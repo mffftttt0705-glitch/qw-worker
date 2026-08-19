@@ -1,10 +1,10 @@
 // ============================================================
 //  QW电竞 - 后端 API（Cloudflare Worker 版）
-//  使用 MongoDB Data API
+//  使用 MongoDB 原生驱动
 // ============================================================
 
 // ===== 读取环境变量 =====
-// ⚠️ 在 Worker 设置 → 变量 中添加 MONGODB_URI
+// ⚠️ 已在 Worker 设置中添加了 MONGODB_URI 环境变量
 const MONGODB_URI = env.MONGODB_URI || 'mongodb+srv://mffttttt0705_db_user:LZQ704525@cluster0.lpunuuy.mongodb.net/?appName=Cluster0';
 
 // ===== 引入 MongoDB 驱动 =====
