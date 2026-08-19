@@ -1,0 +1,20 @@
+名称: 自动部署 Worker
+
+触发条件:
+  推送:
+    分支:
+      - main
+
+任务:
+  部署:
+    运行环境: ubuntu-latest
+    步骤:
+      - 使用: actions/checkout@v4
+      
+      - 名称: 安装 Wrangler
+        运行: npm install -g wrangler
+      
+      - 名称: 部署 Worker
+        运行: wrangler deploy
+        环境变量:
+          CLOUDFLARE_API_TOKEN: ${{ 密钥.CLOUDFLARE_API_TOKEN }}
