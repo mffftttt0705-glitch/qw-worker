@@ -631,6 +631,10 @@ async function renderDashboard() {
     } catch (err) { console.error(err); }
 }
 
+// ============================================================
+//  商品管理 - 完整修复版
+// ============================================================
+
 async function renderProducts() {
     try {
         const products = await apiRequest('/admin/products');
@@ -642,15 +646,30 @@ async function renderProducts() {
         let html = '<div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const p of products) {
             const remaining = p.quantity - p.sold;
-            const isHidden = p.hidden === true;
-            let statusText2 = isHidden ? '已下架' : (remaining > 0 ? '在售' : '已售罄');
-            let statusCls = isHidden ? 'status-hidden' : (remaining > 0 ? 'status-onsale' : 'status-soldout');
+            const isHidden = p.hidden === 1 || p.hidden === true;
+            
+            // 状态显示
+            let statusText2 = '';
+            let statusCls = '';
+            if (isHidden) {
+                statusText2 = '已下架';
+                statusCls = 'status-hidden';
+            } else if (remaining > 0) {
+                statusText2 = '在售';
+                statusCls = 'status-onsale';
+            } else {
+                statusText2 = '已售罄';
+                statusCls = 'status-soldout';
+            }
+            
             const productId = p._id || p.id;
             let actions = '';
             if (isHidden) {
+                // 已下架：显示"重新上架"和"删除"按钮
                 actions += `<button class="btn btn-success btn-xs" onclick="confirmReshelf('${productId}')">重新上架</button>`;
                 actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteProduct('${productId}')">删除</button>`;
             } else {
+                // 在售或已售罄：显示"下架"按钮
                 actions += `<button class="btn btn-danger btn-xs" onclick="confirmUnshelf('${productId}')">下架</button>`;
             }
             html += `<tr>
@@ -663,40 +682,118 @@ async function renderProducts() {
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+        console.error(err);
+        document.getElementById('productsList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>加载失败</p></div>';
+    }
 }
 
+// 下架确认弹窗
 window.confirmUnshelf = function(productId) {
-    confirmAction('确认下架', '确认下架此商品？下架后老板将无法购买。', '确认下架', `doUnshelf('${productId}')`);
+    apiRequest('/admin/products').then(products => {
+        const product = products.find(p => (p._id || p.id) === productId);
+        const name = product ? product.title : '此商品';
+        showCustomModal(`
+            <h3><i class="fas fa-arrow-down"></i> 确认下架</h3>
+            <p style="color:#8892a8;font-size:14px;">确认下架「${name}」？下架后老板将无法购买。</p>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-danger" onclick="closeCustomModal();doUnshelf('${productId}')">确认下架</button>
+            </div>
+        `);
+    }).catch(() => {
+        showCustomModal(`
+            <h3><i class="fas fa-arrow-down"></i> 确认下架</h3>
+            <p style="color:#8892a8;font-size:14px;">确认下架此商品？下架后老板将无法购买。</p>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-danger" onclick="closeCustomModal();doUnshelf('${productId}')">确认下架</button>
+            </div>
+        `);
+    });
 };
+
+// 重新上架确认弹窗
+window.confirmReshelf = function(productId) {
+    apiRequest('/admin/products').then(products => {
+        const product = products.find(p => (p._id || p.id) === productId);
+        const name = product ? product.title : '此商品';
+        showCustomModal(`
+            <h3><i class="fas fa-arrow-up"></i> 确认重新上架</h3>
+            <p style="color:#8892a8;font-size:14px;">确认重新上架「${name}」？重新上架后老板将可以购买。</p>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="closeCustomModal();doReshelf('${productId}')">确认上架</button>
+            </div>
+        `);
+    }).catch(() => {
+        showCustomModal(`
+            <h3><i class="fas fa-arrow-up"></i> 确认重新上架</h3>
+            <p style="color:#8892a8;font-size:14px;">确认重新上架此商品？重新上架后老板将可以购买。</p>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="closeCustomModal();doReshelf('${productId}')">确认上架</button>
+            </div>
+        `);
+    });
+};
+
+// 删除确认弹窗
+window.confirmDeleteProduct = function(productId) {
+    apiRequest('/admin/products').then(products => {
+        const product = products.find(p => (p._id || p.id) === productId);
+        const name = product ? product.title : '此商品';
+        showCustomModal(`
+            <h3><i class="fas fa-trash-alt"></i> 确认删除</h3>
+            <p style="color:#ef4444;font-size:14px;">⚠️ 确认永久删除「${name}」？此操作不可恢复！</p>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-danger" onclick="closeCustomModal();doDeleteProduct('${productId}')">确认删除</button>
+            </div>
+        `);
+    }).catch(() => {
+        showCustomModal(`
+            <h3><i class="fas fa-trash-alt"></i> 确认删除</h3>
+            <p style="color:#ef4444;font-size:14px;">⚠️ 确认永久删除此商品？此操作不可恢复！</p>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-danger" onclick="closeCustomModal();doDeleteProduct('${productId}')">确认删除</button>
+            </div>
+        `);
+    });
+};
+
+// 执行下架
 async function doUnshelf(productId) {
     try {
         await apiRequest('/admin/products/' + productId + '/unshelf', { method: 'PUT' });
         toast('商品已下架', 'success');
         renderProducts();
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) { 
+        toast(err.message, 'error'); 
+    }
 }
 
-window.confirmReshelf = function(productId) {
-    confirmAction('确认重新上架', '确认重新上架此商品？', '确认上架', `doReshelf('${productId}')`);
-};
+// 执行重新上架
 async function doReshelf(productId) {
     try {
         await apiRequest('/admin/products/' + productId + '/reshelf', { method: 'PUT' });
         toast('商品已重新上架', 'success');
         renderProducts();
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) { 
+        toast(err.message, 'error'); 
+    }
 }
 
-window.confirmDeleteProduct = function(productId) {
-    confirmAction('确认删除', '确认永久删除此商品？此操作不可恢复。', '确认删除', `doDeleteProduct('${productId}')`);
-};
+// 执行删除
 async function doDeleteProduct(productId) {
     try {
         await apiRequest('/admin/products/' + productId, { method: 'DELETE' });
         toast('商品已删除', 'success');
         renderProducts();
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) { 
+        toast(err.message, 'error'); 
+    }
 }
 
 async function shelfProduct() {
@@ -1058,6 +1155,7 @@ async function renderBossView() {
         let html = '';
         for (const p of products) {
             const remaining = p.quantity - p.sold;
+            const productId = p._id || p.id;
             html += `
                 <div class="card" style="padding:14px;border-left:3px solid ${remaining>0?'#f5c842':'transparent'};">
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
@@ -1065,7 +1163,7 @@ async function renderBossView() {
                         <div style="text-align:right;">
                             <span style="font-size:20px;font-weight:700;color:#f5c842;">${p.price*10} <i class="fas fa-gem"></i></span><br>
                             <span style="font-size:12px;color:#8892a8;">¥${p.price}</span><br>
-                            ${remaining > 0 ? `<button class="btn btn-success btn-sm" onclick="confirmBuy('${p.id}')">购买</button>` : '<span class="status-badge status-soldout">已售罄</span>'}
+                            ${remaining > 0 ? `<button class="btn btn-success btn-sm" onclick="confirmBuy('${productId}')">购买</button>` : '<span class="status-badge status-soldout">已售罄</span>'}
                         </div>
                     </div>
                 </div>
