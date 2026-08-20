@@ -176,6 +176,7 @@ export async function onRequest(context) {
   const path = url.pathname;
   const method = request.method;
 
+  // ⚠️ 关键：从 context.env 获取 D1 绑定
   const env = context.env;
 
   let body = {};
@@ -197,10 +198,12 @@ export async function onRequest(context) {
   try {
     const authHeader = request.headers.get('Authorization');
 
+    // 测试接口
     if (path === '/api/test' && method === 'GET') {
       return jsonResponse({ message: 'Pages Functions 运行正常！' });
     }
 
+    // 公开接口
     if (path === '/api/register' && method === 'POST') {
       return await handleRegister(env, body);
     }
@@ -214,6 +217,7 @@ export async function onRequest(context) {
       return await handleGetAnnounce(env);
     }
 
+    // 需要登录的接口
     if (path === '/api/me' && method === 'GET') {
       return await handleGetMe(env, authHeader);
     }
@@ -224,6 +228,7 @@ export async function onRequest(context) {
       return await handleBuyProduct(env, authHeader, body);
     }
 
+    // 管理员接口（简化版）
     const userId = verifyAndGetUserId(authHeader);
     if (userId) {
       const user = await getUserById(env, userId);
