@@ -274,7 +274,7 @@
         <div class="role-row">
             <label><input type="radio" name="authRole" value="boss" checked> 老板</label>
             <label><input type="radio" name="authRole" value="handler"> 打手</label>
-            <label><input type="radio" name="authRole" value="shop_owner"> 入驻俱乐部</label>
+            <label><input type="radio" name="authRole" value="shop_owner" id="shopOwnerRadio"> 🏪 入驻俱乐部</label>
         </div>
         <div id="shopOwnerFields" style="display:none;text-align:left;padding:8px 0;">
             <input type="text" id="authShopName" placeholder="俱乐部名称" style="width:100%;padding:10px;border-radius:60px;background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);font-size:14px;text-align:center;outline:none;margin-bottom:8px;" />
@@ -296,7 +296,7 @@
         <div class="app-header">
             <div class="brand">
                 <div class="brand-icon">QW</div>
-                <span class="brand-name">电竞 <small>· 护航</small></span>
+                <span class="brand-name" id="brandName">电竞 <small>· 护航</small></span>
             </div>
             <div class="header-right">
                 <div class="header-actions">
@@ -444,6 +444,12 @@
                     <div class="collapse-toggle" onclick="toggleCollapse('shopsList')"><span>🏪 所有店铺</span><span id="shopsListArrow">▶</span></div>
                     <div class="collapse-content" id="shopsListContent"><div id="shopsList"></div></div>
                 </div>
+                <div class="admin-card" style="border-left:4px solid #22c55e;margin-top:16px;">
+                    <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#22c55e;"></i> 创建新店铺</div>
+                    <div class="admin-form-group"><label><i class="fas fa-store"></i> 俱乐部名称</label><input class="admin-form-control" id="createShopName" placeholder="输入俱乐部名称" /></div>
+                    <div class="admin-form-group"><label><i class="fas fa-key"></i> 邀请码（自定义，唯一，至少4位）</label><input class="admin-form-control" id="createShopInviteCode" placeholder="如：CLUB2025" /></div>
+                    <button class="btn btn-success" onclick="createShop()"><i class="fas fa-plus"></i> 创建店铺</button>
+                </div>
             </div>
             <div class="tab-page" id="tab-shop-applications">
                 <div class="admin-card">
@@ -486,6 +492,19 @@
             <div class="tab-page active" id="shop-dashboard">
                 <div class="admin-card"><div class="admin-card-title"><i class="fas fa-chart-simple"></i> 店铺数据</div><div id="shopStatsGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"></div></div>
                 <div class="admin-card"><div class="admin-card-title"><i class="fas fa-clock"></i> 最近订单</div><div id="shopRecentOrders"></div></div>
+                <div class="admin-card" style="border-left:4px solid #22c55e;margin-top:16px;">
+                    <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#22c55e;"></i> 创建新店铺</div>
+                    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">创建成功后，您将成为该店铺的拥有者</p>
+                    <div class="admin-form-group"><label><i class="fas fa-store"></i> 俱乐部名称</label><input class="admin-form-control" id="shopCreateShopName" placeholder="输入俱乐部名称" /></div>
+                    <div class="admin-form-group"><label><i class="fas fa-key"></i> 邀请码（自定义，唯一，至少4位）</label><input class="admin-form-control" id="shopCreateInviteCode" placeholder="如：CLUB2025" /></div>
+                    <button class="btn btn-success" onclick="shopCreateShop()"><i class="fas fa-plus"></i> 创建店铺</button>
+                </div>
+                <div class="admin-card" style="border-left:4px solid #f59e0b;margin-top:16px;">
+                    <div class="admin-card-title"><i class="fas fa-edit" style="color:#f59e0b;"></i> 修改店铺邀请码</div>
+                    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">修改后，新用户将使用新邀请码注册</p>
+                    <div class="admin-form-group"><label><i class="fas fa-key"></i> 新邀请码（至少4位）</label><input class="admin-form-control" id="shopNewInviteCode" placeholder="输入新邀请码" /></div>
+                    <button class="btn btn-warning" onclick="shopUpdateInviteCode()"><i class="fas fa-save"></i> 更新邀请码</button>
+                </div>
             </div>
             <div class="tab-page" id="shop-products">
                 <div class="admin-card"><div class="admin-card-title"><i class="fas fa-filter"></i> 商品列表</div><div id="shopProductsList"></div></div>
@@ -854,9 +873,9 @@ async function doAuthLogin() {
         renderBossView();
         renderAdminAll();
         loadTipHandlers();
-        // 更新店铺名称显示
         if (currentUser.shop_name) {
             document.getElementById('shopDisplayName').textContent = '🏪 店铺：' + currentUser.shop_name;
+            document.getElementById('brandName').innerHTML = currentUser.shop_name + ' <small>· 护航</small>';
         }
     } catch (err) {
         errorEl.textContent = err.message || '登录失败';
@@ -1027,7 +1046,6 @@ function updateRoleBasedUI() {
     document.getElementById('navShop').style.display = hasShop ? 'flex' : 'none';
     document.getElementById('navOrders').style.display = (role === 'boss' || isAdmin) ? 'flex' : 'none';
 
-    // 如果是管理员且有店铺，显示双身份
     if (isAdmin && hasShop) {
         document.getElementById('currentUserDisplay').textContent = currentUser.username + ' (管理员+店长)';
     } else if (isAdmin) {
@@ -1362,6 +1380,7 @@ async function renderShops() {
                 <td>
                     <button class="btn btn-warning btn-xs" onclick="toggleShopDispatch('${s.id}', ${s.dispatch_to_all})">切换分发</button>
                     <button class="btn ${s.status === 'active' ? 'btn-danger' : 'btn-success'} btn-xs" onclick="toggleShopStatus('${s.id}')">${s.status === 'active' ? '封禁' : '解封'}</button>
+                    <button class="btn btn-primary btn-xs" onclick="openShopInviteCodeModal('${s.id}','${s.invite_code}')">修改邀请码</button>
                 </td>
             </tr>`;
         }
@@ -1391,6 +1410,75 @@ async function doToggleShopStatus(shopId) {
         toast('店铺状态已更新', 'success');
         renderShops();
     } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  管理员 - 创建店铺
+// ============================================================
+async function createShop() {
+    const name = document.getElementById('createShopName').value.trim();
+    const invite_code = document.getElementById('createShopInviteCode').value.trim();
+    if (!name) return toast('请输入俱乐部名称', 'warning');
+    if (!invite_code) return toast('请输入邀请码', 'warning');
+    if (invite_code.length < 4) return toast('邀请码至少4位字符', 'warning');
+
+    confirmAction('确认创建店铺', `确认创建店铺「${name}」？邀请码：${invite_code}`, '确认创建', `doCreateShop('${name}', '${invite_code}')`);
+}
+
+async function doCreateShop(name, invite_code) {
+    try {
+        const data = await apiRequest('/shop/create', {
+            method: 'POST',
+            body: JSON.stringify({ name, invite_code })
+        });
+        toast('✅ ' + data.message, 'success');
+        document.getElementById('createShopName').value = '';
+        document.getElementById('createShopInviteCode').value = '';
+        renderShops();
+        const me = await apiRequest('/me');
+        currentUser = me;
+        updateAccountInfo();
+        updateRoleBasedUI();
+        if (currentUser.shop_name) {
+            document.getElementById('shopDisplayName').textContent = '🏪 店铺：' + currentUser.shop_name;
+            document.getElementById('brandName').innerHTML = currentUser.shop_name + ' <small>· 护航</small>';
+        }
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  管理员 - 修改店铺邀请码
+// ============================================================
+function openShopInviteCodeModal(shopId, currentCode) {
+    showCustomModal(`
+        <h3><i class="fas fa-edit"></i> 修改店铺邀请码</h3>
+        <p style="color:var(--text-muted);font-size:14px;">当前邀请码：<strong>${currentCode}</strong></p>
+        <div class="form-group"><label>新邀请码（至少4位）</label><input class="admin-form-control" id="adminNewInviteCode" placeholder="输入新邀请码" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doAdminUpdateInviteCode('${shopId}')">确认修改</button>
+        </div>
+    `);
+    document.getElementById('customModal').classList.add('active');
+}
+
+async function doAdminUpdateInviteCode(shopId) {
+    const new_invite_code = document.getElementById('adminNewInviteCode').value.trim();
+    if (!new_invite_code) return toast('请输入新邀请码', 'warning');
+    if (new_invite_code.length < 4) return toast('邀请码至少4位字符', 'warning');
+    try {
+        await apiRequest('/shop/update-invite-code', {
+            method: 'POST',
+            body: JSON.stringify({ shop_id: shopId, new_invite_code })
+        });
+        closeCustomModal();
+        toast('✅ 邀请码已更新', 'success');
+        renderShops();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
 }
 
 // ============================================================
@@ -1571,6 +1659,64 @@ async function doShopDeleteProduct(productId) {
 }
 
 // ============================================================
+//  店长 - 创建店铺
+// ============================================================
+async function shopCreateShop() {
+    const name = document.getElementById('shopCreateShopName').value.trim();
+    const invite_code = document.getElementById('shopCreateInviteCode').value.trim();
+    if (!name) return toast('请输入俱乐部名称', 'warning');
+    if (!invite_code) return toast('请输入邀请码', 'warning');
+    if (invite_code.length < 4) return toast('邀请码至少4位字符', 'warning');
+
+    confirmAction('确认创建店铺', `确认创建店铺「${name}」？邀请码：${invite_code}`, '确认创建', `doShopCreateShop('${name}', '${invite_code}')`);
+}
+
+async function doShopCreateShop(name, invite_code) {
+    try {
+        const data = await apiRequest('/shop/create', {
+            method: 'POST',
+            body: JSON.stringify({ name, invite_code })
+        });
+        toast('✅ ' + data.message, 'success');
+        document.getElementById('shopCreateShopName').value = '';
+        document.getElementById('shopCreateInviteCode').value = '';
+        renderShopAll();
+        const me = await apiRequest('/me');
+        currentUser = me;
+        updateAccountInfo();
+        updateRoleBasedUI();
+        if (currentUser.shop_name) {
+            document.getElementById('shopDisplayName').textContent = '🏪 店铺：' + currentUser.shop_name;
+            document.getElementById('brandName').innerHTML = currentUser.shop_name + ' <small>· 护航</small>';
+        }
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  店长 - 修改店铺邀请码
+// ============================================================
+async function shopUpdateInviteCode() {
+    const new_invite_code = document.getElementById('shopNewInviteCode').value.trim();
+    if (!new_invite_code) return toast('请输入新邀请码', 'warning');
+    if (new_invite_code.length < 4) return toast('邀请码至少4位字符', 'warning');
+
+    try {
+        const shop = await apiRequest('/shop/owner/info');
+        await apiRequest('/shop/update-invite-code', {
+            method: 'POST',
+            body: JSON.stringify({ shop_id: shop.id, new_invite_code })
+        });
+        toast('✅ 邀请码已更新为：' + new_invite_code, 'success');
+        document.getElementById('shopNewInviteCode').value = '';
+        renderShopDashboard();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
 //  店长订单管理
 // ============================================================
 async function renderShopOrders() {
@@ -1607,7 +1753,6 @@ async function renderShopOrders() {
     } catch (err) { console.error(err); }
 }
 
-// 店长订单操作（简化版，调用店长专用接口）
 async function shopAssignHandler(orderId) {
     const users = await apiRequest('/shop/owner/users');
     const handlers = users.filter(u => u.role === 'handler' && u.status === 'active');
@@ -1853,6 +1998,10 @@ async function renderBossView() {
         document.getElementById('bossDiamond').textContent = user.diamond || 0;
         if (user.shop_name) {
             document.getElementById('shopDisplayName').textContent = '🏪 店铺：' + user.shop_name;
+            document.getElementById('brandName').innerHTML = user.shop_name + ' <small>· 护航</small>';
+        } else {
+            document.getElementById('shopDisplayName').textContent = '🏪 店铺：QW电竞官方';
+            document.getElementById('brandName').innerHTML = 'QW电竞 <small>· 护航</small>';
         }
         const mails = await apiRequest('/mails');
         document.getElementById('unreadMailCount').textContent = mails.filter(m => m.status === 'unread').length;
@@ -1967,7 +2116,6 @@ async function renderHandlerView() {
         const user = await apiRequest('/me');
         document.getElementById('handlerBalance').textContent = '¥' + (user.balance || 0);
 
-        // 获取待接单（带过滤）
         const pendingData = await apiRequest('/orders/pending', {
             method: 'POST',
             body: JSON.stringify({ filter_type: handlerFilter })
