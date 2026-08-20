@@ -364,7 +364,106 @@ async function handleAdminToggleShopOwner(env, userId) {
 }
 
 // ============================================================
-//  6. 店长接口
+//  6. 自定义店铺邀请码（管理员 或 店长）
+// ============================================================
+
+async function handleUpdateShopInviteCode(env, authHeader, body) {
+    const userId = verifyAndGetUserId(authHeader);
+    if (!userId) return errorResponse('请先登录', 401);
+    const user = await getUserById(env, userId);
+    if (!user) return errorResponse('用户不存在', 404);
+
+    if (!hasAdminPermission(user) && user.role !== 'shop_owner') {
+        return errorResponse('无权限，只有管理员或店长可以修改邀请码', 403);
+    }
+
+    const { shop_id, new_invite_code } = body;
+    if (!shop_id || !new_invite_code) {
+        return errorResponse('请填写店铺ID和新邀请码', 400);
+    }
+
+    if (new_invite_code.length < 4) {
+        return errorResponse('邀请码至少4位字符', 400);
+    }
+
+    const shop = await getShopById(env, shop_id);
+    if (!shop) return errorResponse('店铺不存在', 404);
+
+    if (user.role === 'shop_owner' && shop.owner_id !== userId) {
+        return errorResponse('无权修改其他店铺的邀请码', 403);
+    }
+
+    const codeCheck = await queryDB(env, 'SELECT * FROM shops WHERE invite_code = ? AND id != ?', [new_invite_code, shop_id]);
+    if (codeCheck.results && codeCheck.results.length > 0) {
+        return errorResponse('该邀请码已被其他店铺使用', 400);
+    }
+
+    await runDB(env, 'UPDATE shops SET invite_code = ? WHERE id = ?', [new_invite_code, shop_id]);
+    await runDB(env, 'UPDATE users SET invite_code = ? WHERE shop_id = ?', [new_invite_code, shop_id]);
+
+    return jsonResponse({
+        success: true,
+        message: '✅ 邀请码已更新',
+        shop_id: shop_id,
+        new_invite_code: new_invite_code
+    });
+}
+
+// ============================================================
+//  7. 创建店铺（管理员 或 店长）
+// ============================================================
+
+async function handleCreateShop(env, authHeader, body) {
+    const userId = verifyAndGetUserId(authHeader);
+    if (!userId) return errorResponse('请先登录', 401);
+    const user = await getUserById(env, userId);
+    if (!user) return errorResponse('用户不存在', 404);
+
+    if (!hasAdminPermission(user) && user.role !== 'shop_owner') {
+        return errorResponse('无权限，只有管理员或店长可以创建店铺', 403);
+    }
+
+    const { name, invite_code } = body;
+    if (!name || !invite_code) {
+        return errorResponse('请填写俱乐部名称和邀请码', 400);
+    }
+    if (invite_code.length < 4) {
+        return errorResponse('邀请码至少4位字符', 400);
+    }
+
+    const nameCheck = await queryDB(env, 'SELECT * FROM shops WHERE name = ?', [name]);
+    if (nameCheck.results && nameCheck.results.length > 0) {
+        return errorResponse('该俱乐部名称已被使用', 400);
+    }
+
+    const codeCheck = await queryDB(env, 'SELECT * FROM shops WHERE invite_code = ?', [invite_code]);
+    if (codeCheck.results && codeCheck.results.length > 0) {
+        return errorResponse('该邀请码已被使用', 400);
+    }
+
+    const shopId = generateId();
+
+    await runDB(env,
+        `INSERT INTO shops (id, name, owner_id, invite_code, status, created_at, dispatch_to_all) 
+         VALUES (?, ?, ?, ?, "active", ?, 1)`,
+        [shopId, name, userId, invite_code, new Date().toISOString()]
+    );
+
+    await runDB(env, 'UPDATE users SET shop_id = ?, shop_name = ? WHERE id = ?', [shopId, name, userId]);
+
+    return jsonResponse({
+        success: true,
+        message: '✅ 店铺创建成功',
+        shop: {
+            id: shopId,
+            name: name,
+            invite_code: invite_code
+        }
+    });
+}
+
+// ============================================================
+//  8. 店长接口
 // ============================================================
 
 async function handleShopOwnerGetShop(env, authHeader) {
@@ -598,7 +697,7 @@ async function handleShopOwnerRejectRecharge(env, authHeader, rechargeId) {
 }
 
 // ============================================================
-//  7. 商品获取（老板看到自己店铺的商品）
+//  9. 商品获取（老板看到自己店铺的商品）
 // ============================================================
 
 async function handleGetProducts(env, authHeader) {
@@ -627,7 +726,7 @@ async function handleGetProducts(env, authHeader) {
 }
 
 // ============================================================
-//  8. 打手获取待接单列表（支持过滤）
+//  10. 打手获取待接单列表（支持过滤）
 // ============================================================
 
 async function handleGetHandlerOrders(env, authHeader, body) {
@@ -657,7 +756,7 @@ async function handleGetHandlerOrders(env, authHeader, body) {
 }
 
 // ============================================================
-//  9. 购买商品
+//  11. 购买商品
 // ============================================================
 
 async function handleBuyProduct(env, authHeader, body) {
@@ -698,7 +797,7 @@ async function handleBuyProduct(env, authHeader, body) {
 }
 
 // ============================================================
-//  10. 我的订单
+//  12. 我的订单
 // ============================================================
 
 async function handleGetMyOrders(env, authHeader) {
@@ -749,7 +848,39 @@ async function handleGetMyOrders(env, authHeader) {
 }
 
 // ============================================================
-//  11. Pages Functions 入口
+//  13. 聊天相关
+// ============================================================
+
+async function handleSendChat(env, authHeader, orderId, body) {
+    const userId = verifyAndGetUserId(authHeader);
+    if (!userId) return errorResponse('请先登录', 401);
+    const user = await getUserById(env, userId);
+    if (!user) return errorResponse('用户不存在', 404);
+
+    const { content } = body;
+    if (!content) return errorResponse('内容不能为空');
+
+    const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
+    const order = (result.results && result.results[0]) || null;
+    if (!order) return errorResponse('订单不存在', 404);
+
+    if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin') {
+        return errorResponse('无权操作', 403);
+    }
+
+    const sender = user.role === 'boss' ? 'boss' : user.role === 'handler' ? 'handler' : 'admin';
+    let messages = [];
+    try {
+        messages = JSON.parse(order.messages || '[]');
+    } catch (e) { messages = []; }
+    messages.push({ sender, content, time: new Date().toISOString() });
+
+    await runDB(env, 'UPDATE orders SET messages = ? WHERE id = ?', [JSON.stringify(messages), orderId]);
+    return jsonResponse({ message: '发送成功' });
+}
+
+// ============================================================
+//  14. Pages Functions 入口
 // ============================================================
 
 export async function onRequest(context) {
@@ -805,6 +936,16 @@ export async function onRequest(context) {
         }
         if (path === '/api/orders/my' && method === 'GET') {
             return await handleGetMyOrders(env, authHeader);
+        }
+
+        // ===== 创建店铺（管理员 或 店长） =====
+        if (path === '/api/shop/create' && method === 'POST') {
+            return await handleCreateShop(env, authHeader, body);
+        }
+
+        // ===== 更新店铺邀请码（管理员 或 店长） =====
+        if (path === '/api/shop/update-invite-code' && method === 'POST') {
+            return await handleUpdateShopInviteCode(env, authHeader, body);
         }
 
         // ===== 店长/管理员店铺接口 =====
@@ -910,12 +1051,84 @@ export async function onRequest(context) {
                         return await handleAdminToggleShopOwner(env, id);
                     }
                 }
+                // ===== 管理员原有的其他接口 =====
+                if (path === '/api/admin/products' && method === 'GET') {
+                    const result = await queryDB(env, 'SELECT * FROM products ORDER BY created_at DESC');
+                    return jsonResponse(result.results || []);
+                }
+                if (path === '/api/admin/products' && method === 'POST') {
+                    const { game, title, desc, price, quantity, image } = body;
+                    if (!title || !price) return errorResponse('请填写完整信息');
+                    const id = generateId();
+                    await runDB(env,
+                        'INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, shop_id) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, "shop_platform")',
+                        [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '']
+                    );
+                    return jsonResponse({ success: true, id });
+                }
+                if (path.startsWith('/api/admin/products/')) {
+                    const productId = path.replace('/api/admin/products/', '');
+                    if (productId.endsWith('/unshelf') && method === 'PUT') {
+                        const id = productId.replace('/unshelf', '');
+                        await runDB(env, 'UPDATE products SET hidden = 1 WHERE id = ?', [id]);
+                        return jsonResponse({ success: true, message: '已下架' });
+                    }
+                    if (productId.endsWith('/reshelf') && method === 'PUT') {
+                        const id = productId.replace('/reshelf', '');
+                        await runDB(env, 'UPDATE products SET hidden = 0 WHERE id = ?', [id]);
+                        return jsonResponse({ success: true, message: '已重新上架' });
+                    }
+                    if (method === 'DELETE') {
+                        await runDB(env, 'DELETE FROM products WHERE id = ?', [productId]);
+                        return jsonResponse({ success: true, message: '已删除' });
+                    }
+                }
+                if (path === '/api/admin/orders' && method === 'GET') {
+                    const result = await queryDB(env, 'SELECT * FROM orders ORDER BY created_at DESC');
+                    return jsonResponse(result.results || []);
+                }
+                if (path === '/api/admin/users' && method === 'GET') {
+                    const result = await queryDB(env, 'SELECT id, username, role, diamond, balance, status, shop_name FROM users');
+                    return jsonResponse(result.results || []);
+                }
+                if (path === '/api/admin/recharges' && method === 'GET') {
+                    const result = await queryDB(env, 'SELECT * FROM recharges ORDER BY created_at DESC');
+                    return jsonResponse(result.results || []);
+                }
+                if (path === '/api/admin/gift' && method === 'POST') {
+                    const { targetUserId, amount } = body;
+                    if (!targetUserId || !amount) return errorResponse('请填写完整信息');
+                    await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [amount, targetUserId]);
+                    return jsonResponse({ success: true, message: '赠送成功' });
+                }
+                if (path === '/api/admin/announce' && method === 'PUT') {
+                    const { content, images } = body;
+                    await runDB(env, 'DELETE FROM announces');
+                    const imagesJson = Array.isArray(images) ? JSON.stringify(images) : '[]';
+                    await runDB(env,
+                        'INSERT INTO announces (id, content, images, updated_at, shop_id) VALUES (?, ?, ?, ?, "shop_platform")',
+                        [generateId(), content || '欢迎使用 QW电竞护航平台！', imagesJson, new Date().toISOString()]
+                    );
+                    return jsonResponse({ success: true, message: '公告已更新' });
+                }
             }
         }
 
-        // ===== 原有接口（聊天、接单等）- 保留 =====
-        // 由于这些接口在您的原有代码中已有，这里不再重复
-        // 请确保您的原有接口仍然可用
+        // ===== 聊天接口（需要登录） =====
+        if (path.startsWith('/api/orders/') && path.endsWith('/chat') && method === 'POST') {
+            const orderId = path.replace('/api/orders/', '').replace('/chat', '');
+            return await handleSendChat(env, authHeader, orderId, body);
+        }
+
+        // ===== 公告获取（公开） =====
+        if (path === '/api/announce' && method === 'GET') {
+            const result = await queryDB(env, 'SELECT * FROM announces WHERE shop_id = "shop_platform" ORDER BY updated_at DESC LIMIT 1');
+            const data = (result.results && result.results[0]) || { content: '欢迎使用 QW电竞护航平台！', images: '[]' };
+            if (typeof data.images === 'string') {
+                try { data.images = JSON.parse(data.images); } catch (e) { data.images = []; }
+            }
+            return jsonResponse(data);
+        }
 
         return errorResponse('接口不存在', 404);
 
