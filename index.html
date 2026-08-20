@@ -495,7 +495,7 @@ const COLLAPSE_KEYS = {
 
 function getCollapseState(key) {
     const val = localStorage.getItem(key);
-    return val === 'true' ? true : false; // 默认折叠（false）
+    return val === 'true' ? true : false;
 }
 
 function setCollapseState(key, isOpen) {
@@ -518,7 +518,6 @@ function toggleCollapse(id) {
         if (arrow) arrow.textContent = '▶';
     }
     
-    // 保存状态到 localStorage
     const key = COLLAPSE_KEYS[id];
     if (key) {
         setCollapseState(key, newState);
@@ -846,7 +845,6 @@ async function renderAdminAll() {
     await renderRecharges();
     await renderUsers();
     await populateGiftUsers();
-    // 应用折叠状态
     applyCollapseStates();
 }
 
@@ -886,7 +884,7 @@ async function doDeleteOrder(orderId) {
 }
 
 // ============================================================
-//  商品管理
+//  商品管理 - 修复版
 // ============================================================
 let editProductId = null;
 
@@ -901,7 +899,8 @@ async function renderProducts() {
         let html = '<div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const p of products) {
             const remaining = p.quantity - p.sold;
-            const isHidden = p.hidden === true;
+            // ===== 修复：使用 == 或 Number() 来正确判断 hidden 字段 =====
+            const isHidden = p.hidden == 1 || p.hidden === true;
             let statusText2 = isHidden ? '已下架' : (remaining > 0 ? '在售' : '已售罄');
             let statusCls = isHidden ? 'status-hidden' : (remaining > 0 ? 'status-onsale' : 'status-soldout');
             const productId = p.id;
@@ -969,38 +968,41 @@ window.doEditProduct = function() {
 };
 
 // ============================================================
-//  商品操作
+//  商品操作 - 修复：下架后正确刷新状态
 // ============================================================
 window.confirmUnshelf = function(productId) {
-    confirmAction('确认下架', '确认下架此商品？', '确认下架', `doUnshelf('${productId}')`);
+    confirmAction('确认下架', '确认下架此商品？下架后老板将无法购买。', '确认下架', `doUnshelf('${productId}')`);
 };
 async function doUnshelf(productId) {
     try {
         await apiRequest('/admin/products/' + productId + '/unshelf', { method: 'PUT' });
-        toast('已下架', 'success');
-        renderProducts();
+        toast('✅ 商品已下架', 'success');
+        await renderProducts();  // 等待刷新完成
+        await renderBossView();  // 同时刷新老板端商品列表
     } catch (err) { toast(err.message, 'error'); }
 }
 
 window.confirmReshelf = function(productId) {
-    confirmAction('确认重新上架', '确认重新上架此商品？', '确认上架', `doReshelf('${productId}')`);
+    confirmAction('确认重新上架', '确认重新上架此商品？重新上架后老板将可以购买。', '确认上架', `doReshelf('${productId}')`);
 };
 async function doReshelf(productId) {
     try {
         await apiRequest('/admin/products/' + productId + '/reshelf', { method: 'PUT' });
-        toast('已重新上架', 'success');
-        renderProducts();
+        toast('✅ 商品已重新上架', 'success');
+        await renderProducts();  // 等待刷新完成
+        await renderBossView();  // 同时刷新老板端商品列表
     } catch (err) { toast(err.message, 'error'); }
 }
 
 window.confirmDeleteProduct = function(productId) {
-    confirmAction('确认删除', '确认永久删除此商品？', '确认删除', `doDeleteProduct('${productId}')`);
+    confirmAction('确认删除', '⚠️ 确认永久删除此商品？此操作不可恢复！', '确认删除', `doDeleteProduct('${productId}')`);
 };
 async function doDeleteProduct(productId) {
     try {
         await apiRequest('/admin/products/' + productId, { method: 'DELETE' });
-        toast('已删除', 'success');
-        renderProducts();
+        toast('✅ 商品已删除', 'success');
+        await renderProducts();
+        await renderBossView();
     } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -1014,17 +1016,17 @@ async function shelfProduct() {
     if (!title || !price) return toast('请填写完整信息', 'error');
     try {
         await apiRequest('/admin/products', { method: 'POST', body: JSON.stringify({ game, title, desc, price, quantity, image }) });
-        toast('上架成功', 'success');
+        toast('✅ 上架成功', 'success');
         document.getElementById('prodTitle').value = '';
         document.getElementById('prodDesc').value = '';
         document.getElementById('prodPrice').value = '';
         document.getElementById('prodImageUrl').value = '';
         document.getElementById('prodImagePreview').style.display = 'none';
-        renderProducts();
+        await renderProducts();
+        await renderBossView();
     } catch (err) { toast(err.message, 'error'); }
 }
 
-// 预览图片URL
 document.getElementById('prodImageUrl').addEventListener('input', function() {
     previewProdImageUrl('prodImageUrl', 'prodImagePreview');
 });
@@ -1094,6 +1096,8 @@ async function renderAdminOrders() {
                 actions += `<button class="btn btn-success btn-xs" onclick="adminRefundApprove('${o.id}')">通过退款</button>`;
                 actions += `<button class="btn btn-danger btn-xs" onclick="adminRefundReject('${o.id}')">拒绝退款</button>`;
             }
+            // ===== 修复：添加查看聊天按钮 =====
+            actions += `<button class="btn btn-primary btn-xs" onclick="adminOpenChat('${o.id}')">💬 聊天</button>`;
             const displayStatus = isSettled && o.status === 'completed' ? 'settled' : o.status;
             html += `<tr>
                 <td>${o.id}</td>
@@ -1108,6 +1112,81 @@ async function renderAdminOrders() {
         container.innerHTML = html;
     } catch (err) { console.error(err); }
 }
+
+// ============================================================
+//  管理员查看聊天 - 修复
+// ============================================================
+window.adminOpenChat = function(orderId) {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    apiRequest('/admin/orders').then(orders => {
+        const order = orders.find(o => o.id === orderId);
+        if (!order) return toast('订单不存在', 'error');
+        renderChatModal(order, true);
+    }).catch(err => toast(err.message, 'error'));
+};
+
+function renderChatModal(order, isAdmin = false) {
+    const isEnded = ['completed','canceled','rejected','refunded'].includes(order.status);
+    const messagesHtml = order.messages && order.messages.length > 0 ?
+        order.messages.map(msg => {
+            const senderName = msg.sender === 'boss' ? '👤 老板' : msg.sender === 'handler' ? '🎮 打手' : '📢 系统';
+            const senderClass = msg.sender === 'boss' ? 'boss' : msg.sender === 'handler' ? 'handler' : 'system';
+            return `<div class="chat-msg ${senderClass}"><strong>${senderName}:</strong> ${msg.content} <span class="time">${msg.time}</span></div>`;
+        }).join('') :
+        '<div class="empty-state"><p>暂无消息</p></div>';
+    
+    const isReadonly = isEnded || !currentUser;
+    const placeholder = isEnded ? '订单已结束，只读模式' : '输入消息...';
+    const disabledAttr = isReadonly ? 'disabled' : '';
+    
+    showCustomModal(`
+        <h3><i class="fas fa-comment"></i> 💬 订单聊天 ${isAdmin ? '（管理员视角）' : ''}</h3>
+        <p style="font-size:13px;color:var(--text-secondary);">${order.game} · ${order.title}</p>
+        <p style="font-size:12px;color:var(--text-muted);">状态：${statusText(order.status)} ${isEnded ? '（已结束，只读）' : ''}</p>
+        <div class="chat-messages" id="chatMessages">${messagesHtml}</div>
+        <div class="${isReadonly ? 'chat-readonly' : ''}">
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="${placeholder}" ${disabledAttr}>
+                <button class="btn btn-primary btn-sm" id="chatSendBtn" ${disabledAttr}><i class="fas fa-paper-plane"></i> 发送</button>
+            </div>
+        </div>
+        <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
+    `);
+    document.getElementById('customModal').classList.add('active');
+    const msgContainer = document.getElementById('chatMessages');
+    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+    const sendBtn = document.getElementById('chatSendBtn');
+    const input = document.getElementById('chatInput');
+    if (sendBtn && input && !isReadonly) {
+        const sendMessage = function() {
+            const text = input.value.trim();
+            if (!text) return toast('请输入消息', 'warning');
+            apiRequest('/orders/' + order.id + '/chat', { method: 'POST', body: JSON.stringify({ content: text }) })
+                .then(() => { 
+                    toast('消息已发送', 'success');
+                    // 刷新聊天
+                    if (isAdmin) {
+                        adminOpenChat(order.id);
+                    } else {
+                        openChat(order.id);
+                    }
+                })
+                .catch(err => toast(err.message, 'error'));
+        };
+        sendBtn.addEventListener('click', sendMessage);
+        input.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendMessage(); });
+    }
+}
+
+// 老板端聊天 - 使用统一渲染函数
+window.openChat = function(orderId) {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    apiRequest('/orders/my').then(orders => {
+        const order = orders.find(o => o.id === orderId);
+        if (!order) return toast('订单不存在', 'error');
+        renderChatModal(order, false);
+    }).catch(err => toast(err.message, 'error'));
+};
 
 // ============================================================
 //  充值管理
@@ -1264,7 +1343,7 @@ async function renderBossView() {
             if (o.status === 'ongoing' || o.status === 'pending') {
                 actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
             }
-            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">聊天</button>`;
+            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">💬 聊天</button>`;
             actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
             html2 += `<tr><td>${o.id}</td><td>${o.title}</td><td>¥${o.price}</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
         }
@@ -1408,51 +1487,6 @@ async function doClaimMail(mailId) {
         renderBossView();
     } catch (err) { toast(err.message, 'error'); }
 }
-
-window.openChat = function(orderId) {
-    if (!currentUser) { toast('请先登录', 'warning'); return; }
-    apiRequest('/orders/my').then(orders => {
-        const order = orders.find(o => o.id === orderId);
-        if (!order) return toast('订单不存在', 'error');
-        const isEnded = ['completed','canceled','rejected','refunded'].includes(order.status);
-        const messagesHtml = order.messages && order.messages.length > 0 ?
-            order.messages.map(msg => {
-                const senderName = msg.sender === 'boss' ? '老板' : msg.sender === 'handler' ? '打手' : '系统';
-                const senderClass = msg.sender === 'boss' ? 'boss' : msg.sender === 'handler' ? 'handler' : 'system';
-                return `<div class="chat-msg ${senderClass}"><strong>${senderName}:</strong> ${msg.content} <span class="time">${msg.time}</span></div>`;
-            }).join('') :
-            '<div class="empty-state"><p>暂无消息</p></div>';
-        showCustomModal(`
-            <h3><i class="fas fa-comment"></i> 订单 ${orderId} 聊天</h3>
-            <p style="font-size:13px;color:var(--text-secondary);">${order.game} · ${order.title}</p>
-            <p style="font-size:12px;color:var(--text-muted);">状态：${statusText(order.status)} ${isEnded ? '（已结束，只读）' : ''}</p>
-            <div class="chat-messages" id="chatMessages">${messagesHtml}</div>
-            <div class="${isEnded ? 'chat-readonly' : ''}">
-                <div class="chat-input-area">
-                    <input type="text" id="chatInput" placeholder="${isEnded ? '订单已结束' : '输入消息...'}" ${isEnded ? 'disabled' : ''}>
-                    <button class="btn btn-primary btn-sm" id="chatSendBtn" ${isEnded ? 'disabled' : ''}><i class="fas fa-paper-plane"></i> 发送</button>
-                </div>
-            </div>
-            <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
-        `);
-        document.getElementById('customModal').classList.add('active');
-        const msgContainer = document.getElementById('chatMessages');
-        if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
-        const sendBtn = document.getElementById('chatSendBtn');
-        const input = document.getElementById('chatInput');
-        if (sendBtn && input && !isEnded) {
-            const sendMessage = function() {
-                const text = input.value.trim();
-                if (!text) return toast('请输入消息', 'warning');
-                apiRequest('/orders/' + orderId + '/chat', { method: 'POST', body: JSON.stringify({ content: text }) })
-                    .then(() => { openChat(orderId); toast('消息已发送', 'success'); })
-                    .catch(err => toast(err.message, 'error'));
-            };
-            sendBtn.addEventListener('click', sendMessage);
-            input.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendMessage(); });
-        }
-    }).catch(err => toast(err.message, 'error'));
-};
 
 // ============================================================
 //  管理员快捷操作
@@ -1745,7 +1779,7 @@ async function renderHandlerView() {
                 const statusCls = o.status === 'ongoing' ? 'status-ongoing' : 'status-review';
                 let actions = '';
                 if (o.status === 'ongoing') actions += `<button class="btn btn-warning btn-sm" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
-                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button>`;
+                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">💬 聊天</button>`;
                 actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
                 html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price} ｜ 状态：<span class="status-badge ${statusCls}">${statusText2}</span></span></div><div style="display:flex;gap:4px;flex-wrap:wrap;">${actions}</div></div></div>`;
             }
@@ -1760,7 +1794,7 @@ async function renderHandlerView() {
             for (const o of completed) {
                 const settledText = o.settled ? '已结算' : '待结算';
                 const settledCls = o.settled ? 'status-onsale' : 'status-pending';
-                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price} ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.create_time}</span></div><button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button><button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button></div></div>`;
+                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price} ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.create_time}</span></div><button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">💬 聊天</button><button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button></div></div>`;
             }
             cContainer.innerHTML = html;
         }
@@ -1800,7 +1834,6 @@ async function init() {
     document.getElementById('authPage').style.display = 'flex';
     document.getElementById('mainApp').classList.add('hidden');
     
-    // 应用折叠状态
     applyCollapseStates();
 
     if (token) {
