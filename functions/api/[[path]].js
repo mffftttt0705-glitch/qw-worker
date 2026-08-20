@@ -1,6 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
-//  包含：用户、商品（支持图片URL）、订单、充值、公告、邮件、聊天等全部功能
+//  修复：下架商品、聊天系统、管理员查看聊天权限
 // ============================================================
 
 function generateId() {
@@ -110,7 +110,7 @@ function verifyAndGetUserId(authHeader) {
 }
 
 // ============================================================
-//  商品相关（支持图片URL）
+//  商品相关
 // ============================================================
 
 async function handleGetProducts(env) {
@@ -144,12 +144,21 @@ async function handleAdminUpdateProduct(env, productId, body) {
   return jsonResponse({ success: true, message: '商品已更新' });
 }
 
+// ===== 修复：下架商品（增加检查） =====
 async function handleAdminUnshelf(env, productId) {
+  const check = await queryDB(env, 'SELECT * FROM products WHERE id = ?', [productId]);
+  if (!check.results || check.results.length === 0) {
+    return errorResponse('商品不存在', 404);
+  }
   await runDB(env, 'UPDATE products SET hidden = 1 WHERE id = ?', [productId]);
   return jsonResponse({ success: true, message: '已下架' });
 }
 
 async function handleAdminReshelf(env, productId) {
+  const check = await queryDB(env, 'SELECT * FROM products WHERE id = ?', [productId]);
+  if (!check.results || check.results.length === 0) {
+    return errorResponse('商品不存在', 404);
+  }
   await runDB(env, 'UPDATE products SET hidden = 0 WHERE id = ?', [productId]);
   return jsonResponse({ success: true, message: '已重新上架' });
 }
@@ -231,6 +240,7 @@ async function handleGetOrderDetail(env, authHeader, orderId) {
   const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
   const order = (result.results && result.results[0]) || null;
   if (!order) return errorResponse('订单不存在', 404);
+  // 允许老板、打手、管理员查看
   if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin') {
     return errorResponse('无权查看', 403);
   }
@@ -506,7 +516,7 @@ async function handleClaimMail(env, authHeader, mailId) {
 }
 
 // ============================================================
-//  聊天相关
+//  聊天相关（修复：管理员可查看所有聊天）
 // ============================================================
 
 async function handleSendChat(env, authHeader, orderId, body) {
@@ -521,6 +531,8 @@ async function handleSendChat(env, authHeader, orderId, body) {
   const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
   const order = (result.results && result.results[0]) || null;
   if (!order) return errorResponse('订单不存在', 404);
+  
+  // 允许老板、打手、管理员发送消息
   if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin') {
     return errorResponse('无权操作', 403);
   }
@@ -663,7 +675,8 @@ export async function onRequest(context) {
         const id = orderId.replace('/refund-request', '');
         return await handleRefundRequest(env, authHeader, id, body);
       }
-      if (orderId.endsWith('/chat')) {
+      // ===== 聊天接口（管理员可访问） =====
+      if (orderId.endsWith('/chat') && method === 'POST') {
         const id = orderId.replace('/chat', '');
         return await handleSendChat(env, authHeader, id, body);
       }
@@ -719,7 +732,7 @@ export async function onRequest(context) {
           }
         }
 
-        // 商品管理（含图片URL）
+        // 商品管理
         if (path === '/api/admin/products' && method === 'GET') {
           return await handleAdminGetProducts(env);
         }
@@ -728,10 +741,7 @@ export async function onRequest(context) {
         }
         if (path.startsWith('/api/admin/products/')) {
           const productId = path.replace('/api/admin/products/', '');
-          if (productId.endsWith('/edit') && method === 'PUT') {
-            const id = productId.replace('/edit', '');
-            return await handleAdminUpdateProduct(env, id, body);
-          }
+          // 下架 - 必须放在 edit 前面
           if (productId.endsWith('/unshelf') && method === 'PUT') {
             const id = productId.replace('/unshelf', '');
             return await handleAdminUnshelf(env, id);
@@ -739,6 +749,10 @@ export async function onRequest(context) {
           if (productId.endsWith('/reshelf') && method === 'PUT') {
             const id = productId.replace('/reshelf', '');
             return await handleAdminReshelf(env, id);
+          }
+          if (productId.endsWith('/edit') && method === 'PUT') {
+            const id = productId.replace('/edit', '');
+            return await handleAdminUpdateProduct(env, id, body);
           }
           if (method === 'DELETE') {
             return await handleAdminDeleteProduct(env, productId);
