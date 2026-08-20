@@ -258,7 +258,6 @@
     </style>
 </head>
 <body>
-
 <!-- ===== 登录/注册页面 ===== -->
 <div id="authPage">
     <div class="logo"><i class="fas fa-crosshairs"></i> QW电竞</div>
@@ -266,6 +265,7 @@
     <div class="auth-box">
         <input type="text" id="authUsername" placeholder="用户名" />
         <input type="password" id="authPassword" placeholder="密码" />
+        <input type="text" id="authInviteCode" placeholder="店铺邀请码（必填）" />
         <div id="authError" class="auth-error"></div>
         <div class="btn-row">
             <button class="btn btn-success" onclick="doAuthLogin()" style="flex:1;background:#22c55e;color:#fff;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer">登录</button>
@@ -274,8 +274,19 @@
         <div class="role-row">
             <label><input type="radio" name="authRole" value="boss" checked> 老板</label>
             <label><input type="radio" name="authRole" value="handler"> 打手</label>
+            <label><input type="radio" name="authRole" value="shop_owner"> 入驻俱乐部</label>
         </div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;">打手账号需管理员审核通过后方可使用</div>
+        <div id="shopOwnerFields" style="display:none;text-align:left;padding:8px 0;">
+            <input type="text" id="authShopName" placeholder="俱乐部名称" style="width:100%;padding:10px;border-radius:60px;background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);font-size:14px;text-align:center;outline:none;margin-bottom:8px;" />
+            <div style="font-size:12px;color:var(--text-muted);text-align:center;">入驻俱乐部需要管理员审核</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;">
+            打手/店长账号需管理员审核通过后方可使用
+        </div>
+        <div style="margin-top:8px;text-align:center;border-top:1px solid var(--border-color);padding-top:10px;">
+            <span style="color:var(--text-muted);font-size:13px;">还没有俱乐部？</span>
+            <button class="btn btn-outline btn-sm" onclick="showShopApply()" style="font-size:13px;">🏪 入驻俱乐部</button>
+        </div>
     </div>
 </div>
 
@@ -311,6 +322,7 @@
                     </div>
                 </div>
                 <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">1元 = 10红钻</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="shopDisplayName">🏪 店铺：QW电竞官方</div>
             </div>
             <div class="admin-card" style="padding:10px 12px;">
                 <div class="admin-card-title" style="font-size:14px;margin-bottom:8px;"><i class="fas fa-shopping-cart"></i> 护航商品 <span id="bossProductCount" style="font-size:12px;font-weight:400;color:var(--text-muted);">0</span></div>
@@ -334,6 +346,13 @@
         <!-- ===== 打手视图 ===== -->
         <div class="view" id="view-handler">
             <div class="admin-card"><div class="admin-card-title"><i class="fas fa-wallet"></i> 我的余额</div><div style="font-size:24px;font-weight:700;color:#69db7c;" id="handlerBalance">¥0</div></div>
+            <div class="admin-card">
+                <div class="admin-card-title"><i class="fas fa-filter"></i> 订单过滤</div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-primary btn-sm" onclick="setHandlerFilter('all')" id="filterAll">🌐 全部订单</button>
+                    <button class="btn btn-outline btn-sm" onclick="setHandlerFilter('shop')" id="filterShop">🏪 本店订单</button>
+                </div>
+            </div>
             <div class="admin-card"><div class="admin-card-title"><i class="fas fa-clock"></i> 待接单 <span class="badge" id="handlerPendingCount">0</span></div><div id="handlerPendingList"></div></div>
             <div class="admin-card"><div class="admin-card-title"><i class="fas fa-check-circle"></i> 已接单 / 进行中</div><div id="handlerOngoingList"></div></div>
             <div class="admin-card"><div class="admin-card-title"><i class="fas fa-check-double"></i> 已完成订单</div><div id="handlerCompletedList"></div></div>
@@ -347,6 +366,8 @@
                 <button data-tab="tab-orders"><i class="fas fa-list-ul"></i> 订单管理</button>
                 <button data-tab="tab-recharges"><i class="fas fa-coins"></i> 充值管理</button>
                 <button data-tab="tab-users"><i class="fas fa-users"></i> 用户管理</button>
+                <button data-tab="tab-shops"><i class="fas fa-store"></i> 店铺管理</button>
+                <button data-tab="tab-shop-applications"><i class="fas fa-door-open"></i> 入驻申请</button>
                 <button data-tab="tab-announce"><i class="fas fa-bullhorn"></i> 公告管理</button>
             </div>
             <div class="tab-page active" id="tab-dashboard">
@@ -369,7 +390,7 @@
                     <div class="admin-form-group"><label><i class="fas fa-yen-sign"></i> 价格</label><input class="admin-form-control" id="prodPrice" type="number" placeholder="288"></div>
                     <div class="admin-form-group"><label><i class="fas fa-boxes"></i> 库存</label><input class="admin-form-control" id="prodQuantity" type="number" placeholder="1" value="1"></div>
                     <div class="admin-form-group"><label><i class="fas fa-image"></i> 商品图片URL</label>
-                        <input class="admin-form-control" id="prodImageUrl" placeholder="输入图片URL，如 https://imgtu.com/xxx.jpg" />
+                        <input class="admin-form-control" id="prodImageUrl" placeholder="输入图片URL" />
                         <img id="prodImagePreview" class="upload-preview" style="display:none;margin-top:4px;" onerror="this.style.display='none'" />
                     </div>
                     <button class="btn btn-success" onclick="shelfProduct()"><i class="fas fa-upload"></i> 上架商品</button>
@@ -404,7 +425,7 @@
                     <div class="collapse-content" id="rechargesListContent"><div id="rechargeList"></div></div>
                 </div>
                 <div class="admin-card"><div class="admin-card-title"><i class="fas fa-gift"></i> 赠送红钻</div>
-                    <div class="admin-form-group"><label>选择老板</label><select class="admin-form-control" id="giftUser"></select></div>
+                    <div class="admin-form-group"><label>选择用户</label><select class="admin-form-control" id="giftUser"></select></div>
                     <div class="admin-form-group"><label>红钻数量</label><input class="admin-form-control" id="giftAmount" type="number" placeholder="数量"></div>
                     <button class="btn btn-primary" onclick="sendGift()"><i class="fas fa-gift"></i> 赠送</button>
                 </div>
@@ -416,6 +437,18 @@
                         <div style="margin-bottom:12px;"><div class="admin-form-group"><label>搜索用户</label><input class="admin-form-control" id="searchUser" placeholder="输入用户名搜索" oninput="renderUsers()"></div></div>
                         <div id="usersList"></div>
                     </div>
+                </div>
+            </div>
+            <div class="tab-page" id="tab-shops">
+                <div class="admin-card">
+                    <div class="collapse-toggle" onclick="toggleCollapse('shopsList')"><span>🏪 所有店铺</span><span id="shopsListArrow">▶</span></div>
+                    <div class="collapse-content" id="shopsListContent"><div id="shopsList"></div></div>
+                </div>
+            </div>
+            <div class="tab-page" id="tab-shop-applications">
+                <div class="admin-card">
+                    <div class="collapse-toggle" onclick="toggleCollapse('shopAppsList')"><span>📋 入驻申请</span><span id="shopAppsListArrow">▶</span></div>
+                    <div class="collapse-content" id="shopAppsListContent"><div id="shopApplicationsList"></div></div>
                 </div>
             </div>
             <div class="tab-page" id="tab-announce">
@@ -433,6 +466,78 @@
             </div>
         </div>
 
+        <!-- ===== 店长视图 ===== -->
+        <div class="view" id="view-shop">
+            <div class="admin-card" style="background:linear-gradient(135deg,#1a3a2a,#0b0d15);border:1px solid #22c55e44;margin-bottom:14px;padding:14px 16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                    <div><div style="font-size:12px;color:var(--text-muted);">🏪 店铺红钻</div><div style="font-size:24px;font-weight:700;color:#22c55e;" id="shopDiamond">0</div></div>
+                    <div><span id="shopNameDisplay" style="font-size:16px;font-weight:600;color:#fff;">俱乐部名称</span></div>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">店铺红钻用于给本店用户充值</div>
+            </div>
+            <div class="tab-nav">
+                <button class="active" data-tab="shop-dashboard"><i class="fas fa-chart-pie"></i> 仪表盘</button>
+                <button data-tab="shop-products"><i class="fas fa-boxes"></i> 商品管理</button>
+                <button data-tab="shop-orders"><i class="fas fa-list-ul"></i> 订单管理</button>
+                <button data-tab="shop-users"><i class="fas fa-users"></i> 用户管理</button>
+                <button data-tab="shop-recharges"><i class="fas fa-coins"></i> 充值管理</button>
+                <button data-tab="shop-announce"><i class="fas fa-bullhorn"></i> 公告管理</button>
+            </div>
+            <div class="tab-page active" id="shop-dashboard">
+                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-chart-simple"></i> 店铺数据</div><div id="shopStatsGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"></div></div>
+                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-clock"></i> 最近订单</div><div id="shopRecentOrders"></div></div>
+            </div>
+            <div class="tab-page" id="shop-products">
+                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-filter"></i> 商品列表</div><div id="shopProductsList"></div></div>
+                <div class="admin-card" style="border-left:4px solid #22c55e;">
+                    <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#22c55e;"></i> 上架新商品</div>
+                    <div class="admin-form-group"><label><i class="fas fa-gamepad"></i> 游戏</label><select class="admin-form-control" id="shopProdGame"><option value="暗区突围">暗区突围</option><option value="三角洲">三角洲</option></select></div>
+                    <div class="admin-form-group"><label><i class="fas fa-tag"></i> 标题</label><input class="admin-form-control" id="shopProdTitle" placeholder="标题"></div>
+                    <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="shopProdDesc" rows="2" placeholder="服务详情"></textarea></div>
+                    <div class="admin-form-group"><label><i class="fas fa-yen-sign"></i> 价格</label><input class="admin-form-control" id="shopProdPrice" type="number" placeholder="288"></div>
+                    <div class="admin-form-group"><label><i class="fas fa-boxes"></i> 库存</label><input class="admin-form-control" id="shopProdQuantity" type="number" placeholder="1" value="1"></div>
+                    <div class="admin-form-group"><label><i class="fas fa-image"></i> 商品图片URL</label>
+                        <input class="admin-form-control" id="shopProdImageUrl" placeholder="输入图片URL" />
+                        <img id="shopProdImagePreview" class="upload-preview" style="display:none;margin-top:4px;" onerror="this.style.display='none'" />
+                    </div>
+                    <button class="btn btn-success" onclick="shopShelfProduct()"><i class="fas fa-upload"></i> 上架商品</button>
+                </div>
+            </div>
+            <div class="tab-page" id="shop-orders">
+                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-filter"></i> 店铺订单</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                        <select class="admin-form-control" id="shopFilterOrderStatus" style="width:140px;padding:6px 12px;" onchange="renderShopOrders()">
+                            <option value="all">全部</option><option value="pending">待接单</option><option value="ongoing">进行中</option><option value="review">待验收</option><option value="completed">已完成</option><option value="canceled">已取消</option><option value="rejected">已驳回</option>
+                        </select>
+                        <button class="btn btn-outline btn-sm" onclick="renderShopOrders()"><i class="fas fa-sync"></i> 刷新</button>
+                    </div>
+                    <div id="shopOrdersList"></div>
+                </div>
+            </div>
+            <div class="tab-page" id="shop-users">
+                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-user-tie"></i> 店铺用户</div>
+                    <div style="margin-bottom:12px;"><div class="admin-form-group"><label>搜索用户</label><input class="admin-form-control" id="shopSearchUser" placeholder="输入用户名搜索" oninput="renderShopUsers()"></div></div>
+                    <div id="shopUsersList"></div>
+                </div>
+            </div>
+            <div class="tab-page" id="shop-recharges">
+                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-coins"></i> 充值申请（消耗店铺红钻）</div><div id="shopRechargeList"></div></div>
+            </div>
+            <div class="tab-page" id="shop-announce">
+                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-bullhorn"></i> 店铺公告编辑</div>
+                    <div class="announce-editor">
+                        <div class="admin-form-group"><label>公告内容</label><textarea id="shopAnnounceEditContent" rows="3" placeholder="输入公告内容..."></textarea></div>
+                        <div class="admin-form-group"><label>上传图片</label>
+                            <div class="image-upload"><input type="file" id="shopAnnounceImageInput" accept="image/*" multiple onchange="previewShopAnnounceImages(event)"></div>
+                            <div class="preview-images" id="shopAnnounceImagePreview"></div>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveShopAnnounce()"><i class="fas fa-save"></i> 保存公告</button>
+                    </div>
+                </div>
+                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-eye"></i> 当前公告预览</div><div id="shopAnnouncePreview" style="color:var(--text-secondary);font-size:14px;line-height:1.6;"></div></div>
+            </div>
+        </div>
+
         <!-- ===== 账号管理 ===== -->
         <div class="view" id="view-account">
             <div class="admin-card">
@@ -441,12 +546,9 @@
                     <div class="info-row"><span class="label">用户名</span><span class="value" id="accUsername">-</span></div>
                     <div class="info-row"><span class="label">角色</span><span class="value" id="accRole">-</span></div>
                     <div class="info-row"><span class="label">状态</span><span class="value" id="accStatus">-</span></div>
+                    <div class="info-row" id="accShopRow"><span class="label">所属店铺</span><span class="value" id="accShop">-</span></div>
                     <div class="info-row" id="accDiamondRow"><span class="label">红钻</span><span class="value" id="accDiamond">0</span></div>
                     <div class="info-row" id="accBalanceRow"><span class="label">余额</span><span class="value" id="accBalance">¥0</span></div>
-                </div>
-                <div id="loginSection" style="margin-top:12px;display:none;">
-                    <button class="btn btn-primary btn-block" onclick="showLogin()"><i class="fas fa-sign-in-alt"></i> 登录账号</button>
-                    <button class="btn btn-outline btn-block" onclick="showRegister()" style="margin-top:8px;"><i class="fas fa-user-plus"></i> 注册新账号</button>
                 </div>
             </div>
         </div>
@@ -458,6 +560,7 @@
         <button class="nav-item active" data-target="home"><i class="fas fa-store"></i><span>商城</span></button>
         <button class="nav-item" data-target="orders" id="navOrders"><i class="fas fa-receipt"></i><span>订单</span></button>
         <button class="nav-item" data-target="handler" id="navHandler" style="display:none;"><i class="fas fa-gamepad"></i><span>打手</span></button>
+        <button class="nav-item" data-target="shop" id="navShop" style="display:none;"><i class="fas fa-store-alt"></i><span>店铺</span></button>
         <button class="nav-item" data-target="admin" id="navAdmin" style="display:none;"><i class="fas fa-user-cog"></i><span>管理</span></button>
         <button class="nav-item" data-target="account"><i class="fas fa-user"></i><span>我的</span></button>
     </div>
@@ -472,7 +575,6 @@
     </div>
 </div>
 <div id="toast" class="toast"></div>
-
 <script>
 // ============================================================
 //  配置
@@ -481,16 +583,20 @@ const API_URL = '/api';
 let currentUser = null;
 let token = localStorage.getItem('token');
 let announceImages = [];
+let shopAnnounceImages = [];
+let handlerFilter = 'all';
 
 // ============================================================
-//  折叠状态管理（localStorage持久化）
+//  折叠状态管理
 // ============================================================
 const COLLAPSE_KEYS = {
     recentOrders: 'collapse_recentOrders',
     productsList: 'collapse_productsList',
     adminOrders: 'collapse_adminOrders',
     rechargesList: 'collapse_rechargesList',
-    usersList: 'collapse_usersList'
+    usersList: 'collapse_usersList',
+    shopsList: 'collapse_shopsList',
+    shopAppsList: 'collapse_shopAppsList'
 };
 
 function getCollapseState(key) {
@@ -506,10 +612,8 @@ function toggleCollapse(id) {
     const content = document.getElementById(id + 'Content');
     const arrow = document.getElementById(id + 'Arrow');
     if (!content) return;
-    
     const isCurrentlyOpen = content.classList.contains('open');
     const newState = !isCurrentlyOpen;
-    
     if (newState) {
         content.classList.add('open');
         if (arrow) arrow.textContent = '▼';
@@ -517,11 +621,8 @@ function toggleCollapse(id) {
         content.classList.remove('open');
         if (arrow) arrow.textContent = '▶';
     }
-    
     const key = COLLAPSE_KEYS[id];
-    if (key) {
-        setCollapseState(key, newState);
-    }
+    if (key) setCollapseState(key, newState);
 }
 
 function applyCollapseStates() {
@@ -529,7 +630,6 @@ function applyCollapseStates() {
         const content = document.getElementById(id + 'Content');
         const arrow = document.getElementById(id + 'Arrow');
         if (!content) return;
-        
         const isOpen = getCollapseState(COLLAPSE_KEYS[id]);
         if (isOpen) {
             content.classList.add('open');
@@ -604,33 +704,56 @@ function confirmAction(title, message, confirmText, callback) {
     `);
 }
 
-function updateRoleBasedUI() {
-    if (!currentUser) return;
-    const role = currentUser.role;
-    document.getElementById('navHandler').style.display = (role === 'handler' || role === 'admin') ? 'flex' : 'none';
-    document.getElementById('navAdmin').style.display = (role === 'admin') ? 'flex' : 'none';
-    document.getElementById('navOrders').style.display = (role === 'boss' || role === 'admin') ? 'flex' : 'none';
+// ============================================================
+//  注册页面 - 显示/隐藏店长字段
+// ============================================================
+document.querySelectorAll('input[name="authRole"]').forEach(el => {
+    el.addEventListener('change', function() {
+        const shopFields = document.getElementById('shopOwnerFields');
+        if (this.value === 'shop_owner') {
+            shopFields.style.display = 'block';
+        } else {
+            shopFields.style.display = 'none';
+        }
+    });
+});
+
+// ============================================================
+//  入驻申请
+// ============================================================
+function showShopApply() {
+    showCustomModal(`
+        <h3><i class="fas fa-store"></i> 俱乐部入驻</h3>
+        <p style="color:var(--text-muted);font-size:14px;">填写信息提交审核，通过后即可拥有自己的店铺</p>
+        <div class="form-group"><label>俱乐部名称</label><input class="admin-form-control" id="applyShopName" placeholder="输入俱乐部名称" /></div>
+        <div class="form-group"><label>用户名</label><input class="admin-form-control" id="applyUsername" placeholder="设置登录用户名" /></div>
+        <div class="form-group"><label>密码</label><input class="admin-form-control" id="applyPassword" type="password" placeholder="设置密码" /></div>
+        <div class="form-group"><label>入驻邀请码</label><input class="admin-form-control" id="applyInviteCode" placeholder="请输入入驻邀请码" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="submitShopApply()">提交入驻申请</button>
+        </div>
+    `);
+    document.getElementById('customModal').classList.add('active');
 }
 
-function showLogin() {
-    document.getElementById('authPage').style.display = 'flex';
-    document.getElementById('mainApp').classList.add('hidden');
-}
-
-function showRegister() {
-    document.getElementById('authPage').style.display = 'flex';
-    document.getElementById('mainApp').classList.add('hidden');
-}
-
-function previewProdImageUrl(inputId, previewId) {
-    const url = document.getElementById(inputId).value.trim();
-    const img = document.getElementById(previewId);
-    if (url) {
-        img.src = url;
-        img.style.display = 'block';
-        img.onerror = function() { this.style.display = 'none'; };
-    } else {
-        img.style.display = 'none';
+async function submitShopApply() {
+    const shop_name = document.getElementById('applyShopName').value.trim();
+    const username = document.getElementById('applyUsername').value.trim();
+    const password = document.getElementById('applyPassword').value.trim();
+    const invite_code = document.getElementById('applyInviteCode').value.trim();
+    if (!shop_name || !username || !password || !invite_code) {
+        return toast('请填写完整信息', 'warning');
+    }
+    try {
+        await apiRequest('/shop/apply', {
+            method: 'POST',
+            body: JSON.stringify({ shop_name, username, password, invite_code })
+        });
+        closeCustomModal();
+        toast('✅ 入驻申请已提交，请等待管理员审核', 'success');
+    } catch (err) {
+        toast(err.message, 'error');
     }
 }
 
@@ -731,6 +854,10 @@ async function doAuthLogin() {
         renderBossView();
         renderAdminAll();
         loadTipHandlers();
+        // 更新店铺名称显示
+        if (currentUser.shop_name) {
+            document.getElementById('shopDisplayName').textContent = '🏪 店铺：' + currentUser.shop_name;
+        }
     } catch (err) {
         errorEl.textContent = err.message || '登录失败';
     }
@@ -739,6 +866,7 @@ async function doAuthLogin() {
 async function doAuthRegister() {
     const username = document.getElementById('authUsername').value.trim();
     const password = document.getElementById('authPassword').value.trim();
+    const invite_code = document.getElementById('authInviteCode').value.trim();
     const role = document.querySelector('input[name="authRole"]:checked').value;
     const errorEl = document.getElementById('authError');
     errorEl.textContent = '';
@@ -746,10 +874,22 @@ async function doAuthRegister() {
         errorEl.textContent = '请填写用户名和密码';
         return;
     }
+    if (!invite_code) {
+        errorEl.textContent = '请填写店铺邀请码';
+        return;
+    }
+    const body = { username, password, role, invite_code };
+    if (role === 'shop_owner') {
+        const shop_name = document.getElementById('authShopName').value.trim();
+        if (!shop_name) {
+            errorEl.textContent = '请填写俱乐部名称';
+            return;
+        }
+        body.shop_name = shop_name;
+    }
     try {
-        const status = role === 'handler' ? 'pending' : 'active';
-        await apiRequest('/register', { method: 'POST', body: JSON.stringify({ username, password, role, phone: '', game: '', status }) });
-        if (role === 'handler') {
+        const data = await apiRequest('/register', { method: 'POST', body: JSON.stringify(body) });
+        if (role === 'handler' || role === 'shop_owner') {
             toast('注册成功，请等待管理员审核', 'success');
         } else {
             toast('注册成功，请登录', 'success');
@@ -778,13 +918,26 @@ function doLogout() {
 function updateAccountInfo() {
     if (!currentUser) return;
     document.getElementById('accUsername').textContent = currentUser.username;
-    document.getElementById('accRole').textContent = currentUser.role === 'boss' ? '老板' : currentUser.role === 'handler' ? (currentUser.status === 'pending' ? '待审核打手' : '打手') : '管理员';
-    document.getElementById('accStatus').textContent = currentUser.status === 'active' ? '正常' : currentUser.status === 'pending' ? '待审核' : '封禁';
+    const roleMap = { 'boss': '老板', 'handler': currentUser.status === 'pending' ? '待审核打手' : '打手', 'shop_owner': currentUser.status === 'pending' ? '待审核店长' : '店长', 'admin': '管理员' };
+    document.getElementById('accRole').textContent = roleMap[currentUser.role] || currentUser.role;
+    const statusMap = { 'active': '正常', 'pending': '待审核', 'banned': '封禁' };
+    document.getElementById('accStatus').textContent = statusMap[currentUser.status] || currentUser.status;
+    document.getElementById('accShop').textContent = currentUser.shop_name || '未加入店铺';
     document.getElementById('accDiamond').textContent = currentUser.diamond || 0;
     document.getElementById('accBalance').textContent = '¥' + (currentUser.balance || 0);
-    document.getElementById('accDiamondRow').style.display = currentUser.role === 'boss' || currentUser.role === 'admin' ? 'flex' : 'none';
-    document.getElementById('accBalanceRow').style.display = currentUser.role === 'handler' || currentUser.role === 'admin' ? 'flex' : 'none';
-    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('accDiamondRow').style.display = (currentUser.role === 'boss' || currentUser.role === 'admin') ? 'flex' : 'none';
+    document.getElementById('accBalanceRow').style.display = (currentUser.role === 'handler' || currentUser.role === 'admin') ? 'flex' : 'none';
+    document.getElementById('accShopRow').style.display = currentUser.shop_id ? 'flex' : 'none';
+}
+
+// ============================================================
+//  打手过滤
+// ============================================================
+function setHandlerFilter(type) {
+    handlerFilter = type;
+    document.getElementById('filterAll').className = type === 'all' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+    document.getElementById('filterShop').className = type === 'shop' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+    renderHandlerView();
 }
 
 // ============================================================
@@ -807,12 +960,13 @@ document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
             renderBossView();
             return;
         }
-        const viewMap = { 'orders': 'view-orders', 'handler': 'view-handler', 'admin': 'view-admin', 'account': 'view-account' };
+        const viewMap = { 'orders': 'view-orders', 'handler': 'view-handler', 'shop': 'view-shop', 'admin': 'view-admin', 'account': 'view-account' };
         const viewId = viewMap[target];
         if (viewId) {
             document.getElementById(viewId).classList.add('active');
             if (target === 'orders') { renderBossView(); loadTipHandlers(); }
             else if (target === 'handler') renderHandlerView();
+            else if (target === 'shop') renderShopAll();
             else if (target === 'admin') renderAdminAll();
             else if (target === 'account') updateAccountInfo();
         }
@@ -820,13 +974,13 @@ document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
 });
 
 // ============================================================
-//  管理员渲染
+//  管理员标签切换
 // ============================================================
-document.querySelectorAll('.tab-nav button').forEach(btn => {
+document.querySelectorAll('#view-admin .tab-nav button').forEach(btn => {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#view-admin .tab-nav button').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
-        document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('#view-admin .tab-page').forEach(p => p.classList.remove('active'));
         document.getElementById(this.dataset.tab).classList.add('active');
         const tab = this.dataset.tab;
         if (tab === 'tab-dashboard') renderDashboard();
@@ -834,16 +988,66 @@ document.querySelectorAll('.tab-nav button').forEach(btn => {
         else if (tab === 'tab-orders') renderAdminOrders();
         else if (tab === 'tab-recharges') renderRecharges();
         else if (tab === 'tab-users') renderUsers();
+        else if (tab === 'tab-shops') renderShops();
+        else if (tab === 'tab-shop-applications') renderShopApplications();
         else if (tab === 'tab-announce') loadAnnounce();
     });
 });
 
+// ============================================================
+//  店长标签切换
+// ============================================================
+document.querySelectorAll('#view-shop .tab-nav button').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('#view-shop .tab-nav button').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        document.querySelectorAll('#view-shop .tab-page').forEach(p => p.classList.remove('active'));
+        document.getElementById(this.dataset.tab).classList.add('active');
+        const tab = this.dataset.tab;
+        if (tab === 'shop-dashboard') renderShopDashboard();
+        else if (tab === 'shop-products') renderShopProducts();
+        else if (tab === 'shop-orders') renderShopOrders();
+        else if (tab === 'shop-users') renderShopUsers();
+        else if (tab === 'shop-recharges') renderShopRecharges();
+        else if (tab === 'shop-announce') loadShopAnnounce();
+    });
+});
+
+// ============================================================
+//  权限UI更新
+// ============================================================
+function updateRoleBasedUI() {
+    if (!currentUser) return;
+    const role = currentUser.role;
+    const isAdmin = currentUser.is_admin === 1;
+    const hasShop = currentUser.shop_id && (role === 'shop_owner' || isAdmin);
+
+    document.getElementById('navHandler').style.display = (role === 'handler' || isAdmin) ? 'flex' : 'none';
+    document.getElementById('navAdmin').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('navShop').style.display = hasShop ? 'flex' : 'none';
+    document.getElementById('navOrders').style.display = (role === 'boss' || isAdmin) ? 'flex' : 'none';
+
+    // 如果是管理员且有店铺，显示双身份
+    if (isAdmin && hasShop) {
+        document.getElementById('currentUserDisplay').textContent = currentUser.username + ' (管理员+店长)';
+    } else if (isAdmin) {
+        document.getElementById('currentUserDisplay').textContent = currentUser.username + ' (管理员)';
+    } else if (role === 'shop_owner') {
+        document.getElementById('currentUserDisplay').textContent = currentUser.username + ' (店长)';
+    }
+}
+
+// ============================================================
+//  管理员渲染
+// ============================================================
 async function renderAdminAll() {
     await renderDashboard();
     await renderProducts();
     await renderAdminOrders();
     await renderRecharges();
     await renderUsers();
+    await renderShops();
+    await renderShopApplications();
     await populateGiftUsers();
     applyCollapseStates();
 }
@@ -884,10 +1088,8 @@ async function doDeleteOrder(orderId) {
 }
 
 // ============================================================
-//  商品管理 - 修复版
+//  商品管理
 // ============================================================
-let editProductId = null;
-
 async function renderProducts() {
     try {
         const products = await apiRequest('/admin/products');
@@ -899,13 +1101,11 @@ async function renderProducts() {
         let html = '<div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const p of products) {
             const remaining = p.quantity - p.sold;
-            // ===== 修复：使用 == 或 Number() 来正确判断 hidden 字段 =====
             const isHidden = p.hidden == 1 || p.hidden === true;
             let statusText2 = isHidden ? '已下架' : (remaining > 0 ? '在售' : '已售罄');
             let statusCls = isHidden ? 'status-hidden' : (remaining > 0 ? 'status-onsale' : 'status-soldout');
             const productId = p.id;
             let actions = '';
-            actions += `<button class="btn btn-primary btn-xs" onclick="openEditProduct('${productId}')">编辑</button>`;
             if (isHidden) {
                 actions += `<button class="btn btn-success btn-xs" onclick="confirmReshelf('${productId}')">重新上架</button>`;
                 actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteProduct('${productId}')">删除</button>`;
@@ -925,82 +1125,37 @@ async function renderProducts() {
     } catch (err) { console.error(err); }
 }
 
-window.openEditProduct = function(productId) {
-    editProductId = productId;
-    apiRequest('/admin/products').then(products => {
-        const p = products.find(x => x.id === productId);
-        if (!p) return toast('商品不存在', 'error');
-        showCustomModal(`
-            <h3><i class="fas fa-edit"></i> 编辑商品</h3>
-            <div class="admin-form-group"><label>游戏</label><select class="admin-form-control" id="editProdGame"><option value="暗区突围" ${p.game==='暗区突围'?'selected':''}>暗区突围</option><option value="三角洲" ${p.game==='三角洲'?'selected':''}>三角洲</option></select></div>
-            <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="editProdTitle" value="${p.title}" /></div>
-            <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="editProdDesc" rows="2">${p.desc||''}</textarea></div>
-            <div class="admin-form-group"><label>价格</label><input class="admin-form-control" id="editProdPrice" type="number" value="${p.price}" /></div>
-            <div class="admin-form-group"><label>库存</label><input class="admin-form-control" id="editProdQuantity" type="number" value="${p.quantity}" /></div>
-            <div class="admin-form-group"><label>商品图片URL</label>
-                <input class="admin-form-control" id="editProdImageUrl" value="${p.image||''}" placeholder="输入图片URL" oninput="previewProdImageUrl('editProdImageUrl','editProdImagePreview')" />
-                <img id="editProdImagePreview" class="upload-preview" style="display:${p.image?'block':'none'};margin-top:4px;" src="${p.image||''}" onerror="this.style.display='none'" />
-            </div>
-            <div class="btn-row">
-                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-                <button class="btn btn-success" onclick="doEditProduct()">保存修改</button>
-            </div>
-        `);
-    }).catch(err => toast(err.message, 'error'));
-};
-
-window.doEditProduct = function() {
-    const game = document.getElementById('editProdGame').value;
-    const title = document.getElementById('editProdTitle').value.trim();
-    const desc = document.getElementById('editProdDesc').value.trim();
-    const price = parseFloat(document.getElementById('editProdPrice').value);
-    const quantity = parseInt(document.getElementById('editProdQuantity').value) || 1;
-    const image = document.getElementById('editProdImageUrl').value.trim();
-    if (!title || !price) return toast('请填写完整信息', 'error');
-    apiRequest('/admin/products/' + editProductId + '/edit', {
-        method: 'PUT',
-        body: JSON.stringify({ game, title, desc, price, quantity, image })
-    }).then(() => {
-        closeCustomModal();
-        toast('✅ 商品已更新', 'success');
-        renderProducts();
-    }).catch(err => toast(err.message, 'error'));
-};
-
-// ============================================================
-//  商品操作 - 修复：下架后正确刷新状态
-// ============================================================
 window.confirmUnshelf = function(productId) {
-    confirmAction('确认下架', '确认下架此商品？下架后老板将无法购买。', '确认下架', `doUnshelf('${productId}')`);
+    confirmAction('确认下架', '确认下架此商品？', '确认下架', `doUnshelf('${productId}')`);
 };
 async function doUnshelf(productId) {
     try {
         await apiRequest('/admin/products/' + productId + '/unshelf', { method: 'PUT' });
-        toast('✅ 商品已下架', 'success');
-        await renderProducts();  // 等待刷新完成
-        await renderBossView();  // 同时刷新老板端商品列表
+        toast('已下架', 'success');
+        await renderProducts();
+        await renderBossView();
     } catch (err) { toast(err.message, 'error'); }
 }
 
 window.confirmReshelf = function(productId) {
-    confirmAction('确认重新上架', '确认重新上架此商品？重新上架后老板将可以购买。', '确认上架', `doReshelf('${productId}')`);
+    confirmAction('确认重新上架', '确认重新上架此商品？', '确认上架', `doReshelf('${productId}')`);
 };
 async function doReshelf(productId) {
     try {
         await apiRequest('/admin/products/' + productId + '/reshelf', { method: 'PUT' });
-        toast('✅ 商品已重新上架', 'success');
-        await renderProducts();  // 等待刷新完成
-        await renderBossView();  // 同时刷新老板端商品列表
+        toast('已重新上架', 'success');
+        await renderProducts();
+        await renderBossView();
     } catch (err) { toast(err.message, 'error'); }
 }
 
 window.confirmDeleteProduct = function(productId) {
-    confirmAction('确认删除', '⚠️ 确认永久删除此商品？此操作不可恢复！', '确认删除', `doDeleteProduct('${productId}')`);
+    confirmAction('确认删除', '⚠️ 确认永久删除此商品？', '确认删除', `doDeleteProduct('${productId}')`);
 };
 async function doDeleteProduct(productId) {
     try {
         await apiRequest('/admin/products/' + productId, { method: 'DELETE' });
-        toast('✅ 商品已删除', 'success');
+        toast('已删除', 'success');
         await renderProducts();
         await renderBossView();
     } catch (err) { toast(err.message, 'error'); }
@@ -1016,7 +1171,7 @@ async function shelfProduct() {
     if (!title || !price) return toast('请填写完整信息', 'error');
     try {
         await apiRequest('/admin/products', { method: 'POST', body: JSON.stringify({ game, title, desc, price, quantity, image }) });
-        toast('✅ 上架成功', 'success');
+        toast('上架成功', 'success');
         document.getElementById('prodTitle').value = '';
         document.getElementById('prodDesc').value = '';
         document.getElementById('prodPrice').value = '';
@@ -1028,7 +1183,10 @@ async function shelfProduct() {
 }
 
 document.getElementById('prodImageUrl').addEventListener('input', function() {
-    previewProdImageUrl('prodImageUrl', 'prodImagePreview');
+    const url = this.value.trim();
+    const img = document.getElementById('prodImagePreview');
+    if (url) { img.src = url; img.style.display = 'block'; img.onerror = function() { this.style.display = 'none'; }; } 
+    else { img.style.display = 'none'; }
 });
 
 // ============================================================
@@ -1069,9 +1227,7 @@ async function renderAdminOrders() {
         }
         const filter = document.getElementById('filterOrderStatus').value;
         let filtered = orders;
-        if (filter !== 'all') {
-            filtered = orders.filter(o => o.status === filter);
-        }
+        if (filter !== 'all') filtered = orders.filter(o => o.status === filter);
         let html = '<div class="table-wrap"><table><thead><tr><th>订单号</th><th>标题</th><th>金额</th><th>打手</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const o of filtered) {
             const handlerName = o.handler_id ? (userMap[o.handler_id] || o.handler_id.substring(0, 8)) : '无';
@@ -1096,8 +1252,7 @@ async function renderAdminOrders() {
                 actions += `<button class="btn btn-success btn-xs" onclick="adminRefundApprove('${o.id}')">通过退款</button>`;
                 actions += `<button class="btn btn-danger btn-xs" onclick="adminRefundReject('${o.id}')">拒绝退款</button>`;
             }
-            // ===== 修复：添加查看聊天按钮 =====
-            actions += `<button class="btn btn-primary btn-xs" onclick="adminOpenChat('${o.id}')">💬 聊天</button>`;
+            actions += `<button class="btn btn-primary btn-xs" onclick="adminOpenChat('${o.id}')">💬聊天</button>`;
             const displayStatus = isSettled && o.status === 'completed' ? 'settled' : o.status;
             html += `<tr>
                 <td>${o.id}</td>
@@ -1114,7 +1269,7 @@ async function renderAdminOrders() {
 }
 
 // ============================================================
-//  管理员查看聊天 - 修复
+//  管理员聊天
 // ============================================================
 window.adminOpenChat = function(orderId) {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
@@ -1126,19 +1281,20 @@ window.adminOpenChat = function(orderId) {
 };
 
 function renderChatModal(order, isAdmin = false) {
+    let messages = [];
+    try {
+        if (typeof order.messages === 'string') messages = JSON.parse(order.messages);
+        else if (Array.isArray(order.messages)) messages = order.messages;
+    } catch (e) { messages = []; }
     const isEnded = ['completed','canceled','rejected','refunded'].includes(order.status);
-    const messagesHtml = order.messages && order.messages.length > 0 ?
-        order.messages.map(msg => {
-            const senderName = msg.sender === 'boss' ? '👤 老板' : msg.sender === 'handler' ? '🎮 打手' : '📢 系统';
+    const messagesHtml = messages.length > 0 ?
+        messages.map(msg => {
+            const senderName = msg.sender === 'boss' ? '👤老板' : msg.sender === 'handler' ? '🎮打手' : '📢系统';
             const senderClass = msg.sender === 'boss' ? 'boss' : msg.sender === 'handler' ? 'handler' : 'system';
             return `<div class="chat-msg ${senderClass}"><strong>${senderName}:</strong> ${msg.content} <span class="time">${msg.time}</span></div>`;
         }).join('') :
         '<div class="empty-state"><p>暂无消息</p></div>';
-    
     const isReadonly = isEnded || !currentUser;
-    const placeholder = isEnded ? '订单已结束，只读模式' : '输入消息...';
-    const disabledAttr = isReadonly ? 'disabled' : '';
-    
     showCustomModal(`
         <h3><i class="fas fa-comment"></i> 💬 订单聊天 ${isAdmin ? '（管理员视角）' : ''}</h3>
         <p style="font-size:13px;color:var(--text-secondary);">${order.game} · ${order.title}</p>
@@ -1146,8 +1302,8 @@ function renderChatModal(order, isAdmin = false) {
         <div class="chat-messages" id="chatMessages">${messagesHtml}</div>
         <div class="${isReadonly ? 'chat-readonly' : ''}">
             <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="${placeholder}" ${disabledAttr}>
-                <button class="btn btn-primary btn-sm" id="chatSendBtn" ${disabledAttr}><i class="fas fa-paper-plane"></i> 发送</button>
+                <input type="text" id="chatInput" placeholder="${isEnded ? '订单已结束，只读模式' : '输入消息...'}" ${isReadonly ? 'disabled' : ''}>
+                <button class="btn btn-primary btn-sm" id="chatSendBtn" ${isReadonly ? 'disabled' : ''}><i class="fas fa-paper-plane"></i> 发送</button>
             </div>
         </div>
         <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
@@ -1162,15 +1318,7 @@ function renderChatModal(order, isAdmin = false) {
             const text = input.value.trim();
             if (!text) return toast('请输入消息', 'warning');
             apiRequest('/orders/' + order.id + '/chat', { method: 'POST', body: JSON.stringify({ content: text }) })
-                .then(() => { 
-                    toast('消息已发送', 'success');
-                    // 刷新聊天
-                    if (isAdmin) {
-                        adminOpenChat(order.id);
-                    } else {
-                        openChat(order.id);
-                    }
-                })
+                .then(() => { toast('消息已发送', 'success'); if (isAdmin) adminOpenChat(order.id); else openChat(order.id); })
                 .catch(err => toast(err.message, 'error'));
         };
         sendBtn.addEventListener('click', sendMessage);
@@ -1178,7 +1326,6 @@ function renderChatModal(order, isAdmin = false) {
     }
 }
 
-// 老板端聊天 - 使用统一渲染函数
 window.openChat = function(orderId) {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
     apiRequest('/orders/my').then(orders => {
@@ -1189,98 +1336,506 @@ window.openChat = function(orderId) {
 };
 
 // ============================================================
-//  充值管理
+//  店铺管理（管理员）
 // ============================================================
-async function renderRecharges() {
+async function renderShops() {
     try {
-        const recharges = await apiRequest('/admin/recharges');
-        const container = document.getElementById('rechargeList');
-        if (recharges.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-coins"></i><p>暂无充值申请</p></div>';
+        const shops = await apiRequest('/admin/shops');
+        const container = document.getElementById('shopsList');
+        if (shops.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-store"></i><p>暂无店铺</p></div>';
             return;
         }
-        let html = '<div class="table-wrap"><table><thead><tr><th>用户</th><th>金额</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
-        for (const r of recharges) {
-            const userId = r.user_id || '';
-            const statusText2 = r.status === 'pending' ? '待审核' : r.status === 'approved' ? '已通过' : '已拒绝';
-            const statusCls = r.status === 'pending' ? 'status-pending' : r.status === 'approved' ? 'status-onsale' : 'status-canceled';
-            let actions = '';
-            if (r.status === 'pending') {
-                actions += `<button class="btn btn-success btn-xs" onclick="confirmApproveRecharge('${r.id}')">通过</button>`;
-                actions += `<button class="btn btn-danger btn-xs" onclick="confirmRejectRecharge('${r.id}')">拒绝</button>`;
-            }
-            actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteRecharge('${r.id}')">删除</button>`;
-            html += `<tr><td>${userId}</td><td>¥${r.amount}</td><td>${r.diamond}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+        let html = '<div class="table-wrap"><table><thead><tr><th>店铺名称</th><th>店长</th><th>邀请码</th><th>红钻</th><th>状态</th><th>分发</th><th>操作</th></tr></thead><tbody>';
+        for (const s of shops) {
+            const statusText2 = s.status === 'active' ? '正常' : '封禁';
+            const statusCls = s.status === 'active' ? 'status-onsale' : 'status-canceled';
+            const dispatchText = s.dispatch_to_all === 1 ? '🌐分发' : '🔒本店';
+            const dispatchCls = s.dispatch_to_all === 1 ? 'status-onsale' : 'status-pending';
+            html += `<tr>
+                <td>${s.name}</td>
+                <td>${s.owner_name || '未知'}</td>
+                <td><code>${s.invite_code}</code></td>
+                <td>${s.diamond || 0}</td>
+                <td><span class="status-badge ${statusCls}">${statusText2}</span></td>
+                <td><span class="status-badge ${dispatchCls}">${dispatchText}</span></td>
+                <td>
+                    <button class="btn btn-warning btn-xs" onclick="toggleShopDispatch('${s.id}', ${s.dispatch_to_all})">切换分发</button>
+                    <button class="btn ${s.status === 'active' ? 'btn-danger' : 'btn-success'} btn-xs" onclick="toggleShopStatus('${s.id}')">${s.status === 'active' ? '封禁' : '解封'}</button>
+                </td>
+            </tr>`;
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
     } catch (err) { console.error(err); }
 }
 
-// ============================================================
-//  用户管理
-// ============================================================
-async function renderUsers() {
+async function toggleShopDispatch(shopId, current) {
+    const newValue = current === 1 ? 0 : 1;
     try {
-        const search = document.getElementById('searchUser')?.value.toLowerCase() || '';
-        const users = await apiRequest('/admin/users');
+        await apiRequest('/admin/shops/' + shopId + '/dispatch', {
+            method: 'PUT',
+            body: JSON.stringify({ dispatch_to_all: newValue })
+        });
+        toast(newValue === 1 ? '✅ 订单已分发到全部打手' : '🔒 订单仅本店打手可见', 'success');
+        renderShops();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function toggleShopStatus(shopId) {
+    confirmAction('确认操作', '确认更改此店铺状态？', '确认', `doToggleShopStatus('${shopId}')`);
+}
+async function doToggleShopStatus(shopId) {
+    try {
+        await apiRequest('/admin/shops/' + shopId + '/toggle', { method: 'PUT' });
+        toast('店铺状态已更新', 'success');
+        renderShops();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  入驻申请管理（管理员）
+// ============================================================
+async function renderShopApplications() {
+    try {
+        const apps = await apiRequest('/admin/shop-applications');
+        const container = document.getElementById('shopApplicationsList');
+        if (apps.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-door-open"></i><p>暂无入驻申请</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>俱乐部名称</th><th>用户名</th><th>邀请码</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const a of apps) {
+            const statusText2 = a.status === 'pending' ? '待审核' : a.status === 'approved' ? '已通过' : '已拒绝';
+            const statusCls = a.status === 'pending' ? 'status-pending' : a.status === 'approved' ? 'status-onsale' : 'status-canceled';
+            let actions = '';
+            if (a.status === 'pending') {
+                actions += `<button class="btn btn-success btn-xs" onclick="approveShop('${a.id}')">通过</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="rejectShop('${a.id}')">拒绝</button>`;
+            }
+            html += `<tr><td>${a.shop_name}</td><td>${a.owner_username}</td><td><code>${a.invite_code}</code></td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td>${actions}</td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+async function approveShop(appId) {
+    confirmAction('确认通过', '确认通过此入驻申请？', '确认通过', `doApproveShop('${appId}')`);
+}
+async function doApproveShop(appId) {
+    try {
+        await apiRequest('/admin/shop-applications/' + appId + '/approve', { method: 'PUT' });
+        toast('✅ 入驻审核通过', 'success');
+        renderShopApplications();
+        renderShops();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function rejectShop(appId) {
+    confirmAction('确认拒绝', '确认拒绝此入驻申请？', '确认拒绝', `doRejectShop('${appId}')`);
+}
+async function doRejectShop(appId) {
+    try {
+        await apiRequest('/admin/shop-applications/' + appId + '/reject', { method: 'PUT' });
+        toast('已拒绝', 'warning');
+        renderShopApplications();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  店长视图
+// ============================================================
+async function renderShopAll() {
+    await renderShopDashboard();
+    await renderShopProducts();
+    await renderShopOrders();
+    await renderShopUsers();
+    await renderShopRecharges();
+    await loadShopAnnounce();
+}
+
+async function renderShopDashboard() {
+    try {
+        const shop = await apiRequest('/shop/owner/info');
+        document.getElementById('shopDiamond').textContent = shop.diamond || 0;
+        document.getElementById('shopNameDisplay').textContent = '🏪 ' + shop.name;
+        const orders = await apiRequest('/shop/owner/orders');
+        const total = orders.length;
+        const pending = orders.filter(o => o.status === 'pending').length;
+        const completed = orders.filter(o => o.status === 'completed').length;
+        document.getElementById('shopStatsGrid').innerHTML = `
+            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;">${total}</div><div style="font-size:12px;color:var(--text-muted);">总订单</div></div>
+            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#f59e0b;">${pending}</div><div style="font-size:12px;color:var(--text-muted);">待接单</div></div>
+            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#22c55e;">${completed}</div><div style="font-size:12px;color:var(--text-muted);">已完成</div></div>
+        `;
+        const recent = orders.slice(0, 5);
+        const container = document.getElementById('shopRecentOrders');
+        if (recent.length === 0) { container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无订单</p></div>'; return; }
+        let html = '<div class="table-wrap"><table><thead><tr><th>订单号</th><th>金额</th><th>状态</th></tr></thead><tbody>';
+        recent.forEach(o => {
+            html += `<tr><td>${o.id}</td><td>¥${o.price}</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+async function renderShopProducts() {
+    try {
+        const products = await apiRequest('/shop/owner/products');
+        const container = document.getElementById('shopProductsList');
+        if (products.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>暂无商品</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const p of products) {
+            const remaining = p.quantity - p.sold;
+            const isHidden = p.hidden == 1 || p.hidden === true;
+            let statusText2 = isHidden ? '已下架' : (remaining > 0 ? '在售' : '已售罄');
+            let statusCls = isHidden ? 'status-hidden' : (remaining > 0 ? 'status-onsale' : 'status-soldout');
+            const productId = p.id;
+            let actions = '';
+            if (isHidden) {
+                actions += `<button class="btn btn-success btn-xs" onclick="shopReshelf('${productId}')">重新上架</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="shopDeleteProduct('${productId}')">删除</button>`;
+            } else {
+                actions += `<button class="btn btn-danger btn-xs" onclick="shopUnshelf('${productId}')">下架</button>`;
+            }
+            html += `<tr><td>${p.title}</td><td>¥${p.price}</td><td>${p.sold}/${p.quantity}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+async function shopShelfProduct() {
+    const game = document.getElementById('shopProdGame').value;
+    const title = document.getElementById('shopProdTitle').value.trim();
+    const desc = document.getElementById('shopProdDesc').value.trim();
+    const price = parseFloat(document.getElementById('shopProdPrice').value);
+    const quantity = parseInt(document.getElementById('shopProdQuantity').value) || 1;
+    const image = document.getElementById('shopProdImageUrl').value.trim();
+    if (!title || !price) return toast('请填写完整信息', 'error');
+    try {
+        await apiRequest('/shop/owner/products', { method: 'POST', body: JSON.stringify({ game, title, desc, price, quantity, image }) });
+        toast('上架成功', 'success');
+        document.getElementById('shopProdTitle').value = '';
+        document.getElementById('shopProdDesc').value = '';
+        document.getElementById('shopProdPrice').value = '';
+        document.getElementById('shopProdImageUrl').value = '';
+        document.getElementById('shopProdImagePreview').style.display = 'none';
+        renderShopProducts();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+document.getElementById('shopProdImageUrl').addEventListener('input', function() {
+    const url = this.value.trim();
+    const img = document.getElementById('shopProdImagePreview');
+    if (url) { img.src = url; img.style.display = 'block'; img.onerror = function() { this.style.display = 'none'; }; } 
+    else { img.style.display = 'none'; }
+});
+
+async function shopUnshelf(productId) {
+    confirmAction('确认下架', '确认下架此商品？', '确认下架', `doShopUnshelf('${productId}')`);
+}
+async function doShopUnshelf(productId) {
+    try {
+        await apiRequest('/shop/owner/products/' + productId + '/unshelf', { method: 'PUT' });
+        toast('已下架', 'success');
+        renderShopProducts();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function shopReshelf(productId) {
+    confirmAction('确认重新上架', '确认重新上架此商品？', '确认上架', `doShopReshelf('${productId}')`);
+}
+async function doShopReshelf(productId) {
+    try {
+        await apiRequest('/shop/owner/products/' + productId + '/reshelf', { method: 'PUT' });
+        toast('已重新上架', 'success');
+        renderShopProducts();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function shopDeleteProduct(productId) {
+    confirmAction('确认删除', '⚠️ 确认永久删除此商品？', '确认删除', `doShopDeleteProduct('${productId}')`);
+}
+async function doShopDeleteProduct(productId) {
+    try {
+        await apiRequest('/shop/owner/products/' + productId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderShopProducts();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  店长订单管理
+// ============================================================
+async function renderShopOrders() {
+    try {
+        const orders = await apiRequest('/shop/owner/orders');
+        const container = document.getElementById('shopOrdersList');
+        if (orders.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无订单</p></div>';
+            return;
+        }
+        const filter = document.getElementById('shopFilterOrderStatus').value;
+        let filtered = orders;
+        if (filter !== 'all') filtered = orders.filter(o => o.status === filter);
+        let html = '<div class="table-wrap"><table><thead><tr><th>订单号</th><th>标题</th><th>金额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const o of filtered) {
+            let actions = '';
+            if (o.status === 'pending') actions += `<button class="btn btn-success btn-xs" onclick="shopAssignHandler('${o.id}')">指派</button>`;
+            if (o.status === 'ongoing') {
+                actions += `<button class="btn btn-warning btn-xs" onclick="shopForceComplete('${o.id}')">强制完成</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="shopCancelOrder('${o.id}')">取消</button>`;
+            }
+            if (o.status === 'review') {
+                actions += `<button class="btn btn-success btn-xs" onclick="shopConfirmComplete('${o.id}')">确认</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="shopRejectOrder('${o.id}')">驳回</button>`;
+            }
+            if (o.status === 'completed' && !o.settled) {
+                actions += `<button class="btn btn-primary btn-xs" onclick="shopSettleOrder('${o.id}')">结算</button>`;
+            }
+            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">💬聊天</button>`;
+            html += `<tr><td>${o.id}</td><td>${o.title}</td><td>¥${o.price}</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+// 店长订单操作（简化版，调用店长专用接口）
+async function shopAssignHandler(orderId) {
+    const users = await apiRequest('/shop/owner/users');
+    const handlers = users.filter(u => u.role === 'handler' && u.status === 'active');
+    if (handlers.length === 0) { toast('暂无可用打手', 'warning'); return; }
+    let options = handlers.map(u => `<option value="${u.id}">${u.username}</option>`).join('');
+    showCustomModal(`
+        <h3><i class="fas fa-user-check"></i> 指派打手</h3>
+        <div class="form-group"><label>打手</label><select class="admin-form-control" id="shopAssignSelect">${options}</select></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doShopAssign('${orderId}')">确认</button>
+        </div>
+    `);
+}
+async function doShopAssign(orderId) {
+    const handlerId = document.getElementById('shopAssignSelect').value;
+    if (!handlerId) return toast('请选择打手', 'warning');
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/assign', { method: 'PUT', body: JSON.stringify({ handlerId }) });
+        closeCustomModal();
+        toast('✅ 指派成功', 'success');
+        renderShopOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+async function shopForceComplete(orderId) {
+    confirmAction('确认强制完成', '确认强制完成此订单？', '确认', `doShopForceComplete('${orderId}')`);
+}
+async function doShopForceComplete(orderId) {
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/force-complete', { method: 'PUT' });
+        toast('强制完成成功', 'success');
+        renderShopOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+async function shopConfirmComplete(orderId) {
+    confirmAction('确认验收通过', '确认此订单验收通过？', '确认', `doShopConfirmComplete('${orderId}')`);
+}
+async function doShopConfirmComplete(orderId) {
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/confirm', { method: 'PUT' });
+        toast('验收通过', 'success');
+        renderShopOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+async function shopRejectOrder(orderId) {
+    const reason = prompt('请输入驳回原因：');
+    if (reason === null) return;
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/reject', { method: 'PUT', body: JSON.stringify({ reason }) });
+        toast('已驳回', 'warning');
+        renderShopOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+async function shopCancelOrder(orderId) {
+    confirmAction('确认取消', '确认取消此订单？', '确认', `doShopCancelOrder('${orderId}')`);
+}
+async function doShopCancelOrder(orderId) {
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/cancel', { method: 'PUT' });
+        toast('已取消', 'warning');
+        renderShopOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+async function shopSettleOrder(orderId) {
+    const earning = prompt('请输入打手收入金额（元）：');
+    if (earning === null) return;
+    const amount = parseFloat(earning);
+    if (isNaN(amount) || amount < 0) return toast('请输入有效金额', 'error');
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/settle', { method: 'PUT', body: JSON.stringify({ earning: amount }) });
+        toast(`✅ 结算成功 ¥${amount}`, 'success');
+        renderShopOrders();
+        renderShopDashboard();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  店长用户管理
+// ============================================================
+async function renderShopUsers() {
+    try {
+        const search = document.getElementById('shopSearchUser')?.value.toLowerCase() || '';
+        const users = await apiRequest('/shop/owner/users');
         let filtered = users.filter(u => u.username.toLowerCase().includes(search));
-        const container = document.getElementById('usersList');
+        const container = document.getElementById('shopUsersList');
         if (filtered.length === 0) {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>暂无用户</p></div>';
             return;
         }
         let html = '<div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>红钻</th><th>余额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const u of filtered) {
-            let roleText = u.role === 'boss' ? '老板' : u.role === 'handler' ? (u.status === 'pending' ? '待审核打手' : '打手') : '管理员';
-            let statusText2 = u.status === 'active' ? '正常' : u.status === 'pending' ? '待审核' : '封禁';
-            let statusCls = u.status === 'active' ? 'status-onsale' : u.status === 'pending' ? 'status-pending' : 'status-canceled';
-            let actions = '';
-            if (u.role !== 'admin') {
-                if (u.role === 'handler' && u.status === 'pending') {
-                    actions += `<button class="btn btn-success btn-xs" onclick="approveHandler('${u.id}')">审核通过</button>`;
-                }
-                actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>`;
-                actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
-                actions += `<button class="btn btn-primary btn-xs" onclick="changeUsername('${u.id}','${u.username}')">改用户名</button>`;
-            }
-            html += `<tr><td>${u.username}</td><td>${roleText}</td><td>${u.diamond||0}</td><td>¥${u.balance||0}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+            const roleText = u.role === 'boss' ? '老板' : '打手';
+            const statusText2 = u.status === 'active' ? '正常' : '封禁';
+            const statusCls = u.status === 'active' ? 'status-onsale' : 'status-canceled';
+            html += `<tr>
+                <td>${u.username}</td>
+                <td>${roleText}</td>
+                <td>${u.diamond||0}</td>
+                <td>¥${u.balance||0}</td>
+                <td><span class="status-badge ${statusCls}">${statusText2}</span></td>
+                <td>
+                    <button class="btn btn-warning btn-xs" onclick="shopToggleUser('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>
+                    <button class="btn btn-outline btn-xs" onclick="shopResetPassword('${u.id}')">重置密码</button>
+                </td>
+            </tr>`;
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
     } catch (err) { console.error(err); }
 }
 
-window.approveHandler = function(userId) {
-    confirmAction('审核通过', '确认通过此打手账号审核？', '确认通过', `doApproveHandler('${userId}')`);
-};
-async function doApproveHandler(userId) {
+async function shopToggleUser(userId) {
+    confirmAction('确认操作', '确认更改此用户状态？', '确认', `doShopToggleUser('${userId}')`);
+}
+async function doShopToggleUser(userId) {
     try {
-        await apiRequest('/admin/users/' + userId + '/approve', { method: 'PUT' });
-        toast('✅ 打手账号已审核通过', 'success');
-        renderUsers();
+        await apiRequest('/shop/owner/users/' + userId + '/ban', { method: 'PUT' });
+        toast('用户状态已更新', 'success');
+        renderShopUsers();
+    } catch (err) { toast(err.message, 'error'); }
+}
+async function shopResetPassword(userId) {
+    confirmAction('重置密码', '确认将用户密码重置为 123456？', '确认', `doShopResetPassword('${userId}')`);
+}
+async function doShopResetPassword(userId) {
+    try {
+        await apiRequest('/shop/owner/users/' + userId + '/reset-password', { method: 'PUT' });
+        toast('密码已重置为 123456', 'success');
     } catch (err) { toast(err.message, 'error'); }
 }
 
-window.changeUsername = function(userId, currentName) {
-    showCustomModal(`
-        <h3><i class="fas fa-user-edit"></i> 修改用户名</h3>
-        <p style="color:var(--text-muted);font-size:14px;">当前用户名：<strong>${currentName}</strong></p>
-        <div class="form-group"><label>新用户名</label><input class="admin-form-control" id="newUsernameInput" placeholder="输入新用户名" /></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-primary" onclick="doChangeUsername('${userId}')">确认修改</button>
-        </div>
-    `);
-};
-async function doChangeUsername(userId) {
-    const newUsername = document.getElementById('newUsernameInput').value.trim();
-    if (!newUsername) return toast('请输入新用户名', 'warning');
+// ============================================================
+//  店长充值管理
+// ============================================================
+async function renderShopRecharges() {
     try {
-        await apiRequest('/admin/users/' + userId + '/username', { method: 'PUT', body: JSON.stringify({ username: newUsername }) });
-        closeCustomModal();
-        toast('✅ 用户名已修改', 'success');
-        renderUsers();
+        const recharges = await apiRequest('/shop/owner/recharges');
+        const container = document.getElementById('shopRechargeList');
+        if (recharges.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-coins"></i><p>暂无充值申请</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>用户</th><th>金额</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const r of recharges) {
+            const statusText2 = r.status === 'pending' ? '待审核' : r.status === 'approved' ? '已通过' : '已拒绝';
+            const statusCls = r.status === 'pending' ? 'status-pending' : r.status === 'approved' ? 'status-onsale' : 'status-canceled';
+            let actions = '';
+            if (r.status === 'pending') {
+                actions += `<button class="btn btn-success btn-xs" onclick="shopApproveRecharge('${r.id}')">通过</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="shopRejectRecharge('${r.id}')">拒绝</button>`;
+            }
+            html += `<tr><td>${r.user_id}</td><td>¥${r.amount}</td><td>${r.diamond}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td>${actions}</td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+async function shopApproveRecharge(rechargeId) {
+    confirmAction('确认通过', '确认通过此充值申请？将消耗店铺红钻。', '确认', `doShopApproveRecharge('${rechargeId}')`);
+}
+async function doShopApproveRecharge(rechargeId) {
+    try {
+        await apiRequest('/shop/owner/recharges/' + rechargeId + '/approve', { method: 'PUT' });
+        toast('✅ 充值通过，红钻已到账', 'success');
+        renderShopRecharges();
+        renderShopDashboard();
+    } catch (err) { toast(err.message, 'error'); }
+}
+async function shopRejectRecharge(rechargeId) {
+    confirmAction('确认拒绝', '确认拒绝此充值申请？', '确认', `doShopRejectRecharge('${rechargeId}')`);
+}
+async function doShopRejectRecharge(rechargeId) {
+    try {
+        await apiRequest('/shop/owner/recharges/' + rechargeId + '/reject', { method: 'PUT' });
+        toast('已拒绝', 'warning');
+        renderShopRecharges();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  店长公告管理
+// ============================================================
+async function loadShopAnnounce() {
+    try {
+        const data = await apiRequest('/shop/owner/announce');
+        document.getElementById('shopAnnounceEditContent').value = data.content || '欢迎来到我们的俱乐部！';
+        shopAnnounceImages = data.images || [];
+        renderShopAnnounceImagePreview();
+        document.getElementById('shopAnnouncePreview').innerHTML = (data.content || '') + (data.images && data.images.length > 0 ? '<br><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' + data.images.map(img => '<img src="'+img+'" style="max-width:80px;max-height:80px;border-radius:8px;cursor:pointer;" onclick="showImgPreview(\''+img+'\')">').join('') + '</div>' : '');
+    } catch (err) { console.error('加载店铺公告失败', err); }
+}
+
+function previewShopAnnounceImages(event) {
+    const files = event.target.files;
+    for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            shopAnnounceImages.push(e.target.result);
+            renderShopAnnounceImagePreview();
+        };
+        reader.readAsDataURL(file);
+    }
+    event.target.value = '';
+}
+
+function removeShopAnnounceImage(index) {
+    shopAnnounceImages.splice(index, 1);
+    renderShopAnnounceImagePreview();
+}
+
+function renderShopAnnounceImagePreview() {
+    const container = document.getElementById('shopAnnounceImagePreview');
+    container.innerHTML = shopAnnounceImages.map((img, i) =>
+        `<div style="position:relative;display:inline-block;">
+            <img src="${img}" style="max-width:60px;max-height:60px;border-radius:8px;border:1px solid var(--border-color);cursor:pointer;" onclick="showImgPreview('${img}')">
+            <button onclick="removeShopAnnounceImage(${i})" style="position:absolute;top:-6px;right:-6px;background:#ef4444;border:none;color:#fff;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;line-height:18px;text-align:center;">×</button>
+        </div>`
+    ).join('');
+}
+
+async function saveShopAnnounce() {
+    const content = document.getElementById('shopAnnounceEditContent').value.trim();
+    if (!content) return toast('请输入公告内容', 'warning');
+    try {
+        await apiRequest('/shop/owner/announce', { method: 'PUT', body: JSON.stringify({ content, images: shopAnnounceImages }) });
+        toast('公告已更新', 'success');
+        loadShopAnnounce();
     } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -1296,6 +1851,9 @@ async function renderBossView() {
         }
         const user = await apiRequest('/me');
         document.getElementById('bossDiamond').textContent = user.diamond || 0;
+        if (user.shop_name) {
+            document.getElementById('shopDisplayName').textContent = '🏪 店铺：' + user.shop_name;
+        }
         const mails = await apiRequest('/mails');
         document.getElementById('unreadMailCount').textContent = mails.filter(m => m.status === 'unread').length;
 
@@ -1343,7 +1901,7 @@ async function renderBossView() {
             if (o.status === 'ongoing' || o.status === 'pending') {
                 actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
             }
-            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">💬 聊天</button>`;
+            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">💬聊天</button>`;
             actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
             html2 += `<tr><td>${o.id}</td><td>${o.title}</td><td>¥${o.price}</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
         }
@@ -1398,6 +1956,69 @@ async function doBuy(productId) {
     } catch (err) {
         toast(err.message, 'error');
     }
+}
+
+// ============================================================
+//  打手视图
+// ============================================================
+async function renderHandlerView() {
+    try {
+        if (!currentUser) { document.getElementById('handlerBalance').textContent = '请登录'; return; }
+        const user = await apiRequest('/me');
+        document.getElementById('handlerBalance').textContent = '¥' + (user.balance || 0);
+
+        // 获取待接单（带过滤）
+        const pendingData = await apiRequest('/orders/pending', {
+            method: 'POST',
+            body: JSON.stringify({ filter_type: handlerFilter })
+        });
+        const orders = await apiRequest('/orders/my');
+
+        const pending = pendingData.filter(o => o.status === 'pending');
+        document.getElementById('handlerPendingCount').textContent = pending.length;
+        const pContainer = document.getElementById('handlerPendingList');
+        if (pending.length === 0) {
+            pContainer.innerHTML = '<div class="empty-state"><i class="fas fa-clock"></i><p>暂无待接单</p></div>';
+        } else {
+            let html = '';
+            for (const o of pending) {
+                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price}</span></div><button class="btn btn-primary btn-sm" onclick="confirmTake('${o.id}')">接单</button></div></div>`;
+            }
+            pContainer.innerHTML = html;
+        }
+
+        const ongoing = orders.filter(o => o.status === 'ongoing' || o.status === 'review');
+        const oContainer = document.getElementById('handlerOngoingList');
+        if (ongoing.length === 0) {
+            oContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>暂无进行中的订单</p></div>';
+        } else {
+            let html = '';
+            for (const o of ongoing) {
+                const statusText2 = o.status === 'ongoing' ? '进行中' : '待验收';
+                const statusCls = o.status === 'ongoing' ? 'status-ongoing' : 'status-review';
+                let actions = '';
+                if (o.status === 'ongoing') actions += `<button class="btn btn-warning btn-sm" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
+                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">💬聊天</button>`;
+                actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
+                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price} ｜ 状态：<span class="status-badge ${statusCls}">${statusText2}</span></span></div><div style="display:flex;gap:4px;flex-wrap:wrap;">${actions}</div></div></div>`;
+            }
+            oContainer.innerHTML = html;
+        }
+
+        const completed = orders.filter(o => o.status === 'completed');
+        const cContainer = document.getElementById('handlerCompletedList');
+        if (completed.length === 0) {
+            cContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-double"></i><p>暂无已完成订单</p></div>';
+        } else {
+            let html = '';
+            for (const o of completed) {
+                const settledText = o.settled ? '已结算' : '待结算';
+                const settledCls = o.settled ? 'status-onsale' : 'status-pending';
+                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price} ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.create_time}</span></div><button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">💬聊天</button><button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button></div></div>`;
+            }
+            cContainer.innerHTML = html;
+        }
+    } catch (err) { console.error(err); }
 }
 
 // ============================================================
@@ -1488,6 +2109,32 @@ async function doClaimMail(mailId) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
+window.confirmTake = function(orderId) {
+    confirmAction('确认接单', '确认接取此订单？', '确认接单', `doTake('${orderId}')`);
+};
+async function doTake(orderId) {
+    try {
+        await apiRequest('/orders/' + orderId + '/take', { method: 'PUT' });
+        toast('接单成功', 'success');
+        renderHandlerView();
+        renderBossView();
+        renderAdminOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.confirmSubmitComplete = function(orderId) {
+    confirmAction('提交完成', '确认已完成此订单服务？', '确认提交', `doSubmitComplete('${orderId}')`);
+};
+async function doSubmitComplete(orderId) {
+    try {
+        await apiRequest('/orders/' + orderId + '/submit-complete', { method: 'PUT' });
+        toast('已提交验收', 'success');
+        renderHandlerView();
+        renderBossView();
+        renderAdminOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
 // ============================================================
 //  管理员快捷操作
 // ============================================================
@@ -1534,8 +2181,8 @@ async function populateGiftUsers() {
         const users = await apiRequest('/admin/users');
         const sel = document.getElementById('giftUser');
         sel.innerHTML = '<option value="">-- 请选择 --</option>';
-        users.filter(u => u.role === 'boss' && u.status === 'active').forEach(u => {
-            sel.innerHTML += `<option value="${u.id}">${u.username}</option>`;
+        users.forEach(u => {
+            sel.innerHTML += `<option value="${u.id}">${u.username} (${u.role})</option>`;
         });
     } catch (err) { console.error(err); }
 }
@@ -1543,7 +2190,7 @@ async function populateGiftUsers() {
 window.sendGift = function() {
     const targetUserId = document.getElementById('giftUser').value;
     const amount = parseInt(document.getElementById('giftAmount').value);
-    if (!targetUserId || !amount) return toast('请选择老板并输入数量', 'error');
+    if (!targetUserId || !amount) return toast('请选择用户并输入数量', 'error');
     apiRequest('/admin/gift', { method: 'POST', body: JSON.stringify({ targetUserId, amount }) })
         .then(() => {
             toast('赠送成功', 'success');
@@ -1553,6 +2200,95 @@ window.sendGift = function() {
         })
         .catch(err => toast(err.message, 'error'));
 };
+
+async function renderRecharges() {
+    try {
+        const recharges = await apiRequest('/admin/recharges');
+        const container = document.getElementById('rechargeList');
+        if (recharges.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-coins"></i><p>暂无充值申请</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>用户</th><th>金额</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const r of recharges) {
+            const statusText2 = r.status === 'pending' ? '待审核' : r.status === 'approved' ? '已通过' : '已拒绝';
+            const statusCls = r.status === 'pending' ? 'status-pending' : r.status === 'approved' ? 'status-onsale' : 'status-canceled';
+            let actions = '';
+            if (r.status === 'pending') {
+                actions += `<button class="btn btn-success btn-xs" onclick="confirmApproveRecharge('${r.id}')">通过</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="confirmRejectRecharge('${r.id}')">拒绝</button>`;
+            }
+            actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteRecharge('${r.id}')">删除</button>`;
+            html += `<tr><td>${r.user_id}</td><td>¥${r.amount}</td><td>${r.diamond}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+async function renderUsers() {
+    try {
+        const search = document.getElementById('searchUser')?.value.toLowerCase() || '';
+        const users = await apiRequest('/admin/users');
+        let filtered = users.filter(u => u.username.toLowerCase().includes(search));
+        const container = document.getElementById('usersList');
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>暂无用户</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>店铺</th><th>红钻</th><th>余额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const u of filtered) {
+            const roleText = u.role === 'boss' ? '老板' : u.role === 'handler' ? (u.status === 'pending' ? '待审核打手' : '打手') : u.role === 'shop_owner' ? '店长' : '管理员';
+            const statusText2 = u.status === 'active' ? '正常' : u.status === 'pending' ? '待审核' : '封禁';
+            const statusCls = u.status === 'active' ? 'status-onsale' : u.status === 'pending' ? 'status-pending' : 'status-canceled';
+            let actions = '';
+            if (u.role !== 'admin') {
+                if (u.role === 'handler' && u.status === 'pending') {
+                    actions += `<button class="btn btn-success btn-xs" onclick="approveHandler('${u.id}')">审核通过</button>`;
+                }
+                if (u.role === 'shop_owner') {
+                    actions += `<button class="btn btn-primary btn-xs" onclick="toggleShopOwner('${u.id}')">${u.status==='active'?'封禁店长':'解封店长'}</button>`;
+                }
+                actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>`;
+                actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
+            }
+            html += `<tr>
+                <td>${u.username}</td>
+                <td>${roleText}</td>
+                <td>${u.shop_name || '-'}</td>
+                <td>${u.diamond||0}</td>
+                <td>¥${u.balance||0}</td>
+                <td><span class="status-badge ${statusCls}">${statusText2}</span></td>
+                <td><div class="action-group">${actions}</div></td>
+            </tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+window.approveHandler = function(userId) {
+    confirmAction('审核通过', '确认通过此打手账号审核？', '确认通过', `doApproveHandler('${userId}')`);
+};
+async function doApproveHandler(userId) {
+    try {
+        await apiRequest('/admin/users/' + userId + '/approve', { method: 'PUT' });
+        toast('✅ 打手账号已审核通过', 'success');
+        renderUsers();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.toggleShopOwner = function(userId) {
+    confirmAction('确认操作', '确认更改此店长状态？店铺将同步封禁/解封。', '确认', `doToggleShopOwner('${userId}')`);
+};
+async function doToggleShopOwner(userId) {
+    try {
+        await apiRequest('/admin/shop-owner/' + userId + '/toggle', { method: 'PUT' });
+        toast('店长状态已更新', 'success');
+        renderUsers();
+        renderShops();
+    } catch (err) { toast(err.message, 'error'); }
+}
 
 window.toggleUserBan = function(userId) {
     confirmAction('确认操作', '确认更改此用户状态？', '确认', `doToggleUserBan('${userId}')`);
@@ -1582,11 +2318,10 @@ window.adminAssignHandler = function(orderId) {
         let options = handlers.map(u => `<option value="${u.id}">${u.username}</option>`).join('');
         showCustomModal(`
             <h3><i class="fas fa-user-check"></i> 指派打手</h3>
-            <p style="color:var(--text-muted);font-size:14px;">选择要指派的打手：</p>
             <div class="form-group"><label>打手</label><select class="admin-form-control" id="assignHandlerSelect">${options}</select></div>
             <div class="btn-row">
                 <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-                <button class="btn btn-success" onclick="doAdminAssign('${orderId}')">确认指派</button>
+                <button class="btn btn-success" onclick="doAdminAssign('${orderId}')">确认</button>
             </div>
         `);
     }).catch(err => toast(err.message, 'error'));
@@ -1723,8 +2458,13 @@ async function doRequestRefund(orderId) {
 window.viewOrderDetail = function(orderId) {
     apiRequest('/orders/' + orderId).then(order => {
         const handlerName = order.handler_id ? order.handler_id : '未指派';
-        const messagesHtml = order.messages && order.messages.length > 0 ?
-            order.messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:var(--text-muted);">${msg.time}</span></div>`).join('') :
+        let messages = [];
+        try {
+            if (typeof order.messages === 'string') messages = JSON.parse(order.messages);
+            else if (Array.isArray(order.messages)) messages = order.messages;
+        } catch (e) { messages = []; }
+        const messagesHtml = messages.length > 0 ?
+            messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:var(--text-muted);">${msg.time}</span></div>`).join('') :
             '暂无消息';
         showCustomModal(`
             <h3><i class="fas fa-info-circle"></i> 订单详情</h3>
@@ -1750,99 +2490,21 @@ window.viewOrderDetail = function(orderId) {
     }).catch(err => toast(err.message, 'error'));
 };
 
-async function renderHandlerView() {
-    try {
-        if (!currentUser) { document.getElementById('handlerBalance').textContent = '请登录'; return; }
-        const user = await apiRequest('/me');
-        document.getElementById('handlerBalance').textContent = '¥' + (user.balance || 0);
-        const orders = await apiRequest('/orders/my');
-        const pending = orders.filter(o => o.status === 'pending');
-        document.getElementById('handlerPendingCount').textContent = pending.length;
-        const pContainer = document.getElementById('handlerPendingList');
-        if (pending.length === 0) {
-            pContainer.innerHTML = '<div class="empty-state"><i class="fas fa-clock"></i><p>暂无待接单</p></div>';
-        } else {
-            let html = '';
-            for (const o of pending) {
-                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price}</span></div><button class="btn btn-primary btn-sm" onclick="confirmTake('${o.id}')">接单</button></div></div>`;
-            }
-            pContainer.innerHTML = html;
-        }
-        const ongoing = orders.filter(o => o.status === 'ongoing' || o.status === 'review');
-        const oContainer = document.getElementById('handlerOngoingList');
-        if (ongoing.length === 0) {
-            oContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>暂无进行中的订单</p></div>';
-        } else {
-            let html = '';
-            for (const o of ongoing) {
-                const statusText2 = o.status === 'ongoing' ? '进行中' : '待验收';
-                const statusCls = o.status === 'ongoing' ? 'status-ongoing' : 'status-review';
-                let actions = '';
-                if (o.status === 'ongoing') actions += `<button class="btn btn-warning btn-sm" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
-                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">💬 聊天</button>`;
-                actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
-                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price} ｜ 状态：<span class="status-badge ${statusCls}">${statusText2}</span></span></div><div style="display:flex;gap:4px;flex-wrap:wrap;">${actions}</div></div></div>`;
-            }
-            oContainer.innerHTML = html;
-        }
-        const completed = orders.filter(o => o.status === 'completed');
-        const cContainer = document.getElementById('handlerCompletedList');
-        if (completed.length === 0) {
-            cContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-double"></i><p>暂无已完成订单</p></div>';
-        } else {
-            let html = '';
-            for (const o of completed) {
-                const settledText = o.settled ? '已结算' : '待结算';
-                const settledCls = o.settled ? 'status-onsale' : 'status-pending';
-                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price} ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.create_time}</span></div><button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">💬 聊天</button><button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button></div></div>`;
-            }
-            cContainer.innerHTML = html;
-        }
-    } catch (err) { console.error(err); }
-}
-
-window.confirmTake = function(orderId) {
-    confirmAction('确认接单', '确认接取此订单？', '确认接单', `doTake('${orderId}')`);
-};
-async function doTake(orderId) {
-    try {
-        await apiRequest('/orders/' + orderId + '/take', { method: 'PUT' });
-        toast('接单成功', 'success');
-        renderHandlerView();
-        renderBossView();
-        renderAdminOrders();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-window.confirmSubmitComplete = function(orderId) {
-    confirmAction('提交完成', '确认已完成此订单服务？', '确认提交', `doSubmitComplete('${orderId}')`);
-};
-async function doSubmitComplete(orderId) {
-    try {
-        await apiRequest('/orders/' + orderId + '/submit-complete', { method: 'PUT' });
-        toast('已提交验收', 'success');
-        renderHandlerView();
-        renderBossView();
-        renderAdminOrders();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
 // ============================================================
 //  初始化
 // ============================================================
 async function init() {
     document.getElementById('authPage').style.display = 'flex';
     document.getElementById('mainApp').classList.add('hidden');
-    
     applyCollapseStates();
 
     if (token) {
         try {
-            const user = await apiRequest('/me');
-            currentUser = user;
+            const data = await apiRequest('/me');
+            currentUser = data;
             document.getElementById('authPage').style.display = 'none';
             document.getElementById('mainApp').classList.remove('hidden');
-            document.getElementById('currentUserDisplay').textContent = user.username + ' (' + user.role + ')';
+            document.getElementById('currentUserDisplay').textContent = currentUser.username + ' (' + currentUser.role + ')';
             document.getElementById('view-home').classList.add('active');
             document.querySelector('.bottom-nav .nav-item[data-target="home"]').classList.add('active');
             updateRoleBasedUI();
@@ -1850,6 +2512,9 @@ async function init() {
             updateAccountInfo();
             renderBossView();
             renderAdminAll();
+            if (currentUser.role === 'shop_owner' || (currentUser.is_admin === 1 && currentUser.shop_id)) {
+                renderShopAll();
+            }
         } catch (err) {
             localStorage.removeItem('token');
             token = null;
@@ -1861,7 +2526,7 @@ async function init() {
 
 document.getElementById('logoutBtn').addEventListener('click', logout);
 init();
-console.log('✅ QW电竞护航平台已加载');
+console.log('✅ QW电竞护航平台已加载（店铺系统版）');
 console.log('后端地址:', API_URL);
 </script>
 
