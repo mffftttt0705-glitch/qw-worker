@@ -782,10 +782,37 @@ async function renderAdminOrders() {
 }
 
 window.adminAssignHandler = function(orderId) {
-    const handlerId = prompt('请输入打手ID：');
-    if (!handlerId) return;
+    apiRequest('/admin/users').then(users => {
+        const handlers = users.filter(u => u.role === 'handler');
+        if (handlers.length === 0) {
+            toast('暂无打手可指派', 'warning');
+            return;
+        }
+        let options = handlers.map(u => `<option value="${u.id}">${u.username}</option>`).join('');
+        showCustomModal(`
+            <h3><i class="fas fa-user-check"></i> 指派打手</h3>
+            <p style="color:#8892a8;font-size:14px;">选择要指派的打手：</p>
+            <div class="form-group">
+                <label>打手</label>
+                <select class="admin-form-control" id="assignHandlerSelect">${options}</select>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doAdminAssign('${orderId}')">确认指派</button>
+            </div>
+        `);
+    }).catch(err => toast(err.message, 'error'));
+};
+
+window.doAdminAssign = function(orderId) {
+    const handlerId = document.getElementById('assignHandlerSelect').value;
+    if (!handlerId) return toast('请选择打手', 'warning');
     apiRequest('/admin/orders/' + orderId + '/assign', { method: 'PUT', body: JSON.stringify({ handlerId }) })
-        .then(() => { toast('指派成功', 'success'); renderAdminOrders(); })
+        .then(() => {
+            closeCustomModal();
+            toast('✅ 指派成功', 'success');
+            renderAdminOrders();
+        })
         .catch(err => toast(err.message, 'error'));
 };
 
@@ -894,15 +921,15 @@ async function renderRecharges() {
         }
         let html = '<div class="table-wrap"><table><thead><tr><th>用户</th><th>金额</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const r of recharges) {
-            const userId = r.userId || '';
+            const userId = r.user_id || '';
             const statusText2 = r.status === 'pending' ? '待审核' : r.status === 'approved' ? '已通过' : '已拒绝';
             const statusCls = r.status === 'pending' ? 'status-pending' : r.status === 'approved' ? 'status-onsale' : 'status-canceled';
             let actions = '';
             if (r.status === 'pending') {
-                actions += `<button class="btn btn-success btn-xs" onclick="confirmApproveRecharge('${r._id}')">通过</button>`;
-                actions += `<button class="btn btn-danger btn-xs" onclick="confirmRejectRecharge('${r._id}')">拒绝</button>`;
+                actions += `<button class="btn btn-success btn-xs" onclick="confirmApproveRecharge('${r.id}')">通过</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="confirmRejectRecharge('${r.id}')">拒绝</button>`;
             }
-            actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteRecharge('${r._id}')">删除</button>`;
+            actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteRecharge('${r.id}')">删除</button>`;
             html += `<tr><td>${userId}</td><td>¥${r.amount}</td><td>${r.diamond}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
         }
         html += '</tbody></table></div>';
@@ -950,7 +977,7 @@ async function populateGiftUsers() {
         const sel = document.getElementById('giftUser');
         sel.innerHTML = '<option value="">-- 请选择 --</option>';
         users.filter(u => u.role === 'boss').forEach(u => {
-            sel.innerHTML += `<option value="${u._id}">${u.username}</option>`;
+            sel.innerHTML += `<option value="${u.id}">${u.username}</option>`;
         });
     } catch (err) { console.error(err); }
 }
@@ -986,8 +1013,8 @@ async function renderUsers() {
             const statusCls = u.status === 'active' ? 'status-onsale' : 'status-canceled';
             let actions = '';
             if (u.role !== 'admin') {
-                actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u._id}')">${u.status==='active'?'封禁':'解禁'}</button>`;
-                actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u._id}')">重置密码</button>`;
+                actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>`;
+                actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
             }
             html += `<tr><td>${u.username}</td><td>${roleText}</td><td>${u.diamond||0}</td><td>¥${u.balance||0}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td>${actions}</td></tr>`;
         }
@@ -1038,7 +1065,7 @@ async function renderBossView() {
                         <div style="text-align:right;">
                             <span style="font-size:20px;font-weight:700;color:#f5c842;">${p.price*10} <i class="fas fa-gem"></i></span><br>
                             <span style="font-size:12px;color:#8892a8;">¥${p.price}</span><br>
-                            ${remaining > 0 ? `<button class="btn btn-success btn-sm" onclick="confirmBuy('${p._id}')">购买</button>` : '<span class="status-badge status-soldout">已售罄</span>'}
+                            ${remaining > 0 ? `<button class="btn btn-success btn-sm" onclick="confirmBuy('${p.id}')">购买</button>` : '<span class="status-badge status-soldout">已售罄</span>'}
                         </div>
                     </div>
                 </div>
@@ -1052,13 +1079,13 @@ async function renderBossView() {
         let html2 = '<div class="table-wrap"><table><thead><tr><th>订单号</th><th>标题</th><th>金额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const o of orders) {
             let actions = '';
-            if (o.status === 'review') actions += `<button class="btn btn-success btn-xs" onclick="confirmBossComplete('${o._id}')">确认完成</button>`;
+            if (o.status === 'review') actions += `<button class="btn btn-success btn-xs" onclick="confirmBossComplete('${o.id}')">确认完成</button>`;
             if (o.status === 'ongoing' || o.status === 'pending') {
-                actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o._id}')">申请退款</button>`;
+                actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
             }
-            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o._id}')">聊天</button>`;
-            actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o._id}')">详情</button>`;
-            html2 += `<tr><td>${o._id}</td><td>${o.title}</td><td>¥${o.price}</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">聊天</button>`;
+            actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
+            html2 += `<tr><td>${o.id}</td><td>${o.title}</td><td>¥${o.price}</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
         }
         html2 += '</tbody></table></div>';
         myContainer.innerHTML = html2;
@@ -1121,7 +1148,7 @@ async function doRequestRefund(orderId) {
 
 window.viewOrderDetail = function(orderId) {
     apiRequest('/orders/' + orderId).then(order => {
-        const handlerName = order.handlerId ? order.handlerId : '未指派';
+        const handlerName = order.handler_id ? order.handler_id : '未指派';
         const messagesHtml = order.messages && order.messages.length > 0 ?
             order.messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:#8892a8;">${msg.time}</span></div>`).join('') :
             '暂无消息';
@@ -1135,10 +1162,10 @@ window.viewOrderDetail = function(orderId) {
                 <div class="detail-row"><span class="label">状态</span><span class="value"><span class="status-badge ${statusClass(order.status)}">${statusText(order.status)}</span></span></div>
                 <div class="detail-row"><span class="label">打手</span><span class="value">${handlerName}</span></div>
                 <div class="detail-row"><span class="label">创建时间</span><span class="value">${order.createTime}</span></div>
-                ${order.startTime ? `<div class="detail-row"><span class="label">开始时间</span><span class="value">${order.startTime}</span></div>` : ''}
-                ${order.endTime ? `<div class="detail-row"><span class="label">结束时间</span><span class="value">${order.endTime}</span></div>` : ''}
-                ${order.settled ? `<div class="detail-row"><span class="label">结算金额</span><span class="value">¥${order.settledAmount||order.price}</span></div>` : ''}
-                ${order.refundReason ? `<div class="detail-row"><span class="label">退款原因</span><span class="value">${order.refundReason}</span></div>` : ''}
+                ${order.start_time ? `<div class="detail-row"><span class="label">开始时间</span><span class="value">${order.start_time}</span></div>` : ''}
+                ${order.end_time ? `<div class="detail-row"><span class="label">结束时间</span><span class="value">${order.end_time}</span></div>` : ''}
+                ${order.settled ? `<div class="detail-row"><span class="label">结算金额</span><span class="value">¥${order.settled_amount||order.price}</span></div>` : ''}
+                ${order.refund_reason ? `<div class="detail-row"><span class="label">退款原因</span><span class="value">${order.refund_reason}</span></div>` : ''}
             </div>
             <div style="border-top:1px solid #2a2f3a;padding-top:12px;text-align:left;">
                 <div style="font-weight:600;margin-bottom:8px;">聊天记录</div>
@@ -1168,7 +1195,7 @@ async function renderHandlerView() {
                     <div class="card" style="padding:14px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
                             <div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price}</span></div>
-                            <button class="btn btn-primary btn-sm" onclick="confirmTake('${o._id}')">接单</button>
+                            <button class="btn btn-primary btn-sm" onclick="confirmTake('${o.id}')">接单</button>
                         </div>
                     </div>
                 `;
@@ -1186,9 +1213,9 @@ async function renderHandlerView() {
                 const statusText2 = o.status === 'ongoing' ? '进行中' : '待验收';
                 const statusCls = o.status === 'ongoing' ? 'status-ongoing' : 'status-review';
                 let actions = '';
-                if (o.status === 'ongoing') actions += `<button class="btn btn-warning btn-sm" onclick="confirmSubmitComplete('${o._id}')">提交完成</button>`;
-                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o._id}')">聊天</button>`;
-                actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o._id}')">详情</button>`;
+                if (o.status === 'ongoing') actions += `<button class="btn btn-warning btn-sm" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
+                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button>`;
+                actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
                 html += `
                     <div class="card" style="padding:14px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
@@ -1213,9 +1240,9 @@ async function renderHandlerView() {
                 html += `
                     <div class="card" style="padding:14px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                            <div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price} ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.endTime || o.createTime}</span></div>
-                            <button class="btn btn-primary btn-sm" onclick="openChat('${o._id}')">聊天</button>
-                            <button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o._id}')">详情</button>
+                            <div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price} ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.create_time}</span></div>
+                            <button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button>
+                            <button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>
                         </div>
                     </div>
                 `;
@@ -1314,8 +1341,8 @@ window.openMail = function() {
                     </div>
                     <div style="font-size:14px;color:#b0b8c8;padding:4px 0;">${m.content}</div>
                     <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#8892a8;">
-                        <span>${m.createTime}</span>
-                        ${m.status === 'unread' && m.diamond > 0 ? `<button class="btn btn-success btn-xs" onclick="confirmClaimMail('${m._id}')">领取 ${m.diamond} 红钻</button>` : ''}
+                        <span>${m.create_time}</span>
+                        ${m.status === 'unread' && m.diamond > 0 ? `<button class="btn btn-success btn-xs" onclick="confirmClaimMail('${m.id}')">领取 ${m.diamond} 红钻</button>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -1340,7 +1367,7 @@ async function doClaimMail(mailId) {
 
 window.openChat = function(orderId) {
     apiRequest('/orders/my').then(orders => {
-        const order = orders.find(o => o._id === orderId);
+        const order = orders.find(o => o.id === orderId);
         if (!order) return toast('订单不存在', 'error');
         const isEnded = ['completed','canceled','rejected','refunded'].includes(order.status);
         const messagesHtml = order.messages && order.messages.length > 0 ?
