@@ -23,8 +23,8 @@
         .announcement{background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.15);border-radius:16px;padding:14px 16px;margin-bottom:16px}
         .announcement .content{font-size:14px;color:#d0e4ff;line-height:1.6}
         .announcement .images{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-        .announcement .images img{max-width:100px;max-height:100px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)}
-        .announcement .time{font-size:11px;color:#5a6378;margin-top:6px}
+        .announcement .images img{max-width:100px;max-height:100px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:transform 0.2s}
+        .announcement .images img:active{transform:scale(0.95)}
         .announce-editor textarea{width:100%;background:#0b0d10;border:1px solid #2a2f3a;border-radius:12px;padding:10px 14px;color:#e8e6e3;font-size:14px;outline:none;resize:vertical;min-height:80px}
         .announce-editor textarea:focus{border-color:#f5c842}
         .announce-editor .image-upload{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
@@ -38,13 +38,6 @@
         .entry-title{font-size:16px;font-weight:600;color:#e4edff}
         .entry-sub{font-size:12px;color:#7a8faf}
         .entry-badge{display:inline-block;margin-top:10px;padding:3px 12px;background:rgba(60,160,255,0.08);border-radius:30px;font-size:10px;color:#6a9fd6;border:1px solid rgba(60,160,255,0.06)}
-        .section-title{font-size:18px;font-weight:600;color:#d0e4ff;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-        .section-title i{color:#3a7eff}
-        .list-item{background:rgba(18,24,42,0.5);border-radius:20px;padding:16px 18px;margin-bottom:12px;border:1px solid rgba(70,150,255,0.04);display:flex;justify-content:space-between;align-items:center}
-        .list-item .left .name{font-weight:500;color:#e4edff;font-size:15px}
-        .list-item .left .desc{font-size:12px;color:#7a8faf}
-        .list-item .right .price{font-weight:600;color:#69db7c;font-size:16px}
-        .list-item .right .tag{font-size:11px;background:rgba(60,160,255,0.1);padding:2px 12px;border-radius:30px;color:#6ab0ff}
         .btn-primary{background:linear-gradient(145deg,#1a6aff,#0044cc);border:none;color:#fff;padding:8px 20px;border-radius:40px;font-weight:500;font-size:13px;cursor:pointer;box-shadow:0 4px 12px rgba(0,80,255,0.2)}
         .btn-primary:active{transform:scale(0.96)}
         .btn-outline{background:transparent;border:1px solid rgba(60,160,255,0.2);color:#b0c8e6;padding:8px 20px;border-radius:40px;font-size:13px;cursor:pointer}
@@ -94,7 +87,6 @@
         .empty-state{text-align:center;padding:40px 20px;color:#5a6378}
         .empty-state i{font-size:44px;opacity:0.4;display:block;margin-bottom:12px}
         .empty-state p{font-size:15px}
-        .promo-badge{display:inline-block;background:#f5c84222;color:#f5c842;border:1px solid #f5c84244;border-radius:30px;padding:2px 12px;font-size:11px;margin-right:6px}
         .role-view{display:none}
         .role-view.active{display:block}
         .hidden{display:none!important}
@@ -157,6 +149,21 @@
         .collapse-toggle:hover{background:#1f2630}
         .collapse-content{display:none;padding:8px 0}
         .collapse-content.open{display:block}
+        /* 商品卡片样式 */
+        .product-card{background:rgba(18,24,42,0.6);border-radius:16px;border:1px solid rgba(70,150,255,0.08);overflow:hidden;margin-bottom:16px;position:relative}
+        .product-card .product-img{width:100%;height:160px;background:linear-gradient(145deg,#10182e,#1a2648);display:flex;align-items:center;justify-content:center;font-size:48px;color:#3a7eff}
+        .product-card .product-img .tag{position:absolute;top:10px;left:10px;background:#f5c842;color:#0b0d10;padding:2px 12px;border-radius:20px;font-size:11px;font-weight:600}
+        .product-card .product-body{padding:14px 16px}
+        .product-card .product-title{font-size:16px;font-weight:600;color:#e4edff}
+        .product-card .product-desc{font-size:13px;color:#7a8faf;margin-top:4px;line-height:1.4}
+        .product-card .product-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.04)}
+        .product-card .product-price{font-size:20px;font-weight:700;color:#f5c842}
+        .product-card .product-price small{font-size:14px;font-weight:400;color:#7a8faf;text-decoration:line-through;margin-left:8px}
+        .product-card .product-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+        .product-card .product-tags span{background:rgba(60,160,255,0.06);padding:2px 10px;border-radius:20px;font-size:11px;color:#6ab0ff;border:1px solid rgba(60,160,255,0.06)}
+        .product-card .product-stock{font-size:12px;color:#5a6378;margin-top:4px}
+        .img-preview-modal .modal-box{max-width:90%;padding:10px}
+        .img-preview-modal img{width:100%;height:auto;border-radius:12px}
         @media(max-width:420px){.app-wrapper{border-radius:28px;padding-bottom:66px}.view-container{padding:16px 14px}.entry-grid{gap:12px}.entry-card{padding:18px 8px}.entry-icon{width:48px;height:48px;font-size:22px}.entry-title{font-size:14px}.bottom-nav{padding:6px 0 10px}.nav-item i{font-size:18px}.nav-item span{font-size:10px}#authPage{min-height:600px}}
     </style>
 </head>
@@ -178,6 +185,8 @@
             <label><input type="radio" name="authRole" value="boss" checked> 老板</label>
             <label><input type="radio" name="authRole" value="handler"> 打手</label>
         </div>
+        <!-- 打手注册提示 -->
+        <div style="font-size:12px;color:#8892a8;margin-top:8px;text-align:center;">打手账号需管理员审核通过后方可使用</div>
     </div>
 </div>
 
@@ -195,7 +204,7 @@
             </div>
         </div>
 
-        <!-- ===== 首页（老板界面） ===== -->
+        <!-- ===== 商城页面（原首页） ===== -->
         <div class="view active" id="view-home">
             <div class="announcement" id="homeAnnounce">
                 <div class="content" id="announceContent">加载中...</div>
@@ -208,22 +217,24 @@
                     <div><div style="font-size:14px;color:#8892a8;">红钻余额</div><div style="font-size:28px;font-weight:700;color:#f5c842;" id="bossDiamond">0</div></div>
                     <div style="display:flex;gap:8px;">
                         <button class="btn btn-warning btn-sm" onclick="openRecharge()"><i class="fas fa-plus-circle"></i> 充值</button>
-                        <button class="btn btn-primary btn-sm" onclick="openMail()"><i class="fas fa-envelope"></i> 邮件 <span id="unreadMailCount" class="badge" style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:30px;font-size:11px;">0</span></button>
+                        <button class="btn btn-primary btn-sm" onclick="openMail()"><i class="fas fa-envelope"></i> 邮件 <span id="unreadMailCount" style="background:#ef4444;color:#fff;border-radius:50%;padding:0 8px;font-size:11px;">0</span></button>
                     </div>
                 </div>
                 <div style="font-size:13px;color:#8892a8;margin-top:4px;">1元 = 10红钻</div>
             </div>
-            <!-- 商品列表 -->
+            <!-- 商品列表 - 卡片样式 -->
             <div class="card">
-                <div class="card-title"><i class="fas fa-shopping-cart"></i> 可购买护航 <span class="badge" id="bossProductCount">0</span></div>
+                <div class="card-title"><i class="fas fa-shopping-cart"></i> 护航商品 <span id="bossProductCount" style="font-size:13px;font-weight:400;color:#8892a8;">0</span></div>
                 <div id="bossProductList"></div>
             </div>
-            <!-- 我的订单 -->
+        </div>
+
+        <!-- ===== 订单页面（我的订单 + 打赏） ===== -->
+        <div class="view" id="view-orders">
             <div class="card">
                 <div class="card-title"><i class="fas fa-history"></i> 我的订单</div>
                 <div id="bossMyOrders"></div>
             </div>
-            <!-- 打赏功能 -->
             <div class="card">
                 <div class="card-title"><i class="fas fa-gift" style="color:#f59e0b;"></i> 打赏打手</div>
                 <div id="bossTipSection">
@@ -262,10 +273,26 @@
             </div>
             <div class="tab-page active" id="tab-dashboard">
                 <div class="admin-card"><div class="admin-card-title"><i class="fas fa-chart-simple"></i> 数据概览</div><div id="statsGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"></div></div>
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-clock"></i> 最近订单 <button class="btn btn-danger btn-xs" onclick="confirmDeleteAllRecent()" style="float:right;">清空全部</button></div><div id="recentOrdersList"></div></div>
+                <div class="admin-card">
+                    <div class="collapse-toggle" onclick="toggleCollapse('recentOrders')">
+                        <span>📋 最近订单</span>
+                        <span id="recentOrdersArrow">▶</span>
+                    </div>
+                    <div class="collapse-content" id="recentOrdersContent">
+                        <div id="recentOrdersList"></div>
+                    </div>
+                </div>
             </div>
             <div class="tab-page" id="tab-products">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-filter"></i> 商品列表</div><div id="productsList"></div></div>
+                <div class="admin-card">
+                    <div class="collapse-toggle" onclick="toggleCollapse('productsList')">
+                        <span>📦 商品列表</span>
+                        <span id="productsListArrow">▶</span>
+                    </div>
+                    <div class="collapse-content" id="productsListContent">
+                        <div id="productsList"></div>
+                    </div>
+                </div>
                 <div class="admin-card" style="border-left:4px solid #22c55e;">
                     <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#22c55e;"></i> 上架新商品</div>
                     <div class="admin-form-group"><label><i class="fas fa-gamepad"></i> 游戏</label><select class="admin-form-control" id="prodGame"><option value="暗区突围">暗区突围</option><option value="三角洲">三角洲</option></select></div>
@@ -273,6 +300,7 @@
                     <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="prodDesc" rows="2" placeholder="服务详情"></textarea></div>
                     <div class="admin-form-group"><label><i class="fas fa-yen-sign"></i> 价格</label><input class="admin-form-control" id="prodPrice" type="number" placeholder="288"></div>
                     <div class="admin-form-group"><label><i class="fas fa-boxes"></i> 库存</label><input class="admin-form-control" id="prodQuantity" type="number" placeholder="1" value="1"></div>
+                    <div class="admin-form-group"><label><i class="fas fa-image"></i> 商品图片(可选)</label><input class="admin-form-control" id="prodImage" type="text" placeholder="图片URL，留空使用默认图标"></div>
                     <button class="btn btn-success" onclick="shelfProduct()"><i class="fas fa-upload"></i> 上架商品</button>
                 </div>
                 <div class="admin-card" style="border-left:4px solid #f59e0b;">
@@ -286,18 +314,32 @@
                 </div>
             </div>
             <div class="tab-page" id="tab-orders">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-filter"></i> 所有订单</div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-                        <select class="admin-form-control" id="filterOrderStatus" style="width:140px;padding:6px 12px;" onchange="renderAdminOrders()">
-                            <option value="all">全部</option><option value="pending">待接单</option><option value="ongoing">进行中</option><option value="review">待验收</option><option value="completed">已完成</option><option value="canceled">已取消</option><option value="rejected">已驳回</option><option value="refund_pending">退款申请</option><option value="refunded">已退款</option>
-                        </select>
-                        <button class="btn btn-outline btn-sm" onclick="renderAdminOrders()"><i class="fas fa-sync"></i> 刷新</button>
+                <div class="admin-card">
+                    <div class="collapse-toggle" onclick="toggleCollapse('adminOrders')">
+                        <span>📋 所有订单</span>
+                        <span id="adminOrdersArrow">▶</span>
                     </div>
-                    <div id="adminOrdersList"></div>
+                    <div class="collapse-content" id="adminOrdersContent">
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                            <select class="admin-form-control" id="filterOrderStatus" style="width:140px;padding:6px 12px;" onchange="renderAdminOrders()">
+                                <option value="all">全部</option><option value="pending">待接单</option><option value="ongoing">进行中</option><option value="review">待验收</option><option value="completed">已完成</option><option value="canceled">已取消</option><option value="rejected">已驳回</option><option value="refund_pending">退款申请</option><option value="refunded">已退款</option>
+                            </select>
+                            <button class="btn btn-outline btn-sm" onclick="renderAdminOrders()"><i class="fas fa-sync"></i> 刷新</button>
+                        </div>
+                        <div id="adminOrdersList"></div>
+                    </div>
                 </div>
             </div>
             <div class="tab-page" id="tab-recharges">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-coins"></i> 充值申请</div><div id="rechargeList"></div></div>
+                <div class="admin-card">
+                    <div class="collapse-toggle" onclick="toggleCollapse('rechargesList')">
+                        <span>💰 充值申请</span>
+                        <span id="rechargesListArrow">▶</span>
+                    </div>
+                    <div class="collapse-content" id="rechargesListContent">
+                        <div id="rechargeList"></div>
+                    </div>
+                </div>
                 <div class="admin-card"><div class="admin-card-title"><i class="fas fa-gift"></i> 赠送红钻</div>
                     <div class="admin-form-group"><label>选择老板</label><select class="admin-form-control" id="giftUser"></select></div>
                     <div class="admin-form-group"><label>红钻数量</label><input class="admin-form-control" id="giftAmount" type="number" placeholder="数量"></div>
@@ -305,11 +347,17 @@
                 </div>
             </div>
             <div class="tab-page" id="tab-users">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-user-tie"></i> 用户管理</div>
-                    <div style="margin-bottom:12px;">
-                        <div class="admin-form-group"><label>搜索用户</label><input class="admin-form-control" id="searchUser" placeholder="输入用户名搜索" oninput="renderUsers()"></div>
+                <div class="admin-card">
+                    <div class="collapse-toggle" onclick="toggleCollapse('usersList')">
+                        <span>👥 用户管理</span>
+                        <span id="usersListArrow">▶</span>
                     </div>
-                    <div id="usersList"></div>
+                    <div class="collapse-content" id="usersListContent">
+                        <div style="margin-bottom:12px;">
+                            <div class="admin-form-group"><label>搜索用户</label><input class="admin-form-control" id="searchUser" placeholder="输入用户名搜索" oninput="renderUsers()"></div>
+                        </div>
+                        <div id="usersList"></div>
+                    </div>
                 </div>
             </div>
             <div class="tab-page" id="tab-announce">
@@ -342,7 +390,6 @@
                     <div class="info-row" id="accDiamondRow"><span class="label">红钻</span><span class="value" id="accDiamond">0</span></div>
                     <div class="info-row" id="accBalanceRow"><span class="label">余额</span><span class="value" id="accBalance">¥0</span></div>
                 </div>
-                <!-- 未登录时显示登录按钮 -->
                 <div id="loginSection" style="margin-top:12px;display:none;">
                     <button class="btn btn-primary btn-block" onclick="showLogin()"><i class="fas fa-sign-in-alt"></i> 登录账号</button>
                     <button class="btn btn-outline btn-block" onclick="showRegister()" style="margin-top:8px;"><i class="fas fa-user-plus"></i> 注册新账号</button>
@@ -354,15 +401,23 @@
 
     <!-- 底部导航 -->
     <div class="bottom-nav">
-        <button class="nav-item active" data-target="home" id="navHome"><i class="fas fa-home"></i><span>商城</span></button>
+        <button class="nav-item active" data-target="home"><i class="fas fa-store"></i><span>商城</span></button>
+        <button class="nav-item" data-target="orders" id="navOrders"><i class="fas fa-receipt"></i><span>订单</span></button>
         <button class="nav-item" data-target="handler" id="navHandler" style="display:none;"><i class="fas fa-gamepad"></i><span>打手</span></button>
         <button class="nav-item" data-target="admin" id="navAdmin" style="display:none;"><i class="fas fa-user-cog"></i><span>管理</span></button>
-        <button class="nav-item" data-target="account" id="navAccount"><i class="fas fa-user"></i><span>我的</span></button>
+        <button class="nav-item" data-target="account"><i class="fas fa-user"></i><span>我的</span></button>
     </div>
 </div>
 
-<!-- 模态框 -->
+<!-- ===== 模态框 ===== -->
 <div class="modal-overlay" id="customModal"><div class="modal-box" id="customModalContent"></div></div>
+<!-- 图片预览模态框 -->
+<div class="modal-overlay img-preview-modal" id="imgPreviewModal">
+    <div class="modal-box" onclick="closeImgPreview()">
+        <img id="imgPreviewSrc" src="" alt="预览" style="width:100%;border-radius:12px;" />
+        <div class="btn-row"><button class="btn btn-outline" onclick="closeImgPreview()">关闭</button></div>
+    </div>
+</div>
 <div id="toast" class="toast"></div>
 
 <script>
@@ -417,6 +472,15 @@ function closeCustomModal() {
     document.getElementById('customModal').classList.remove('active');
 }
 
+function closeImgPreview() {
+    document.getElementById('imgPreviewModal').classList.remove('active');
+}
+
+function showImgPreview(src) {
+    document.getElementById('imgPreviewSrc').src = src;
+    document.getElementById('imgPreviewModal').classList.add('active');
+}
+
 function confirmAction(title, message, confirmText, callback) {
     showCustomModal(`
         <h3>${title}</h3>
@@ -433,8 +497,16 @@ function updateRoleBasedUI() {
     const role = currentUser.role;
     document.getElementById('navHandler').style.display = (role === 'handler' || role === 'admin') ? 'flex' : 'none';
     document.getElementById('navAdmin').style.display = (role === 'admin') ? 'flex' : 'none';
-    document.getElementById('navHome').style.display = 'flex';
-    document.getElementById('navAccount').style.display = 'flex';
+    document.getElementById('navOrders').style.display = (role === 'boss' || role === 'admin') ? 'flex' : 'none';
+}
+
+function toggleCollapse(id) {
+    const content = document.getElementById(id + 'Content');
+    const arrow = document.getElementById(id + 'Arrow');
+    if (content) {
+        content.classList.toggle('open');
+        if (arrow) arrow.textContent = content.classList.contains('open') ? '▼' : '▶';
+    }
 }
 
 function showLogin() {
@@ -445,11 +517,10 @@ function showLogin() {
 function showRegister() {
     document.getElementById('authPage').style.display = 'flex';
     document.getElementById('mainApp').classList.add('hidden');
-    // 切换到注册
 }
 
 // ============================================================
-//  公告功能
+//  公告功能（图片点击放大）
 // ============================================================
 async function loadAnnounce() {
     try {
@@ -461,6 +532,7 @@ async function loadAnnounce() {
             data.images.forEach(img => {
                 const imgEl = document.createElement('img');
                 imgEl.src = img;
+                imgEl.onclick = function() { showImgPreview(img); };
                 imagesContainer.appendChild(imgEl);
             });
         }
@@ -470,7 +542,7 @@ async function loadAnnounce() {
         document.getElementById('announceEditContent').value = data.content || '';
         announceImages = data.images || [];
         renderAnnounceImagePreview();
-        document.getElementById('announcePreview').innerHTML = (data.content || '') + (data.images && data.images.length > 0 ? '<br><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' + data.images.map(img => '<img src="'+img+'" style="max-width:80px;max-height:80px;border-radius:8px;">').join('') + '</div>' : '');
+        document.getElementById('announcePreview').innerHTML = (data.content || '') + (data.images && data.images.length > 0 ? '<br><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' + data.images.map(img => '<img src="'+img+'" style="max-width:80px;max-height:80px;border-radius:8px;cursor:pointer;" onclick="showImgPreview(\''+img+'\')">').join('') + '</div>' : '');
     } catch (err) { console.error('加载公告失败', err); }
 }
 
@@ -496,7 +568,7 @@ function renderAnnounceImagePreview() {
     const container = document.getElementById('announceImagePreview');
     container.innerHTML = announceImages.map((img, i) =>
         `<div style="position:relative;display:inline-block;">
-            <img src="${img}" style="max-width:60px;max-height:60px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+            <img src="${img}" style="max-width:60px;max-height:60px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" onclick="showImgPreview('${img}')">
             <button onclick="removeAnnounceImage(${i})" style="position:absolute;top:-6px;right:-6px;background:#ef4444;border:none;color:#fff;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;line-height:18px;text-align:center;">×</button>
         </div>`
     ).join('');
@@ -563,8 +635,14 @@ async function doAuthRegister() {
         return;
     }
     try {
-        await apiRequest('/register', { method: 'POST', body: JSON.stringify({ username, password, role, phone: '', game: '' }) });
-        toast('注册成功，请登录', 'success');
+        // 打手账号需要审核，默认状态为 pending
+        const status = role === 'handler' ? 'pending' : 'active';
+        await apiRequest('/register', { method: 'POST', body: JSON.stringify({ username, password, role, phone: '', game: '', status }) });
+        if (role === 'handler') {
+            toast('注册成功，请等待管理员审核', 'success');
+        } else {
+            toast('注册成功，请登录', 'success');
+        }
         document.getElementById('authPassword').value = password;
         doAuthLogin();
     } catch (err) {
@@ -589,8 +667,8 @@ function doLogout() {
 function updateAccountInfo() {
     if (!currentUser) return;
     document.getElementById('accUsername').textContent = currentUser.username;
-    document.getElementById('accRole').textContent = currentUser.role === 'boss' ? '老板' : currentUser.role === 'handler' ? '打手' : '管理员';
-    document.getElementById('accStatus').textContent = currentUser.status === 'active' ? '正常' : '封禁';
+    document.getElementById('accRole').textContent = currentUser.role === 'boss' ? '老板' : currentUser.role === 'handler' ? (currentUser.status === 'pending' ? '待审核打手' : '打手') : '管理员';
+    document.getElementById('accStatus').textContent = currentUser.status === 'active' ? '正常' : currentUser.status === 'pending' ? '待审核' : '封禁';
     document.getElementById('accDiamond').textContent = currentUser.diamond || 0;
     document.getElementById('accBalance').textContent = '¥' + (currentUser.balance || 0);
     document.getElementById('accDiamondRow').style.display = currentUser.role === 'boss' || currentUser.role === 'admin' ? 'flex' : 'none';
@@ -618,25 +696,15 @@ document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
             renderBossView();
             return;
         }
-        const viewMap = { 'handler': 'view-handler', 'admin': 'view-admin', 'account': 'view-account' };
+        const viewMap = { 'orders': 'view-orders', 'handler': 'view-handler', 'admin': 'view-admin', 'account': 'view-account' };
         const viewId = viewMap[target];
         if (viewId) {
             document.getElementById(viewId).classList.add('active');
-            if (target === 'handler') renderHandlerView();
+            if (target === 'orders') { renderBossView(); loadTipHandlers(); }
+            else if (target === 'handler') renderHandlerView();
             else if (target === 'admin') renderAdminAll();
             else if (target === 'account') updateAccountInfo();
         }
-    });
-});
-
-document.querySelectorAll('.entry-card[data-target]').forEach(card => {
-    card.addEventListener('click', function() {
-        if (!currentUser) return toast('请先登录', 'warning');
-        const target = this.dataset.target;
-        if (this.style.display === 'none') return;
-        document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-        const navItem = document.querySelector(`.bottom-nav .nav-item[data-target="${target}"]`);
-        if (navItem && navItem.style.display !== 'none') navItem.click();
     });
 });
 
@@ -693,10 +761,12 @@ async function renderDashboard() {
         });
         html += '</tbody></table></div>';
         container.innerHTML = html;
+        // 默认展开最近订单
+        document.getElementById('recentOrdersContent').classList.add('open');
+        document.getElementById('recentOrdersArrow').textContent = '▼';
     } catch (err) { console.error(err); }
 }
 
-// 删除订单
 window.confirmDeleteOrder = function(orderId) {
     confirmAction('确认删除', '确认永久删除此订单？', '确认删除', `doDeleteOrder('${orderId}')`);
 };
@@ -709,29 +779,8 @@ async function doDeleteOrder(orderId) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
-window.confirmDeleteAllRecent = function() {
-    confirmAction('确认清空', '确认清空所有最近订单？此操作不可恢复。', '确认清空', `doDeleteAllRecent()`);
-};
-async function doDeleteAllRecent() {
-    try {
-        const orders = await apiRequest('/admin/orders');
-        const recent = orders.slice(0, 10);
-        for (const o of recent) {
-            await apiRequest('/admin/orders/' + o.id, { method: 'DELETE' });
-        }
-        toast('已清空', 'success');
-        renderAdminOrders();
-        renderDashboard();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-// 删除已结算订单
-window.confirmDeleteSettled = function(orderId) {
-    confirmAction('确认删除', '确认永久删除此已结算订单？', '确认删除', `doDeleteOrder('${orderId}')`);
-};
-
 // ============================================================
-//  商品管理
+//  商品管理（支持图片）
 // ============================================================
 async function renderProducts() {
     try {
@@ -765,83 +814,14 @@ async function renderProducts() {
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
+        // 默认折叠
+        document.getElementById('productsListContent').classList.remove('open');
+        document.getElementById('productsListArrow').textContent = '▶';
     } catch (err) { console.error(err); }
 }
 
-window.confirmUnshelf = function(productId) {
-    confirmAction('确认下架', '确认下架此商品？', '确认下架', `doUnshelf('${productId}')`);
-};
-async function doUnshelf(productId) {
-    try {
-        await apiRequest('/admin/products/' + productId + '/unshelf', { method: 'PUT' });
-        toast('已下架', 'success');
-        renderProducts();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-window.confirmReshelf = function(productId) {
-    confirmAction('确认重新上架', '确认重新上架此商品？', '确认上架', `doReshelf('${productId}')`);
-};
-async function doReshelf(productId) {
-    try {
-        await apiRequest('/admin/products/' + productId + '/reshelf', { method: 'PUT' });
-        toast('已重新上架', 'success');
-        renderProducts();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-window.confirmDeleteProduct = function(productId) {
-    confirmAction('确认删除', '确认永久删除此商品？', '确认删除', `doDeleteProduct('${productId}')`);
-};
-async function doDeleteProduct(productId) {
-    try {
-        await apiRequest('/admin/products/' + productId, { method: 'DELETE' });
-        toast('已删除', 'success');
-        renderProducts();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-async function shelfProduct() {
-    const game = document.getElementById('prodGame').value;
-    const title = document.getElementById('prodTitle').value.trim();
-    const desc = document.getElementById('prodDesc').value.trim();
-    const price = parseFloat(document.getElementById('prodPrice').value);
-    const quantity = parseInt(document.getElementById('prodQuantity').value) || 1;
-    if (!title || !price) return toast('请填写完整信息', 'error');
-    try {
-        await apiRequest('/admin/products', { method: 'POST', body: JSON.stringify({ game, title, desc, price, quantity }) });
-        toast('上架成功', 'success');
-        document.getElementById('prodTitle').value = '';
-        document.getElementById('prodDesc').value = '';
-        document.getElementById('prodPrice').value = '';
-        renderProducts();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
 // ============================================================
-//  直接发布订单
-// ============================================================
-window.directPublishOrder = function() {
-    const game = document.getElementById('directGame').value;
-    const title = document.getElementById('directTitle').value.trim();
-    const desc = document.getElementById('directDesc').value.trim();
-    const price = parseFloat(document.getElementById('directPrice').value);
-    if (!title || !price) return toast('请填写完整信息', 'error');
-    confirmAction('确认发布', `确认发布订单「${title}」？`, '确认发布', `doDirectPublish('${game}', '${title}', '${desc}', ${price})`);
-};
-async function doDirectPublish(game, title, desc, price) {
-    try {
-        await apiRequest('/admin/orders/direct', { method: 'POST', body: JSON.stringify({ game, title, desc, price }) });
-        toast('✅ 订单已发布', 'success');
-        document.getElementById('directTitle').value = '';
-        document.getElementById('directDesc').value = '';
-        document.getElementById('directPrice').value = '';
-        renderAdminOrders();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-// ============================================================
-//  订单管理（管理员）- 显示打手用户名
+//  订单管理
 // ============================================================
 async function renderAdminOrders() {
     try {
@@ -895,6 +875,8 @@ async function renderAdminOrders() {
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
+        document.getElementById('adminOrdersContent').classList.remove('open');
+        document.getElementById('adminOrdersArrow').textContent = '▶';
     } catch (err) { console.error(err); }
 }
 
@@ -924,70 +906,13 @@ async function renderRecharges() {
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
+        document.getElementById('rechargesListContent').classList.remove('open');
+        document.getElementById('rechargesListArrow').textContent = '▶';
     } catch (err) { console.error(err); }
 }
-
-window.confirmApproveRecharge = function(rechargeId) {
-    confirmAction('确认通过充值', '确认通过此充值申请？红钻将直接到账。', '确认通过', `doApproveRecharge('${rechargeId}')`);
-};
-async function doApproveRecharge(rechargeId) {
-    try {
-        await apiRequest('/admin/recharges/' + rechargeId + '/approve', { method: 'PUT' });
-        toast('✅ 充值已通过，红钻已到账', 'success');
-        renderRecharges();
-        renderBossView();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-window.confirmRejectRecharge = function(rechargeId) {
-    confirmAction('确认拒绝充值', '确认拒绝此充值申请？', '确认拒绝', `doRejectRecharge('${rechargeId}')`);
-};
-async function doRejectRecharge(rechargeId) {
-    try {
-        await apiRequest('/admin/recharges/' + rechargeId + '/reject', { method: 'PUT' });
-        toast('已拒绝', 'warning');
-        renderRecharges();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-window.confirmDeleteRecharge = function(rechargeId) {
-    confirmAction('确认删除', '确认删除此充值申请？', '确认删除', `doDeleteRecharge('${rechargeId}')`);
-};
-async function doDeleteRecharge(rechargeId) {
-    try {
-        await apiRequest('/admin/recharges/' + rechargeId, { method: 'DELETE' });
-        toast('已删除', 'success');
-        renderRecharges();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-async function populateGiftUsers() {
-    try {
-        const users = await apiRequest('/admin/users');
-        const sel = document.getElementById('giftUser');
-        sel.innerHTML = '<option value="">-- 请选择 --</option>';
-        users.filter(u => u.role === 'boss').forEach(u => {
-            sel.innerHTML += `<option value="${u.id}">${u.username}</option>`;
-        });
-    } catch (err) { console.error(err); }
-}
-
-window.sendGift = function() {
-    const targetUserId = document.getElementById('giftUser').value;
-    const amount = parseInt(document.getElementById('giftAmount').value);
-    if (!targetUserId || !amount) return toast('请选择老板并输入数量', 'error');
-    apiRequest('/admin/gift', { method: 'POST', body: JSON.stringify({ targetUserId, amount }) })
-        .then(() => {
-            toast('赠送成功', 'success');
-            document.getElementById('giftAmount').value = '';
-            renderRecharges();
-            renderBossView();
-        })
-        .catch(err => toast(err.message, 'error'));
-};
 
 // ============================================================
-//  用户管理（带折叠）
+//  用户管理（含修改用户名、打手审核）
 // ============================================================
 async function renderUsers() {
     try {
@@ -999,64 +924,71 @@ async function renderUsers() {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>暂无用户</p></div>';
             return;
         }
-        let html = `
-            <div class="collapse-toggle" onclick="toggleCollapse('userTable')">
-                <span>👥 用户列表 (${filtered.length})</span>
-                <span id="userTableArrow">▼</span>
-            </div>
-            <div class="collapse-content open" id="userTableContent">
-                <div class="table-wrap">
-                    <table>
-                        <thead><tr><th>用户名</th><th>角色</th><th>红钻</th><th>余额</th><th>状态</th><th>操作</th></tr></thead>
-                        <tbody>`;
+        let html = '<div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>红钻</th><th>余额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const u of filtered) {
-            const roleText = u.role === 'boss' ? '老板' : u.role === 'handler' ? '打手' : '管理员';
-            const statusText2 = u.status === 'active' ? '正常' : '封禁';
-            const statusCls = u.status === 'active' ? 'status-onsale' : 'status-canceled';
+            let roleText = u.role === 'boss' ? '老板' : u.role === 'handler' ? (u.status === 'pending' ? '待审核打手' : '打手') : '管理员';
+            let statusText2 = u.status === 'active' ? '正常' : u.status === 'pending' ? '待审核' : '封禁';
+            let statusCls = u.status === 'active' ? 'status-onsale' : u.status === 'pending' ? 'status-pending' : 'status-canceled';
             let actions = '';
             if (u.role !== 'admin') {
+                // 打手审核
+                if (u.role === 'handler' && u.status === 'pending') {
+                    actions += `<button class="btn btn-success btn-xs" onclick="approveHandler('${u.id}')">审核通过</button>`;
+                }
                 actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>`;
                 actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
+                // 修改用户名
+                actions += `<button class="btn btn-primary btn-xs" onclick="changeUsername('${u.id}','${u.username}')">改用户名</button>`;
             }
-            html += `<tr><td>${u.username}</td><td>${roleText}</td><td>${u.diamond||0}</td><td>¥${u.balance||0}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td>${actions}</td></tr>`;
+            html += `<tr><td>${u.username}</td><td>${roleText}</td><td>${u.diamond||0}</td><td>¥${u.balance||0}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
         }
-        html += '</tbody></table></div></div>';
+        html += '</tbody></table></div>';
         container.innerHTML = html;
+        document.getElementById('usersListContent').classList.remove('open');
+        document.getElementById('usersListArrow').textContent = '▶';
     } catch (err) { console.error(err); }
 }
 
-function toggleCollapse(id) {
-    const content = document.getElementById(id + 'Content');
-    const arrow = document.getElementById(id + 'Arrow');
-    if (content) {
-        content.classList.toggle('open');
-        if (arrow) arrow.textContent = content.classList.contains('open') ? '▼' : '▶';
-    }
-}
-
-window.toggleUserBan = function(userId) {
-    confirmAction('确认操作', '确认更改此用户状态？', '确认', `doToggleUserBan('${userId}')`);
+// 审核打手
+window.approveHandler = function(userId) {
+    confirmAction('审核通过', '确认通过此打手账号审核？', '确认通过', `doApproveHandler('${userId}')`);
 };
-async function doToggleUserBan(userId) {
+async function doApproveHandler(userId) {
     try {
-        await apiRequest('/admin/users/' + userId + '/ban', { method: 'PUT' });
-        toast('用户状态已更新', 'success');
+        await apiRequest('/admin/users/' + userId + '/approve', { method: 'PUT' });
+        toast('✅ 打手账号已审核通过', 'success');
         renderUsers();
     } catch (err) { toast(err.message, 'error'); }
 }
 
-window.resetUserPassword = function(userId) {
-    confirmAction('重置密码', '确认将用户密码重置为 123456？', '确认重置', `doResetPassword('${userId}')`);
+// 修改用户名
+window.changeUsername = function(userId, currentName) {
+    showCustomModal(`
+        <h3><i class="fas fa-user-edit"></i> 修改用户名</h3>
+        <p style="color:#8892a8;font-size:14px;">当前用户名：<strong>${currentName}</strong></p>
+        <div class="form-group">
+            <label>新用户名</label>
+            <input class="admin-form-control" id="newUsernameInput" placeholder="输入新用户名" />
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-primary" onclick="doChangeUsername('${userId}')">确认修改</button>
+        </div>
+    `);
 };
-async function doResetPassword(userId) {
+async function doChangeUsername(userId) {
+    const newUsername = document.getElementById('newUsernameInput').value.trim();
+    if (!newUsername) return toast('请输入新用户名', 'warning');
     try {
-        await apiRequest('/admin/users/' + userId + '/reset-password', { method: 'PUT' });
-        toast('密码已重置为 123456', 'success');
+        await apiRequest('/admin/users/' + userId + '/username', { method: 'PUT', body: JSON.stringify({ username: newUsername }) });
+        closeCustomModal();
+        toast('✅ 用户名已修改', 'success');
+        renderUsers();
     } catch (err) { toast(err.message, 'error'); }
 }
 
 // ============================================================
-//  老板视图
+//  老板视图（卡片样式商品）
 // ============================================================
 async function renderBossView() {
     try {
@@ -1077,14 +1009,34 @@ async function renderBossView() {
         let html = '';
         for (const p of products) {
             const remaining = p.quantity - p.sold;
+            // 图片处理
+            let imgHtml = '';
+            if (p.image) {
+                imgHtml = `<img src="${p.image}" style="width:100%;height:160px;object-fit:cover;" />`;
+            } else {
+                // 根据游戏显示不同图标
+                const icon = p.game === '暗区突围' ? '🎯' : '🚁';
+                imgHtml = `<div style="width:100%;height:160px;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(145deg,#10182e,#1a2648);">${icon}</div>`;
+            }
+            // 标签
+            const tags = p.tags ? p.tags.split(',').map(t => `<span>${t.trim()}</span>`).join('') : '';
             html += `
-                <div class="card" style="padding:14px;border-left:3px solid ${remaining>0?'#f5c842':'transparent'};">
-                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                        <div><strong>${p.game} · ${p.title}</strong><br><span style="font-size:13px;color:#8892a8;">剩余 ${remaining} 单</span><br><span style="font-size:13px;color:#b0b8c8;">${p.desc||''}</span></div>
-                        <div style="text-align:right;">
-                            <span style="font-size:20px;font-weight:700;color:#f5c842;">${p.price*10} <i class="fas fa-gem"></i></span><br>
-                            <span style="font-size:12px;color:#8892a8;">¥${p.price}</span><br>
-                            ${remaining > 0 ? `<button class="btn btn-success btn-sm" onclick="confirmBuy('${p.id}')">购买</button>` : '<span class="status-badge status-soldout">已售罄</span>'}
+                <div class="product-card">
+                    <div style="position:relative;">
+                        ${imgHtml}
+                        <div class="tag">${p.game || '暗区突围'}</div>
+                    </div>
+                    <div class="product-body">
+                        <div class="product-title">${p.title}</div>
+                        <div class="product-desc">${p.desc || ''}</div>
+                        <div class="product-tags">${tags}</div>
+                        <div class="product-stock">剩余 ${remaining} 单</div>
+                        <div class="product-bottom">
+                            <div>
+                                <span class="product-price">¥${p.price}</span>
+                                ${p.original_price ? `<small>¥${p.original_price}</small>` : ''}
+                            </div>
+                            ${remaining > 0 ? `<button class="btn btn-success btn-sm" onclick="confirmBuy('${p.id}')">立即购买</button>` : '<span class="status-badge status-soldout">已售罄</span>'}
                         </div>
                     </div>
                 </div>
@@ -1092,6 +1044,7 @@ async function renderBossView() {
         }
         container.innerHTML = html;
 
+        // 订单列表
         const orders = await apiRequest('/orders/my');
         const myContainer = document.getElementById('bossMyOrders');
         if (orders.length === 0) { myContainer.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><p>暂无订单</p></div>'; return; }
@@ -1113,12 +1066,12 @@ async function renderBossView() {
     } catch (err) { console.error(err); }
 }
 
-// 加载打手列表用于打赏
+// 加载打手列表
 async function loadTipHandlers() {
     try {
         if (!currentUser) return;
         const users = await apiRequest('/admin/users');
-        const handlers = users.filter(u => u.role === 'handler');
+        const handlers = users.filter(u => u.role === 'handler' && u.status === 'active');
         const sel = document.getElementById('tipHandlerSelect');
         sel.innerHTML = '<option value="">-- 请选择打手 --</option>';
         handlers.forEach(h => {
@@ -1127,7 +1080,7 @@ async function loadTipHandlers() {
     } catch (err) { console.error(err); }
 }
 
-// 打赏功能
+// 打赏
 window.sendTip = function() {
     if (!currentUser) {
         toast('请先登录', 'warning');
@@ -1143,7 +1096,6 @@ async function doSendTip(handlerId, amount) {
     try {
         const user = await apiRequest('/me');
         if (user.diamond < amount) return toast('红钻不足', 'error');
-        // 先扣老板红钻，再加打手红钻（暂用赠送接口）
         await apiRequest('/admin/gift', { method: 'POST', body: JSON.stringify({ targetUserId: handlerId, amount }) });
         toast('✅ 打赏成功！', 'success');
         document.getElementById('tipAmount').value = '';
@@ -1171,321 +1123,8 @@ async function doBuy(productId) {
     }
 }
 
-window.confirmBossComplete = function(orderId) {
-    confirmAction('确认完成', '确认已完成此订单服务？', '确认完成', `doBossComplete('${orderId}')`);
-};
-async function doBossComplete(orderId) {
-    try {
-        await apiRequest('/orders/' + orderId + '/boss-confirm', { method: 'PUT' });
-        toast('已确认完成，等待管理员结算', 'success');
-        renderBossView();
-        renderHandlerView();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.requestRefund = function(orderId) {
-    showCustomModal(`
-        <h3><i class="fas fa-undo"></i> 申请退款</h3>
-        <p style="color:#8892a8;font-size:14px;">请填写退款原因：</p>
-        <div class="form-group"><label>退款原因</label><textarea class="admin-form-control" id="refundReasonInput" rows="3" placeholder="请详细说明退款原因..."></textarea></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-warning" onclick="doRequestRefund('${orderId}')">提交退款</button>
-        </div>
-    `);
-};
-async function doRequestRefund(orderId) {
-    const reason = document.getElementById('refundReasonInput').value.trim();
-    if (!reason) return toast('请填写退款原因', 'warning');
-    closeCustomModal();
-    try {
-        await apiRequest('/orders/' + orderId + '/refund-request', { method: 'PUT', body: JSON.stringify({ reason }) });
-        toast('退款申请已提交', 'success');
-        renderBossView();
-        renderAdminOrders();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.viewOrderDetail = function(orderId) {
-    apiRequest('/orders/' + orderId).then(order => {
-        const handlerName = order.handler_id ? order.handler_id : '未指派';
-        const messagesHtml = order.messages && order.messages.length > 0 ?
-            order.messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:#8892a8;">${msg.time}</span></div>`).join('') :
-            '暂无消息';
-        showCustomModal(`
-            <h3><i class="fas fa-info-circle"></i> 订单详情</h3>
-            <div style="margin:12px 0;text-align:left;">
-                <div class="detail-row"><span class="label">订单号</span><span class="value">${order.id}</span></div>
-                <div class="detail-row"><span class="label">游戏</span><span class="value">${order.game}</span></div>
-                <div class="detail-row"><span class="label">标题</span><span class="value">${order.title}</span></div>
-                <div class="detail-row"><span class="label">价格</span><span class="value">¥${order.price}</span></div>
-                <div class="detail-row"><span class="label">状态</span><span class="value"><span class="status-badge ${statusClass(order.status)}">${statusText(order.status)}</span></span></div>
-                <div class="detail-row"><span class="label">打手</span><span class="value">${handlerName}</span></div>
-                <div class="detail-row"><span class="label">创建时间</span><span class="value">${order.createTime}</span></div>
-                ${order.start_time ? `<div class="detail-row"><span class="label">开始时间</span><span class="value">${order.start_time}</span></div>` : ''}
-                ${order.end_time ? `<div class="detail-row"><span class="label">结束时间</span><span class="value">${order.end_time}</span></div>` : ''}
-                ${order.settled ? `<div class="detail-row"><span class="label">结算金额</span><span class="value">¥${order.settled_amount||order.price}</span></div>` : ''}
-                ${order.refund_reason ? `<div class="detail-row"><span class="label">退款原因</span><span class="value">${order.refund_reason}</span></div>` : ''}
-            </div>
-            <div style="border-top:1px solid #2a2f3a;padding-top:12px;text-align:left;">
-                <div style="font-weight:600;margin-bottom:8px;">聊天记录</div>
-                <div style="max-height:200px;overflow-y:auto;font-size:13px;background:#0b0d10;padding:8px;border-radius:8px;">${messagesHtml}</div>
-            </div>
-            <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
-        `);
-    }).catch(err => toast(err.message, 'error'));
-};
-
 // ============================================================
-//  打手视图
-// ============================================================
-async function renderHandlerView() {
-    try {
-        if (!currentUser) {
-            document.getElementById('handlerBalance').textContent = '请登录';
-            return;
-        }
-        const user = await apiRequest('/me');
-        document.getElementById('handlerBalance').textContent = '¥' + (user.balance || 0);
-
-        const orders = await apiRequest('/orders/my');
-
-        const pending = orders.filter(o => o.status === 'pending');
-        document.getElementById('handlerPendingCount').textContent = pending.length;
-        const pContainer = document.getElementById('handlerPendingList');
-        if (pending.length === 0) {
-            pContainer.innerHTML = '<div class="empty-state"><i class="fas fa-clock"></i><p>暂无待接单</p></div>';
-        } else {
-            let html = '';
-            for (const o of pending) {
-                html += `
-                    <div class="card" style="padding:14px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                            <div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price}</span></div>
-                            <button class="btn btn-primary btn-sm" onclick="confirmTake('${o.id}')">接单</button>
-                        </div>
-                    </div>
-                `;
-            }
-            pContainer.innerHTML = html;
-        }
-
-        const ongoing = orders.filter(o => o.status === 'ongoing' || o.status === 'review');
-        const oContainer = document.getElementById('handlerOngoingList');
-        if (ongoing.length === 0) {
-            oContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>暂无进行中的订单</p></div>';
-        } else {
-            let html = '';
-            for (const o of ongoing) {
-                const statusText2 = o.status === 'ongoing' ? '进行中' : '待验收';
-                const statusCls = o.status === 'ongoing' ? 'status-ongoing' : 'status-review';
-                let actions = '';
-                if (o.status === 'ongoing') actions += `<button class="btn btn-warning btn-sm" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
-                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button>`;
-                actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
-                html += `
-                    <div class="card" style="padding:14px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                            <div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price} ｜ 状态：<span class="status-badge ${statusCls}">${statusText2}</span></span></div>
-                            <div style="display:flex;gap:4px;flex-wrap:wrap;">${actions}</div>
-                        </div>
-                    </div>
-                `;
-            }
-            oContainer.innerHTML = html;
-        }
-
-        const completed = orders.filter(o => o.status === 'completed');
-        const cContainer = document.getElementById('handlerCompletedList');
-        if (completed.length === 0) {
-            cContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-double"></i><p>暂无已完成订单</p></div>';
-        } else {
-            let html = '';
-            for (const o of completed) {
-                const settledText = o.settled ? '已结算' : '待结算';
-                const settledCls = o.settled ? 'status-onsale' : 'status-pending';
-                html += `
-                    <div class="card" style="padding:14px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                            <div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price} ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.create_time}</span></div>
-                            <button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button>
-                            <button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>
-                        </div>
-                    </div>
-                `;
-            }
-            cContainer.innerHTML = html;
-        }
-    } catch (err) { console.error(err); }
-}
-
-window.confirmTake = function(orderId) {
-    confirmAction('确认接单', '确认接取此订单？', '确认接单', `doTake('${orderId}')`);
-};
-async function doTake(orderId) {
-    try {
-        await apiRequest('/orders/' + orderId + '/take', { method: 'PUT' });
-        toast('接单成功', 'success');
-        renderHandlerView();
-        renderBossView();
-        renderAdminOrders();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.confirmSubmitComplete = function(orderId) {
-    confirmAction('提交完成', '确认已完成此订单服务？', '确认提交', `doSubmitComplete('${orderId}')`);
-};
-async function doSubmitComplete(orderId) {
-    try {
-        await apiRequest('/orders/' + orderId + '/submit-complete', { method: 'PUT' });
-        toast('已提交验收', 'success');
-        renderHandlerView();
-        renderBossView();
-        renderAdminOrders();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-// ============================================================
-//  管理员订单操作
-// ============================================================
-window.adminAssignHandler = function(orderId) {
-    apiRequest('/admin/users').then(users => {
-        const handlers = users.filter(u => u.role === 'handler');
-        if (handlers.length === 0) {
-            toast('暂无打手可指派', 'warning');
-            return;
-        }
-        let options = handlers.map(u => `<option value="${u.id}">${u.username}</option>`).join('');
-        showCustomModal(`
-            <h3><i class="fas fa-user-check"></i> 指派打手</h3>
-            <p style="color:#8892a8;font-size:14px;">选择要指派的打手：</p>
-            <div class="form-group">
-                <label>打手</label>
-                <select class="admin-form-control" id="assignHandlerSelect">${options}</select>
-            </div>
-            <div class="btn-row">
-                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-                <button class="btn btn-success" onclick="doAdminAssign('${orderId}')">确认指派</button>
-            </div>
-        `);
-    }).catch(err => toast(err.message, 'error'));
-};
-window.doAdminAssign = function(orderId) {
-    const handlerId = document.getElementById('assignHandlerSelect').value;
-    if (!handlerId) return toast('请选择打手', 'warning');
-    apiRequest('/admin/orders/' + orderId + '/assign', { method: 'PUT', body: JSON.stringify({ handlerId }) })
-        .then(() => {
-            closeCustomModal();
-            toast('✅ 指派成功', 'success');
-            renderAdminOrders();
-        })
-        .catch(err => toast(err.message, 'error'));
-};
-
-window.adminForceComplete = function(orderId) {
-    confirmAction('确认强制完成', '确认强制完成此订单？', '确认强制完成', `doForceComplete('${orderId}')`);
-};
-async function doForceComplete(orderId) {
-    try {
-        await apiRequest('/admin/orders/' + orderId + '/force-complete', { method: 'PUT' });
-        toast('强制完成成功', 'success');
-        renderAdminOrders();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-window.adminConfirmComplete = function(orderId) {
-    confirmAction('确认验收通过', '确认此订单验收通过？', '确认通过', `doConfirmComplete('${orderId}')`);
-};
-async function doConfirmComplete(orderId) {
-    try {
-        await apiRequest('/admin/orders/' + orderId + '/confirm', { method: 'PUT' });
-        toast('验收通过', 'success');
-        renderAdminOrders();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-window.adminRejectOrder = function(orderId) {
-    const reason = prompt('请输入驳回原因：');
-    if (reason === null) return;
-    apiRequest('/admin/orders/' + orderId + '/reject', { method: 'PUT', body: JSON.stringify({ reason }) })
-        .then(() => { toast('已驳回', 'warning'); renderAdminOrders(); })
-        .catch(err => toast(err.message, 'error'));
-};
-
-window.adminCancelOrder = function(orderId) {
-    confirmAction('确认取消', '确认取消此订单？', '确认取消', `doCancelOrder('${orderId}')`);
-};
-async function doCancelOrder(orderId) {
-    try {
-        await apiRequest('/admin/orders/' + orderId + '/cancel', { method: 'PUT' });
-        toast('已取消', 'warning');
-        renderAdminOrders();
-    } catch (err) { toast(err.message, 'error'); }
-};
-
-window.adminSettleOrder = function(orderId) {
-    showCustomModal(`
-        <h3><i class="fas fa-coins"></i> 结算打手</h3>
-        <p style="color:#8892a8;font-size:14px;">请输入打手收入金额（元）：</p>
-        <div class="form-group"><label>金额</label><input class="admin-form-control" id="settleAmountInput" type="number" placeholder="输入金额" step="0.01"></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="doSettleOrder('${orderId}')">确认结算</button>
-        </div>
-    `);
-};
-async function doSettleOrder(orderId) {
-    const earning = document.getElementById('settleAmountInput').value;
-    if (!earning) return toast('请输入金额', 'warning');
-    const amount = parseFloat(earning);
-    if (isNaN(amount) || amount < 0) return toast('请输入有效金额', 'error');
-    closeCustomModal();
-    try {
-        await apiRequest('/admin/orders/' + orderId + '/settle', { method: 'PUT', body: JSON.stringify({ earning: amount }) });
-        toast(`✅ 结算成功，打手收入 ¥${amount}`, 'success');
-        renderAdminOrders();
-        renderHandlerView();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.adminRefundApprove = function(orderId) {
-    confirmAction('确认通过退款', '确认通过此退款申请？红钻将返还给老板。', '确认通过', `doRefundApprove('${orderId}')`);
-};
-async function doRefundApprove(orderId) {
-    try {
-        await apiRequest('/admin/orders/' + orderId + '/refund', { method: 'PUT', body: JSON.stringify({ approve: true }) });
-        toast('✅ 退款已通过，红钻已返还', 'success');
-        renderAdminOrders();
-        renderBossView();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.adminRefundReject = function(orderId) {
-    const reason = prompt('请输入拒绝原因：');
-    if (reason === null) return;
-    apiRequest('/admin/orders/' + orderId + '/refund', { method: 'PUT', body: JSON.stringify({ approve: false, rejectReason: reason }) })
-        .then(() => {
-            toast('已拒绝退款', 'warning');
-            renderAdminOrders();
-            renderBossView();
-        })
-        .catch(err => toast(err.message, 'error'));
-};
-
-// ============================================================
-//  充值、邮件、聊天
+//  其他功能（充值、邮件、聊天、打手等）
 // ============================================================
 const rechargeOptions = [
     { amount: 1, diamond: 10 },
@@ -1618,12 +1257,472 @@ window.openChat = function(orderId) {
 };
 
 // ============================================================
+//  管理员快捷操作（复用之前的函数）
+// ============================================================
+window.confirmUnshelf = function(productId) {
+    confirmAction('确认下架', '确认下架此商品？', '确认下架', `doUnshelf('${productId}')`);
+};
+async function doUnshelf(productId) {
+    try {
+        await apiRequest('/admin/products/' + productId + '/unshelf', { method: 'PUT' });
+        toast('已下架', 'success');
+        renderProducts();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.confirmReshelf = function(productId) {
+    confirmAction('确认重新上架', '确认重新上架此商品？', '确认上架', `doReshelf('${productId}')`);
+};
+async function doReshelf(productId) {
+    try {
+        await apiRequest('/admin/products/' + productId + '/reshelf', { method: 'PUT' });
+        toast('已重新上架', 'success');
+        renderProducts();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.confirmDeleteProduct = function(productId) {
+    confirmAction('确认删除', '确认永久删除此商品？', '确认删除', `doDeleteProduct('${productId}')`);
+};
+async function doDeleteProduct(productId) {
+    try {
+        await apiRequest('/admin/products/' + productId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderProducts();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function shelfProduct() {
+    const game = document.getElementById('prodGame').value;
+    const title = document.getElementById('prodTitle').value.trim();
+    const desc = document.getElementById('prodDesc').value.trim();
+    const price = parseFloat(document.getElementById('prodPrice').value);
+    const quantity = parseInt(document.getElementById('prodQuantity').value) || 1;
+    const image = document.getElementById('prodImage').value.trim();
+    if (!title || !price) return toast('请填写完整信息', 'error');
+    try {
+        await apiRequest('/admin/products', { method: 'POST', body: JSON.stringify({ game, title, desc, price, quantity, image }) });
+        toast('上架成功', 'success');
+        document.getElementById('prodTitle').value = '';
+        document.getElementById('prodDesc').value = '';
+        document.getElementById('prodPrice').value = '';
+        document.getElementById('prodImage').value = '';
+        renderProducts();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.directPublishOrder = function() {
+    const game = document.getElementById('directGame').value;
+    const title = document.getElementById('directTitle').value.trim();
+    const desc = document.getElementById('directDesc').value.trim();
+    const price = parseFloat(document.getElementById('directPrice').value);
+    if (!title || !price) return toast('请填写完整信息', 'error');
+    confirmAction('确认发布', `确认发布订单「${title}」？`, '确认发布', `doDirectPublish('${game}', '${title}', '${desc}', ${price})`);
+};
+async function doDirectPublish(game, title, desc, price) {
+    try {
+        await apiRequest('/admin/orders/direct', { method: 'POST', body: JSON.stringify({ game, title, desc, price }) });
+        toast('✅ 订单已发布', 'success');
+        document.getElementById('directTitle').value = '';
+        document.getElementById('directDesc').value = '';
+        document.getElementById('directPrice').value = '';
+        renderAdminOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.adminAssignHandler = function(orderId) {
+    apiRequest('/admin/users').then(users => {
+        const handlers = users.filter(u => u.role === 'handler' && u.status === 'active');
+        if (handlers.length === 0) {
+            toast('暂无可用打手', 'warning');
+            return;
+        }
+        let options = handlers.map(u => `<option value="${u.id}">${u.username}</option>`).join('');
+        showCustomModal(`
+            <h3><i class="fas fa-user-check"></i> 指派打手</h3>
+            <p style="color:#8892a8;font-size:14px;">选择要指派的打手：</p>
+            <div class="form-group">
+                <label>打手</label>
+                <select class="admin-form-control" id="assignHandlerSelect">${options}</select>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doAdminAssign('${orderId}')">确认指派</button>
+            </div>
+        `);
+    }).catch(err => toast(err.message, 'error'));
+};
+window.doAdminAssign = function(orderId) {
+    const handlerId = document.getElementById('assignHandlerSelect').value;
+    if (!handlerId) return toast('请选择打手', 'warning');
+    apiRequest('/admin/orders/' + orderId + '/assign', { method: 'PUT', body: JSON.stringify({ handlerId }) })
+        .then(() => {
+            closeCustomModal();
+            toast('✅ 指派成功', 'success');
+            renderAdminOrders();
+        })
+        .catch(err => toast(err.message, 'error'));
+};
+
+window.adminForceComplete = function(orderId) {
+    confirmAction('确认强制完成', '确认强制完成此订单？', '确认强制完成', `doForceComplete('${orderId}')`);
+};
+async function doForceComplete(orderId) {
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/force-complete', { method: 'PUT' });
+        toast('强制完成成功', 'success');
+        renderAdminOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.adminConfirmComplete = function(orderId) {
+    confirmAction('确认验收通过', '确认此订单验收通过？', '确认通过', `doConfirmComplete('${orderId}')`);
+};
+async function doConfirmComplete(orderId) {
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/confirm', { method: 'PUT' });
+        toast('验收通过', 'success');
+        renderAdminOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.adminRejectOrder = function(orderId) {
+    const reason = prompt('请输入驳回原因：');
+    if (reason === null) return;
+    apiRequest('/admin/orders/' + orderId + '/reject', { method: 'PUT', body: JSON.stringify({ reason }) })
+        .then(() => { toast('已驳回', 'warning'); renderAdminOrders(); })
+        .catch(err => toast(err.message, 'error'));
+};
+
+window.adminCancelOrder = function(orderId) {
+    confirmAction('确认取消', '确认取消此订单？', '确认取消', `doCancelOrder('${orderId}')`);
+};
+async function doCancelOrder(orderId) {
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/cancel', { method: 'PUT' });
+        toast('已取消', 'warning');
+        renderAdminOrders();
+    } catch (err) { toast(err.message, 'error'); }
+};
+
+window.adminSettleOrder = function(orderId) {
+    showCustomModal(`
+        <h3><i class="fas fa-coins"></i> 结算打手</h3>
+        <p style="color:#8892a8;font-size:14px;">请输入打手收入金额（元）：</p>
+        <div class="form-group"><label>金额</label><input class="admin-form-control" id="settleAmountInput" type="number" placeholder="输入金额" step="0.01"></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doSettleOrder('${orderId}')">确认结算</button>
+        </div>
+    `);
+};
+async function doSettleOrder(orderId) {
+    const earning = document.getElementById('settleAmountInput').value;
+    if (!earning) return toast('请输入金额', 'warning');
+    const amount = parseFloat(earning);
+    if (isNaN(amount) || amount < 0) return toast('请输入有效金额', 'error');
+    closeCustomModal();
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/settle', { method: 'PUT', body: JSON.stringify({ earning: amount }) });
+        toast(`✅ 结算成功，打手收入 ¥${amount}`, 'success');
+        renderAdminOrders();
+        renderHandlerView();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.adminRefundApprove = function(orderId) {
+    confirmAction('确认通过退款', '确认通过此退款申请？红钻将返还给老板。', '确认通过', `doRefundApprove('${orderId}')`);
+};
+async function doRefundApprove(orderId) {
+    try {
+        await apiRequest('/admin/orders/' + orderId + '/refund', { method: 'PUT', body: JSON.stringify({ approve: true }) });
+        toast('✅ 退款已通过，红钻已返还', 'success');
+        renderAdminOrders();
+        renderBossView();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.adminRefundReject = function(orderId) {
+    const reason = prompt('请输入拒绝原因：');
+    if (reason === null) return;
+    apiRequest('/admin/orders/' + orderId + '/refund', { method: 'PUT', body: JSON.stringify({ approve: false, rejectReason: reason }) })
+        .then(() => {
+            toast('已拒绝退款', 'warning');
+            renderAdminOrders();
+            renderBossView();
+        })
+        .catch(err => toast(err.message, 'error'));
+};
+
+window.confirmDeleteSettled = function(orderId) {
+    confirmAction('确认删除', '确认永久删除此已结算订单？', '确认删除', `doDeleteOrder('${orderId}')`);
+};
+
+window.confirmApproveRecharge = function(rechargeId) {
+    confirmAction('确认通过充值', '确认通过此充值申请？红钻将直接到账。', '确认通过', `doApproveRecharge('${rechargeId}')`);
+};
+async function doApproveRecharge(rechargeId) {
+    try {
+        await apiRequest('/admin/recharges/' + rechargeId + '/approve', { method: 'PUT' });
+        toast('✅ 充值已通过，红钻已到账', 'success');
+        renderRecharges();
+        renderBossView();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.confirmRejectRecharge = function(rechargeId) {
+    confirmAction('确认拒绝充值', '确认拒绝此充值申请？', '确认拒绝', `doRejectRecharge('${rechargeId}')`);
+};
+async function doRejectRecharge(rechargeId) {
+    try {
+        await apiRequest('/admin/recharges/' + rechargeId + '/reject', { method: 'PUT' });
+        toast('已拒绝', 'warning');
+        renderRecharges();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.confirmDeleteRecharge = function(rechargeId) {
+    confirmAction('确认删除', '确认删除此充值申请？', '确认删除', `doDeleteRecharge('${rechargeId}')`);
+};
+async function doDeleteRecharge(rechargeId) {
+    try {
+        await apiRequest('/admin/recharges/' + rechargeId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderRecharges();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function populateGiftUsers() {
+    try {
+        const users = await apiRequest('/admin/users');
+        const sel = document.getElementById('giftUser');
+        sel.innerHTML = '<option value="">-- 请选择 --</option>';
+        users.filter(u => u.role === 'boss' && u.status === 'active').forEach(u => {
+            sel.innerHTML += `<option value="${u.id}">${u.username}</option>`;
+        });
+    } catch (err) { console.error(err); }
+}
+
+window.sendGift = function() {
+    const targetUserId = document.getElementById('giftUser').value;
+    const amount = parseInt(document.getElementById('giftAmount').value);
+    if (!targetUserId || !amount) return toast('请选择老板并输入数量', 'error');
+    apiRequest('/admin/gift', { method: 'POST', body: JSON.stringify({ targetUserId, amount }) })
+        .then(() => {
+            toast('赠送成功', 'success');
+            document.getElementById('giftAmount').value = '';
+            renderRecharges();
+            renderBossView();
+        })
+        .catch(err => toast(err.message, 'error'));
+};
+
+window.toggleUserBan = function(userId) {
+    confirmAction('确认操作', '确认更改此用户状态？', '确认', `doToggleUserBan('${userId}')`);
+};
+async function doToggleUserBan(userId) {
+    try {
+        await apiRequest('/admin/users/' + userId + '/ban', { method: 'PUT' });
+        toast('用户状态已更新', 'success');
+        renderUsers();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.resetUserPassword = function(userId) {
+    confirmAction('重置密码', '确认将用户密码重置为 123456？', '确认重置', `doResetPassword('${userId}')`);
+};
+async function doResetPassword(userId) {
+    try {
+        await apiRequest('/admin/users/' + userId + '/reset-password', { method: 'PUT' });
+        toast('密码已重置为 123456', 'success');
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.confirmBossComplete = function(orderId) {
+    confirmAction('确认完成', '确认已完成此订单服务？', '确认完成', `doBossComplete('${orderId}')`);
+};
+async function doBossComplete(orderId) {
+    try {
+        await apiRequest('/orders/' + orderId + '/boss-confirm', { method: 'PUT' });
+        toast('已确认完成，等待管理员结算', 'success');
+        renderBossView();
+        renderHandlerView();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.requestRefund = function(orderId) {
+    showCustomModal(`
+        <h3><i class="fas fa-undo"></i> 申请退款</h3>
+        <p style="color:#8892a8;font-size:14px;">请填写退款原因：</p>
+        <div class="form-group"><label>退款原因</label><textarea class="admin-form-control" id="refundReasonInput" rows="3" placeholder="请详细说明退款原因..."></textarea></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-warning" onclick="doRequestRefund('${orderId}')">提交退款</button>
+        </div>
+    `);
+};
+async function doRequestRefund(orderId) {
+    const reason = document.getElementById('refundReasonInput').value.trim();
+    if (!reason) return toast('请填写退款原因', 'warning');
+    closeCustomModal();
+    try {
+        await apiRequest('/orders/' + orderId + '/refund-request', { method: 'PUT', body: JSON.stringify({ reason }) });
+        toast('退款申请已提交', 'success');
+        renderBossView();
+        renderAdminOrders();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.viewOrderDetail = function(orderId) {
+    apiRequest('/orders/' + orderId).then(order => {
+        const handlerName = order.handler_id ? order.handler_id : '未指派';
+        const messagesHtml = order.messages && order.messages.length > 0 ?
+            order.messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:#8892a8;">${msg.time}</span></div>`).join('') :
+            '暂无消息';
+        showCustomModal(`
+            <h3><i class="fas fa-info-circle"></i> 订单详情</h3>
+            <div style="margin:12px 0;text-align:left;">
+                <div class="detail-row"><span class="label">订单号</span><span class="value">${order.id}</span></div>
+                <div class="detail-row"><span class="label">游戏</span><span class="value">${order.game}</span></div>
+                <div class="detail-row"><span class="label">标题</span><span class="value">${order.title}</span></div>
+                <div class="detail-row"><span class="label">价格</span><span class="value">¥${order.price}</span></div>
+                <div class="detail-row"><span class="label">状态</span><span class="value"><span class="status-badge ${statusClass(order.status)}">${statusText(order.status)}</span></span></div>
+                <div class="detail-row"><span class="label">打手</span><span class="value">${handlerName}</span></div>
+                <div class="detail-row"><span class="label">创建时间</span><span class="value">${order.createTime}</span></div>
+                ${order.start_time ? `<div class="detail-row"><span class="label">开始时间</span><span class="value">${order.start_time}</span></div>` : ''}
+                ${order.end_time ? `<div class="detail-row"><span class="label">结束时间</span><span class="value">${order.end_time}</span></div>` : ''}
+                ${order.settled ? `<div class="detail-row"><span class="label">结算金额</span><span class="value">¥${order.settled_amount||order.price}</span></div>` : ''}
+                ${order.refund_reason ? `<div class="detail-row"><span class="label">退款原因</span><span class="value">${order.refund_reason}</span></div>` : ''}
+            </div>
+            <div style="border-top:1px solid #2a2f3a;padding-top:12px;text-align:left;">
+                <div style="font-weight:600;margin-bottom:8px;">聊天记录</div>
+                <div style="max-height:200px;overflow-y:auto;font-size:13px;background:#0b0d10;padding:8px;border-radius:8px;">${messagesHtml}</div>
+            </div>
+            <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
+        `);
+    }).catch(err => toast(err.message, 'error'));
+};
+
+async function renderHandlerView() {
+    try {
+        if (!currentUser) {
+            document.getElementById('handlerBalance').textContent = '请登录';
+            return;
+        }
+        const user = await apiRequest('/me');
+        document.getElementById('handlerBalance').textContent = '¥' + (user.balance || 0);
+
+        const orders = await apiRequest('/orders/my');
+
+        const pending = orders.filter(o => o.status === 'pending');
+        document.getElementById('handlerPendingCount').textContent = pending.length;
+        const pContainer = document.getElementById('handlerPendingList');
+        if (pending.length === 0) {
+            pContainer.innerHTML = '<div class="empty-state"><i class="fas fa-clock"></i><p>暂无待接单</p></div>';
+        } else {
+            let html = '';
+            for (const o of pending) {
+                html += `
+                    <div class="card" style="padding:14px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                            <div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price}</span></div>
+                            <button class="btn btn-primary btn-sm" onclick="confirmTake('${o.id}')">接单</button>
+                        </div>
+                    </div>
+                `;
+            }
+            pContainer.innerHTML = html;
+        }
+
+        const ongoing = orders.filter(o => o.status === 'ongoing' || o.status === 'review');
+        const oContainer = document.getElementById('handlerOngoingList');
+        if (ongoing.length === 0) {
+            oContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>暂无进行中的订单</p></div>';
+        } else {
+            let html = '';
+            for (const o of ongoing) {
+                const statusText2 = o.status === 'ongoing' ? '进行中' : '待验收';
+                const statusCls = o.status === 'ongoing' ? 'status-ongoing' : 'status-review';
+                let actions = '';
+                if (o.status === 'ongoing') actions += `<button class="btn btn-warning btn-sm" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
+                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button>`;
+                actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
+                html += `
+                    <div class="card" style="padding:14px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                            <div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price} ｜ 状态：<span class="status-badge ${statusCls}">${statusText2}</span></span></div>
+                            <div style="display:flex;gap:4px;flex-wrap:wrap;">${actions}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            oContainer.innerHTML = html;
+        }
+
+        const completed = orders.filter(o => o.status === 'completed');
+        const cContainer = document.getElementById('handlerCompletedList');
+        if (completed.length === 0) {
+            cContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-double"></i><p>暂无已完成订单</p></div>';
+        } else {
+            let html = '';
+            for (const o of completed) {
+                const settledText = o.settled ? '已结算' : '待结算';
+                const settledCls = o.settled ? 'status-onsale' : 'status-pending';
+                html += `
+                    <div class="card" style="padding:14px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                            <div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price} ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.create_time}</span></div>
+                            <button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button>
+                            <button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>
+                        </div>
+                    </div>
+                `;
+            }
+            cContainer.innerHTML = html;
+        }
+    } catch (err) { console.error(err); }
+}
+
+window.confirmTake = function(orderId) {
+    confirmAction('确认接单', '确认接取此订单？', '确认接单', `doTake('${orderId}')`);
+};
+async function doTake(orderId) {
+    try {
+        await apiRequest('/orders/' + orderId + '/take', { method: 'PUT' });
+        toast('接单成功', 'success');
+        renderHandlerView();
+        renderBossView();
+        renderAdminOrders();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.confirmSubmitComplete = function(orderId) {
+    confirmAction('提交完成', '确认已完成此订单服务？', '确认提交', `doSubmitComplete('${orderId}')`);
+};
+async function doSubmitComplete(orderId) {
+    try {
+        await apiRequest('/orders/' + orderId + '/submit-complete', { method: 'PUT' });
+        toast('已提交验收', 'success');
+        renderHandlerView();
+        renderBossView();
+        renderAdminOrders();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
 //  初始化
 // ============================================================
 async function init() {
     document.getElementById('authPage').style.display = 'flex';
     document.getElementById('mainApp').classList.add('hidden');
-    document.getElementById('authPage').style.display = 'flex';
 
     if (token) {
         try {
