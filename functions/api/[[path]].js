@@ -1,7 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
-//  包含：用户、商品、订单、充值、公告、邮件、聊天等全部功能
-//  新增：打手审核、修改用户名、商品图片、编辑商品
+//  包含：用户、商品（支持图片URL）、订单、充值、公告、邮件、聊天等全部功能
 // ============================================================
 
 function generateId() {
@@ -111,7 +110,7 @@ function verifyAndGetUserId(authHeader) {
 }
 
 // ============================================================
-//  商品相关（支持图片、编辑）
+//  商品相关（支持图片URL）
 // ============================================================
 
 async function handleGetProducts(env) {
@@ -135,7 +134,6 @@ async function handleAdminCreateProduct(env, body) {
   return jsonResponse({ success: true, id });
 }
 
-// 新增：编辑商品
 async function handleAdminUpdateProduct(env, productId, body) {
   const { game, title, desc, price, quantity, image } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
@@ -721,7 +719,7 @@ export async function onRequest(context) {
           }
         }
 
-        // 商品管理（含编辑）
+        // 商品管理（含图片URL）
         if (path === '/api/admin/products' && method === 'GET') {
           return await handleAdminGetProducts(env);
         }
@@ -730,7 +728,6 @@ export async function onRequest(context) {
         }
         if (path.startsWith('/api/admin/products/')) {
           const productId = path.replace('/api/admin/products/', '');
-          // 编辑商品（新增）
           if (productId.endsWith('/edit') && method === 'PUT') {
             const id = productId.replace('/edit', '');
             return await handleAdminUpdateProduct(env, id, body);
