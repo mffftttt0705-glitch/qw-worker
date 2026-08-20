@@ -6,171 +6,351 @@
     <title>QW电竞 · 护航平台</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
+        /* ===== CSS变量 - 主题控制 ===== */
+        :root {
+            --bg-primary: #0b0d15;
+            --bg-secondary: #14181f;
+            --bg-card: rgba(18,24,42,0.6);
+            --bg-card-hover: rgba(24,30,52,0.8);
+            --bg-input: #1a1e26;
+            --bg-input-border: #2a2f3a;
+            --text-primary: #e0e6f0;
+            --text-secondary: #b0b8c8;
+            --text-muted: #8892a8;
+            --text-nav: #5a6f8f;
+            --border-color: #2a2f3a;
+            --border-light: rgba(70,150,255,0.08);
+            --shadow: 0 30px 80px rgba(0,0,0,0.9);
+            --gradient-start: #141a2b;
+            --gradient-end: #07090f;
+            --btn-primary-bg: linear-gradient(145deg,#1a6aff,#0044cc);
+            --btn-primary-color: #fff;
+            --toast-bg: #1f2630;
+            --toast-border: #22c55e;
+            --modal-bg: rgba(18,26,48,0.95);
+            --bottom-nav-bg: rgba(10,14,26,0.85);
+            --product-card-bg: rgba(18,24,42,0.6);
+            --product-card-border: rgba(70,150,255,0.08);
+            --tag-bg: rgba(60,160,255,0.06);
+            --tag-color: #6ab0ff;
+            --price-color: #f5c842;
+            --badge-bg: #ef4444;
+            --status-pending-bg: #f59e0b22;
+            --status-ongoing-bg: #3b82f622;
+            --status-review-bg: #a855f722;
+            --status-completed-bg: #22c55e22;
+            --collapse-bg: #1a1e26;
+            --collapse-border: #2a2f3a;
+            --announce-bg: rgba(245,200,66,0.08);
+            --announce-border: rgba(245,200,66,0.15);
+        }
+
+        /* ===== 白色主题 ===== */
+        [data-theme="light"] {
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f5f6f8;
+            --bg-input: #ffffff;
+            --bg-input-border: #d0d5dd;
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a5a;
+            --text-muted: #6a6a7a;
+            --text-nav: #4a4a5a;
+            --border-color: #d0d5dd;
+            --border-light: rgba(0,0,0,0.06);
+            --shadow: 0 30px 80px rgba(0,0,0,0.15);
+            --gradient-start: #e8ecf0;
+            --gradient-end: #d0d5dd;
+            --btn-primary-bg: linear-gradient(145deg,#1a6aff,#0044cc);
+            --btn-primary-color: #fff;
+            --toast-bg: #ffffff;
+            --toast-border: #22c55e;
+            --modal-bg: rgba(255,255,255,0.95);
+            --bottom-nav-bg: rgba(255,255,255,0.95);
+            --product-card-bg: #ffffff;
+            --product-card-border: rgba(0,0,0,0.06);
+            --tag-bg: rgba(60,160,255,0.08);
+            --tag-color: #1a6aff;
+            --price-color: #e8a800;
+            --badge-bg: #ef4444;
+            --status-pending-bg: #f59e0b22;
+            --status-ongoing-bg: #3b82f622;
+            --status-review-bg: #a855f722;
+            --status-completed-bg: #22c55e22;
+            --collapse-bg: #f5f6f8;
+            --collapse-border: #d0d5dd;
+            --announce-bg: rgba(245,200,66,0.08);
+            --announce-border: rgba(245,200,66,0.15);
+            --auth-bg: #f0f2f5;
+            --auth-box-bg: #ffffff;
+            --auth-box-border: #d0d5dd;
+            --input-text: #1a1a2e;
+            --input-placeholder: #8a8a9a;
+            --toast-text: #1a1a2e;
+            --toast-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            --modal-text: #1a1a2e;
+            --modal-sub: #6a6a7a;
+            --detail-label: #6a6a7a;
+            --detail-value: #1a1a2e;
+            --table-header: #6a6a7a;
+            --table-border: #d0d5dd;
+            --table-row: #ffffff;
+            --empty-text: #6a6a7a;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            --header-border: rgba(0,0,0,0.06);
+            --brand-text: #1a1a2e;
+            --brand-small: #6a6a7a;
+            --announce-content: #1a1a2e;
+            --announce-time: #6a6a7a;
+            --admin-card-bg: #ffffff;
+            --admin-card-border: rgba(0,0,0,0.06);
+            --admin-card-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            --admin-card-title: #1a1a2e;
+            --collapse-text: #1a1a2e;
+            --collapse-hover: #e8ecf0;
+            --product-title: #1a1a2e;
+            --product-desc: #4a4a5a;
+            --product-stock: #6a6a7a;
+            --product-bottom-border: rgba(0,0,0,0.06);
+            --product-tag-border: rgba(0,0,0,0.06);
+            --product-tag-bg: rgba(0,0,0,0.04);
+            --product-img-bg: linear-gradient(145deg,#e8ecf0,#d0d5dd);
+            --product-img-icon: #6a6a7a;
+            --status-badge-pending: #f59e0b22;
+            --status-badge-ongoing: #3b82f622;
+            --status-badge-review: #a855f722;
+            --status-badge-completed: #22c55e22;
+            --status-badge-canceled: #6b728022;
+            --status-badge-rejected: #ef444422;
+            --status-badge-onsale: #22c55e22;
+            --status-badge-soldout: #6b728022;
+            --status-badge-hidden: #6b728022;
+            --status-badge-refund: #f59e0b22;
+            --status-badge-settled: #22c55e22;
+            --entry-card-bg: #ffffff;
+            --entry-card-border: rgba(0,0,0,0.06);
+            --entry-card-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            --entry-card-title: #1a1a2e;
+            --entry-card-sub: #4a4a5a;
+            --entry-card-badge: rgba(0,0,0,0.04);
+            --entry-card-badge-text: #6a6a7a;
+            --entry-card-icon: #6a6a7a;
+            --entry-card-icon-bg: linear-gradient(145deg,#e8ecf0,#d0d5dd);
+            --entry-card-icon-color: #6a6a7a;
+            --entry-card-icon-shadow: none;
+            --entry-card-hover: #f5f6f8;
+            --entry-card-hover-border: rgba(0,0,0,0.1);
+            --entry-card-hover-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            --entry-card-hover-transform: translateY(-2px);
+            --entry-card-hover-transition: all 0.25s;
+            --entry-card-hover-border-color: rgba(0,0,0,0.1);
+            --entry-card-hover-shadow-color: rgba(0,0,0,0.1);
+            --entry-card-hover-transform-scale: 1.02;
+            --entry-card-hover-transform-translate: 0px;
+            --entry-card-hover-transform-rotate: 0deg;
+            --entry-card-hover-transform-skew: 0deg;
+            --entry-card-hover-transform-origin: center;
+            --entry-card-hover-transition-duration: 0.25s;
+            --entry-card-hover-transition-timing: ease;
+            --entry-card-hover-transition-delay: 0s;
+            --entry-card-hover-box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            --entry-card-hover-border-color-rgba: rgba(0,0,0,0.1);
+            --entry-card-hover-shadow-rgba: rgba(0,0,0,0.1);
+            --entry-card-hover-transform-scale-xy: 1.02;
+            --entry-card-hover-transform-translate-xy: 0px;
+            --entry-card-hover-transform-rotate-xy: 0deg;
+            --entry-card-hover-transform-skew-xy: 0deg;
+            --entry-card-hover-transform-origin-xy: center;
+            --entry-card-hover-transition-duration-xy: 0.25s;
+            --entry-card-hover-transition-timing-xy: ease;
+            --entry-card-hover-transition-delay-xy: 0s;
+            --entry-card-hover-box-shadow-xy: 0 4px 20px rgba(0,0,0,0.1);
+            --entry-card-hover-border-color-rgba-xy: rgba(0,0,0,0.1);
+            --entry-card-hover-shadow-rgba-xy: rgba(0,0,0,0.1);
+            --entry-card-hover-transform-scale-xy-xy: 1.02;
+            --entry-card-hover-transform-translate-xy-xy: 0px;
+            --entry-card-hover-transform-rotate-xy-xy: 0deg;
+            --entry-card-hover-transform-skew-xy-xy: 0deg;
+            --entry-card-hover-transform-origin-xy-xy: center;
+            --entry-card-hover-transition-duration-xy-xy: 0.25s;
+            --entry-card-hover-transition-timing-xy-xy: ease;
+            --entry-card-hover-transition-delay-xy-xy: 0s;
+            --entry-card-hover-box-shadow-xy-xy: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','PingFang SC',Roboto,sans-serif}
-        body{background:#0b0d15;background-image:radial-gradient(ellipse at 20% 50%,#141a2b 0%,#07090f 100%);color:#e0e6f0;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:12px}
-        .app-wrapper{max-width:480px;width:100%;background:rgba(14,18,30,0.80);backdrop-filter:blur(20px);border-radius:40px;box-shadow:0 30px 80px rgba(0,0,0,0.9);border:1px solid rgba(60,160,255,0.08);overflow:hidden;position:relative;padding-bottom:72px;min-height:700px}
+        body{background:var(--bg-primary);background-image:radial-gradient(ellipse at 20% 50%,var(--gradient-start) 0%,var(--gradient-end) 100%);color:var(--text-primary);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:12px;transition:background 0.3s,color 0.3s}
+        .app-wrapper{max-width:480px;width:100%;background:var(--bg-secondary);backdrop-filter:blur(20px);border-radius:40px;box-shadow:var(--shadow);border:1px solid var(--border-light);overflow:hidden;position:relative;padding-bottom:72px;min-height:700px;transition:background 0.3s,color 0.3s,border 0.3s}
         .view-container{padding:20px 20px 16px}
         .view{display:none;animation:fadeUp 0.3s ease}
         .view.active{display:block}
         @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-        .app-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid rgba(100,200,255,0.06);margin-bottom:20px}
+        .app-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--header-border);margin-bottom:20px}
         .brand{display:flex;align-items:center;gap:10px}
         .brand-icon{width:40px;height:40px;background:linear-gradient(145deg,#00c8ff,#0055ff);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;box-shadow:0 0 20px rgba(0,150,255,0.3)}
         .brand-name{font-size:20px;font-weight:700;background:linear-gradient(to right,#b0e0ff,#7ac7ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .brand-name small{font-weight:300;font-size:13px;-webkit-text-fill-color:rgba(180,210,255,0.6);color:rgba(180,210,255,0.6)}
-        .header-right{font-size:13px;color:#7a8faf;display:flex;align-items:center;gap:6px}
+        .header-right{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
         .header-right i{color:#3a7eff}
-        .announcement{background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.15);border-radius:16px;padding:14px 16px;margin-bottom:16px}
-        .announcement .content{font-size:14px;color:#d0e4ff;line-height:1.6}
+        .header-actions{display:flex;align-items:center;gap:8px}
+        .theme-toggle{background:var(--bg-input);border:1px solid var(--border-color);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);font-size:16px;transition:background 0.3s}
+        .theme-toggle:active{transform:scale(0.95)}
+        .announcement{background:var(--announce-bg);border:1px solid var(--announce-border);border-radius:16px;padding:14px 16px;margin-bottom:16px}
+        .announcement .content{font-size:14px;color:var(--announce-content);line-height:1.6}
         .announcement .images{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-        .announcement .images img{max-width:100px;max-height:100px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:transform 0.2s}
+        .announcement .images img{max-width:100px;max-height:100px;border-radius:8px;border:1px solid var(--border-color);cursor:pointer;transition:transform 0.2s}
         .announcement .images img:active{transform:scale(0.95)}
-        .announce-editor textarea{width:100%;background:#0b0d10;border:1px solid #2a2f3a;border-radius:12px;padding:10px 14px;color:#e8e6e3;font-size:14px;outline:none;resize:vertical;min-height:80px}
+        .announcement .time{font-size:11px;color:var(--announce-time);margin-top:6px}
+        .announce-editor textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:10px 14px;color:var(--text-primary);font-size:14px;outline:none;resize:vertical;min-height:80px;transition:background 0.3s,color 0.3s}
         .announce-editor textarea:focus{border-color:#f5c842}
         .announce-editor .image-upload{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
-        .announce-editor .image-upload input[type="file"]{background:#0b0d10;border:1px solid #2a2f3a;border-radius:12px;padding:6px 12px;color:#e8e6e3;font-size:13px;max-width:200px}
+        .announce-editor .image-upload input[type="file"]{background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:6px 12px;color:var(--text-secondary);font-size:13px;max-width:200px}
         .announce-editor .preview-images{display:flex;gap:8px;flex-wrap:wrap}
-        .announce-editor .preview-images img{max-width:60px;max-height:60px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)}
+        .announce-editor .preview-images img{max-width:60px;max-height:60px;border-radius:8px;border:1px solid var(--border-color)}
         .entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0 16px}
-        .entry-card{background:rgba(18,24,42,0.7);border-radius:24px;padding:22px 12px 18px;text-align:center;border:1px solid rgba(70,150,255,0.06);box-shadow:0 8px 24px rgba(0,0,0,0.3);cursor:pointer;transition:all 0.25s}
+        .entry-card{background:var(--entry-card-bg);border-radius:24px;padding:22px 12px 18px;text-align:center;border:1px solid var(--entry-card-border);box-shadow:var(--entry-card-shadow);cursor:pointer;transition:all 0.25s}
         .entry-card:active{transform:scale(0.95)}
-        .entry-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;background:linear-gradient(145deg,#10182e,#1a2648);color:#6ab0ff}
-        .entry-title{font-size:16px;font-weight:600;color:#e4edff}
-        .entry-sub{font-size:12px;color:#7a8faf}
-        .entry-badge{display:inline-block;margin-top:10px;padding:3px 12px;background:rgba(60,160,255,0.08);border-radius:30px;font-size:10px;color:#6a9fd6;border:1px solid rgba(60,160,255,0.06)}
-        .btn-primary{background:linear-gradient(145deg,#1a6aff,#0044cc);border:none;color:#fff;padding:8px 20px;border-radius:40px;font-weight:500;font-size:13px;cursor:pointer;box-shadow:0 4px 12px rgba(0,80,255,0.2)}
+        .entry-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;background:var(--entry-card-icon-bg);color:var(--entry-card-icon-color)}
+        .entry-title{font-size:16px;font-weight:600;color:var(--entry-card-title)}
+        .entry-sub{font-size:12px;color:var(--entry-card-sub)}
+        .entry-badge{display:inline-block;margin-top:10px;padding:3px 12px;background:var(--entry-card-badge);border-radius:30px;font-size:10px;color:var(--entry-card-badge-text);border:1px solid var(--entry-card-border)}
+        .btn-primary{background:var(--btn-primary-bg);border:none;color:var(--btn-primary-color);padding:8px 20px;border-radius:40px;font-weight:500;font-size:13px;cursor:pointer;box-shadow:0 4px 12px rgba(0,80,255,0.2)}
         .btn-primary:active{transform:scale(0.96)}
-        .btn-outline{background:transparent;border:1px solid rgba(60,160,255,0.2);color:#b0c8e6;padding:8px 20px;border-radius:40px;font-size:13px;cursor:pointer}
+        .btn-outline{background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:8px 20px;border-radius:40px;font-size:13px;cursor:pointer;transition:background 0.3s,color 0.3s,border 0.3s}
         .btn-success{background:#22c55e;color:#fff;border:none;padding:6px 16px;border-radius:30px;font-size:12px;cursor:pointer}
         .btn-danger{background:#ef4444;color:#fff;border:none;padding:6px 16px;border-radius:30px;font-size:12px;cursor:pointer}
         .btn-warning{background:#f59e0b;color:#0b0d10;border:none;padding:6px 16px;border-radius:30px;font-size:12px;cursor:pointer}
         .btn-sm{padding:4px 14px;font-size:12px}
         .btn-xs{padding:2px 10px;font-size:11px}
         .btn-block{width:100%;justify-content:center}
-        .bottom-nav{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-around;align-items:center;background:rgba(10,14,26,0.85);backdrop-filter:blur(16px);padding:8px 0 12px;border-top:1px solid rgba(100,200,255,0.06);border-radius:0 0 40px 40px}
-        .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:#5a6f8f;font-size:11px;cursor:pointer;padding:4px 12px;border-radius:30px;background:transparent;border:none;font-family:inherit}
+        .bottom-nav{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-around;align-items:center;background:var(--bottom-nav-bg);backdrop-filter:blur(16px);padding:8px 0 12px;border-top:1px solid var(--border-light);border-radius:0 0 40px 40px;transition:background 0.3s}
+        .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text-nav);font-size:11px;cursor:pointer;padding:4px 12px;border-radius:30px;background:transparent;border:none;font-family:inherit;transition:color 0.3s}
         .nav-item i{font-size:20px}
-        .nav-item.active{color:#b8dcff}
+        .nav-item.active{color:var(--text-primary)}
         .nav-item.active i{color:#3a7eff;text-shadow:0 0 20px rgba(0,80,255,0.3)}
         .nav-item.hidden-nav{display:none!important}
         .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);justify-content:center;align-items:center;z-index:999}
         .modal-overlay.active{display:flex}
-        .modal-box{background:rgba(18,26,48,0.95);border:1px solid rgba(60,160,255,0.15);border-radius:32px;padding:32px 28px;max-width:420px;width:90%;text-align:center;animation:fadeUp 0.25s ease;max-height:90vh;overflow-y:auto}
-        .modal-box h3{font-size:20px;color:#d0e4ff;margin-bottom:8px}
-        .modal-box p{color:#7a8faf;font-size:14px;margin:6px 0 20px}
+        .modal-box{background:var(--modal-bg);border:1px solid var(--border-color);border-radius:32px;padding:32px 28px;max-width:420px;width:90%;text-align:center;animation:fadeUp 0.25s ease;max-height:90vh;overflow-y:auto;transition:background 0.3s,border 0.3s}
+        .modal-box h3{font-size:20px;color:var(--text-primary);margin-bottom:8px}
+        .modal-box p{color:var(--text-muted);font-size:14px;margin:6px 0 20px}
         .modal-box .btn-row{display:flex;gap:10px}
         .modal-box .btn-row button{flex:1;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer}
         .modal-box .form-group{margin-bottom:14px;text-align:left}
-        .modal-box .form-group label{display:block;font-size:13px;color:#b0b8c8;margin-bottom:4px}
-        .modal-box .form-group input,.modal-box .form-group select{width:100%;background:#0b0d10;border:1px solid #2a2f3a;border-radius:12px;padding:10px 14px;color:#e8e6e3;font-size:14px;outline:none}
+        .modal-box .form-group label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:4px}
+        .modal-box .form-group input,.modal-box .form-group select{width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:10px 14px;color:var(--text-primary);font-size:14px;outline:none;transition:background 0.3s,color 0.3s,border 0.3s}
         .modal-box .form-group input:focus,.modal-box .form-group select:focus{border-color:#f5c842}
-        .modal-box .detail-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1f2630}
-        .modal-box .detail-row .label{color:#8892a8}
-        .modal-box .detail-row .value{color:#e8e6e3;font-weight:500}
-        .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#1f2630;padding:12px 28px;border-radius:40px;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,0.6);border-left:4px solid #22c55e;color:#e8e6e3;font-size:14px;display:none;max-width:90%;text-align:center}
+        .modal-box .detail-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-color)}
+        .modal-box .detail-row .label{color:var(--detail-label)}
+        .modal-box .detail-row .value{color:var(--detail-value);font-weight:500}
+        .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--toast-bg);padding:12px 28px;border-radius:40px;z-index:9999;box-shadow:var(--toast-shadow);border-left:4px solid var(--toast-border);color:var(--toast-text);font-size:14px;display:none;max-width:90%;text-align:center;transition:background 0.3s,color 0.3s}
         .toast.show{display:block;animation:fadeUp 0.3s ease}
         .toast.error{border-left-color:#ef4444}
         .toast.warning{border-left-color:#f59e0b}
         .status-badge{font-size:11px;padding:2px 12px;border-radius:30px;display:inline-block;font-weight:500}
-        .status-pending{background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44}
-        .status-ongoing{background:#3b82f622;color:#3b82f6;border:1px solid #3b82f644}
-        .status-review{background:#a855f722;color:#a855f7;border:1px solid #a855f744}
-        .status-completed{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44}
-        .status-canceled{background:#6b728022;color:#9ca3af;border:1px solid #6b728044}
-        .status-rejected{background:#ef444422;color:#ef4444;border:1px solid #ef444444}
-        .status-onsale{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44}
-        .status-soldout{background:#6b728022;color:#9ca3af;border:1px solid #6b728044}
-        .status-hidden{background:#6b728022;color:#6b7280;border:1px solid #6b728044}
-        .status-refund_pending{background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44}
-        .status-refunded{background:#a855f722;color:#a855f7;border:1px solid #a855f744}
-        .status-settled{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44}
-        .empty-state{text-align:center;padding:40px 20px;color:#5a6378}
+        .status-pending{background:var(--status-pending-bg);color:#f59e0b;border:1px solid #f59e0b44}
+        .status-ongoing{background:var(--status-ongoing-bg);color:#3b82f6;border:1px solid #3b82f644}
+        .status-review{background:var(--status-review-bg);color:#a855f7;border:1px solid #a855f744}
+        .status-completed{background:var(--status-completed-bg);color:#22c55e;border:1px solid #22c55e44}
+        .status-canceled{background:var(--status-canceled-bg);color:#9ca3af;border:1px solid #6b728044}
+        .status-rejected{background:var(--status-rejected-bg);color:#ef4444;border:1px solid #ef444444}
+        .status-onsale{background:var(--status-onsale-bg);color:#22c55e;border:1px solid #22c55e44}
+        .status-soldout{background:var(--status-soldout-bg);color:#9ca3af;border:1px solid #6b728044}
+        .status-hidden{background:var(--status-hidden-bg);color:#6b7280;border:1px solid #6b728044}
+        .status-refund_pending{background:var(--status-refund-bg);color:#f59e0b;border:1px solid #f59e0b44}
+        .status-refunded{background:var(--status-refund-bg);color:#a855f7;border:1px solid #a855f744}
+        .status-settled{background:var(--status-settled-bg);color:#22c55e;border:1px solid #22c55e44}
+        .empty-state{text-align:center;padding:40px 20px;color:var(--empty-text)}
         .empty-state i{font-size:44px;opacity:0.4;display:block;margin-bottom:12px}
         .empty-state p{font-size:15px}
         .role-view{display:none}
         .role-view.active{display:block}
         .hidden{display:none!important}
-        .admin-card{background:rgba(18,24,42,0.5);border-radius:20px;padding:18px 16px;margin-bottom:16px;border:1px solid rgba(70,150,255,0.04)}
-        .admin-card-title{font-size:16px;font-weight:600;margin-bottom:12px;color:#d0e4ff;display:flex;align-items:center;gap:8px}
+        .admin-card{background:var(--admin-card-bg);border-radius:20px;padding:18px 16px;margin-bottom:16px;border:1px solid var(--admin-card-border);box-shadow:var(--admin-card-shadow);transition:background 0.3s,border 0.3s}
+        .admin-card-title{font-size:16px;font-weight:600;margin-bottom:12px;color:var(--admin-card-title);display:flex;align-items:center;gap:8px}
         .admin-card-title i{color:#f5c842}
         .tab-page{display:none}
         .tab-page.active{display:block}
         .admin-form-group{margin-bottom:14px}
-        .admin-form-group label{display:block;font-size:13px;color:#b0b8c8;margin-bottom:4px}
+        .admin-form-group label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:4px}
         .admin-form-group label i{margin-right:6px;color:#f5c842;width:18px}
-        .admin-form-control{width:100%;background:#0b0d10;border:1px solid #2a2f3a;border-radius:12px;padding:10px 14px;color:#e8e6e3;font-size:14px;outline:none}
+        .admin-form-control{width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:10px 14px;color:var(--text-primary);font-size:14px;outline:none;transition:background 0.3s,color 0.3s,border 0.3s}
         .admin-form-control:focus{border-color:#f5c842}
         select.admin-form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238892a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
         textarea.admin-form-control{resize:vertical;min-height:60px}
         .action-group{display:flex;gap:4px;flex-wrap:wrap}
         .tab-nav{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;overflow-x:auto}
-        .tab-nav button{padding:8px 16px;border-radius:30px;border:none;background:#1f2630;color:#8892a8;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+        .tab-nav button{padding:8px 16px;border-radius:30px;border:none;background:var(--bg-input);color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 0.3s,color 0.3s}
         .tab-nav button.active{background:#f5c842;color:#0b0d10}
         .tab-nav button i{margin-right:6px}
         .table-wrap{overflow-x:auto;margin-top:8px}
         table{width:100%;border-collapse:collapse;font-size:13px}
-        thead{border-bottom:2px solid #2a2f3a}
-        th{padding:10px 8px;text-align:left;font-weight:600;color:#8892a8;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap}
-        td{padding:10px 8px;border-bottom:1px solid #1f2630;vertical-align:middle}
-        .chat-messages{max-height:300px;overflow-y:auto;padding:8px 0;border-top:1px solid #2a2f3a;border-bottom:1px solid #2a2f3a;margin:8px 0}
+        thead{border-bottom:2px solid var(--border-color)}
+        th{padding:10px 8px;text-align:left;font-weight:600;color:var(--table-header);font-size:11px;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap}
+        td{padding:10px 8px;border-bottom:1px solid var(--border-color);vertical-align:middle}
+        .chat-messages{max-height:300px;overflow-y:auto;padding:8px 0;border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);margin:8px 0}
         .chat-msg{padding:6px 10px;margin:4px 0;border-radius:12px;max-width:85%;word-break:break-word}
         .chat-msg.boss{background:#1a2a4a;color:#b0c8e6;align-self:flex-start}
         .chat-msg.handler{background:#2a4a2a;color:#b0e6b0;align-self:flex-end}
         .chat-msg.system{background:#3a3a4a;color:#d0d0e0;align-self:center;font-style:italic}
-        .chat-msg .time{font-size:10px;color:#8892a8;margin-left:8px}
+        .chat-msg .time{font-size:10px;color:var(--text-muted);margin-left:8px}
         .chat-input-area{display:flex;gap:8px;margin-top:8px}
-        .chat-input-area input{flex:1;padding:8px 12px;border-radius:30px;border:1px solid #2a2f3a;background:#0b0d10;color:#e8e6e3;outline:none}
+        .chat-input-area input{flex:1;padding:8px 12px;border-radius:30px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-primary);outline:none}
         .chat-input-area input:focus{border-color:#f5c842}
         .chat-readonly{opacity:0.6}
         .chat-readonly .chat-input-area input{pointer-events:none}
-        .recharge-option{display:inline-block;padding:8px 16px;margin:4px;border:1px solid #2a2f3a;border-radius:12px;cursor:pointer;transition:0.2s}
-        .recharge-option:hover{border-color:#f5c842;background:#1f2630}
+        .recharge-option{display:inline-block;padding:8px 16px;margin:4px;border:1px solid var(--border-color);border-radius:12px;cursor:pointer;transition:0.2s}
+        .recharge-option:hover{border-color:#f5c842;background:var(--bg-input)}
         .recharge-option.selected{border-color:#f5c842;background:#f5c84222}
-        .mail-item{padding:10px;border-bottom:1px solid #1f2630}
-        .mail-item .mail-title{font-weight:600}
-        .mail-item .mail-time{font-size:12px;color:#8892a8}
+        .mail-item{padding:10px;border-bottom:1px solid var(--border-color)}
+        .mail-item .mail-title{font-weight:600;color:var(--text-primary)}
+        .mail-item .mail-time{font-size:12px;color:var(--text-muted)}
         .account-info{display:flex;flex-direction:column;gap:8px}
-        .account-info .info-row{display:flex;justify-content:space-between;padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:12px}
-        .account-info .info-row .label{color:#8892a8}
-        .account-info .info-row .value{color:#e8e6e3;font-weight:500}
-        #authPage{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:700px;padding:20px;text-align:center}
+        .account-info .info-row{display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-input);border-radius:12px}
+        .account-info .info-row .label{color:var(--text-muted)}
+        .account-info .info-row .value{color:var(--text-primary);font-weight:500}
+        #authPage{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:700px;padding:20px;text-align:center;background:var(--auth-bg);border-radius:40px;transition:background 0.3s}
         #authPage .logo{font-size:32px;font-weight:700;background:linear-gradient(135deg,#f5c842,#dbaa2a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
         #authPage .logo i{font-size:40px;color:#f5c842;-webkit-text-fill-color:#f5c842;margin-right:10px}
-        #authPage .sub{color:#8892a8;font-size:14px;margin-bottom:30px}
-        #authPage .auth-box{width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px}
-        #authPage .auth-box input{width:100%;padding:14px;border-radius:60px;background:#0b0d10;border:1px solid #2a2f3a;color:#fff;font-size:16px;text-align:center;outline:none}
+        #authPage .sub{color:var(--text-muted);font-size:14px;margin-bottom:30px}
+        #authPage .auth-box{width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;background:var(--auth-box-bg);padding:32px 24px;border-radius:24px;border:1px solid var(--auth-box-border);box-shadow:var(--shadow)}
+        #authPage .auth-box input{width:100%;padding:14px;border-radius:60px;background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);font-size:16px;text-align:center;outline:none;transition:background 0.3s,color 0.3s,border 0.3s}
         #authPage .auth-box input:focus{border-color:#f5c842}
         #authPage .auth-box .btn-row{display:flex;gap:10px}
         #authPage .auth-box .btn-row button{flex:1;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer}
-        #authPage .auth-box .role-row{display:flex;gap:12px;justify-content:center;font-size:13px;color:#8892a8}
+        #authPage .auth-box .role-row{display:flex;gap:12px;justify-content:center;font-size:13px;color:var(--text-muted)}
         #authPage .auth-box .role-row label{display:flex;align-items:center;gap:4px;cursor:pointer}
         #authPage .auth-box .auth-error{color:#ef4444;font-size:13px;min-height:20px}
-        .collapse-toggle{background:#1a1e26;border:1px solid #2a2f3a;border-radius:12px;padding:10px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-        .collapse-toggle:hover{background:#1f2630}
+        .collapse-toggle{background:var(--collapse-bg);border:1px solid var(--collapse-border);border-radius:12px;padding:10px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:var(--collapse-text);transition:background 0.3s,border 0.3s,color 0.3s}
+        .collapse-toggle:hover{background:var(--bg-input)}
         .collapse-content{display:none;padding:8px 0}
         .collapse-content.open{display:block}
-        /* 商品卡片样式 - 紧凑型 */
-        .product-card{background:rgba(18,24,42,0.6);border-radius:16px;border:1px solid rgba(70,150,255,0.08);overflow:hidden;margin-bottom:14px;position:relative}
-        .product-card .product-img{width:100%;height:120px;background:linear-gradient(145deg,#10182e,#1a2648);display:flex;align-items:center;justify-content:center;font-size:36px;color:#3a7eff;object-fit:cover}
-        .product-card .product-img img{width:100%;height:120px;object-fit:cover}
-        .product-card .product-img .tag{position:absolute;top:8px;left:8px;background:#f5c842;color:#0b0d10;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:600}
-        .product-card .product-body{padding:10px 14px}
-        .product-card .product-title{font-size:14px;font-weight:600;color:#e4edff;line-height:1.3}
-        .product-card .product-desc{font-size:12px;color:#7a8faf;margin-top:3px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-        .product-card .product-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
-        .product-card .product-tags span{background:rgba(60,160,255,0.06);padding:1px 8px;border-radius:20px;font-size:10px;color:#6ab0ff;border:1px solid rgba(60,160,255,0.06)}
-        .product-card .product-stock{font-size:11px;color:#5a6378;margin-top:3px}
-        .product-card .product-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04)}
-        .product-card .product-price{font-size:18px;font-weight:700;color:#f5c842}
-        .product-card .product-price small{font-size:12px;font-weight:400;color:#7a8faf;text-decoration:line-through;margin-left:6px}
-        .product-card .btn-sm{padding:4px 14px;font-size:11px}
+        /* ===== 商品卡片 - 一行两个（紧凑型） ===== */
+        .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+        .product-card{background:var(--product-card-bg);border-radius:12px;border:1px solid var(--product-card-border);overflow:hidden;position:relative;transition:background 0.3s,border 0.3s,transform 0.2s}
+        .product-card:active{transform:scale(0.97)}
+        .product-card .product-img{width:100%;height:100px;background:var(--product-img-bg);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--product-img-icon);overflow:hidden;transition:background 0.3s}
+        .product-card .product-img img{width:100%;height:100px;object-fit:cover}
+        .product-card .product-img .tag{position:absolute;top:6px;left:6px;background:#f5c842;color:#0b0d10;padding:1px 8px;border-radius:20px;font-size:9px;font-weight:600}
+        .product-card .product-body{padding:8px 10px}
+        .product-card .product-title{font-size:13px;font-weight:600;color:var(--product-title);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .product-card .product-desc{font-size:11px;color:var(--product-desc);margin-top:2px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+        .product-card .product-tags{display:flex;gap:2px;flex-wrap:wrap;margin-top:3px}
+        .product-card .product-tags span{background:var(--product-tag-bg);padding:0 6px;border-radius:20px;font-size:8px;color:var(--tag-color);border:1px solid var(--product-tag-border)}
+        .product-card .product-stock{font-size:10px;color:var(--product-stock);margin-top:2px}
+        .product-card .product-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid var(--product-bottom-border)}
+        .product-card .product-price{font-size:16px;font-weight:700;color:var(--price-color)}
+        .product-card .product-price small{font-size:11px;font-weight:400;color:var(--text-muted);text-decoration:line-through;margin-left:4px}
+        .product-card .btn-sm{padding:2px 10px;font-size:10px}
+        .file-upload-btn{background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:8px 12px;color:var(--text-secondary);font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background 0.3s,color 0.3s,border 0.3s}
+        .file-upload-btn:hover{background:var(--bg-card-hover)}
+        .file-upload-btn input{display:none}
+        .upload-preview{max-width:80px;max-height:80px;border-radius:8px;border:1px solid var(--border-color);margin-top:6px}
         .img-preview-modal .modal-box{max-width:90%;padding:10px}
         .img-preview-modal img{width:100%;height:auto;border-radius:12px}
-        .file-upload-btn{background:#1a1e26;border:1px solid #2a2f3a;border-radius:12px;padding:8px 12px;color:#b0b8c8;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
-        .file-upload-btn:hover{background:#1f2630}
-        .file-upload-btn input{display:none}
-        .upload-preview{max-width:80px;max-height:80px;border-radius:8px;border:1px solid #2a2f3a;margin-top:6px}
-        @media(max-width:420px){.app-wrapper{border-radius:28px;padding-bottom:66px}.view-container{padding:16px 14px}.entry-grid{gap:12px}.entry-card{padding:18px 8px}.entry-icon{width:48px;height:48px;font-size:22px}.entry-title{font-size:14px}.bottom-nav{padding:6px 0 10px}.nav-item i{font-size:18px}.nav-item span{font-size:10px}#authPage{min-height:600px}.product-card .product-img{height:90px}.product-card .product-img img{height:90px}}
+        .theme-toggle-label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);cursor:pointer;padding:4px 10px;border-radius:20px;background:var(--bg-input);border:1px solid var(--border-color)}
+        @media(max-width:420px){.app-wrapper{border-radius:28px;padding-bottom:66px}.view-container{padding:16px 14px}.entry-grid{gap:12px}.entry-card{padding:18px 8px}.entry-icon{width:48px;height:48px;font-size:22px}.entry-title{font-size:14px}.bottom-nav{padding:6px 0 10px}.nav-item i{font-size:18px}.nav-item span{font-size:10px}#authPage{min-height:600px}.product-card .product-img{height:80px}.product-card .product-img img{height:80px}.product-card .product-title{font-size:12px}.product-card .product-price{font-size:14px}.product-grid{gap:8px}}
     </style>
 </head>
 <body>
@@ -191,7 +371,7 @@
             <label><input type="radio" name="authRole" value="boss" checked> 老板</label>
             <label><input type="radio" name="authRole" value="handler"> 打手</label>
         </div>
-        <div style="font-size:12px;color:#8892a8;margin-top:8px;text-align:center;">打手账号需管理员审核通过后方可使用</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;">打手账号需管理员审核通过后方可使用</div>
     </div>
 </div>
 
@@ -204,8 +384,14 @@
                 <span class="brand-name">电竞 <small>· 护航</small></span>
             </div>
             <div class="header-right">
-                <i class="fas fa-user"></i> <span id="currentUserDisplay">未登录</span>
-                <button class="btn btn-outline btn-sm" onclick="logout()" style="margin-left:8px;padding:2px 10px;font-size:11px;" id="logoutBtn">退出</button>
+                <div class="header-actions">
+                    <label class="theme-toggle-label" onclick="toggleTheme()">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                        <span id="themeText">黑夜</span>
+                    </label>
+                    <i class="fas fa-user"></i> <span id="currentUserDisplay">未登录</span>
+                    <button class="btn btn-outline btn-sm" onclick="logout()" style="margin-left:4px;padding:2px 10px;font-size:11px;" id="logoutBtn">退出</button>
+                </div>
             </div>
         </div>
 
@@ -216,27 +402,27 @@
                 <div class="images" id="announceImages"></div>
                 <div class="time" id="announceTime"></div>
             </div>
-            <div class="card" style="background:linear-gradient(135deg,#1a2a4a,#0b0d15);border:1px solid #f5c84244;margin-bottom:14px;">
+            <div class="admin-card" style="background:linear-gradient(135deg,#1a2a4a,#0b0d15);border:1px solid #f5c84244;margin-bottom:14px;padding:14px 16px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-                    <div><div style="font-size:12px;color:#8892a8;">红钻余额</div><div style="font-size:24px;font-weight:700;color:#f5c842;" id="bossDiamond">0</div></div>
+                    <div><div style="font-size:12px;color:var(--text-muted);">红钻余额</div><div style="font-size:24px;font-weight:700;color:#f5c842;" id="bossDiamond">0</div></div>
                     <div style="display:flex;gap:6px;">
                         <button class="btn btn-warning btn-sm" onclick="openRecharge()"><i class="fas fa-plus-circle"></i> 充值</button>
                         <button class="btn btn-primary btn-sm" onclick="openMail()"><i class="fas fa-envelope"></i> 邮件 <span id="unreadMailCount" style="background:#ef4444;color:#fff;border-radius:50%;padding:0 6px;font-size:10px;">0</span></button>
                     </div>
                 </div>
-                <div style="font-size:12px;color:#8892a8;margin-top:2px;">1元 = 10红钻</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">1元 = 10红钻</div>
             </div>
-            <div class="card" style="padding:12px 14px;">
-                <div class="card-title" style="font-size:15px;margin-bottom:10px;"><i class="fas fa-shopping-cart"></i> 护航商品 <span id="bossProductCount" style="font-size:12px;font-weight:400;color:#8892a8;">0</span></div>
-                <div id="bossProductList"></div>
+            <div class="admin-card" style="padding:10px 12px;">
+                <div class="admin-card-title" style="font-size:14px;margin-bottom:8px;"><i class="fas fa-shopping-cart"></i> 护航商品 <span id="bossProductCount" style="font-size:12px;font-weight:400;color:var(--text-muted);">0</span></div>
+                <div id="bossProductList" class="product-grid"></div>
             </div>
         </div>
 
         <!-- ===== 订单页面 ===== -->
         <div class="view" id="view-orders">
-            <div class="card"><div class="card-title"><i class="fas fa-history"></i> 我的订单</div><div id="bossMyOrders"></div></div>
-            <div class="card">
-                <div class="card-title"><i class="fas fa-gift" style="color:#f59e0b;"></i> 打赏打手</div>
+            <div class="admin-card"><div class="admin-card-title"><i class="fas fa-history"></i> 我的订单</div><div id="bossMyOrders"></div></div>
+            <div class="admin-card">
+                <div class="admin-card-title"><i class="fas fa-gift" style="color:#f59e0b;"></i> 打赏打手</div>
                 <div id="bossTipSection">
                     <div class="admin-form-group"><label>选择打手</label><select class="admin-form-control" id="tipHandlerSelect"><option value="">-- 请选择打手 --</option></select></div>
                     <div class="admin-form-group"><label>红钻数量</label><input class="admin-form-control" id="tipAmount" type="number" placeholder="输入红钻数量" min="1" /></div>
@@ -247,10 +433,10 @@
 
         <!-- ===== 打手视图 ===== -->
         <div class="view" id="view-handler">
-            <div class="card"><div class="card-title"><i class="fas fa-wallet"></i> 我的余额</div><div style="font-size:24px;font-weight:700;color:#69db7c;" id="handlerBalance">¥0</div></div>
-            <div class="card"><div class="card-title"><i class="fas fa-clock"></i> 待接单 <span class="badge" id="handlerPendingCount">0</span></div><div id="handlerPendingList"></div></div>
-            <div class="card"><div class="card-title"><i class="fas fa-check-circle"></i> 已接单 / 进行中</div><div id="handlerOngoingList"></div></div>
-            <div class="card"><div class="card-title"><i class="fas fa-check-double"></i> 已完成订单</div><div id="handlerCompletedList"></div></div>
+            <div class="admin-card"><div class="admin-card-title"><i class="fas fa-wallet"></i> 我的余额</div><div style="font-size:24px;font-weight:700;color:#69db7c;" id="handlerBalance">¥0</div></div>
+            <div class="admin-card"><div class="admin-card-title"><i class="fas fa-clock"></i> 待接单 <span class="badge" id="handlerPendingCount">0</span></div><div id="handlerPendingList"></div></div>
+            <div class="admin-card"><div class="admin-card-title"><i class="fas fa-check-circle"></i> 已接单 / 进行中</div><div id="handlerOngoingList"></div></div>
+            <div class="admin-card"><div class="admin-card-title"><i class="fas fa-check-double"></i> 已完成订单</div><div id="handlerCompletedList"></div></div>
         </div>
 
         <!-- ===== 管理员视图 ===== -->
@@ -282,18 +468,15 @@
                     <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="prodDesc" rows="2" placeholder="服务详情"></textarea></div>
                     <div class="admin-form-group"><label><i class="fas fa-yen-sign"></i> 价格</label><input class="admin-form-control" id="prodPrice" type="number" placeholder="288"></div>
                     <div class="admin-form-group"><label><i class="fas fa-boxes"></i> 库存</label><input class="admin-form-control" id="prodQuantity" type="number" placeholder="1" value="1"></div>
-                    <div class="admin-form-group"><label><i class="fas fa-image"></i> 商品图片</label>
-                        <div class="file-upload-btn" onclick="document.getElementById('prodImageInput').click()">
-                            <i class="fas fa-upload"></i> 选择图片
-                            <input type="file" id="prodImageInput" accept="image/*" onchange="previewProdImage(event, 'prodImagePreview')" />
-                        </div>
-                        <img id="prodImagePreview" class="upload-preview" style="display:none;" />
+                    <div class="admin-form-group"><label><i class="fas fa-image"></i> 商品图片URL</label>
+                        <input class="admin-form-control" id="prodImageUrl" placeholder="输入图片URL，如 https://imgtu.com/xxx.jpg" />
+                        <img id="prodImagePreview" class="upload-preview" style="display:none;margin-top:4px;" onerror="this.style.display='none'" />
                     </div>
                     <button class="btn btn-success" onclick="shelfProduct()"><i class="fas fa-upload"></i> 上架商品</button>
                 </div>
                 <div class="admin-card" style="border-left:4px solid #f59e0b;">
                     <div class="admin-card-title"><i class="fas fa-paper-plane" style="color:#f59e0b;"></i> 直接发布订单</div>
-                    <p style="font-size:13px;color:#8892a8;margin-bottom:12px;">无需老板购买，直接创建订单，打手可接单。</p>
+                    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">无需老板购买，直接创建订单，打手可接单。</p>
                     <div class="admin-form-group"><label><i class="fas fa-gamepad"></i> 游戏</label><select class="admin-form-control" id="directGame"><option value="暗区突围">暗区突围</option><option value="三角洲">三角洲</option></select></div>
                     <div class="admin-form-group"><label><i class="fas fa-tag"></i> 标题</label><input class="admin-form-control" id="directTitle" placeholder="标题"></div>
                     <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="directDesc" rows="2" placeholder="服务详情"></textarea></div>
@@ -346,14 +529,14 @@
                         <button class="btn btn-primary" onclick="saveAnnounce()"><i class="fas fa-save"></i> 保存公告</button>
                     </div>
                 </div>
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-eye"></i> 当前公告预览</div><div id="announcePreview" style="color:#b0b8c8;font-size:14px;line-height:1.6;"></div></div>
+                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-eye"></i> 当前公告预览</div><div id="announcePreview" style="color:var(--text-secondary);font-size:14px;line-height:1.6;"></div></div>
             </div>
         </div>
 
         <!-- ===== 账号管理 ===== -->
         <div class="view" id="view-account">
-            <div class="card">
-                <div class="card-title"><i class="fas fa-user"></i> 账号信息</div>
+            <div class="admin-card">
+                <div class="admin-card-title"><i class="fas fa-user"></i> 账号信息</div>
                 <div id="accountInfo" class="account-info">
                     <div class="info-row"><span class="label">用户名</span><span class="value" id="accUsername">-</span></div>
                     <div class="info-row"><span class="label">角色</span><span class="value" id="accRole">-</span></div>
@@ -398,6 +581,22 @@ const API_URL = '/api';
 let currentUser = null;
 let token = localStorage.getItem('token');
 let announceImages = [];
+let currentTheme = localStorage.getItem('theme') || 'dark';
+
+// ============================================================
+//  主题切换
+// ============================================================
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('themeIcon').className = theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+    document.getElementById('themeText').textContent = theme === 'light' ? '白天' : '黑夜';
+    localStorage.setItem('theme', theme);
+    currentTheme = theme;
+}
+
+function toggleTheme() {
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+}
 
 // ============================================================
 //  工具函数
@@ -489,20 +688,6 @@ function showRegister() {
     document.getElementById('mainApp').classList.add('hidden');
 }
 
-function previewProdImage(event, previewId) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = document.getElementById(previewId);
-            img.src = e.target.result;
-            img.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    }
-}
-window.previewProdImage = previewProdImage;
-
 // ============================================================
 //  公告功能
 // ============================================================
@@ -552,7 +737,7 @@ function renderAnnounceImagePreview() {
     const container = document.getElementById('announceImagePreview');
     container.innerHTML = announceImages.map((img, i) =>
         `<div style="position:relative;display:inline-block;">
-            <img src="${img}" style="max-width:60px;max-height:60px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" onclick="showImgPreview('${img}')">
+            <img src="${img}" style="max-width:60px;max-height:60px;border-radius:8px;border:1px solid var(--border-color);cursor:pointer;" onclick="showImgPreview('${img}')">
             <button onclick="removeAnnounceImage(${i})" style="position:absolute;top:-6px;right:-6px;background:#ef4444;border:none;color:#fff;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;line-height:18px;text-align:center;">×</button>
         </div>`
     ).join('');
@@ -600,6 +785,7 @@ async function doAuthLogin() {
         renderBossView();
         renderAdminAll();
         loadTipHandlers();
+        applyTheme(currentTheme);
     } catch (err) {
         errorEl.textContent = err.message || '登录失败';
     }
@@ -723,9 +909,9 @@ async function renderDashboard() {
         const pending = orders.filter(o => o.status === 'pending').length;
         const completed = orders.filter(o => o.status === 'completed').length;
         document.getElementById('statsGrid').innerHTML = `
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;">${total}</div><div style="font-size:12px;color:#8892a8;">总订单</div></div>
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#f59e0b;">${pending}</div><div style="font-size:12px;color:#8892a8;">待接单</div></div>
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#22c55e;">${completed}</div><div style="font-size:12px;color:#8892a8;">已完成</div></div>
+            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;">${total}</div><div style="font-size:12px;color:var(--text-muted);">总订单</div></div>
+            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#f59e0b;">${pending}</div><div style="font-size:12px;color:var(--text-muted);">待接单</div></div>
+            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#22c55e;">${completed}</div><div style="font-size:12px;color:var(--text-muted);">已完成</div></div>
         `;
         const recent = orders.slice(0, 10);
         const container = document.getElementById('recentOrdersList');
@@ -754,7 +940,7 @@ async function doDeleteOrder(orderId) {
 }
 
 // ============================================================
-//  商品管理（含编辑功能、图片上传）
+//  商品管理
 // ============================================================
 let editProductId = null;
 
@@ -796,7 +982,6 @@ async function renderProducts() {
     } catch (err) { console.error(err); }
 }
 
-// 编辑商品弹窗
 window.openEditProduct = function(productId) {
     editProductId = productId;
     apiRequest('/admin/products').then(products => {
@@ -809,18 +994,25 @@ window.openEditProduct = function(productId) {
             <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="editProdDesc" rows="2">${p.desc||''}</textarea></div>
             <div class="admin-form-group"><label>价格</label><input class="admin-form-control" id="editProdPrice" type="number" value="${p.price}" /></div>
             <div class="admin-form-group"><label>库存</label><input class="admin-form-control" id="editProdQuantity" type="number" value="${p.quantity}" /></div>
-            <div class="admin-form-group"><label>商品图片</label>
-                <div class="file-upload-btn" onclick="document.getElementById('editProdImageInput').click()">
-                    <i class="fas fa-upload"></i> 选择图片
-                    <input type="file" id="editProdImageInput" accept="image/*" onchange="previewProdImage(event, 'editProdImagePreview')" />
-                </div>
-                ${p.image ? `<img id="editProdImagePreview" class="upload-preview" src="${p.image}" style="display:block;" />` : `<img id="editProdImagePreview" class="upload-preview" style="display:none;" />`}
+            <div class="admin-form-group"><label>商品图片URL</label>
+                <input class="admin-form-control" id="editProdImageUrl" value="${p.image||''}" placeholder="输入图片URL" />
+                <img id="editProdImagePreview" class="upload-preview" style="display:${p.image?'block':'none'};margin-top:4px;" src="${p.image||''}" onerror="this.style.display='none'" />
             </div>
             <div class="btn-row">
                 <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
                 <button class="btn btn-success" onclick="doEditProduct()">保存修改</button>
             </div>
         `);
+        // 预览图片
+        document.getElementById('editProdImageUrl').addEventListener('input', function() {
+            const img = document.getElementById('editProdImagePreview');
+            if (this.value) {
+                img.src = this.value;
+                img.style.display = 'block';
+            } else {
+                img.style.display = 'none';
+            }
+        });
     }).catch(err => toast(err.message, 'error'));
 };
 
@@ -830,8 +1022,7 @@ window.doEditProduct = function() {
     const desc = document.getElementById('editProdDesc').value.trim();
     const price = parseFloat(document.getElementById('editProdPrice').value);
     const quantity = parseInt(document.getElementById('editProdQuantity').value) || 1;
-    const imgPreview = document.getElementById('editProdImagePreview');
-    const image = imgPreview && imgPreview.src && imgPreview.style.display !== 'none' ? imgPreview.src : '';
+    const image = document.getElementById('editProdImageUrl').value.trim();
     if (!title || !price) return toast('请填写完整信息', 'error');
     apiRequest('/admin/products/' + editProductId + '/edit', {
         method: 'PUT',
@@ -844,7 +1035,7 @@ window.doEditProduct = function() {
 };
 
 // ============================================================
-//  商品操作（上架、下架、删除）
+//  商品操作
 // ============================================================
 window.confirmUnshelf = function(productId) {
     confirmAction('确认下架', '确认下架此商品？', '确认下架', `doUnshelf('${productId}')`);
@@ -885,8 +1076,7 @@ async function shelfProduct() {
     const desc = document.getElementById('prodDesc').value.trim();
     const price = parseFloat(document.getElementById('prodPrice').value);
     const quantity = parseInt(document.getElementById('prodQuantity').value) || 1;
-    const imgPreview = document.getElementById('prodImagePreview');
-    const image = imgPreview && imgPreview.style.display !== 'none' ? imgPreview.src : '';
+    const image = document.getElementById('prodImageUrl').value.trim();
     if (!title || !price) return toast('请填写完整信息', 'error');
     try {
         await apiRequest('/admin/products', { method: 'POST', body: JSON.stringify({ game, title, desc, price, quantity, image }) });
@@ -894,11 +1084,22 @@ async function shelfProduct() {
         document.getElementById('prodTitle').value = '';
         document.getElementById('prodDesc').value = '';
         document.getElementById('prodPrice').value = '';
+        document.getElementById('prodImageUrl').value = '';
         document.getElementById('prodImagePreview').style.display = 'none';
-        document.getElementById('prodImagePreview').src = '';
         renderProducts();
     } catch (err) { toast(err.message, 'error'); }
 }
+
+// 预览图片URL
+document.getElementById('prodImageUrl').addEventListener('input', function() {
+    const img = document.getElementById('prodImagePreview');
+    if (this.value) {
+        img.src = this.value;
+        img.style.display = 'block';
+    } else {
+        img.style.display = 'none';
+    }
+});
 
 // ============================================================
 //  直接发布订单
@@ -1063,7 +1264,7 @@ async function doApproveHandler(userId) {
 window.changeUsername = function(userId, currentName) {
     showCustomModal(`
         <h3><i class="fas fa-user-edit"></i> 修改用户名</h3>
-        <p style="color:#8892a8;font-size:14px;">当前用户名：<strong>${currentName}</strong></p>
+        <p style="color:var(--text-muted);font-size:14px;">当前用户名：<strong>${currentName}</strong></p>
         <div class="form-group"><label>新用户名</label><input class="admin-form-control" id="newUsernameInput" placeholder="输入新用户名" /></div>
         <div class="btn-row">
             <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
@@ -1083,7 +1284,7 @@ async function doChangeUsername(userId) {
 }
 
 // ============================================================
-//  老板视图（紧凑型商品卡片）
+//  老板视图（一行两个商品）
 // ============================================================
 async function renderBossView() {
     try {
@@ -1106,10 +1307,10 @@ async function renderBossView() {
             const remaining = p.quantity - p.sold;
             let imgHtml = '';
             if (p.image) {
-                imgHtml = `<img src="${p.image}" style="width:100%;height:120px;object-fit:cover;" />`;
+                imgHtml = `<img src="${p.image}" style="width:100%;height:100px;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);\\'>'+(p.game==='暗区突围'?'🎯':'🚁')+'</div>'" />`;
             } else {
                 const icon = p.game === '暗区突围' ? '🎯' : '🚁';
-                imgHtml = `<div style="width:100%;height:120px;display:flex;align-items:center;justify-content:center;font-size:36px;background:linear-gradient(145deg,#10182e,#1a2648);">${icon}</div>`;
+                imgHtml = `<div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);color:var(--product-img-icon);">${icon}</div>`;
             }
             html += `
                 <div class="product-card">
@@ -1120,7 +1321,7 @@ async function renderBossView() {
                     <div class="product-body">
                         <div class="product-title">${p.title}</div>
                         <div class="product-desc">${p.desc || ''}</div>
-                        <div class="product-stock">剩余 ${remaining} 单</div>
+                        <div class="product-stock">剩余 ${remaining}</div>
                         <div class="product-bottom">
                             <span class="product-price">¥${p.price}</span>
                             ${remaining > 0 ? `<button class="btn btn-success btn-sm" onclick="confirmBuy('${p.id}')">购买</button>` : '<span class="status-badge status-soldout">已售罄</span>'}
@@ -1215,11 +1416,11 @@ window.openRecharge = function() {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
     const html = `
         <h3><i class="fas fa-plus-circle"></i> 充值红钻</h3>
-        <p style="color:#8892a8;font-size:14px;">选择充值档位，提交后等待管理员审核。</p>
+        <p style="color:var(--text-muted);font-size:14px;">选择充值档位，提交后等待管理员审核。</p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0;">
             ${rechargeOptions.map(opt => `<div class="recharge-option" onclick="selectRecharge(this, ${opt.amount}, ${opt.diamond})">
                 <div style="font-weight:600;font-size:16px;">¥${opt.amount}</div>
-                <div style="font-size:12px;color:#8892a8;">${opt.diamond} 红钻</div>
+                <div style="font-size:12px;color:var(--text-muted);">${opt.diamond} 红钻</div>
             </div>`).join('')}
         </div>
         <div style="text-align:center;margin:8px 0;"><span id="selectedRecharge" style="color:#f5c842;">请选择档位</span></div>
@@ -1260,8 +1461,8 @@ window.openMail = function() {
                         <span class="mail-title">${m.title}</span>
                         <span class="mail-status"><span class="status-badge ${m.status==='unread'?'status-pending':'status-claimed'}">${m.status==='unread'?'未领取':'已领取'}</span></span>
                     </div>
-                    <div style="font-size:14px;color:#b0b8c8;padding:4px 0;">${m.content}</div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#8892a8;">
+                    <div style="font-size:14px;color:var(--text-secondary);padding:4px 0;">${m.content}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);">
                         <span>${m.create_time}</span>
                         ${m.status === 'unread' && m.diamond > 0 ? `<button class="btn btn-success btn-xs" onclick="confirmClaimMail('${m.id}')">领取 ${m.diamond} 红钻</button>` : ''}
                     </div>
@@ -1301,8 +1502,8 @@ window.openChat = function(orderId) {
             '<div class="empty-state"><p>暂无消息</p></div>';
         showCustomModal(`
             <h3><i class="fas fa-comment"></i> 订单 ${orderId} 聊天</h3>
-            <p style="font-size:13px;color:#8892a8;">${order.game} · ${order.title}</p>
-            <p style="font-size:12px;color:#5a6378;">状态：${statusText(order.status)} ${isEnded ? '（已结束，只读）' : ''}</p>
+            <p style="font-size:13px;color:var(--text-secondary);">${order.game} · ${order.title}</p>
+            <p style="font-size:12px;color:var(--text-muted);">状态：${statusText(order.status)} ${isEnded ? '（已结束，只读）' : ''}</p>
             <div class="chat-messages" id="chatMessages">${messagesHtml}</div>
             <div class="${isEnded ? 'chat-readonly' : ''}">
                 <div class="chat-input-area">
@@ -1425,7 +1626,7 @@ window.adminAssignHandler = function(orderId) {
         let options = handlers.map(u => `<option value="${u.id}">${u.username}</option>`).join('');
         showCustomModal(`
             <h3><i class="fas fa-user-check"></i> 指派打手</h3>
-            <p style="color:#8892a8;font-size:14px;">选择要指派的打手：</p>
+            <p style="color:var(--text-muted);font-size:14px;">选择要指派的打手：</p>
             <div class="form-group"><label>打手</label><select class="admin-form-control" id="assignHandlerSelect">${options}</select></div>
             <div class="btn-row">
                 <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
@@ -1486,7 +1687,7 @@ async function doCancelOrder(orderId) {
 window.adminSettleOrder = function(orderId) {
     showCustomModal(`
         <h3><i class="fas fa-coins"></i> 结算打手</h3>
-        <p style="color:#8892a8;font-size:14px;">请输入打手收入金额（元）：</p>
+        <p style="color:var(--text-muted);font-size:14px;">请输入打手收入金额（元）：</p>
         <div class="form-group"><label>金额</label><input class="admin-form-control" id="settleAmountInput" type="number" placeholder="输入金额" step="0.01"></div>
         <div class="btn-row">
             <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
@@ -1543,7 +1744,7 @@ async function doBossComplete(orderId) {
 window.requestRefund = function(orderId) {
     showCustomModal(`
         <h3><i class="fas fa-undo"></i> 申请退款</h3>
-        <p style="color:#8892a8;font-size:14px;">请填写退款原因：</p>
+        <p style="color:var(--text-muted);font-size:14px;">请填写退款原因：</p>
         <div class="form-group"><label>退款原因</label><textarea class="admin-form-control" id="refundReasonInput" rows="3" placeholder="请详细说明退款原因..."></textarea></div>
         <div class="btn-row">
             <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
@@ -1567,7 +1768,7 @@ window.viewOrderDetail = function(orderId) {
     apiRequest('/orders/' + orderId).then(order => {
         const handlerName = order.handler_id ? order.handler_id : '未指派';
         const messagesHtml = order.messages && order.messages.length > 0 ?
-            order.messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:#8892a8;">${msg.time}</span></div>`).join('') :
+            order.messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:var(--text-muted);">${msg.time}</span></div>`).join('') :
             '暂无消息';
         showCustomModal(`
             <h3><i class="fas fa-info-circle"></i> 订单详情</h3>
@@ -1584,9 +1785,9 @@ window.viewOrderDetail = function(orderId) {
                 ${order.settled ? `<div class="detail-row"><span class="label">结算金额</span><span class="value">¥${order.settled_amount||order.price}</span></div>` : ''}
                 ${order.refund_reason ? `<div class="detail-row"><span class="label">退款原因</span><span class="value">${order.refund_reason}</span></div>` : ''}
             </div>
-            <div style="border-top:1px solid #2a2f3a;padding-top:12px;text-align:left;">
+            <div style="border-top:1px solid var(--border-color);padding-top:12px;text-align:left;">
                 <div style="font-weight:600;margin-bottom:8px;">聊天记录</div>
-                <div style="max-height:200px;overflow-y:auto;font-size:13px;background:#0b0d10;padding:8px;border-radius:8px;">${messagesHtml}</div>
+                <div style="max-height:200px;overflow-y:auto;font-size:13px;background:var(--bg-input);padding:8px;border-radius:8px;">${messagesHtml}</div>
             </div>
             <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
         `);
@@ -1607,7 +1808,7 @@ async function renderHandlerView() {
         } else {
             let html = '';
             for (const o of pending) {
-                html += `<div class="card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price}</span></div><button class="btn btn-primary btn-sm" onclick="confirmTake('${o.id}')">接单</button></div></div>`;
+                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price}</span></div><button class="btn btn-primary btn-sm" onclick="confirmTake('${o.id}')">接单</button></div></div>`;
             }
             pContainer.innerHTML = html;
         }
@@ -1624,7 +1825,7 @@ async function renderHandlerView() {
                 if (o.status === 'ongoing') actions += `<button class="btn btn-warning btn-sm" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
                 actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button>`;
                 actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
-                html += `<div class="card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price} ｜ 状态：<span class="status-badge ${statusCls}">${statusText2}</span></span></div><div style="display:flex;gap:4px;flex-wrap:wrap;">${actions}</div></div></div>`;
+                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price} ｜ 状态：<span class="status-badge ${statusCls}">${statusText2}</span></span></div><div style="display:flex;gap:4px;flex-wrap:wrap;">${actions}</div></div></div>`;
             }
             oContainer.innerHTML = html;
         }
@@ -1637,7 +1838,7 @@ async function renderHandlerView() {
             for (const o of completed) {
                 const settledText = o.settled ? '已结算' : '待结算';
                 const settledCls = o.settled ? 'status-onsale' : 'status-pending';
-                html += `<div class="card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:#8892a8;">¥${o.price} ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.create_time}</span></div><button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button><button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button></div></div>`;
+                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">¥${o.price} ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.create_time}</span></div><button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button><button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button></div></div>`;
             }
             cContainer.innerHTML = html;
         }
@@ -1676,6 +1877,7 @@ async function doSubmitComplete(orderId) {
 async function init() {
     document.getElementById('authPage').style.display = 'flex';
     document.getElementById('mainApp').classList.add('hidden');
+    applyTheme(currentTheme);
     if (token) {
         try {
             const user = await apiRequest('/me');
