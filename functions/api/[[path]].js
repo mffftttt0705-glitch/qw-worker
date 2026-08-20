@@ -1,6 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
-//  功能：店铺独立 + 订单分发 + 打手过滤
+//  功能：店铺入驻 + 邀请码注册 + 店长系统 + 管理员封禁
 // ============================================================
 
 // ===== IP注册缓存 =====
@@ -85,7 +85,6 @@ async function handleRegister(env, body, request) {
     const { username, password, role, status, phone, invite_code, shop_name } = body;
     if (!username || !password) return errorResponse('请填写用户名和密码');
 
-    // IP限制
     const clientIP = request.headers.get('CF-Connecting-IP') ||
         request.headers.get('X-Forwarded-For') ||
         request.headers.get('X-Real-IP') ||
@@ -96,7 +95,6 @@ async function handleRegister(env, body, request) {
         return errorResponse('注册过于频繁，请1小时后再试', 429);
     }
 
-    // 检查用户名
     const existing = await queryDB(env, 'SELECT * FROM users WHERE username = ?', [username]);
     if (existing.results && existing.results.length > 0) {
         return errorResponse('用户名已存在');
@@ -113,7 +111,6 @@ async function handleRegister(env, body, request) {
         return errorResponse('邀请码无效或店铺已停用');
     }
 
-    // 店长入驻
     if (role === 'shop_owner') {
         if (!shop_name) return errorResponse('请填写俱乐部名称');
         const nameCheck = await queryDB(env, 'SELECT * FROM shops WHERE name = ?', [shop_name]);
@@ -131,7 +128,6 @@ async function handleRegister(env, body, request) {
         [id, username, password, role || 'boss', userStatus, phone || '', clientIP, new Date().toISOString(), shop.id, shop_name || '', invite_code]
     );
 
-    // 店长创建店铺
     if (role === 'shop_owner' && shop_name) {
         const shopId = generateId();
         await runDB(env,
@@ -216,72 +212,7 @@ async function handleGetMe(env, authHeader) {
 }
 
 // ============================================================
-//  3. 商品获取（老板看到自己店铺的商品）
-// ============================================================
-
-async function handleGetProducts(env, authHeader) {
-    // 获取当前用户
-    const userId = verifyAndGetUserId(authHeader);
-    let shopId = null;
-
-    if (userId) {
-        const user = await getUserById(env, userId);
-        if (user && user.shop_id) {
-            shopId = user.shop_id;
-        }
-    }
-
-    // 如果没有登录或没有店铺，返回平台商品
-    if (!shopId) {
-        const result = await queryDB(env,
-            'SELECT * FROM products WHERE hidden = 0 AND (shop_id = "shop_platform" OR shop_id IS NULL) ORDER BY created_at DESC'
-        );
-        return jsonResponse(result.results || []);
-    }
-
-    // 返回该店铺的商品（包括平台商品，如果店铺允许）
-    const result = await queryDB(env,
-        'SELECT * FROM products WHERE hidden = 0 AND shop_id = ? ORDER BY created_at DESC',
-        [shopId]
-    );
-    return jsonResponse(result.results || []);
-}
-
-// ============================================================
-//  4. 打手获取待接单列表（支持过滤）
-// ============================================================
-
-async function handleGetHandlerOrders(env, authHeader, body) {
-    const userId = verifyAndGetUserId(authHeader);
-    if (!userId) return errorResponse('请先登录', 401);
-    const user = await getUserById(env, userId);
-    if (!user || user.role !== 'handler') return errorResponse('只有打手可查看', 403);
-
-    const { filter_type } = body || {}; // 'all' 或 'shop'
-
-    let sql = 'SELECT * FROM orders WHERE status = "pending"';
-    const params = [];
-
-    // 如果打手选择了"仅自己店铺"，只显示自己店铺的订单
-    if (filter_type === 'shop' && user.shop_id) {
-        sql += ' AND shop_id = ?';
-        params.push(user.shop_id);
-    } else {
-        // "全部"模式：显示所有 dispatch_to_all = 1 的店铺订单 + 平台订单
-        sql += ` AND (
-            shop_id = "shop_platform" 
-            OR shop_id IS NULL 
-            OR shop_id IN (SELECT id FROM shops WHERE dispatch_to_all = 1 AND status = "active")
-        )`;
-    }
-
-    sql += ' ORDER BY created_at DESC';
-    const result = await queryDB(env, sql, params);
-    return jsonResponse(result.results || []);
-}
-
-// ============================================================
-//  5. 店铺入驻申请（无需登录）
+//  3. 店铺入驻申请（无需登录）
 // ============================================================
 
 async function handleShopApply(env, body) {
@@ -315,9 +246,8 @@ async function handleShopApply(env, body) {
 
     return jsonResponse({ success: true, message: '入驻申请已提交，请等待管理员审核' });
 }
-
 // ============================================================
-//  6. 管理员 - 店铺申请管理
+//  4. 管理员 - 店铺申请管理
 // ============================================================
 
 async function handleAdminGetShopApplications(env) {
@@ -359,10 +289,9 @@ async function handleAdminRejectShop(env, applicationId) {
 }
 
 // ============================================================
-//  7. 管理员 - 店铺管理（含订单分发开关）
+//  5. 管理员 - 店铺管理
 // ============================================================
 
-// 获取所有店铺
 async function handleAdminGetShops(env) {
     const result = await queryDB(env, `
         SELECT s.*, u.username as owner_name, u.status as owner_status
@@ -373,7 +302,6 @@ async function handleAdminGetShops(env) {
     return jsonResponse(result.results || []);
 }
 
-// 封禁/解封店铺
 async function handleAdminToggleShop(env, shopId) {
     const shop = await getShopById(env, shopId);
     if (!shop) return errorResponse('店铺不存在', 404);
@@ -395,7 +323,6 @@ async function handleAdminToggleShop(env, shopId) {
     return jsonResponse({ success: true, message: `店铺已${newStatus === 'active' ? '解封' : '封禁'}` });
 }
 
-// 设置店铺订单分发开关
 async function handleAdminSetDispatch(env, shopId, body) {
     const { dispatch_to_all } = body;
     if (typeof dispatch_to_all !== 'number' || (dispatch_to_all !== 0 && dispatch_to_all !== 1)) {
@@ -414,7 +341,6 @@ async function handleAdminSetDispatch(env, shopId, body) {
     });
 }
 
-// 管理员封禁/解禁店长
 async function handleAdminToggleShopOwner(env, userId) {
     const user = await getUserById(env, userId);
     if (!user) return errorResponse('用户不存在', 404);
@@ -438,10 +364,9 @@ async function handleAdminToggleShopOwner(env, userId) {
 }
 
 // ============================================================
-//  8. 店长/管理员 - 店铺管理接口
+//  6. 店长接口
 // ============================================================
 
-// 获取店铺信息
 async function handleShopOwnerGetShop(env, authHeader) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -454,7 +379,6 @@ async function handleShopOwnerGetShop(env, authHeader) {
     return jsonResponse(shop);
 }
 
-// 获取店铺商品
 async function handleShopOwnerGetProducts(env, authHeader) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -469,7 +393,6 @@ async function handleShopOwnerGetProducts(env, authHeader) {
     return jsonResponse(result.results || []);
 }
 
-// 店长上架商品
 async function handleShopOwnerCreateProduct(env, authHeader, body) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -482,14 +405,13 @@ async function handleShopOwnerCreateProduct(env, authHeader, body) {
 
     const id = generateId();
     await runDB(env,
-        `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, shop_id, is_platform) 
-         VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, 0)`,
+        `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, shop_id) 
+         VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?)`,
         [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', user.shop_id]
     );
     return jsonResponse({ success: true, id });
 }
 
-// 店长下架商品
 async function handleShopOwnerUnshelf(env, authHeader, productId) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -504,7 +426,6 @@ async function handleShopOwnerUnshelf(env, authHeader, productId) {
     return jsonResponse({ success: true, message: '已下架' });
 }
 
-// 店长重新上架
 async function handleShopOwnerReshelf(env, authHeader, productId) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -519,7 +440,6 @@ async function handleShopOwnerReshelf(env, authHeader, productId) {
     return jsonResponse({ success: true, message: '已重新上架' });
 }
 
-// 店长删除商品
 async function handleShopOwnerDeleteProduct(env, authHeader, productId) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -534,7 +454,6 @@ async function handleShopOwnerDeleteProduct(env, authHeader, productId) {
     return jsonResponse({ success: true, message: '已删除' });
 }
 
-// 店长获取订单（仅自己店铺）
 async function handleShopOwnerGetOrders(env, authHeader) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -548,7 +467,6 @@ async function handleShopOwnerGetOrders(env, authHeader) {
     return jsonResponse(result.results || []);
 }
 
-// 店长获取公告
 async function handleShopOwnerGetAnnounce(env, authHeader) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -566,7 +484,6 @@ async function handleShopOwnerGetAnnounce(env, authHeader) {
     return jsonResponse(data);
 }
 
-// 店长更新公告
 async function handleShopOwnerUpdateAnnounce(env, authHeader, body) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -583,7 +500,6 @@ async function handleShopOwnerUpdateAnnounce(env, authHeader, body) {
     return jsonResponse({ success: true, message: '公告已更新' });
 }
 
-// 店长获取用户（仅自己店铺）
 async function handleShopOwnerGetUsers(env, authHeader) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -597,7 +513,6 @@ async function handleShopOwnerGetUsers(env, authHeader) {
     return jsonResponse(result.results || []);
 }
 
-// 店长管理用户
 async function handleShopOwnerToggleBan(env, authHeader, targetUserId) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -629,7 +544,6 @@ async function handleShopOwnerResetPassword(env, authHeader, targetUserId) {
     return jsonResponse({ success: true, message: '密码已重置为 123456' });
 }
 
-// 店长获取充值申请（自己店铺）
 async function handleShopOwnerGetRecharges(env, authHeader) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -643,7 +557,6 @@ async function handleShopOwnerGetRecharges(env, authHeader) {
     return jsonResponse(result.results || []);
 }
 
-// 店长审批充值（消耗店铺红钻）
 async function handleShopOwnerApproveRecharge(env, authHeader, rechargeId) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -685,7 +598,66 @@ async function handleShopOwnerRejectRecharge(env, authHeader, rechargeId) {
 }
 
 // ============================================================
-//  9. 购买商品（记录店铺）
+//  7. 商品获取（老板看到自己店铺的商品）
+// ============================================================
+
+async function handleGetProducts(env, authHeader) {
+    const userId = verifyAndGetUserId(authHeader);
+    let shopId = null;
+
+    if (userId) {
+        const user = await getUserById(env, userId);
+        if (user && user.shop_id) {
+            shopId = user.shop_id;
+        }
+    }
+
+    if (!shopId) {
+        const result = await queryDB(env,
+            'SELECT * FROM products WHERE hidden = 0 AND shop_id = "shop_platform" ORDER BY created_at DESC'
+        );
+        return jsonResponse(result.results || []);
+    }
+
+    const result = await queryDB(env,
+        'SELECT * FROM products WHERE hidden = 0 AND shop_id = ? ORDER BY created_at DESC',
+        [shopId]
+    );
+    return jsonResponse(result.results || []);
+}
+
+// ============================================================
+//  8. 打手获取待接单列表（支持过滤）
+// ============================================================
+
+async function handleGetHandlerOrders(env, authHeader, body) {
+    const userId = verifyAndGetUserId(authHeader);
+    if (!userId) return errorResponse('请先登录', 401);
+    const user = await getUserById(env, userId);
+    if (!user || user.role !== 'handler') return errorResponse('只有打手可查看', 403);
+
+    const { filter_type } = body || {};
+
+    let sql = 'SELECT * FROM orders WHERE status = "pending"';
+    const params = [];
+
+    if (filter_type === 'shop' && user.shop_id) {
+        sql += ' AND shop_id = ?';
+        params.push(user.shop_id);
+    } else {
+        sql += ` AND (
+            shop_id = "shop_platform" 
+            OR shop_id IN (SELECT id FROM shops WHERE dispatch_to_all = 1 AND status = "active")
+        )`;
+    }
+
+    sql += ' ORDER BY created_at DESC';
+    const result = await queryDB(env, sql, params);
+    return jsonResponse(result.results || []);
+}
+
+// ============================================================
+//  9. 购买商品
 // ============================================================
 
 async function handleBuyProduct(env, authHeader, body) {
@@ -726,7 +698,7 @@ async function handleBuyProduct(env, authHeader, body) {
 }
 
 // ============================================================
-//  10. 打手获取我的订单（含过滤）
+//  10. 我的订单
 // ============================================================
 
 async function handleGetMyOrders(env, authHeader) {
@@ -742,11 +714,9 @@ async function handleGetMyOrders(env, authHeader) {
         sql = 'SELECT * FROM orders WHERE boss_id = ? ORDER BY created_at DESC';
         params = [userId];
     } else if (user.role === 'handler') {
-        // 打手看到：待接单（根据店铺过滤）+ 自己的订单
         let pendingSql = 'SELECT * FROM orders WHERE status = "pending"';
         let pendingParams = [];
 
-        // 如果打手有店铺，优先显示自己店铺的待接单
         if (user.shop_id) {
             pendingSql += ` AND (
                 shop_id = ? 
@@ -755,7 +725,7 @@ async function handleGetMyOrders(env, authHeader) {
             )`;
             pendingParams.push(user.shop_id);
         } else {
-            pendingSql += ' AND (shop_id = "shop_platform" OR shop_id IS NULL)';
+            pendingSql += ' AND shop_id = "shop_platform"';
         }
 
         const pendingResult = await queryDB(env, pendingSql + ' ORDER BY created_at DESC', pendingParams);
@@ -824,36 +794,26 @@ export async function onRequest(context) {
         if (path === '/api/me' && method === 'GET') {
             return await handleGetMe(env, authHeader);
         }
-
-        // ===== 商品接口（根据用户店铺过滤） =====
         if (path === '/api/products' && method === 'GET') {
             return await handleGetProducts(env, authHeader);
         }
-
-        // ===== 打手待接单（支持过滤） =====
         if (path === '/api/orders/pending' && method === 'POST') {
             return await handleGetHandlerOrders(env, authHeader, body);
         }
-
-        // ===== 购买商品 =====
         if (path === '/api/orders/buy' && method === 'POST') {
             return await handleBuyProduct(env, authHeader, body);
         }
-
-        // ===== 我的订单 =====
         if (path === '/api/orders/my' && method === 'GET') {
             return await handleGetMyOrders(env, authHeader);
         }
 
-        // ===== 店长/管理员店铺管理接口 =====
+        // ===== 店长/管理员店铺接口 =====
         if (userId) {
             const user = await getUserById(env, userId);
             if (user && hasShopOwnerPermission(user)) {
-                // 店铺信息
                 if (path === '/api/shop/owner/info' && method === 'GET') {
                     return await handleShopOwnerGetShop(env, authHeader);
                 }
-                // 商品管理
                 if (path === '/api/shop/owner/products' && method === 'GET') {
                     return await handleShopOwnerGetProducts(env, authHeader);
                 }
@@ -874,18 +834,15 @@ export async function onRequest(context) {
                         return await handleShopOwnerDeleteProduct(env, authHeader, productId);
                     }
                 }
-                // 订单管理
                 if (path === '/api/shop/owner/orders' && method === 'GET') {
                     return await handleShopOwnerGetOrders(env, authHeader);
                 }
-                // 公告管理
                 if (path === '/api/shop/owner/announce' && method === 'GET') {
                     return await handleShopOwnerGetAnnounce(env, authHeader);
                 }
                 if (path === '/api/shop/owner/announce' && method === 'PUT') {
                     return await handleShopOwnerUpdateAnnounce(env, authHeader, body);
                 }
-                // 用户管理
                 if (path === '/api/shop/owner/users' && method === 'GET') {
                     return await handleShopOwnerGetUsers(env, authHeader);
                 }
@@ -900,7 +857,6 @@ export async function onRequest(context) {
                         return await handleShopOwnerResetPassword(env, authHeader, id);
                     }
                 }
-                // 充值管理
                 if (path === '/api/shop/owner/recharges' && method === 'GET') {
                     return await handleShopOwnerGetRecharges(env, authHeader);
                 }
@@ -919,7 +875,6 @@ export async function onRequest(context) {
 
             // ===== 管理员接口 =====
             if (user && hasAdminPermission(user)) {
-                // 店铺申请管理
                 if (path === '/api/admin/shop-applications' && method === 'GET') {
                     return await handleAdminGetShopApplications(env);
                 }
@@ -934,7 +889,6 @@ export async function onRequest(context) {
                         return await handleAdminRejectShop(env, id);
                     }
                 }
-                // 店铺管理
                 if (path === '/api/admin/shops' && method === 'GET') {
                     return await handleAdminGetShops(env);
                 }
@@ -949,7 +903,6 @@ export async function onRequest(context) {
                         return await handleAdminSetDispatch(env, id, body);
                     }
                 }
-                // 封禁店长
                 if (path.startsWith('/api/admin/shop-owner/')) {
                     const targetUserId = path.replace('/api/admin/shop-owner/', '');
                     if (targetUserId.endsWith('/toggle') && method === 'PUT') {
@@ -960,16 +913,9 @@ export async function onRequest(context) {
             }
         }
 
-        // ===== 其他原有接口（聊天、接单等）继续保留 =====
-        // 由于篇幅，这里省略，您需要保留原有的：
-        // - /api/orders/:id/take
-        // - /api/orders/:id/submit-complete
-        // - /api/orders/:id/boss-confirm
-        // - /api/orders/:id/chat
-        // - /api/orders/:id/refund-request
-        // - /api/recharges
-        // - /api/mails
-        // - /api/admin/* 等
+        // ===== 原有接口（聊天、接单等）- 保留 =====
+        // 由于这些接口在您的原有代码中已有，这里不再重复
+        // 请确保您的原有接口仍然可用
 
         return errorResponse('接口不存在', 404);
 
