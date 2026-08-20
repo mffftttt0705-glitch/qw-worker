@@ -1,7 +1,7 @@
 // ============================================================
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
 //  包含：用户、商品、订单、充值、公告、邮件、聊天等全部功能
-//  新增：打手审核、修改用户名、商品图片
+//  新增：打手审核、修改用户名、商品图片、编辑商品
 // ============================================================
 
 function generateId() {
@@ -54,7 +54,6 @@ async function handleRegister(env, body) {
   }
 
   const id = generateId();
-  // 打手账号默认状态为 pending（待审核），老板账号直接 active
   const userStatus = role === 'handler' ? 'pending' : (status || 'active');
   await runDB(env,
     'INSERT INTO users (id, username, password, role, diamond, balance, status) VALUES (?, ?, ?, ?, 0, 0, ?)',
@@ -112,7 +111,7 @@ function verifyAndGetUserId(authHeader) {
 }
 
 // ============================================================
-//  商品相关（支持图片）
+//  商品相关（支持图片、编辑）
 // ============================================================
 
 async function handleGetProducts(env) {
@@ -134,6 +133,17 @@ async function handleAdminCreateProduct(env, body) {
     [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '']
   );
   return jsonResponse({ success: true, id });
+}
+
+// 新增：编辑商品
+async function handleAdminUpdateProduct(env, productId, body) {
+  const { game, title, desc, price, quantity, image } = body;
+  if (!title || !price) return errorResponse('请填写完整信息');
+  await runDB(env,
+    'UPDATE products SET game = ?, title = ?, description = ?, price = ?, quantity = ?, image = ? WHERE id = ?',
+    [game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', productId]
+  );
+  return jsonResponse({ success: true, message: '商品已更新' });
 }
 
 async function handleAdminUnshelf(env, productId) {
@@ -529,7 +539,7 @@ async function handleSendChat(env, authHeader, orderId, body) {
 }
 
 // ============================================================
-//  管理员：用户管理（新增打手审核、修改用户名）
+//  管理员：用户管理
 // ============================================================
 
 async function handleAdminToggleBan(env, targetUserId) {
@@ -546,7 +556,6 @@ async function handleAdminResetPassword(env, targetUserId) {
   return jsonResponse({ success: true, message: '密码已重置为 123456' });
 }
 
-// 新增：审核打手
 async function handleApproveHandler(env, targetUserId) {
   const result = await queryDB(env, 'SELECT * FROM users WHERE id = ?', [targetUserId]);
   const user = (result.results && result.results[0]) || null;
@@ -557,11 +566,9 @@ async function handleApproveHandler(env, targetUserId) {
   return jsonResponse({ success: true, message: '打手审核通过' });
 }
 
-// 新增：修改用户名
 async function handleChangeUsername(env, targetUserId, body) {
   const { username } = body;
   if (!username) return errorResponse('请输入新用户名');
-  // 检查用户名是否被占用
   const existing = await queryDB(env, 'SELECT * FROM users WHERE username = ? AND id != ?', [username, targetUserId]);
   if (existing.results && existing.results.length > 0) {
     return errorResponse('用户名已被使用');
@@ -714,7 +721,7 @@ export async function onRequest(context) {
           }
         }
 
-        // 商品管理
+        // 商品管理（含编辑）
         if (path === '/api/admin/products' && method === 'GET') {
           return await handleAdminGetProducts(env);
         }
@@ -723,6 +730,11 @@ export async function onRequest(context) {
         }
         if (path.startsWith('/api/admin/products/')) {
           const productId = path.replace('/api/admin/products/', '');
+          // 编辑商品（新增）
+          if (productId.endsWith('/edit') && method === 'PUT') {
+            const id = productId.replace('/edit', '');
+            return await handleAdminUpdateProduct(env, id, body);
+          }
           if (productId.endsWith('/unshelf') && method === 'PUT') {
             const id = productId.replace('/unshelf', '');
             return await handleAdminUnshelf(env, id);
@@ -755,7 +767,7 @@ export async function onRequest(context) {
           }
         }
 
-        // 用户管理（含打手审核、修改用户名）
+        // 用户管理
         if (path === '/api/admin/users' && method === 'GET') {
           return await handleAdminGetUsers(env);
         }
@@ -772,12 +784,10 @@ export async function onRequest(context) {
             const id = targetUserId.replace('/reset-password', '');
             return await handleAdminResetPassword(env, id);
           }
-          // 新增：审核打手
           if (targetUserId.endsWith('/approve') && method === 'PUT') {
             const id = targetUserId.replace('/approve', '');
             return await handleApproveHandler(env, id);
           }
-          // 新增：修改用户名
           if (targetUserId.endsWith('/username') && method === 'PUT') {
             const id = targetUserId.replace('/username', '');
             return await handleChangeUsername(env, id, body);
