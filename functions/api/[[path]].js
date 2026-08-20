@@ -1,5 +1,7 @@
 // ============================================================
-//  QW电竞 - 完整后端 API（Pages Functions 版本）- 修复版
+//  QW电竞 - 完整后端 API（Pages Functions 版本）
+//  包含：用户、商品、订单、充值、公告、邮件、聊天等全部功能
+//  新增：打手审核、修改用户名、商品图片
 // ============================================================
 
 function generateId() {
@@ -43,7 +45,7 @@ async function runDB(env, sql, params = []) {
 // ============================================================
 
 async function handleRegister(env, body) {
-  const { username, password, role } = body;
+  const { username, password, role, status } = body;
   if (!username || !password) return errorResponse('请填写用户名和密码');
 
   const existing = await queryDB(env, 'SELECT * FROM users WHERE username = ?', [username]);
@@ -52,9 +54,11 @@ async function handleRegister(env, body) {
   }
 
   const id = generateId();
+  // 打手账号默认状态为 pending（待审核），老板账号直接 active
+  const userStatus = role === 'handler' ? 'pending' : (status || 'active');
   await runDB(env,
-    'INSERT INTO users (id, username, password, role, diamond, balance, status) VALUES (?, ?, ?, ?, 0, 0, "active")',
-    [id, username, password, role || 'boss']
+    'INSERT INTO users (id, username, password, role, diamond, balance, status) VALUES (?, ?, ?, ?, 0, 0, ?)',
+    [id, username, password, role || 'boss', userStatus]
   );
 
   return jsonResponse({ message: '注册成功', id });
@@ -68,6 +72,8 @@ async function handleLogin(env, body) {
   const user = (result.results && result.results[0]) || null;
   if (!user) return errorResponse('用户不存在');
   if (user.password !== password) return errorResponse('密码错误');
+  if (user.status === 'banned') return errorResponse('账号已被封禁');
+  if (user.status === 'pending') return errorResponse('账号待审核，请等待管理员通过');
 
   const token = generateId() + '.' + user.id;
 
@@ -106,7 +112,7 @@ function verifyAndGetUserId(authHeader) {
 }
 
 // ============================================================
-//  商品相关
+//  商品相关（支持图片）
 // ============================================================
 
 async function handleGetProducts(env) {
@@ -120,12 +126,12 @@ async function handleAdminGetProducts(env) {
 }
 
 async function handleAdminCreateProduct(env, body) {
-  const { game, title, desc, price, quantity } = body;
+  const { game, title, desc, price, quantity, image } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
   const id = generateId();
   await runDB(env,
-    'INSERT INTO products (id, game, title, description, price, quantity, sold, hidden) VALUES (?, ?, ?, ?, ?, ?, 0, 0)',
-    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1]
+    'INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?)',
+    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '']
   );
   return jsonResponse({ success: true, id });
 }
@@ -146,7 +152,7 @@ async function handleAdminDeleteProduct(env, productId) {
 }
 
 // ============================================================
-//  订单相关 - 修复打手看不到订单的问题
+//  订单相关
 // ============================================================
 
 async function handleBuyProduct(env, authHeader, body) {
@@ -158,12 +164,10 @@ async function handleBuyProduct(env, authHeader, body) {
   const { productId } = body;
   if (!productId) return errorResponse('请选择商品');
 
-  // 修复：使用 _id 匹配
   const prodResult = await queryDB(env, 'SELECT * FROM products WHERE id = ?', [productId]);
   const product = (prodResult.results && prodResult.results[0]) || null;
   if (!product) return errorResponse('商品不存在', 404);
 
-  // 检查库存
   const sold = product.sold || 0;
   if (product.quantity <= sold) return errorResponse('库存不足');
 
@@ -173,7 +177,6 @@ async function handleBuyProduct(env, authHeader, body) {
   await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [diamondCost, userId]);
 
   const orderId = generateId();
-  // 修复：确保 boss_id 正确存储
   await runDB(env,
     'INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages) VALUES (?, ?, ?, "pending", ?, ?, ?, ?, ?)',
     [orderId, productId, userId, product.price, product.game, product.title, product.desc || '', JSON.stringify([{ sender: 'system', content: '🎉 订单已创建', time: new Date().toISOString() }])]
@@ -193,12 +196,9 @@ async function handleGetMyOrders(env, authHeader) {
   if (user.role === 'boss') {
     sql = 'SELECT * FROM orders WHERE boss_id = ? ORDER BY created_at DESC';
   } else if (user.role === 'handler') {
-    // 修复：打手能看到所有待接单 + 自己的订单
-    // 先查所有待接单，再查自己接的订单
     const pendingResult = await queryDB(env, 'SELECT * FROM orders WHERE status = "pending" ORDER BY created_at DESC');
     const myResult = await queryDB(env, 'SELECT * FROM orders WHERE handler_id = ? ORDER BY created_at DESC', [userId]);
     const all = [...(pendingResult.results || []), ...(myResult.results || [])];
-    // 去重
     const seen = new Set();
     const unique = all.filter(o => {
       const key = o.id;
@@ -239,6 +239,7 @@ async function handleTakeOrder(env, authHeader, orderId) {
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
   if (user.role !== 'handler') return errorResponse('只有打手可接单');
+  if (user.status !== 'active') return errorResponse('账号未激活，请联系管理员');
 
   const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
   const order = (result.results && result.results[0]) || null;
@@ -305,7 +306,7 @@ async function handleRefundRequest(env, authHeader, orderId, body) {
 }
 
 // ============================================================
-//  管理员功能 - 修复充值管理
+//  管理员功能
 // ============================================================
 
 async function handleAdminGetOrders(env) {
@@ -321,7 +322,6 @@ async function handleAdminGetUsers(env) {
 async function handleAdminAssignHandler(env, orderId, body) {
   const { handlerId } = body;
   if (!handlerId) return errorResponse('请选择打手');
-  // 验证打手是否存在
   const userResult = await queryDB(env, 'SELECT * FROM users WHERE id = ? AND role = "handler"', [handlerId]);
   if (!userResult.results || userResult.results.length === 0) {
     return errorResponse('打手不存在');
@@ -381,7 +381,6 @@ async function handleAdminDirectPublish(env, authHeader, body) {
   const { game, title, desc, price } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
   const orderId = generateId();
-  // 修复：直接发布订单，让打手可以看到
   await runDB(env,
     'INSERT INTO orders (id, boss_id, status, price, game, title, description, messages) VALUES (?, ?, "pending", ?, ?, ?, ?, ?)',
     [orderId, userId, parseFloat(price), game || '暗区突围', title, desc || '', JSON.stringify([{ sender: 'system', content: '🎉 订单已创建（管理员发布）', time: new Date().toISOString() }])]
@@ -389,8 +388,13 @@ async function handleAdminDirectPublish(env, authHeader, body) {
   return jsonResponse({ success: true, orderId });
 }
 
+async function handleAdminDeleteOrder(env, orderId) {
+  await runDB(env, 'DELETE FROM orders WHERE id = ?', [orderId]);
+  return jsonResponse({ success: true, message: '已删除' });
+}
+
 // ============================================================
-//  充值相关 - 修复到账问题
+//  充值相关
 // ============================================================
 
 async function handleCreateRecharge(env, authHeader, body) {
@@ -416,9 +420,7 @@ async function handleAdminApproveRecharge(env, rechargeId) {
   const recharge = (result.results && result.results[0]) || null;
   if (!recharge || recharge.status !== 'pending') return errorResponse('记录不存在或已处理');
 
-  // 更新充值状态
   await runDB(env, 'UPDATE recharges SET status = "approved", approve_time = ? WHERE id = ?', [new Date().toISOString(), rechargeId]);
-  // 修复：给用户增加红钻
   if (recharge.user_id) {
     await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [recharge.diamond || 0, recharge.user_id]);
   }
@@ -441,19 +443,17 @@ async function handleAdminDeleteRecharge(env, rechargeId) {
 async function handleAdminGiftDiamond(env, body) {
   const { targetUserId, amount } = body;
   if (!targetUserId || !amount) return errorResponse('请填写完整信息');
-  // 修复：赠送红钻到账
   await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [amount, targetUserId]);
   return jsonResponse({ success: true, message: '赠送成功' });
 }
 
 // ============================================================
-//  公告相关 - 支持图片上传
+//  公告相关
 // ============================================================
 
 async function handleGetAnnounce(env) {
   const result = await queryDB(env, 'SELECT * FROM announces ORDER BY updated_at DESC LIMIT 1');
   const data = (result.results && result.results[0]) || { content: '欢迎使用 QW电竞护航平台！', images: '[]' };
-  // 解析 images 字段
   if (typeof data.images === 'string') {
     try { data.images = JSON.parse(data.images); } catch(e) { data.images = []; }
   }
@@ -529,7 +529,7 @@ async function handleSendChat(env, authHeader, orderId, body) {
 }
 
 // ============================================================
-//  管理员：用户管理
+//  管理员：用户管理（新增打手审核、修改用户名）
 // ============================================================
 
 async function handleAdminToggleBan(env, targetUserId) {
@@ -544,6 +544,30 @@ async function handleAdminToggleBan(env, targetUserId) {
 async function handleAdminResetPassword(env, targetUserId) {
   await runDB(env, 'UPDATE users SET password = "123456" WHERE id = ?', [targetUserId]);
   return jsonResponse({ success: true, message: '密码已重置为 123456' });
+}
+
+// 新增：审核打手
+async function handleApproveHandler(env, targetUserId) {
+  const result = await queryDB(env, 'SELECT * FROM users WHERE id = ?', [targetUserId]);
+  const user = (result.results && result.results[0]) || null;
+  if (!user) return errorResponse('用户不存在', 404);
+  if (user.role !== 'handler') return errorResponse('该用户不是打手');
+  if (user.status !== 'pending') return errorResponse('该用户不需要审核');
+  await runDB(env, 'UPDATE users SET status = "active" WHERE id = ?', [targetUserId]);
+  return jsonResponse({ success: true, message: '打手审核通过' });
+}
+
+// 新增：修改用户名
+async function handleChangeUsername(env, targetUserId, body) {
+  const { username } = body;
+  if (!username) return errorResponse('请输入新用户名');
+  // 检查用户名是否被占用
+  const existing = await queryDB(env, 'SELECT * FROM users WHERE username = ? AND id != ?', [username, targetUserId]);
+  if (existing.results && existing.results.length > 0) {
+    return errorResponse('用户名已被使用');
+  }
+  await runDB(env, 'UPDATE users SET username = ? WHERE id = ?', [username, targetUserId]);
+  return jsonResponse({ success: true, message: '用户名已修改' });
 }
 
 // ============================================================
@@ -685,6 +709,9 @@ export async function onRequest(context) {
             const id = orderId.replace('/settle', '');
             return await handleAdminSettle(env, id, body);
           }
+          if (method === 'DELETE') {
+            return await handleAdminDeleteOrder(env, orderId);
+          }
         }
 
         // 商品管理
@@ -728,7 +755,7 @@ export async function onRequest(context) {
           }
         }
 
-        // 用户管理
+        // 用户管理（含打手审核、修改用户名）
         if (path === '/api/admin/users' && method === 'GET') {
           return await handleAdminGetUsers(env);
         }
@@ -744,6 +771,16 @@ export async function onRequest(context) {
           if (targetUserId.endsWith('/reset-password') && method === 'PUT') {
             const id = targetUserId.replace('/reset-password', '');
             return await handleAdminResetPassword(env, id);
+          }
+          // 新增：审核打手
+          if (targetUserId.endsWith('/approve') && method === 'PUT') {
+            const id = targetUserId.replace('/approve', '');
+            return await handleApproveHandler(env, id);
+          }
+          // 新增：修改用户名
+          if (targetUserId.endsWith('/username') && method === 'PUT') {
+            const id = targetUserId.replace('/username', '');
+            return await handleChangeUsername(env, id, body);
           }
         }
 
