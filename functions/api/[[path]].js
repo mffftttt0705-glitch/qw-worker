@@ -1,7 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
-//  功能：商城（无店铺过滤）+ 派单员 + 商品管理 + 订单管理
-//  修复：派单员订单显示、登录保持、充值/用户管理红点
+//  修复：商品显示 + 登录保持 + 派单员 + 红点
 // ============================================================
 
 // ===== IP注册缓存 =====
@@ -165,7 +164,7 @@ function verifyAndGetUserId(authHeader) {
 }
 
 // ============================================================
-//  商品相关（无店铺过滤，所有商品直接显示在商城）
+//  商品相关（关键修复：不过滤 shop_id，所有商品直接显示）
 // ============================================================
 
 async function handleGetProducts(env) {
@@ -573,7 +572,6 @@ async function handleAdminGetRecharges(env) {
     return jsonResponse(result.results || []);
 }
 
-// 获取待处理的充值申请数量
 async function handleAdminGetRechargePendingCount(env) {
     const result = await queryDB(env, 'SELECT COUNT(*) as count FROM recharges WHERE status = "pending"');
     const count = (result.results && result.results[0] && result.results[0].count) || 0;
@@ -612,7 +610,6 @@ async function handleAdminGiftDiamond(env, body) {
     return jsonResponse({ success: true, message: '赠送成功' });
 }
 
-// 获取待审核用户数量
 async function handleAdminGetUserPendingCount(env) {
     const result = await queryDB(env, 'SELECT COUNT(*) as count FROM users WHERE status = "pending"');
     const count = (result.results && result.results[0] && result.results[0].count) || 0;
