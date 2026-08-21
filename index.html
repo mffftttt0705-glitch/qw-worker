@@ -6,121 +6,43 @@
     <title>QW电竞 · 护航平台</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ===== 白色主题 ===== */
-        :root {
-            --bg-primary: #f0f2f5;
-            --bg-secondary: #ffffff;
-            --bg-card: #ffffff;
-            --bg-card-hover: #f5f6f8;
-            --bg-input: #ffffff;
-            --bg-input-border: #d0d5dd;
-            --text-primary: #1a1a2e;
-            --text-secondary: #4a4a5a;
-            --text-muted: #6a6a7a;
-            --text-nav: #4a4a5a;
-            --border-color: #d0d5dd;
-            --border-light: rgba(0,0,0,0.06);
-            --shadow: 0 30px 80px rgba(0,0,0,0.15);
-            --gradient-start: #e8ecf0;
-            --gradient-end: #d0d5dd;
-            --btn-primary-bg: linear-gradient(145deg,#1a6aff,#0044cc);
-            --btn-primary-color: #fff;
-            --toast-bg: #ffffff;
-            --toast-border: #22c55e;
-            --modal-bg: rgba(255,255,255,0.95);
-            --bottom-nav-bg: rgba(255,255,255,0.95);
-            --product-card-bg: #ffffff;
-            --product-card-border: rgba(0,0,0,0.06);
-            --tag-bg: rgba(60,160,255,0.08);
-            --tag-color: #1a6aff;
-            --price-color: #e8a800;
-            --badge-bg: #ef4444;
-            --status-pending-bg: #f59e0b22;
-            --status-ongoing-bg: #3b82f622;
-            --status-review-bg: #a855f722;
-            --status-completed-bg: #22c55e22;
-            --collapse-bg: #f5f6f8;
-            --collapse-border: #d0d5dd;
-            --announce-bg: rgba(245,200,66,0.08);
-            --announce-border: rgba(245,200,66,0.15);
-            --card-bg: #ffffff;
-            --product-img-bg: linear-gradient(145deg,#e8ecf0,#d0d5dd);
-            --product-img-icon: #6a6a7a;
-            --product-title: #1a1a2e;
-            --product-desc: #4a4a5a;
-            --product-stock: #6a6a7a;
-            --product-bottom-border: rgba(0,0,0,0.06);
-            --product-tag-bg: rgba(0,0,0,0.04);
-            --product-tag-border: rgba(0,0,0,0.06);
-            --auth-bg: #f0f2f5;
-            --auth-box-bg: #ffffff;
-            --auth-box-border: #d0d5dd;
-            --entry-card-bg: #ffffff;
-            --entry-card-border: rgba(0,0,0,0.06);
-            --entry-card-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            --entry-card-title: #1a1a2e;
-            --entry-card-sub: #4a4a5a;
-            --entry-card-badge: rgba(0,0,0,0.04);
-            --entry-card-badge-text: #6a6a7a;
-            --entry-card-icon: #6a6a7a;
-            --entry-card-icon-bg: linear-gradient(145deg,#e8ecf0,#d0d5dd);
-            --admin-card-bg: #ffffff;
-            --admin-card-border: rgba(0,0,0,0.06);
-            --admin-card-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            --admin-card-title: #1a1a2e;
-            --collapse-text: #1a1a2e;
-            --toast-text: #1a1a2e;
-            --toast-shadow: 0 8px 30px rgba(0,0,0,0.1);
-            --modal-text: #1a1a2e;
-            --modal-sub: #6a6a7a;
-            --detail-label: #6a6a7a;
-            --detail-value: #1a1a2e;
-            --table-header: #6a6a7a;
-            --empty-text: #6a6a7a;
-            --announce-content: #1a1a2e;
-            --announce-time: #6a6a7a;
-            --header-border: rgba(0,0,0,0.06);
-            --brand-text: #1a1a2e;
-            --brand-small: #6a6a7a;
-        }
-
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','PingFang SC',Roboto,sans-serif}
-        body{background:var(--bg-primary);background-image:radial-gradient(ellipse at 20% 50%,var(--gradient-start) 0%,var(--gradient-end) 100%);color:var(--text-primary);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:12px;transition:background 0.3s,color 0.3s}
-        .app-wrapper{max-width:480px;width:100%;background:var(--bg-secondary);backdrop-filter:blur(20px);border-radius:40px;box-shadow:var(--shadow);border:1px solid var(--border-light);overflow:hidden;position:relative;padding-bottom:72px;min-height:700px;transition:background 0.3s,color 0.3s,border 0.3s}
+        :root{--bg-primary:#f0f2f5;--bg-secondary:#ffffff;--bg-card:#ffffff;--bg-input:#ffffff;--text-primary:#1a1a2e;--text-secondary:#4a4a5a;--text-muted:#6a6a7a;--text-nav:#4a4a5a;--border-color:#d0d5dd;--border-light:rgba(0,0,0,0.06);--shadow:0 30px 80px rgba(0,0,0,0.15);--gradient-start:#e8ecf0;--gradient-end:#d0d5dd;--btn-primary-bg:linear-gradient(145deg,#1a6aff,#0044cc);--btn-primary-color:#fff;--toast-bg:#ffffff;--toast-border:#22c55e;--modal-bg:rgba(255,255,255,0.95);--bottom-nav-bg:rgba(255,255,255,0.95);--product-card-bg:#ffffff;--product-card-border:rgba(0,0,0,0.06);--price-color:#e8a800;--status-pending-bg:#f59e0b22;--status-ongoing-bg:#3b82f622;--status-review-bg:#a855f722;--status-completed-bg:#22c55e22;--collapse-bg:#f5f6f8;--collapse-border:#d0d5dd;--announce-bg:rgba(245,200,66,0.08);--announce-border:rgba(245,200,66,0.15);--product-img-bg:linear-gradient(145deg,#e8ecf0,#d0d5dd);--product-img-icon:#6a6a7a;--auth-bg:#f0f2f5;--auth-box-bg:#ffffff;--auth-box-border:#d0d5dd;--entry-card-bg:#ffffff;--entry-card-border:rgba(0,0,0,0.06);--entry-card-shadow:0 4px 20px rgba(0,0,0,0.06);--admin-card-bg:#ffffff;--admin-card-border:rgba(0,0,0,0.06);--admin-card-shadow:0 4px 20px rgba(0,0,0,0.06);--toast-shadow:0 8px 30px rgba(0,0,0,0.1)}
+        body{background:var(--bg-primary);background-image:radial-gradient(ellipse at 20% 50%,var(--gradient-start) 0%,var(--gradient-end) 100%);color:var(--text-primary);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:12px}
+        .app-wrapper{max-width:480px;width:100%;background:var(--bg-secondary);backdrop-filter:blur(20px);border-radius:40px;box-shadow:var(--shadow);border:1px solid var(--border-light);overflow:hidden;position:relative;padding-bottom:72px;min-height:700px}
         .view-container{padding:20px 20px 16px}
         .view{display:none;animation:fadeUp 0.3s ease}
         .view.active{display:block}
         @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-        .app-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--header-border);margin-bottom:20px;transition:border-color 0.3s}
+        .app-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--border-light);margin-bottom:20px}
         .brand{display:flex;align-items:center;gap:10px}
         .brand-icon{width:40px;height:40px;background:linear-gradient(145deg,#00c8ff,#0055ff);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;box-shadow:0 0 20px rgba(0,150,255,0.3)}
-        .brand-name{font-size:20px;font-weight:700;background:linear-gradient(to right,#b0e0ff,#7ac7ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:var(--text-primary)}
+        .brand-name{font-size:20px;font-weight:700;background:linear-gradient(to right,#b0e0ff,#7ac7ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .brand-name small{font-weight:300;font-size:13px;color:var(--text-muted)}
         .header-right{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
         .header-right i{color:#3a7eff}
         .header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-        .announcement{background:var(--announce-bg);border:1px solid var(--announce-border);border-radius:16px;padding:14px 16px;margin-bottom:16px;transition:background 0.3s,border 0.3s}
-        .announcement .content{font-size:14px;color:var(--announce-content);line-height:1.6;transition:color 0.3s}
+        .announcement{background:var(--announce-bg);border:1px solid var(--announce-border);border-radius:16px;padding:14px 16px;margin-bottom:16px}
+        .announcement .content{font-size:14px;color:var(--text-primary);line-height:1.6}
         .announcement .images{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-        .announcement .images img{max-width:100px;max-height:100px;border-radius:8px;border:1px solid var(--border-color);cursor:pointer;transition:transform 0.2s,border 0.3s}
-        .announcement .images img:active{transform:scale(0.95)}
-        .announcement .time{font-size:11px;color:var(--announce-time);margin-top:6px}
-        .announce-editor textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:10px 14px;color:var(--text-primary);font-size:14px;outline:none;resize:vertical;min-height:80px;transition:background 0.3s,color 0.3s,border 0.3s}
+        .announcement .images img{max-width:100px;max-height:100px;border-radius:8px;border:1px solid var(--border-color);cursor:pointer}
+        .announcement .time{font-size:11px;color:var(--text-muted);margin-top:6px}
+        .announce-editor textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:10px 14px;color:var(--text-primary);font-size:14px;outline:none;resize:vertical;min-height:80px}
         .announce-editor textarea:focus{border-color:#f5c842}
         .announce-editor .image-upload{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
-        .announce-editor .image-upload input[type="file"]{background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:6px 12px;color:var(--text-secondary);font-size:13px;max-width:200px;transition:background 0.3s,border 0.3s,color 0.3s}
+        .announce-editor .image-upload input[type="file"]{background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:6px 12px;color:var(--text-secondary);font-size:13px;max-width:200px}
         .announce-editor .preview-images{display:flex;gap:8px;flex-wrap:wrap}
         .announce-editor .preview-images img{max-width:60px;max-height:60px;border-radius:8px;border:1px solid var(--border-color)}
         .entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0 16px}
         .entry-card{background:var(--entry-card-bg);border-radius:24px;padding:22px 12px 18px;text-align:center;border:1px solid var(--entry-card-border);box-shadow:var(--entry-card-shadow);cursor:pointer;transition:all 0.25s}
         .entry-card:active{transform:scale(0.95)}
-        .entry-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;background:var(--entry-card-icon-bg);color:var(--entry-card-icon)}
-        .entry-title{font-size:16px;font-weight:600;color:var(--entry-card-title)}
-        .entry-sub{font-size:12px;color:var(--entry-card-sub)}
-        .entry-badge{display:inline-block;margin-top:10px;padding:3px 12px;background:var(--entry-card-badge);border-radius:30px;font-size:10px;color:var(--entry-card-badge-text);border:1px solid var(--entry-card-border)}
+        .entry-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;background:linear-gradient(145deg,#e8ecf0,#d0d5dd);color:#6a6a7a}
+        .entry-title{font-size:16px;font-weight:600;color:var(--text-primary)}
+        .entry-sub{font-size:12px;color:var(--text-muted)}
+        .entry-badge{display:inline-block;margin-top:10px;padding:3px 12px;background:rgba(0,0,0,0.04);border-radius:30px;font-size:10px;color:var(--text-muted);border:1px solid var(--entry-card-border)}
         .btn-primary{background:var(--btn-primary-bg);border:none;color:var(--btn-primary-color);padding:8px 20px;border-radius:40px;font-weight:500;font-size:13px;cursor:pointer;box-shadow:0 4px 12px rgba(0,80,255,0.2)}
         .btn-primary:active{transform:scale(0.96)}
-        .btn-outline{background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:8px 20px;border-radius:40px;font-size:13px;cursor:pointer;transition:background 0.3s,color 0.3s,border 0.3s}
+        .btn-outline{background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:8px 20px;border-radius:40px;font-size:13px;cursor:pointer}
         .btn-outline:active{transform:scale(0.96)}
         .btn-success{background:#22c55e;color:#fff;border:none;padding:6px 16px;border-radius:30px;font-size:12px;cursor:pointer}
         .btn-success:active{transform:scale(0.95)}
@@ -131,27 +53,27 @@
         .btn-sm{padding:4px 14px;font-size:12px}
         .btn-xs{padding:2px 10px;font-size:11px}
         .btn-block{width:100%;justify-content:center}
-        .bottom-nav{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-around;align-items:center;background:var(--bottom-nav-bg);backdrop-filter:blur(16px);padding:8px 0 12px;border-top:1px solid var(--border-light);border-radius:0 0 40px 40px;transition:background 0.3s,border 0.3s}
-        .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text-nav);font-size:11px;cursor:pointer;padding:4px 12px;border-radius:30px;background:transparent;border:none;font-family:inherit;transition:color 0.3s}
+        .bottom-nav{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-around;align-items:center;background:var(--bottom-nav-bg);backdrop-filter:blur(16px);padding:8px 0 12px;border-top:1px solid var(--border-light);border-radius:0 0 40px 40px}
+        .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text-nav);font-size:11px;cursor:pointer;padding:4px 12px;border-radius:30px;background:transparent;border:none;font-family:inherit}
         .nav-item i{font-size:20px}
         .nav-item.active{color:var(--text-primary)}
         .nav-item.active i{color:#3a7eff;text-shadow:0 0 20px rgba(0,80,255,0.3)}
         .nav-item.hidden-nav{display:none!important}
         .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);justify-content:center;align-items:center;z-index:999}
         .modal-overlay.active{display:flex}
-        .modal-box{background:var(--modal-bg);border:1px solid var(--border-color);border-radius:32px;padding:32px 28px;max-width:420px;width:90%;text-align:center;animation:fadeUp 0.25s ease;max-height:90vh;overflow-y:auto;transition:background 0.3s,border 0.3s,color 0.3s}
+        .modal-box{background:var(--modal-bg);border:1px solid var(--border-color);border-radius:32px;padding:32px 28px;max-width:420px;width:90%;text-align:center;animation:fadeUp 0.25s ease;max-height:90vh;overflow-y:auto}
         .modal-box h3{font-size:20px;color:var(--text-primary);margin-bottom:8px}
         .modal-box p{color:var(--text-muted);font-size:14px;margin:6px 0 20px}
         .modal-box .btn-row{display:flex;gap:10px}
         .modal-box .btn-row button{flex:1;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer}
         .modal-box .form-group{margin-bottom:14px;text-align:left}
         .modal-box .form-group label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:4px}
-        .modal-box .form-group input,.modal-box .form-group select{width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:10px 14px;color:var(--text-primary);font-size:14px;outline:none;transition:background 0.3s,color 0.3s,border 0.3s}
+        .modal-box .form-group input,.modal-box .form-group select{width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:10px 14px;color:var(--text-primary);font-size:14px;outline:none}
         .modal-box .form-group input:focus,.modal-box .form-group select:focus{border-color:#f5c842}
         .modal-box .detail-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-color)}
-        .modal-box .detail-row .label{color:var(--detail-label)}
-        .modal-box .detail-row .value{color:var(--detail-value);font-weight:500}
-        .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--toast-bg);padding:12px 28px;border-radius:40px;z-index:9999;box-shadow:var(--toast-shadow);border-left:4px solid var(--toast-border);color:var(--toast-text);font-size:14px;display:none;max-width:90%;text-align:center;transition:background 0.3s,color 0.3s}
+        .modal-box .detail-row .label{color:var(--text-muted)}
+        .modal-box .detail-row .value{color:var(--text-primary);font-weight:500}
+        .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--toast-bg);padding:12px 28px;border-radius:40px;z-index:9999;box-shadow:var(--toast-shadow);border-left:4px solid var(--toast-border);color:var(--text-primary);font-size:14px;display:none;max-width:90%;text-align:center}
         .toast.show{display:block;animation:fadeUp 0.3s ease}
         .toast.error{border-left-color:#ef4444}
         .toast.warning{border-left-color:#f59e0b}
@@ -168,33 +90,33 @@
         .status-refund_pending{background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44}
         .status-refunded{background:#a855f722;color:#a855f7;border:1px solid #a855f744}
         .status-settled{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44}
-        .empty-state{text-align:center;padding:40px 20px;color:var(--empty-text)}
+        .empty-state{text-align:center;padding:40px 20px;color:var(--text-muted)}
         .empty-state i{font-size:44px;opacity:0.4;display:block;margin-bottom:12px}
         .empty-state p{font-size:15px}
         .role-view{display:none}
         .role-view.active{display:block}
         .hidden{display:none!important}
-        .admin-card{background:var(--admin-card-bg);border-radius:20px;padding:18px 16px;margin-bottom:16px;border:1px solid var(--admin-card-border);box-shadow:var(--admin-card-shadow);transition:background 0.3s,border 0.3s}
-        .admin-card-title{font-size:16px;font-weight:600;margin-bottom:12px;color:var(--admin-card-title);display:flex;align-items:center;gap:8px}
+        .admin-card{background:var(--admin-card-bg);border-radius:20px;padding:18px 16px;margin-bottom:16px;border:1px solid var(--admin-card-border);box-shadow:var(--admin-card-shadow)}
+        .admin-card-title{font-size:16px;font-weight:600;margin-bottom:12px;color:var(--text-primary);display:flex;align-items:center;gap:8px}
         .admin-card-title i{color:#f5c842}
         .tab-page{display:none}
         .tab-page.active{display:block}
         .admin-form-group{margin-bottom:14px}
         .admin-form-group label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:4px}
         .admin-form-group label i{margin-right:6px;color:#f5c842;width:18px}
-        .admin-form-control{width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:10px 14px;color:var(--text-primary);font-size:14px;outline:none;transition:background 0.3s,color 0.3s,border 0.3s}
+        .admin-form-control{width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:10px 14px;color:var(--text-primary);font-size:14px;outline:none}
         .admin-form-control:focus{border-color:#f5c842}
         select.admin-form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238892a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
         textarea.admin-form-control{resize:vertical;min-height:60px}
         .action-group{display:flex;gap:4px;flex-wrap:wrap}
         .tab-nav{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;overflow-x:auto}
-        .tab-nav button{padding:8px 16px;border-radius:30px;border:none;background:var(--bg-input);color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 0.3s,color 0.3s}
+        .tab-nav button{padding:8px 16px;border-radius:30px;border:none;background:var(--bg-input);color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
         .tab-nav button.active{background:#f5c842;color:#0b0d10}
         .tab-nav button i{margin-right:6px}
         .table-wrap{overflow-x:auto;margin-top:8px}
         table{width:100%;border-collapse:collapse;font-size:13px}
         thead{border-bottom:2px solid var(--border-color)}
-        th{padding:10px 8px;text-align:left;font-weight:600;color:var(--table-header);font-size:11px;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap}
+        th{padding:10px 8px;text-align:left;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap}
         td{padding:10px 8px;border-bottom:1px solid var(--border-color);vertical-align:middle}
         .chat-messages{max-height:300px;overflow-y:auto;padding:8px 0;border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);margin:8px 0}
         .chat-msg{padding:6px 10px;margin:4px 0;border-radius:12px;max-width:85%;word-break:break-word}
@@ -203,7 +125,7 @@
         .chat-msg.system{background:#3a3a4a;color:#d0d0e0;align-self:center;font-style:italic}
         .chat-msg .time{font-size:10px;color:var(--text-muted);margin-left:8px}
         .chat-input-area{display:flex;gap:8px;margin-top:8px}
-        .chat-input-area input{flex:1;padding:8px 12px;border-radius:30px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-primary);outline:none;transition:background 0.3s,color 0.3s,border 0.3s}
+        .chat-input-area input{flex:1;padding:8px 12px;border-radius:30px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-primary);outline:none}
         .chat-input-area input:focus{border-color:#f5c842}
         .chat-readonly{opacity:0.6}
         .chat-readonly .chat-input-area input{pointer-events:none}
@@ -217,44 +139,37 @@
         .account-info .info-row{display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-input);border-radius:12px}
         .account-info .info-row .label{color:var(--text-muted)}
         .account-info .info-row .value{color:var(--text-primary);font-weight:500}
-        #authPage{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:700px;padding:20px;text-align:center;background:var(--auth-bg);border-radius:40px;transition:background 0.3s}
+        #authPage{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:700px;padding:20px;text-align:center;background:var(--auth-bg);border-radius:40px}
         #authPage .logo{font-size:32px;font-weight:700;background:linear-gradient(135deg,#f5c842,#dbaa2a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
         #authPage .logo i{font-size:40px;color:#f5c842;-webkit-text-fill-color:#f5c842;margin-right:10px}
         #authPage .sub{color:var(--text-muted);font-size:14px;margin-bottom:30px}
         #authPage .auth-box{width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;background:var(--auth-box-bg);padding:32px 24px;border-radius:24px;border:1px solid var(--auth-box-border);box-shadow:var(--shadow)}
-        #authPage .auth-box input{width:100%;padding:14px;border-radius:60px;background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);font-size:16px;text-align:center;outline:none;transition:background 0.3s,color 0.3s,border 0.3s}
+        #authPage .auth-box input{width:100%;padding:14px;border-radius:60px;background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);font-size:16px;text-align:center;outline:none}
         #authPage .auth-box input:focus{border-color:#f5c842}
         #authPage .auth-box .btn-row{display:flex;gap:10px}
         #authPage .auth-box .btn-row button{flex:1;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer}
         #authPage .auth-box .role-row{display:flex;gap:12px;justify-content:center;font-size:13px;color:var(--text-muted)}
         #authPage .auth-box .role-row label{display:flex;align-items:center;gap:4px;cursor:pointer}
         #authPage .auth-box .auth-error{color:#ef4444;font-size:13px;min-height:20px}
-        .collapse-toggle{background:var(--collapse-bg);border:1px solid var(--collapse-border);border-radius:12px;padding:10px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:var(--collapse-text);transition:background 0.3s,border 0.3s,color 0.3s}
+        .collapse-toggle{background:var(--collapse-bg);border:1px solid var(--collapse-border);border-radius:12px;padding:10px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:var(--text-primary)}
         .collapse-toggle:hover{background:var(--bg-input)}
         .collapse-content{display:none;padding:8px 0}
         .collapse-content.open{display:block}
-        /* ===== 商品卡片 - 一行两个（紧凑型） ===== */
         .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
-        .product-card{background:var(--product-card-bg);border-radius:12px;border:1px solid var(--product-card-border);overflow:hidden;position:relative;transition:background 0.3s,border 0.3s,transform 0.2s}
+        .product-card{background:var(--product-card-bg);border-radius:12px;border:1px solid var(--product-card-border);overflow:hidden;position:relative;transition:all 0.2s}
         .product-card:active{transform:scale(0.97)}
-        .product-card .product-img{width:100%;height:100px;background:var(--product-img-bg);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--product-img-icon);overflow:hidden;transition:background 0.3s}
+        .product-card .product-img{width:100%;height:100px;background:var(--product-img-bg);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--product-img-icon);overflow:hidden}
         .product-card .product-img img{width:100%;height:100px;object-fit:cover}
         .product-card .product-img .tag{position:absolute;top:6px;left:6px;background:#f5c842;color:#0b0d10;padding:1px 8px;border-radius:20px;font-size:9px;font-weight:600}
         .product-card .product-body{padding:8px 10px}
-        .product-card .product-title{font-size:13px;font-weight:600;color:var(--product-title);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-        .product-card .product-desc{font-size:11px;color:var(--product-desc);margin-top:2px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-        .product-card .product-stock{font-size:10px;color:var(--product-stock);margin-top:2px}
-        .product-card .product-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid var(--product-bottom-border)}
+        .product-card .product-title{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .product-card .product-desc{font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+        .product-card .product-stock{font-size:10px;color:var(--text-muted);margin-top:2px}
+        .product-card .product-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid var(--border-light)}
         .product-card .product-price{font-size:16px;font-weight:700;color:var(--price-color)}
-        .product-card .product-price small{font-size:11px;font-weight:400;color:var(--text-muted);text-decoration:line-through;margin-left:4px}
-        .product-card .btn-sm{padding:2px 10px;font-size:10px}
-        .file-upload-btn{background:var(--bg-input);border:1px solid var(--border-color);border-radius:12px;padding:8px 12px;color:var(--text-secondary);font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background 0.3s,color 0.3s,border 0.3s}
-        .file-upload-btn:hover{background:var(--bg-card-hover)}
-        .file-upload-btn input{display:none}
         .upload-preview{max-width:80px;max-height:80px;border-radius:8px;border:1px solid var(--border-color);margin-top:6px}
         .img-preview-modal .modal-box{max-width:90%;padding:10px}
         .img-preview-modal img{width:100%;height:auto;border-radius:12px}
-        /* ===== 店铺切换下拉 ===== */
         .shop-switcher{position:relative;display:inline-block;margin-left:8px}
         .shop-switcher select{padding:4px 12px;border-radius:20px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-primary);font-size:12px;outline:none;cursor:pointer;max-width:140px}
         .shop-switcher select:focus{border-color:#f5c842}
@@ -262,6 +177,7 @@
     </style>
 </head>
 <body>
+
 <!-- ===== 登录/注册页面 ===== -->
 <div id="authPage">
     <div class="logo"><i class="fas fa-crosshairs"></i> QW电竞</div>
@@ -269,7 +185,6 @@
     <div class="auth-box">
         <input type="text" id="authUsername" placeholder="用户名" />
         <input type="password" id="authPassword" placeholder="密码" />
-        <input type="text" id="authInviteCode" placeholder="店铺邀请码（必填）" />
         <div id="authError" class="auth-error"></div>
         <div class="btn-row">
             <button class="btn btn-success" onclick="doAuthLogin()" style="flex:1;background:#22c55e;color:#fff;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer">登录</button>
@@ -286,10 +201,6 @@
         </div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;">
             打手/店长账号需管理员审核通过后方可使用
-        </div>
-        <div style="margin-top:8px;text-align:center;border-top:1px solid var(--border-color);padding-top:10px;">
-            <span style="color:var(--text-muted);font-size:13px;">还没有俱乐部？</span>
-            <button class="btn btn-outline btn-sm" onclick="showShopApply()" style="font-size:13px;">🏪 入驻俱乐部</button>
         </div>
     </div>
 </div>
@@ -381,6 +292,7 @@
                 <button data-tab="tab-announce"><i class="fas fa-bullhorn"></i> 公告管理</button>
                 <button data-tab="tab-shops"><i class="fas fa-store"></i> 店铺列表</button>
                 <button data-tab="tab-shop-applications"><i class="fas fa-door-open"></i> 入驻申请</button>
+                <button data-tab="tab-shop-create"><i class="fas fa-plus-circle"></i> 店铺创建申请</button>
             </div>
             <div class="tab-page active" id="tab-dashboard">
                 <div class="admin-card"><div class="admin-card-title"><i class="fas fa-chart-simple"></i> 数据概览</div><div id="adminShopStats" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;"></div></div>
@@ -452,8 +364,14 @@
             </div>
             <div class="tab-page" id="tab-shop-applications">
                 <div class="admin-card">
-                    <div class="collapse-toggle" onclick="toggleCollapse('shopAppsList')"><span>📋 入驻申请</span><span id="shopAppsListArrow">▶</span></div>
+                    <div class="collapse-toggle" onclick="toggleCollapse('shopAppsList')"><span>📋 入驻申请（店长注册）</span><span id="shopAppsListArrow">▶</span></div>
                     <div class="collapse-content" id="shopAppsListContent"><div id="shopApplicationsList"></div></div>
+                </div>
+            </div>
+            <div class="tab-page" id="tab-shop-create">
+                <div class="admin-card">
+                    <div class="collapse-toggle" onclick="toggleCollapse('shopCreateList')"><span>📋 店铺创建申请</span><span id="shopCreateListArrow">▶</span></div>
+                    <div class="collapse-content" id="shopCreateListContent"><div id="shopCreateApplicationsList"></div></div>
                 </div>
             </div>
         </div>
@@ -467,82 +385,97 @@
                 </div>
                 <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">店铺红钻用于给本店用户充值</div>
             </div>
-            <div class="tab-nav">
-                <button class="active" data-tab="shop-dashboard"><i class="fas fa-chart-pie"></i> 仪表盘</button>
-                <button data-tab="shop-products"><i class="fas fa-boxes"></i> 商品管理</button>
-                <button data-tab="shop-orders"><i class="fas fa-list-ul"></i> 订单管理</button>
-                <button data-tab="shop-users"><i class="fas fa-users"></i> 用户管理</button>
-                <button data-tab="shop-recharges"><i class="fas fa-coins"></i> 充值管理</button>
-                <button data-tab="shop-announce"><i class="fas fa-bullhorn"></i> 公告管理</button>
-            </div>
-            <div class="tab-page active" id="shop-dashboard">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-chart-simple"></i> 店铺数据</div><div id="shopStatsGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"></div></div>
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-clock"></i> 最近订单</div><div id="shopRecentOrders"></div></div>
-                <div class="admin-card" style="border-left:4px solid #f59e0b;margin-top:16px;">
-                    <div class="admin-card-title"><i class="fas fa-edit" style="color:#f59e0b;"></i> 修改店铺信息</div>
-                    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">修改后，新用户将使用新信息注册</p>
-                    <div class="admin-form-group"><label><i class="fas fa-store"></i> 店铺名称</label><input class="admin-form-control" id="shopNewName" placeholder="输入新店铺名称" /></div>
-                    <div class="admin-form-group"><label><i class="fas fa-key"></i> 邀请码（至少4位）</label><input class="admin-form-control" id="shopNewInviteCode" placeholder="输入新邀请码" /></div>
-                    <button class="btn btn-warning" onclick="shopUpdateInfo()"><i class="fas fa-save"></i> 保存修改</button>
+
+            <!-- ===== 店长 - 未创建店铺提示 ===== -->
+            <div id="shopNoShop" style="display:none;">
+                <div class="admin-card" style="border-left:4px solid #f59e0b;text-align:center;padding:30px 16px;">
+                    <div style="font-size:48px;margin-bottom:12px;">🏪</div>
+                    <div style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">您还未创建店铺</div>
+                    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">创建店铺后即可管理商品、订单和用户</div>
+                    <button class="btn btn-success" onclick="openShopCreateModal()"><i class="fas fa-plus-circle"></i> 创建店铺</button>
+                    <div id="shopCreateStatus" style="margin-top:12px;font-size:13px;color:var(--text-muted);"></div>
                 </div>
             </div>
-            <div class="tab-page" id="shop-products">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-filter"></i> 商品列表</div><div id="shopProductsList"></div></div>
-                <div class="admin-card" style="border-left:4px solid #22c55e;">
-                    <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#22c55e;"></i> 上架新商品</div>
-                    <div class="admin-form-group"><label><i class="fas fa-gamepad"></i> 游戏</label><select class="admin-form-control" id="shopProdGame"><option value="暗区突围">暗区突围</option><option value="三角洲">三角洲</option></select></div>
-                    <div class="admin-form-group"><label><i class="fas fa-tag"></i> 标题</label><input class="admin-form-control" id="shopProdTitle" placeholder="标题" /></div>
-                    <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="shopProdDesc" rows="2" placeholder="服务详情"></textarea></div>
-                    <div class="admin-form-group"><label><i class="fas fa-yen-sign"></i> 价格</label><input class="admin-form-control" id="shopProdPrice" type="number" placeholder="288" /></div>
-                    <div class="admin-form-group"><label><i class="fas fa-boxes"></i> 库存</label><input class="admin-form-control" id="shopProdQuantity" type="number" placeholder="1" value="1" /></div>
-                    <div class="admin-form-group"><label><i class="fas fa-image"></i> 商品图片URL</label>
-                        <input class="admin-form-control" id="shopProdImageUrl" placeholder="输入图片URL" />
-                        <img id="shopProdImagePreview" class="upload-preview" style="display:none;margin-top:4px;" onerror="this.style.display='none'" />
+
+            <!-- ===== 店长 - 已有店铺 ===== -->
+            <div id="shopHasShop" style="display:none;">
+                <div class="tab-nav">
+                    <button class="active" data-tab="shop-dashboard"><i class="fas fa-chart-pie"></i> 仪表盘</button>
+                    <button data-tab="shop-products"><i class="fas fa-boxes"></i> 商品管理</button>
+                    <button data-tab="shop-orders"><i class="fas fa-list-ul"></i> 订单管理</button>
+                    <button data-tab="shop-users"><i class="fas fa-users"></i> 用户管理</button>
+                    <button data-tab="shop-recharges"><i class="fas fa-coins"></i> 充值管理</button>
+                    <button data-tab="shop-announce"><i class="fas fa-bullhorn"></i> 公告管理</button>
+                </div>
+                <div class="tab-page active" id="shop-dashboard">
+                    <div class="admin-card"><div class="admin-card-title"><i class="fas fa-chart-simple"></i> 店铺数据</div><div id="shopStatsGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"></div></div>
+                    <div class="admin-card"><div class="admin-card-title"><i class="fas fa-clock"></i> 最近订单</div><div id="shopRecentOrders"></div></div>
+                    <div class="admin-card" style="border-left:4px solid #f59e0b;margin-top:16px;">
+                        <div class="admin-card-title"><i class="fas fa-edit" style="color:#f59e0b;"></i> 修改店铺信息</div>
+                        <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">修改后，新用户将使用新信息注册</p>
+                        <div class="admin-form-group"><label><i class="fas fa-store"></i> 店铺名称</label><input class="admin-form-control" id="shopNewName" placeholder="输入新店铺名称" /></div>
+                        <div class="admin-form-group"><label><i class="fas fa-key"></i> 邀请码（至少4位）</label><input class="admin-form-control" id="shopNewInviteCode" placeholder="输入新邀请码" /></div>
+                        <button class="btn btn-warning" onclick="shopUpdateInfo()"><i class="fas fa-save"></i> 保存修改</button>
                     </div>
-                    <button class="btn btn-success" onclick="shopShelfProduct()"><i class="fas fa-upload"></i> 上架商品</button>
                 </div>
-                <div class="admin-card" style="border-left:4px solid #f59e0b;margin-top:16px;">
-                    <div class="admin-card-title"><i class="fas fa-paper-plane" style="color:#f59e0b;"></i> 直接发布订单</div>
-                    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">无需老板购买，直接创建订单，打手可接单。</p>
-                    <div class="admin-form-group"><label><i class="fas fa-gamepad"></i> 游戏</label><select class="admin-form-control" id="shopDirectGame"><option value="暗区突围">暗区突围</option><option value="三角洲">三角洲</option></select></div>
-                    <div class="admin-form-group"><label><i class="fas fa-tag"></i> 标题</label><input class="admin-form-control" id="shopDirectTitle" placeholder="标题" /></div>
-                    <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="shopDirectDesc" rows="2" placeholder="服务详情"></textarea></div>
-                    <div class="admin-form-group"><label><i class="fas fa-yen-sign"></i> 价格</label><input class="admin-form-control" id="shopDirectPrice" type="number" placeholder="288" /></div>
-                    <button class="btn btn-warning btn-block" onclick="shopDirectPublish()"><i class="fas fa-paper-plane"></i> 发布订单</button>
-                </div>
-            </div>
-            <div class="tab-page" id="shop-orders">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-filter"></i> 店铺订单</div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-                        <select class="admin-form-control" id="shopFilterOrderStatus" style="width:140px;padding:6px 12px;" onchange="renderShopOrders()">
-                            <option value="all">全部</option><option value="pending">待接单</option><option value="ongoing">进行中</option><option value="review">待验收</option><option value="completed">已完成</option><option value="canceled">已取消</option><option value="rejected">已驳回</option>
-                        </select>
-                        <button class="btn btn-outline btn-sm" onclick="renderShopOrders()"><i class="fas fa-sync"></i> 刷新</button>
-                    </div>
-                    <div id="shopOrdersList"></div>
-                </div>
-            </div>
-            <div class="tab-page" id="shop-users">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-user-tie"></i> 店铺用户</div>
-                    <div style="margin-bottom:12px;"><div class="admin-form-group"><label>搜索用户</label><input class="admin-form-control" id="shopSearchUser" placeholder="输入用户名搜索" oninput="renderShopUsers()"></div></div>
-                    <div id="shopUsersList"></div>
-                </div>
-            </div>
-            <div class="tab-page" id="shop-recharges">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-coins"></i> 充值申请（消耗店铺红钻）</div><div id="shopRechargeList"></div></div>
-            </div>
-            <div class="tab-page" id="shop-announce">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-bullhorn"></i> 店铺公告编辑</div>
-                    <div class="announce-editor">
-                        <div class="admin-form-group"><label>公告内容</label><textarea id="shopAnnounceEditContent" rows="3" placeholder="输入公告内容..."></textarea></div>
-                        <div class="admin-form-group"><label>上传图片</label>
-                            <div class="image-upload"><input type="file" id="shopAnnounceImageInput" accept="image/*" multiple onchange="previewShopAnnounceImages(event)"></div>
-                            <div class="preview-images" id="shopAnnounceImagePreview"></div>
+                <div class="tab-page" id="shop-products">
+                    <div class="admin-card"><div class="admin-card-title"><i class="fas fa-filter"></i> 商品列表</div><div id="shopProductsList"></div></div>
+                    <div class="admin-card" style="border-left:4px solid #22c55e;">
+                        <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#22c55e;"></i> 上架新商品</div>
+                        <div class="admin-form-group"><label><i class="fas fa-gamepad"></i> 游戏</label><select class="admin-form-control" id="shopProdGame"><option value="暗区突围">暗区突围</option><option value="三角洲">三角洲</option></select></div>
+                        <div class="admin-form-group"><label><i class="fas fa-tag"></i> 标题</label><input class="admin-form-control" id="shopProdTitle" placeholder="标题" /></div>
+                        <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="shopProdDesc" rows="2" placeholder="服务详情"></textarea></div>
+                        <div class="admin-form-group"><label><i class="fas fa-yen-sign"></i> 价格</label><input class="admin-form-control" id="shopProdPrice" type="number" placeholder="288" /></div>
+                        <div class="admin-form-group"><label><i class="fas fa-boxes"></i> 库存</label><input class="admin-form-control" id="shopProdQuantity" type="number" placeholder="1" value="1" /></div>
+                        <div class="admin-form-group"><label><i class="fas fa-image"></i> 商品图片URL</label>
+                            <input class="admin-form-control" id="shopProdImageUrl" placeholder="输入图片URL" />
+                            <img id="shopProdImagePreview" class="upload-preview" style="display:none;margin-top:4px;" onerror="this.style.display='none'" />
                         </div>
-                        <button class="btn btn-primary" onclick="saveShopAnnounce()"><i class="fas fa-save"></i> 保存公告</button>
+                        <button class="btn btn-success" onclick="shopShelfProduct()"><i class="fas fa-upload"></i> 上架商品</button>
+                    </div>
+                    <div class="admin-card" style="border-left:4px solid #f59e0b;margin-top:16px;">
+                        <div class="admin-card-title"><i class="fas fa-paper-plane" style="color:#f59e0b;"></i> 直接发布订单</div>
+                        <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">无需老板购买，直接创建订单，打手可接单。</p>
+                        <div class="admin-form-group"><label><i class="fas fa-gamepad"></i> 游戏</label><select class="admin-form-control" id="shopDirectGame"><option value="暗区突围">暗区突围</option><option value="三角洲">三角洲</option></select></div>
+                        <div class="admin-form-group"><label><i class="fas fa-tag"></i> 标题</label><input class="admin-form-control" id="shopDirectTitle" placeholder="标题" /></div>
+                        <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="shopDirectDesc" rows="2" placeholder="服务详情"></textarea></div>
+                        <div class="admin-form-group"><label><i class="fas fa-yen-sign"></i> 价格</label><input class="admin-form-control" id="shopDirectPrice" type="number" placeholder="288" /></div>
+                        <button class="btn btn-warning btn-block" onclick="shopDirectPublish()"><i class="fas fa-paper-plane"></i> 发布订单</button>
                     </div>
                 </div>
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-eye"></i> 当前公告预览</div><div id="shopAnnouncePreview" style="color:var(--text-secondary);font-size:14px;line-height:1.6;"></div></div>
+                <div class="tab-page" id="shop-orders">
+                    <div class="admin-card"><div class="admin-card-title"><i class="fas fa-filter"></i> 店铺订单</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                            <select class="admin-form-control" id="shopFilterOrderStatus" style="width:140px;padding:6px 12px;" onchange="renderShopOrders()">
+                                <option value="all">全部</option><option value="pending">待接单</option><option value="ongoing">进行中</option><option value="review">待验收</option><option value="completed">已完成</option><option value="canceled">已取消</option><option value="rejected">已驳回</option>
+                            </select>
+                            <button class="btn btn-outline btn-sm" onclick="renderShopOrders()"><i class="fas fa-sync"></i> 刷新</button>
+                        </div>
+                        <div id="shopOrdersList"></div>
+                    </div>
+                </div>
+                <div class="tab-page" id="shop-users">
+                    <div class="admin-card"><div class="admin-card-title"><i class="fas fa-user-tie"></i> 店铺用户</div>
+                        <div style="margin-bottom:12px;"><div class="admin-form-group"><label>搜索用户</label><input class="admin-form-control" id="shopSearchUser" placeholder="输入用户名搜索" oninput="renderShopUsers()"></div></div>
+                        <div id="shopUsersList"></div>
+                    </div>
+                </div>
+                <div class="tab-page" id="shop-recharges">
+                    <div class="admin-card"><div class="admin-card-title"><i class="fas fa-coins"></i> 充值申请（消耗店铺红钻）</div><div id="shopRechargeList"></div></div>
+                </div>
+                <div class="tab-page" id="shop-announce">
+                    <div class="admin-card"><div class="admin-card-title"><i class="fas fa-bullhorn"></i> 店铺公告编辑</div>
+                        <div class="announce-editor">
+                            <div class="admin-form-group"><label>公告内容</label><textarea id="shopAnnounceEditContent" rows="3" placeholder="输入公告内容..."></textarea></div>
+                            <div class="admin-form-group"><label>上传图片</label>
+                                <div class="image-upload"><input type="file" id="shopAnnounceImageInput" accept="image/*" multiple onchange="previewShopAnnounceImages(event)"></div>
+                                <div class="preview-images" id="shopAnnounceImagePreview"></div>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveShopAnnounce()"><i class="fas fa-save"></i> 保存公告</button>
+                        </div>
+                    </div>
+                    <div class="admin-card"><div class="admin-card-title"><i class="fas fa-eye"></i> 当前公告预览</div><div id="shopAnnouncePreview" style="color:var(--text-secondary);font-size:14px;line-height:1.6;"></div></div>
+                </div>
             </div>
         </div>
 
@@ -583,6 +516,7 @@
     </div>
 </div>
 <div id="toast" class="toast"></div>
+
 <script>
 // ============================================================
 //  配置
@@ -601,7 +535,8 @@ let currentAdminShopId = 'shop_platform';
 // ============================================================
 const COLLAPSE_KEYS = {
     shopsList: 'collapse_shopsList',
-    shopAppsList: 'collapse_shopAppsList'
+    shopAppsList: 'collapse_shopAppsList',
+    shopCreateList: 'collapse_shopCreateList'
 };
 
 function getCollapseState(key) {
@@ -724,41 +659,73 @@ document.querySelectorAll('input[name="authRole"]').forEach(el => {
 });
 
 // ============================================================
-//  入驻申请
+//  店长 - 创建店铺弹窗
 // ============================================================
-function showShopApply() {
+function openShopCreateModal() {
     showCustomModal(`
-        <h3><i class="fas fa-store"></i> 俱乐部入驻</h3>
+        <h3><i class="fas fa-plus-circle"></i> 创建店铺</h3>
         <p style="color:var(--text-muted);font-size:14px;">填写信息提交审核，通过后即可拥有自己的店铺</p>
-        <div class="form-group"><label>俱乐部名称</label><input class="admin-form-control" id="applyShopName" placeholder="输入俱乐部名称" /></div>
-        <div class="form-group"><label>用户名</label><input class="admin-form-control" id="applyUsername" placeholder="设置登录用户名" /></div>
-        <div class="form-group"><label>密码</label><input class="admin-form-control" id="applyPassword" type="password" placeholder="设置密码" /></div>
-        <div class="form-group"><label>店铺邀请码</label><input class="admin-form-control" id="applyInviteCode" placeholder="请输入店铺邀请码" /></div>
+        <div class="form-group"><label><i class="fas fa-store"></i> 俱乐部名称</label><input class="admin-form-control" id="createShopName" placeholder="输入俱乐部名称" /></div>
+        <div class="form-group"><label><i class="fas fa-key"></i> 邀请码（至少4位，唯一）</label><input class="admin-form-control" id="createShopInviteCode" placeholder="如：CLUB2025" /></div>
+        <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:12px;">提交后需要管理员审核通过</div>
         <div class="btn-row">
             <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="submitShopApply()">提交入驻申请</button>
+            <button class="btn btn-success" onclick="submitShopCreate()">提交创建申请</button>
         </div>
     `);
     document.getElementById('customModal').classList.add('active');
 }
 
-async function submitShopApply() {
-    const shop_name = document.getElementById('applyShopName').value.trim();
-    const username = document.getElementById('applyUsername').value.trim();
-    const password = document.getElementById('applyPassword').value.trim();
-    const invite_code = document.getElementById('applyInviteCode').value.trim();
-    if (!shop_name || !username || !password || !invite_code) {
-        return toast('请填写完整信息', 'warning');
-    }
+async function submitShopCreate() {
+    const shop_name = document.getElementById('createShopName').value.trim();
+    const invite_code = document.getElementById('createShopInviteCode').value.trim();
+    if (!shop_name) return toast('请输入俱乐部名称', 'warning');
+    if (!invite_code) return toast('请输入邀请码', 'warning');
+    if (invite_code.length < 4) return toast('邀请码至少4位字符', 'warning');
+
     try {
-        await apiRequest('/shop/apply', {
+        await apiRequest('/shop/create-apply', {
             method: 'POST',
-            body: JSON.stringify({ shop_name, username, password, invite_code })
+            body: JSON.stringify({ shop_name, invite_code })
         });
         closeCustomModal();
-        toast('✅ 入驻申请已提交，请等待管理员审核', 'success');
+        toast('✅ 店铺创建申请已提交，请等待管理员审核', 'success');
+        loadShopStatus();
     } catch (err) {
         toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  店长 - 加载店铺创建状态
+// ============================================================
+async function loadShopStatus() {
+    try {
+        const data = await apiRequest('/shop/create-status');
+        if (data.hasShop) {
+            // 已有店铺，显示店铺管理界面
+            document.getElementById('shopNoShop').style.display = 'none';
+            document.getElementById('shopHasShop').style.display = 'block';
+            document.getElementById('shopDiamond').textContent = data.shop?.diamond || 0;
+            document.getElementById('shopNameDisplay').textContent = '🏪 ' + (data.shop?.name || '');
+            renderShopAll();
+        } else if (data.status === 'pending') {
+            document.getElementById('shopNoShop').style.display = 'block';
+            document.getElementById('shopHasShop').style.display = 'none';
+            document.getElementById('shopCreateStatus').innerHTML = '⏳ 店铺创建申请审核中，请等待管理员审核';
+            document.getElementById('shopCreateStatus').style.color = '#f59e0b';
+        } else if (data.status === 'rejected') {
+            document.getElementById('shopNoShop').style.display = 'block';
+            document.getElementById('shopHasShop').style.display = 'none';
+            document.getElementById('shopCreateStatus').innerHTML = '❌ 店铺创建申请已被拒绝，请重新提交';
+            document.getElementById('shopCreateStatus').style.color = '#ef4444';
+        } else {
+            document.getElementById('shopNoShop').style.display = 'block';
+            document.getElementById('shopHasShop').style.display = 'none';
+            document.getElementById('shopCreateStatus').innerHTML = '';
+        }
+    } catch (err) {
+        console.error('加载店铺状态失败', err);
     }
 }
 
@@ -863,6 +830,10 @@ async function doAuthLogin() {
             document.getElementById('shopDisplayName').textContent = '🏪 店铺：' + currentUser.shop_name;
             document.getElementById('brandName').innerHTML = currentUser.shop_name + ' <small>· 护航</small>';
         }
+        // 如果是店长，加载店铺创建状态
+        if (currentUser.role === 'shop_owner') {
+            loadShopStatus();
+        }
     } catch (err) {
         errorEl.textContent = err.message || '登录失败';
     }
@@ -871,7 +842,6 @@ async function doAuthLogin() {
 async function doAuthRegister() {
     const username = document.getElementById('authUsername').value.trim();
     const password = document.getElementById('authPassword').value.trim();
-    const invite_code = document.getElementById('authInviteCode').value.trim();
     const role = document.querySelector('input[name="authRole"]:checked').value;
     const errorEl = document.getElementById('authError');
     errorEl.textContent = '';
@@ -879,11 +849,7 @@ async function doAuthRegister() {
         errorEl.textContent = '请填写用户名和密码';
         return;
     }
-    if (!invite_code) {
-        errorEl.textContent = '请填写店铺邀请码';
-        return;
-    }
-    const body = { username, password, role, invite_code };
+    const body = { username, password, role };
     if (role === 'shop_owner') {
         const shop_name = document.getElementById('authShopName').value.trim();
         if (!shop_name) {
@@ -891,6 +857,14 @@ async function doAuthRegister() {
             return;
         }
         body.shop_name = shop_name;
+        body.invite_code = ''; // 店长不需要邀请码
+    } else {
+        const invite_code = document.getElementById('authInviteCode').value.trim();
+        if (!invite_code) {
+            errorEl.textContent = '请填写店铺邀请码';
+            return;
+        }
+        body.invite_code = invite_code;
     }
     try {
         const data = await apiRequest('/register', { method: 'POST', body: JSON.stringify(body) });
@@ -971,7 +945,7 @@ document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
             document.getElementById(viewId).classList.add('active');
             if (target === 'orders') { renderBossView(); loadTipHandlers(); }
             else if (target === 'handler') renderHandlerView();
-            else if (target === 'shop') renderShopAll();
+            else if (target === 'shop') { if (currentUser.role === 'shop_owner') loadShopStatus(); else renderShopAll(); }
             else if (target === 'admin') renderAdminAll();
             else if (target === 'account') updateAccountInfo();
         }
@@ -996,6 +970,7 @@ document.querySelectorAll('#view-admin .tab-nav button').forEach(btn => {
         else if (tab === 'tab-announce') loadAdminShopAnnounce();
         else if (tab === 'tab-shops') renderShops();
         else if (tab === 'tab-shop-applications') renderShopApplications();
+        else if (tab === 'tab-shop-create') renderShopCreateApplications();
     });
 });
 
@@ -1029,7 +1004,7 @@ function updateRoleBasedUI() {
 
     document.getElementById('navHandler').style.display = (role === 'handler' || isAdmin) ? 'flex' : 'none';
     document.getElementById('navAdmin').style.display = isAdmin ? 'flex' : 'none';
-    document.getElementById('navShop').style.display = hasShop ? 'flex' : 'none';
+    document.getElementById('navShop').style.display = hasShop || role === 'shop_owner' ? 'flex' : 'none';
     document.getElementById('navOrders').style.display = (role === 'boss' || isAdmin) ? 'flex' : 'none';
 
     if (isAdmin && hasShop) {
@@ -1049,25 +1024,14 @@ async function loadAdminShopSwitcher() {
         const shops = await apiRequest('/admin/shops');
         const sel = document.getElementById('adminShopSwitcher');
         sel.innerHTML = '';
-        let hasCurrent = false;
         shops.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.id;
             opt.textContent = s.name + ' (' + (s.status === 'active' ? '正常' : '封禁') + ')';
-            if (s.id === currentAdminShopId) {
-                opt.selected = true;
-                hasCurrent = true;
-            }
+            if (s.id === currentAdminShopId) opt.selected = true;
             sel.appendChild(opt);
         });
-        // 如果当前选中的店铺不在列表中，选第一个
-        if (!hasCurrent && shops.length > 0) {
-            sel.value = shops[0].id;
-            currentAdminShopId = shops[0].id;
-        }
-        // 默认选中平台店铺
         if (shops.length === 0) {
-            // 没有店铺，创建默认选项
             const opt = document.createElement('option');
             opt.value = 'shop_platform';
             opt.textContent = 'QW电竞官方';
@@ -1075,17 +1039,13 @@ async function loadAdminShopSwitcher() {
             sel.value = 'shop_platform';
             currentAdminShopId = 'shop_platform';
         }
-        // 触发加载
         switchAdminShop();
-    } catch (err) {
-        console.error('加载店铺列表失败', err);
-    }
+    } catch (err) { console.error('加载店铺列表失败', err); }
 }
 
 async function switchAdminShop() {
     const sel = document.getElementById('adminShopSwitcher');
     currentAdminShopId = sel.value;
-    // 重新渲染管理员的所有tab
     const activeTab = document.querySelector('#view-admin .tab-nav .active');
     if (activeTab) {
         const tab = activeTab.dataset.tab;
@@ -1127,7 +1087,9 @@ async function renderAdminShopDashboard() {
         container.innerHTML = html;
     } catch (err) { console.error(err); }
 }
-
+// ============================================================
+//  管理员 - 店铺商品管理
+// ============================================================
 async function renderAdminShopProducts() {
     try {
         const products = await apiRequest('/admin/shops/' + currentAdminShopId + '/products');
@@ -1157,7 +1119,6 @@ async function renderAdminShopProducts() {
     } catch (err) { console.error(err); }
 }
 
-// 管理员店铺商品操作
 async function confirmAdminShopUnshelf(productId) {
     confirmAction('确认下架', '确认下架此商品？', '确认下架', `doAdminShopUnshelf('${productId}')`);
 }
@@ -1192,7 +1153,6 @@ async function doAdminShopDeleteProduct(productId) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
-// 管理员在店铺上架商品
 async function adminShopShelfProduct() {
     const game = document.getElementById('adminShopProdGame').value;
     const title = document.getElementById('adminShopProdTitle').value.trim();
@@ -1224,7 +1184,6 @@ document.getElementById('adminShopProdImageUrl').addEventListener('input', funct
     else { img.style.display = 'none'; }
 });
 
-// 管理员在店铺直接发布订单
 async function adminShopDirectPublish() {
     const game = document.getElementById('adminShopDirectGame').value;
     const title = document.getElementById('adminShopDirectTitle').value.trim();
@@ -1446,7 +1405,6 @@ function switchToShop(shopId) {
     sel.value = shopId;
     currentAdminShopId = shopId;
     switchAdminShop();
-    // 切换到管理tab
     document.querySelector('#view-admin .tab-nav button[data-tab="tab-dashboard"]').click();
     toast('已切换到该店铺', 'success');
 }
@@ -1476,7 +1434,7 @@ async function doToggleShopStatus(shopId) {
 }
 
 // ============================================================
-//  管理员 - 入驻申请管理
+//  管理员 - 入驻申请管理（店长注册）
 // ============================================================
 async function renderShopApplications() {
     try {
@@ -1527,6 +1485,57 @@ async function doRejectShop(appId) {
 }
 
 // ============================================================
+//  管理员 - 店铺创建申请管理
+// ============================================================
+async function renderShopCreateApplications() {
+    try {
+        const apps = await apiRequest('/admin/shop-create-applications');
+        const container = document.getElementById('shopCreateApplicationsList');
+        if (apps.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-plus-circle"></i><p>暂无店铺创建申请</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>俱乐部名称</th><th>申请人</th><th>邀请码</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const a of apps) {
+            const statusText2 = a.status === 'pending' ? '待审核' : a.status === 'approved' ? '已通过' : '已拒绝';
+            const statusCls = a.status === 'pending' ? 'status-pending' : a.status === 'approved' ? 'status-onsale' : 'status-canceled';
+            let actions = '';
+            if (a.status === 'pending') {
+                actions += `<button class="btn btn-success btn-xs" onclick="approveShopCreate('${a.id}')">通过</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="rejectShopCreate('${a.id}')">拒绝</button>`;
+            }
+            html += `<tr><td>${a.shop_name}</td><td>${a.applicant_name}</td><td><code>${a.invite_code}</code></td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td>${actions}</td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+async function approveShopCreate(appId) {
+    confirmAction('确认通过', '确认通过此店铺创建申请？', '确认通过', `doApproveShopCreate('${appId}')`);
+}
+async function doApproveShopCreate(appId) {
+    try {
+        await apiRequest('/admin/shop-create-applications/' + appId + '/approve', { method: 'PUT' });
+        toast('✅ 店铺创建审核通过', 'success');
+        renderShopCreateApplications();
+        renderShops();
+        loadAdminShopSwitcher();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function rejectShopCreate(appId) {
+    confirmAction('确认拒绝', '确认拒绝此店铺创建申请？', '确认拒绝', `doRejectShopCreate('${appId}')`);
+}
+async function doRejectShopCreate(appId) {
+    try {
+        await apiRequest('/admin/shop-create-applications/' + appId + '/reject', { method: 'PUT' });
+        toast('已拒绝', 'warning');
+        renderShopCreateApplications();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
 //  店长视图
 // ============================================================
 async function renderShopAll() {
@@ -1541,6 +1550,7 @@ async function renderShopAll() {
 async function renderShopDashboard() {
     try {
         const shop = await apiRequest('/shop/owner/info');
+        if (!shop) return;
         document.getElementById('shopDiamond').textContent = shop.diamond || 0;
         document.getElementById('shopNameDisplay').textContent = '🏪 ' + shop.name;
         const orders = await apiRequest('/shop/owner/orders');
@@ -1565,17 +1575,13 @@ async function renderShopDashboard() {
 }
 
 // ============================================================
-//  店长 - 修改店铺信息（名称 + 邀请码）
+//  店长 - 修改店铺信息
 // ============================================================
 async function shopUpdateInfo() {
     const new_name = document.getElementById('shopNewName').value.trim();
     const new_invite_code = document.getElementById('shopNewInviteCode').value.trim();
-    if (!new_name && !new_invite_code) {
-        return toast('请至少修改一项', 'warning');
-    }
-    if (new_invite_code && new_invite_code.length < 4) {
-        return toast('邀请码至少4位字符', 'warning');
-    }
+    if (!new_name && !new_invite_code) return toast('请至少修改一项', 'warning');
+    if (new_invite_code && new_invite_code.length < 4) return toast('邀请码至少4位字符', 'warning');
     try {
         const shop = await apiRequest('/shop/owner/info');
         const body = { shop_id: shop.id };
@@ -1589,13 +1595,10 @@ async function shopUpdateInfo() {
         if (new_name) {
             document.getElementById('shopDisplayName').textContent = '🏪 店铺：' + new_name;
             document.getElementById('brandName').innerHTML = new_name + ' <small>· 护航</small>';
-            // 更新当前用户的shop_name
             currentUser.shop_name = new_name;
             document.getElementById('accShop').textContent = new_name;
         }
-    } catch (err) {
-        toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
 }
 
 // ============================================================
@@ -1715,9 +1718,7 @@ async function doShopDirectPublish(game, title, desc, price) {
         document.getElementById('shopDirectPrice').value = '';
         renderShopOrders();
         renderShopDashboard();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
 }
 
 // ============================================================
@@ -2591,6 +2592,38 @@ window.viewOrderDetail = function(orderId) {
 };
 
 // ============================================================
+//  管理员渲染总入口
+// ============================================================
+async function renderAdminAll() {
+    await loadAdminShopSwitcher();
+    await renderAdminShopDashboard();
+    await renderAdminShopProducts();
+    await renderAdminShopOrders();
+    await renderAdminShopUsers();
+    await renderAdminShopRecharges();
+    await loadAdminShopAnnounce();
+    await renderShops();
+    await renderShopApplications();
+    await renderShopCreateApplications();
+    applyCollapseStates();
+}
+
+// ============================================================
+//  管理员 - 删除店铺订单
+// ============================================================
+window.confirmAdminDeleteShopOrder = function(orderId) {
+    confirmAction('确认删除', '确认永久删除此订单？', '确认删除', `doAdminDeleteShopOrder('${orderId}')`);
+};
+async function doAdminDeleteShopOrder(orderId) {
+    try {
+        await apiRequest('/admin/orders/' + orderId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderAdminShopDashboard();
+        renderAdminShopOrders();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
 //  初始化
 // ============================================================
 async function init() {
@@ -2612,10 +2645,9 @@ async function init() {
             updateAccountInfo();
             renderBossView();
             renderAdminAll();
-            if (currentUser.role === 'shop_owner' || currentUser.is_shop_admin === 1) {
-                renderShopAll();
+            if (currentUser.role === 'shop_owner') {
+                loadShopStatus();
             }
-            // 如果当前用户是管理员，加载店铺切换器
             if (currentUser.is_admin === 1) {
                 await loadAdminShopSwitcher();
             }
@@ -2630,7 +2662,7 @@ async function init() {
 
 document.getElementById('logoutBtn').addEventListener('click', logout);
 init();
-console.log('✅ QW电竞护航平台已加载（店铺独立管理系统版）');
+console.log('✅ QW电竞护航平台已加载（店长入驻+店铺创建申请版）');
 console.log('后端地址:', API_URL);
 </script>
 </body>
