@@ -1,6 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
-//  功能：商品详情、打赏、IP限制、订单撤销、指派打手
+//  功能：商品详情、打赏、IP限制、订单撤销、指派打手、派单员
 // ============================================================
 
 // ===== IP注册缓存 =====
@@ -87,7 +87,8 @@ async function handleRegister(env, body, request) {
     }
 
     const id = generateId();
-    const userStatus = role === 'handler' ? 'pending' : (status || 'active');
+    // 派单员和打手需要审核
+    const userStatus = (role === 'handler' || role === 'dispatcher') ? 'pending' : (status || 'active');
     await runDB(env,
         'INSERT INTO users (id, username, password, role, diamond, balance, status, phone, register_ip, created_at) VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?)',
         [id, username, password, role || 'boss', userStatus, phone || '', clientIP, new Date().toISOString()]
@@ -98,7 +99,7 @@ async function handleRegister(env, body, request) {
     }
     registerCache[clientIP].push(Date.now());
 
-    return jsonResponse({ message: '注册成功', id });
+    return jsonResponse({ message: '注册成功', id, needApproval: role === 'handler' || role === 'dispatcher' });
 }
 
 async function handleLogin(env, body, request) {
@@ -235,7 +236,7 @@ async function handleAdminDeleteProduct(env, productId) {
 }
 
 // ============================================================
-//  订单相关 - 包含撤销和指派功能
+//  订单相关
 // ============================================================
 
 // 购买商品（老板下单，可选指派打手）
@@ -270,7 +271,6 @@ async function handleBuyProduct(env, authHeader, body) {
         [orderId, productId, userId, status, product.price, product.game, product.title, product.desc || '', JSON.stringify(messages), assignedHandlerId || null]
     );
 
-    // 如果指定了打手，更新订单的 handler_id 并设置开始时间
     if (assignedHandlerId) {
         await runDB(env, 'UPDATE orders SET handler_id = ?, start_time = ? WHERE id = ?', [assignedHandlerId, new Date().toISOString(), orderId]);
     }
@@ -279,22 +279,29 @@ async function handleBuyProduct(env, authHeader, body) {
     return jsonResponse({ orderId, message: '购买成功' });
 }
 
-// 管理员/店长直接发布订单（可指派打手）
-async function handleAdminDirectPublish(env, authHeader, body) {
+// 派单员/管理员直接发布订单（可指派打手）
+async function handleDirectPublish(env, authHeader, body) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
+    const user = await getUserById(env, userId);
+    if (!user) return errorResponse('用户不存在', 404);
+
+    // 只有管理员或派单员可以发布
+    if (user.role !== 'admin' && user.role !== 'dispatcher') {
+        return errorResponse('无权限，只有管理员或派单员可以发布订单', 403);
+    }
 
     const { game, title, desc, price, assignedHandlerId } = body;
     if (!title || !price) return errorResponse('请填写完整信息');
 
     const orderId = generateId();
     const status = assignedHandlerId ? 'ongoing' : 'pending';
-    const messages = [{ sender: 'system', content: assignedHandlerId ? '🎉 订单已创建（管理员发布）并指派打手' : '🎉 订单已创建（管理员发布）', time: new Date().toISOString() }];
+    const messages = [{ sender: 'system', content: assignedHandlerId ? '🎉 订单已创建并指派打手' : '🎉 订单已创建', time: new Date().toISOString() }];
 
     await runDB(env,
-        `INSERT INTO orders (id, boss_id, status, price, game, title, description, messages, assigned_handler_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderId, userId, status, parseFloat(price), game || '暗区突围', title, desc || '', JSON.stringify(messages), assignedHandlerId || null]
+        `INSERT INTO orders (id, boss_id, status, price, game, title, description, messages, assigned_handler_id, dispatcher_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [orderId, userId, status, parseFloat(price), game || '暗区突围', title, desc || '', JSON.stringify(messages), assignedHandlerId || null, userId]
     );
 
     if (assignedHandlerId) {
@@ -304,17 +311,12 @@ async function handleAdminDirectPublish(env, authHeader, body) {
     return jsonResponse({ success: true, orderId });
 }
 
-// 撤销订单（管理员/店长）
+// 撤销订单（管理员/派单员只能撤销自己发布的）
 async function handleCancelOrder(env, authHeader, orderId, body) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
     const user = await getUserById(env, userId);
     if (!user) return errorResponse('用户不存在', 404);
-
-    // 只有管理员可以撤销
-    if (user.role !== 'admin') {
-        return errorResponse('只有管理员可以撤销订单', 403);
-    }
 
     const { reason } = body;
     const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
@@ -325,15 +327,13 @@ async function handleCancelOrder(env, authHeader, orderId, body) {
     if (order.status === 'completed' || order.status === 'settled') {
         return errorResponse('已完成或已结算的订单不能撤销', 400);
     }
-
-    // 已撤销的订单不能再次撤销
     if (order.status === 'canceled') {
         return errorResponse('订单已撤销', 400);
     }
 
-    // 如果订单已被接取且有打手，需要释放打手
-    if (order.handler_id) {
-        // 如果有打手，记录但不做额外操作
+    // 权限检查：管理员可以撤销所有，派单员只能撤销自己发布的
+    if (user.role === 'dispatcher' && order.dispatcher_id !== userId) {
+        return errorResponse('无权撤销其他派单员发布的订单', 403);
     }
 
     // 如果订单是老板购买的，退还红钻
@@ -383,6 +383,10 @@ async function handleGetMyOrders(env, authHeader) {
             return true;
         });
         return jsonResponse(unique);
+    } else if (user.role === 'dispatcher') {
+        // 派单员看到自己发布的订单
+        sql = 'SELECT * FROM orders WHERE dispatcher_id = ? ORDER BY created_at DESC';
+        params = [userId];
     } else {
         return errorResponse('无权查看', 403);
     }
@@ -400,7 +404,7 @@ async function handleGetOrderDetail(env, authHeader, orderId) {
     const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
     const order = (result.results && result.results[0]) || null;
     if (!order) return errorResponse('订单不存在', 404);
-    if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin') {
+    if (order.boss_id !== userId && order.handler_id !== userId && order.dispatcher_id !== userId && user.role !== 'admin') {
         return errorResponse('无权查看', 403);
     }
     return jsonResponse(order);
@@ -712,11 +716,11 @@ async function handleSendChat(env, authHeader, orderId, body) {
     const order = (result.results && result.results[0]) || null;
     if (!order) return errorResponse('订单不存在', 404);
 
-    if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin') {
+    if (order.boss_id !== userId && order.handler_id !== userId && order.dispatcher_id !== userId && user.role !== 'admin') {
         return errorResponse('无权操作', 403);
     }
 
-    const sender = user.role === 'boss' ? 'boss' : user.role === 'handler' ? 'handler' : 'admin';
+    const sender = user.role === 'boss' ? 'boss' : user.role === 'handler' ? 'handler' : user.role === 'dispatcher' ? 'dispatcher' : 'admin';
     let messages = [];
     try {
         messages = JSON.parse(order.messages || '[]');
@@ -749,10 +753,10 @@ async function handleApproveHandler(env, targetUserId) {
     const result = await queryDB(env, 'SELECT * FROM users WHERE id = ?', [targetUserId]);
     const user = (result.results && result.results[0]) || null;
     if (!user) return errorResponse('用户不存在', 404);
-    if (user.role !== 'handler') return errorResponse('该用户不是打手');
+    if (user.role !== 'handler' && user.role !== 'dispatcher') return errorResponse('该用户不是打手或派单员');
     if (user.status !== 'pending') return errorResponse('该用户不需要审核');
     await runDB(env, 'UPDATE users SET status = "active" WHERE id = ?', [targetUserId]);
-    return jsonResponse({ success: true, message: '打手审核通过' });
+    return jsonResponse({ success: true, message: '审核通过' });
 }
 
 async function handleChangeUsername(env, targetUserId, body) {
@@ -764,6 +768,47 @@ async function handleChangeUsername(env, targetUserId, body) {
     }
     await runDB(env, 'UPDATE users SET username = ? WHERE id = ?', [username, targetUserId]);
     return jsonResponse({ success: true, message: '用户名已修改' });
+}
+
+// ============================================================
+//  派单员获取自己的订单（用于仪表盘）
+// ============================================================
+
+async function handleDispatcherGetOrders(env, authHeader) {
+    const userId = verifyAndGetUserId(authHeader);
+    if (!userId) return errorResponse('请先登录', 401);
+    const user = await getUserById(env, userId);
+    if (!user || user.role !== 'dispatcher') return errorResponse('无权限', 403);
+
+    const result = await queryDB(env,
+        'SELECT * FROM orders WHERE dispatcher_id = ? ORDER BY created_at DESC',
+        [userId]
+    );
+    return jsonResponse(result.results || []);
+}
+
+async function handleDispatcherGetStats(env, authHeader) {
+    const userId = verifyAndGetUserId(authHeader);
+    if (!userId) return errorResponse('请先登录', 401);
+    const user = await getUserById(env, userId);
+    if (!user || user.role !== 'dispatcher') return errorResponse('无权限', 403);
+
+    const orders = await queryDB(env,
+        'SELECT * FROM orders WHERE dispatcher_id = ?',
+        [userId]
+    );
+    const list = orders.results || [];
+    const total = list.length;
+    const pending = list.filter(o => o.status === 'pending').length;
+    const ongoing = list.filter(o => o.status === 'ongoing').length;
+    const completed = list.filter(o => o.status === 'completed').length;
+
+    return jsonResponse({
+        total: total,
+        pending: pending,
+        ongoing: ongoing,
+        completed: completed
+    });
 }
 
 // ============================================================
@@ -835,6 +880,13 @@ export async function onRequest(context) {
         if (path === '/api/tip' && method === 'POST') {
             return await handleTip(env, authHeader, body);
         }
+        // ===== 派单员接口 =====
+        if (path === '/api/dispatcher/orders' && method === 'GET') {
+            return await handleDispatcherGetOrders(env, authHeader);
+        }
+        if (path === '/api/dispatcher/stats' && method === 'GET') {
+            return await handleDispatcherGetStats(env, authHeader);
+        }
 
         // ===== 带参数的订单接口 =====
         if (path.startsWith('/api/orders/')) {
@@ -862,7 +914,6 @@ export async function onRequest(context) {
                 const id = orderId.replace('/chat', '');
                 return await handleSendChat(env, authHeader, id, body);
             }
-            // ===== 撤销订单 =====
             if (orderId.endsWith('/cancel') && method === 'PUT') {
                 const id = orderId.replace('/cancel', '');
                 return await handleCancelOrder(env, authHeader, id, body);
@@ -886,7 +937,7 @@ export async function onRequest(context) {
                     return await handleAdminGetOrders(env);
                 }
                 if (path === '/api/admin/orders/direct' && method === 'POST') {
-                    return await handleAdminDirectPublish(env, authHeader, body);
+                    return await handleDirectPublish(env, authHeader, body);
                 }
                 if (path.startsWith('/api/admin/orders/')) {
                     const orderId = path.replace('/api/admin/orders/', '');
@@ -994,6 +1045,21 @@ export async function onRequest(context) {
                 // 公告管理
                 if (path === '/api/admin/announce' && method === 'PUT') {
                     return await handleAdminUpdateAnnounce(env, body);
+                }
+            }
+
+            // ===== 派单员接口（部分权限） =====
+            if (user && user.role === 'dispatcher') {
+                // 直接发布订单（派单员）
+                if (path === '/api/dispatcher/publish' && method === 'POST') {
+                    return await handleDirectPublish(env, authHeader, body);
+                }
+                // 获取派单员自己的订单
+                if (path === '/api/dispatcher/orders' && method === 'GET') {
+                    return await handleDispatcherGetOrders(env, authHeader);
+                }
+                if (path === '/api/dispatcher/stats' && method === 'GET') {
+                    return await handleDispatcherGetStats(env, authHeader);
                 }
             }
         }
