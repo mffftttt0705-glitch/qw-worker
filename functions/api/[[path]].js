@@ -1,6 +1,7 @@
 // ============================================================
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
 //  功能：商城（无店铺过滤）+ 派单员 + 商品管理 + 订单管理
+//  修复：派单员订单显示、登录保持、充值/用户管理红点
 // ============================================================
 
 // ===== IP注册缓存 =====
@@ -265,9 +266,9 @@ async function handleBuyProduct(env, authHeader, body) {
     const messages = [{ sender: 'system', content: assignedHandlerId ? '🎉 订单已创建并指派打手' : '🎉 订单已创建', time: new Date().toISOString() }];
 
     await runDB(env,
-        `INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages, assigned_handler_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderId, productId, userId, status, product.price, product.game, product.title, product.desc || '', JSON.stringify(messages), assignedHandlerId || null]
+        `INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages, assigned_handler_id, shop_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [orderId, productId, userId, status, product.price, product.game, product.title, product.desc || '', JSON.stringify(messages), assignedHandlerId || null, 'platform']
     );
 
     if (assignedHandlerId) {
@@ -296,9 +297,9 @@ async function handleDirectPublish(env, authHeader, body) {
     const messages = [{ sender: 'system', content: assignedHandlerId ? '🎉 订单已创建并指派打手' : '🎉 订单已创建', time: new Date().toISOString() }];
 
     await runDB(env,
-        `INSERT INTO orders (id, boss_id, status, price, game, title, description, messages, assigned_handler_id, dispatcher_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderId, userId, status, parseFloat(price), game || '暗区突围', title, desc || '', JSON.stringify(messages), assignedHandlerId || null, userId]
+        `INSERT INTO orders (id, boss_id, status, price, game, title, description, messages, assigned_handler_id, dispatcher_id, shop_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [orderId, userId, status, parseFloat(price), game || '暗区突围', title, desc || '', JSON.stringify(messages), assignedHandlerId || null, userId, 'platform']
     );
 
     if (assignedHandlerId) {
@@ -572,6 +573,13 @@ async function handleAdminGetRecharges(env) {
     return jsonResponse(result.results || []);
 }
 
+// 获取待处理的充值申请数量
+async function handleAdminGetRechargePendingCount(env) {
+    const result = await queryDB(env, 'SELECT COUNT(*) as count FROM recharges WHERE status = "pending"');
+    const count = (result.results && result.results[0] && result.results[0].count) || 0;
+    return jsonResponse({ count: count });
+}
+
 async function handleAdminApproveRecharge(env, rechargeId) {
     const result = await queryDB(env, 'SELECT * FROM recharges WHERE id = ?', [rechargeId]);
     const recharge = (result.results && result.results[0]) || null;
@@ -602,6 +610,13 @@ async function handleAdminGiftDiamond(env, body) {
     if (!targetUserId || !amount) return errorResponse('请填写完整信息');
     await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [amount, targetUserId]);
     return jsonResponse({ success: true, message: '赠送成功' });
+}
+
+// 获取待审核用户数量
+async function handleAdminGetUserPendingCount(env) {
+    const result = await queryDB(env, 'SELECT COUNT(*) as count FROM users WHERE status = "pending"');
+    const count = (result.results && result.results[0] && result.results[0].count) || 0;
+    return jsonResponse({ count: count });
 }
 
 // ============================================================
@@ -995,6 +1010,9 @@ export async function onRequest(context) {
                 if (path === '/api/admin/recharges' && method === 'GET') {
                     return await handleAdminGetRecharges(env);
                 }
+                if (path === '/api/admin/recharges/pending-count' && method === 'GET') {
+                    return await handleAdminGetRechargePendingCount(env);
+                }
                 if (path.startsWith('/api/admin/recharges/')) {
                     const rechargeId = path.replace('/api/admin/recharges/', '');
                     if (rechargeId.endsWith('/approve') && method === 'PUT') {
@@ -1013,6 +1031,9 @@ export async function onRequest(context) {
                 // 用户管理
                 if (path === '/api/admin/users' && method === 'GET') {
                     return await handleAdminGetUsers(env);
+                }
+                if (path === '/api/admin/users/pending-count' && method === 'GET') {
+                    return await handleAdminGetUserPendingCount(env);
                 }
                 if (path === '/api/admin/gift' && method === 'POST') {
                     return await handleAdminGiftDiamond(env, body);
