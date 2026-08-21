@@ -933,7 +933,6 @@ function doLogout() {
         clearInterval(window._badgeTimer);
         window._badgeTimer = null;
     }
-    // 重新加载商品（游客模式）
     renderBossView();
     toast('已退出', 'warning');
 }
@@ -1637,7 +1636,6 @@ async function doChangeUsername(userId) {
 // ============================================================
 async function renderBossView() {
     try {
-        // 无论是否登录，都加载商品
         const products = await apiRequest('/products').catch(() => []);
         document.getElementById('bossProductCount').textContent = products.length;
         const container = document.getElementById('bossProductList');
@@ -1680,7 +1678,6 @@ async function renderBossView() {
         }
         container.innerHTML = html;
 
-        // 登录后才加载订单和红钻
         if (!currentUser) {
             document.getElementById('bossDiamond').textContent = '请登录';
             return;
@@ -2321,7 +2318,7 @@ async function doSubmitComplete(orderId) {
 }
 
 // ============================================================
-//  初始化 - 直接进入商城，保持登录状态
+//  初始化 - 修复登录保持
 // ============================================================
 async function init() {
     // 直接进入商城
@@ -2329,7 +2326,6 @@ async function init() {
     document.getElementById('mainApp').classList.remove('hidden');
     applyCollapseStates();
 
-    // 未登录状态显示
     document.getElementById('authStatusText').textContent = '未登录';
     document.getElementById('headerDiamond').textContent = '0';
     document.getElementById('headerUnreadMail').textContent = '0';
@@ -2346,14 +2342,12 @@ async function init() {
             const user = await apiRequest('/me');
             currentUser = user;
             document.getElementById('authStatusText').textContent = user.username;
-            // 切换到登录状态
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('view-home').classList.add('active');
             document.querySelector('.bottom-nav .nav-item[data-target="home"]').classList.add('active');
             updateRoleBasedUI();
             updateAccountInfo();
-            // 重新渲染（带用户数据）
             renderBossView();
             renderAdminAll();
             renderDispatcherAll();
@@ -2363,7 +2357,6 @@ async function init() {
             if (window._badgeTimer) clearInterval(window._badgeTimer);
             window._badgeTimer = setInterval(updateBadges, 30000);
         } catch (err) {
-            // token 无效，清除
             localStorage.removeItem('token');
             token = null;
             currentUser = null;
