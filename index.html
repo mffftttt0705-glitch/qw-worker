@@ -235,7 +235,7 @@
         .collapse-content.open{display:block}
         /* ===== 商品卡片 - 一行两个（紧凑型） ===== */
         .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
-        .product-card{background:var(--product-card-bg);border-radius:12px;border:1px solid var(--product-card-border);overflow:hidden;position:relative;transition:background 0.3s,border 0.3s,transform 0.2s}
+        .product-card{background:var(--product-card-bg);border-radius:12px;border:1px solid var(--product-card-border);overflow:hidden;position:relative;transition:background 0.3s,border 0.3s,transform 0.2s;cursor:pointer}
         .product-card:active{transform:scale(0.97)}
         .product-card .product-img{width:100%;height:100px;background:var(--product-img-bg);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--product-img-icon);overflow:hidden;transition:background 0.3s}
         .product-card .product-img img{width:100%;height:100px;object-fit:cover}
@@ -254,7 +254,13 @@
         .upload-preview{max-width:80px;max-height:80px;border-radius:8px;border:1px solid var(--border-color);margin-top:6px}
         .img-preview-modal .modal-box{max-width:90%;padding:10px}
         .img-preview-modal img{width:100%;height:auto;border-radius:12px}
-        @media(max-width:420px){.app-wrapper{border-radius:28px;padding-bottom:66px}.view-container{padding:16px 14px}.entry-grid{gap:12px}.entry-card{padding:18px 8px}.entry-icon{width:48px;height:48px;font-size:22px}.entry-title{font-size:14px}.bottom-nav{padding:6px 0 10px}.nav-item i{font-size:18px}.nav-item span{font-size:10px}#authPage{min-height:600px}.product-card .product-img{height:80px}.product-card .product-img img{height:80px}.product-card .product-title{font-size:12px}.product-card .product-price{font-size:14px}.product-grid{gap:8px}}
+        /* ===== 商品详情页面样式 ===== */
+        .detail-carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;border-radius:16px;scroll-behavior:smooth}
+        .detail-carousel::-webkit-scrollbar{display:none}
+        .detail-carousel .slide{min-width:100%;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;height:300px;background:var(--product-img-bg)}
+        .detail-carousel .slide img{max-width:100%;max-height:300px;object-fit:contain}
+        .detail-index{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.6);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px}
+        @media(max-width:420px){.app-wrapper{border-radius:28px;padding-bottom:66px}.view-container{padding:16px 14px}.entry-grid{gap:12px}.entry-card{padding:18px 8px}.entry-icon{width:48px;height:48px;font-size:22px}.entry-title{font-size:14px}.bottom-nav{padding:6px 0 10px}.nav-item i{font-size:18px}.nav-item span{font-size:10px}#authPage{min-height:600px}.product-card .product-img{height:80px}.product-card .product-img img{height:80px}.product-card .product-title{font-size:12px}.product-card .product-price{font-size:14px}.product-grid{gap:8px}.detail-carousel .slide{height:200px}.detail-carousel .slide img{max-height:200px}}
     </style>
 </head>
 <body>
@@ -285,7 +291,7 @@
         <div class="app-header">
             <div class="brand">
                 <div class="brand-icon">QW</div>
-                <span class="brand-name">电竞 <small>· 护航</small></span>
+                <span class="brand-name" id="brandName">电竞 <small>· 护航</small></span>
             </div>
             <div class="header-right">
                 <div class="header-actions">
@@ -315,6 +321,27 @@
             <div class="admin-card" style="padding:10px 12px;">
                 <div class="admin-card-title" style="font-size:14px;margin-bottom:8px;"><i class="fas fa-shopping-cart"></i> 护航商品 <span id="bossProductCount" style="font-size:12px;font-weight:400;color:var(--text-muted);">0</span></div>
                 <div id="bossProductList" class="product-grid"></div>
+            </div>
+        </div>
+
+        <!-- ===== 商品详情页面 ===== -->
+        <div class="view" id="view-product-detail">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button class="btn btn-outline btn-sm" onclick="goBackFromDetail()"><i class="fas fa-arrow-left"></i> 返回</button>
+                <span style="font-size:16px;font-weight:600;" id="productDetailTitle">商品详情</span>
+            </div>
+            <div id="productDetailContent">
+                <div style="position:relative;background:var(--product-img-bg);border-radius:16px;overflow:hidden;margin-bottom:16px;">
+                    <div class="detail-carousel" id="productDetailCarousel"></div>
+                    <div class="detail-index" id="productDetailIndex">1/1</div>
+                </div>
+                <div style="padding:0 4px;">
+                    <div style="font-size:24px;font-weight:700;color:var(--price-color);margin-bottom:4px;" id="productDetailPrice">¥0</div>
+                    <div style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:6px;" id="productDetailName">商品名称</div>
+                    <div style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;" id="productDetailDesc">商品描述</div>
+                    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">库存：<span id="productDetailStock">0</span></div>
+                    <button class="btn btn-success btn-block" onclick="buyFromDetail()"><i class="fas fa-shopping-cart"></i> 立即购买</button>
+                </div>
             </div>
         </div>
 
@@ -369,8 +396,14 @@
                     <div class="admin-form-group"><label><i class="fas fa-yen-sign"></i> 价格</label><input class="admin-form-control" id="prodPrice" type="number" placeholder="288"></div>
                     <div class="admin-form-group"><label><i class="fas fa-boxes"></i> 库存</label><input class="admin-form-control" id="prodQuantity" type="number" placeholder="1" value="1"></div>
                     <div class="admin-form-group"><label><i class="fas fa-image"></i> 商品图片URL</label>
-                        <input class="admin-form-control" id="prodImageUrl" placeholder="输入图片URL，如 https://imgtu.com/xxx.jpg" />
+                        <input class="admin-form-control" id="prodImageUrl" placeholder="输入图片URL" />
                         <img id="prodImagePreview" class="upload-preview" style="display:none;margin-top:4px;" onerror="this.style.display='none'" />
+                    </div>
+                    <div class="admin-form-group"><label><i class="fas fa-images"></i> 详情图片（多个URL用逗号分隔）</label>
+                        <input class="admin-form-control" id="prodDetailImages" placeholder="https://img1.jpg, https://img2.jpg" />
+                    </div>
+                    <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 详情描述</label>
+                        <textarea class="admin-form-control" id="prodDetailDesc" rows="3" placeholder="详细描述内容"></textarea>
                     </div>
                     <button class="btn btn-success" onclick="shelfProduct()"><i class="fas fa-upload"></i> 上架商品</button>
                 </div>
@@ -444,10 +477,6 @@
                     <div class="info-row" id="accDiamondRow"><span class="label">红钻</span><span class="value" id="accDiamond">0</span></div>
                     <div class="info-row" id="accBalanceRow"><span class="label">余额</span><span class="value" id="accBalance">¥0</span></div>
                 </div>
-                <div id="loginSection" style="margin-top:12px;display:none;">
-                    <button class="btn btn-primary btn-block" onclick="showLogin()"><i class="fas fa-sign-in-alt"></i> 登录账号</button>
-                    <button class="btn btn-outline btn-block" onclick="showRegister()" style="margin-top:8px;"><i class="fas fa-user-plus"></i> 注册新账号</button>
-                </div>
             </div>
         </div>
 
@@ -483,7 +512,7 @@ let token = localStorage.getItem('token');
 let announceImages = [];
 
 // ============================================================
-//  折叠状态管理（localStorage持久化）
+//  折叠状态管理
 // ============================================================
 const COLLAPSE_KEYS = {
     recentOrders: 'collapse_recentOrders',
@@ -495,7 +524,7 @@ const COLLAPSE_KEYS = {
 
 function getCollapseState(key) {
     const val = localStorage.getItem(key);
-    return val === 'true' ? true : false; // 默认折叠（false）
+    return val === 'true' ? true : false;
 }
 
 function setCollapseState(key, isOpen) {
@@ -506,10 +535,8 @@ function toggleCollapse(id) {
     const content = document.getElementById(id + 'Content');
     const arrow = document.getElementById(id + 'Arrow');
     if (!content) return;
-    
     const isCurrentlyOpen = content.classList.contains('open');
     const newState = !isCurrentlyOpen;
-    
     if (newState) {
         content.classList.add('open');
         if (arrow) arrow.textContent = '▼';
@@ -517,12 +544,8 @@ function toggleCollapse(id) {
         content.classList.remove('open');
         if (arrow) arrow.textContent = '▶';
     }
-    
-    // 保存状态到 localStorage
     const key = COLLAPSE_KEYS[id];
-    if (key) {
-        setCollapseState(key, newState);
-    }
+    if (key) setCollapseState(key, newState);
 }
 
 function applyCollapseStates() {
@@ -530,7 +553,6 @@ function applyCollapseStates() {
         const content = document.getElementById(id + 'Content');
         const arrow = document.getElementById(id + 'Arrow');
         if (!content) return;
-        
         const isOpen = getCollapseState(COLLAPSE_KEYS[id]);
         if (isOpen) {
             content.classList.add('open');
@@ -611,16 +633,6 @@ function updateRoleBasedUI() {
     document.getElementById('navHandler').style.display = (role === 'handler' || role === 'admin') ? 'flex' : 'none';
     document.getElementById('navAdmin').style.display = (role === 'admin') ? 'flex' : 'none';
     document.getElementById('navOrders').style.display = (role === 'boss' || role === 'admin') ? 'flex' : 'none';
-}
-
-function showLogin() {
-    document.getElementById('authPage').style.display = 'flex';
-    document.getElementById('mainApp').classList.add('hidden');
-}
-
-function showRegister() {
-    document.getElementById('authPage').style.display = 'flex';
-    document.getElementById('mainApp').classList.add('hidden');
 }
 
 function previewProdImageUrl(inputId, previewId) {
@@ -785,7 +797,6 @@ function updateAccountInfo() {
     document.getElementById('accBalance').textContent = '¥' + (currentUser.balance || 0);
     document.getElementById('accDiamondRow').style.display = currentUser.role === 'boss' || currentUser.role === 'admin' ? 'flex' : 'none';
     document.getElementById('accBalanceRow').style.display = currentUser.role === 'handler' || currentUser.role === 'admin' ? 'flex' : 'none';
-    document.getElementById('loginSection').style.display = 'none';
 }
 
 // ============================================================
@@ -846,7 +857,6 @@ async function renderAdminAll() {
     await renderRecharges();
     await renderUsers();
     await populateGiftUsers();
-    // 应用折叠状态
     applyCollapseStates();
 }
 
@@ -901,12 +911,12 @@ async function renderProducts() {
         let html = '<div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const p of products) {
             const remaining = p.quantity - p.sold;
-            const isHidden = p.hidden === true;
+            // ===== 修复：正确处理 hidden 字段 =====
+            const isHidden = p.hidden == 1 || p.hidden === true;
             let statusText2 = isHidden ? '已下架' : (remaining > 0 ? '在售' : '已售罄');
             let statusCls = isHidden ? 'status-hidden' : (remaining > 0 ? 'status-onsale' : 'status-soldout');
             const productId = p.id;
             let actions = '';
-            actions += `<button class="btn btn-primary btn-xs" onclick="openEditProduct('${productId}')">编辑</button>`;
             if (isHidden) {
                 actions += `<button class="btn btn-success btn-xs" onclick="confirmReshelf('${productId}')">重新上架</button>`;
                 actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteProduct('${productId}')">删除</button>`;
@@ -942,6 +952,12 @@ window.openEditProduct = function(productId) {
                 <input class="admin-form-control" id="editProdImageUrl" value="${p.image||''}" placeholder="输入图片URL" oninput="previewProdImageUrl('editProdImageUrl','editProdImagePreview')" />
                 <img id="editProdImagePreview" class="upload-preview" style="display:${p.image?'block':'none'};margin-top:4px;" src="${p.image||''}" onerror="this.style.display='none'" />
             </div>
+            <div class="admin-form-group"><label>详情图片（多个URL用逗号分隔）</label>
+                <input class="admin-form-control" id="editProdDetailImages" value="${p.detail_images || ''}" placeholder="https://img1.jpg, https://img2.jpg" />
+            </div>
+            <div class="admin-form-group"><label>详情描述</label>
+                <textarea class="admin-form-control" id="editProdDetailDesc" rows="3">${p.detail_desc || ''}</textarea>
+            </div>
             <div class="btn-row">
                 <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
                 <button class="btn btn-success" onclick="doEditProduct()">保存修改</button>
@@ -957,10 +973,13 @@ window.doEditProduct = function() {
     const price = parseFloat(document.getElementById('editProdPrice').value);
     const quantity = parseInt(document.getElementById('editProdQuantity').value) || 1;
     const image = document.getElementById('editProdImageUrl').value.trim();
+    const detail_images_raw = document.getElementById('editProdDetailImages').value.trim();
+    const detail_desc = document.getElementById('editProdDetailDesc').value.trim();
+    const detail_images = detail_images_raw ? detail_images_raw.split(',').map(s => s.trim()).filter(s => s) : [];
     if (!title || !price) return toast('请填写完整信息', 'error');
     apiRequest('/admin/products/' + editProductId + '/edit', {
         method: 'PUT',
-        body: JSON.stringify({ game, title, desc, price, quantity, image })
+        body: JSON.stringify({ game, title, desc, price, quantity, image, detail_images, detail_desc })
     }).then(() => {
         closeCustomModal();
         toast('✅ 商品已更新', 'success');
@@ -979,6 +998,7 @@ async function doUnshelf(productId) {
         await apiRequest('/admin/products/' + productId + '/unshelf', { method: 'PUT' });
         toast('已下架', 'success');
         renderProducts();
+        renderBossView();
     } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -990,17 +1010,19 @@ async function doReshelf(productId) {
         await apiRequest('/admin/products/' + productId + '/reshelf', { method: 'PUT' });
         toast('已重新上架', 'success');
         renderProducts();
+        renderBossView();
     } catch (err) { toast(err.message, 'error'); }
 }
 
 window.confirmDeleteProduct = function(productId) {
-    confirmAction('确认删除', '确认永久删除此商品？', '确认删除', `doDeleteProduct('${productId}')`);
+    confirmAction('确认删除', '⚠️ 确认永久删除此商品？', '确认删除', `doDeleteProduct('${productId}')`);
 };
 async function doDeleteProduct(productId) {
     try {
         await apiRequest('/admin/products/' + productId, { method: 'DELETE' });
         toast('已删除', 'success');
         renderProducts();
+        renderBossView();
     } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -1011,20 +1033,28 @@ async function shelfProduct() {
     const price = parseFloat(document.getElementById('prodPrice').value);
     const quantity = parseInt(document.getElementById('prodQuantity').value) || 1;
     const image = document.getElementById('prodImageUrl').value.trim();
+    const detail_images_raw = document.getElementById('prodDetailImages').value.trim();
+    const detail_desc = document.getElementById('prodDetailDesc').value.trim();
+    const detail_images = detail_images_raw ? detail_images_raw.split(',').map(s => s.trim()).filter(s => s) : [];
     if (!title || !price) return toast('请填写完整信息', 'error');
     try {
-        await apiRequest('/admin/products', { method: 'POST', body: JSON.stringify({ game, title, desc, price, quantity, image }) });
+        await apiRequest('/admin/products', {
+            method: 'POST',
+            body: JSON.stringify({ game, title, desc, price, quantity, image, detail_images, detail_desc })
+        });
         toast('上架成功', 'success');
         document.getElementById('prodTitle').value = '';
         document.getElementById('prodDesc').value = '';
         document.getElementById('prodPrice').value = '';
         document.getElementById('prodImageUrl').value = '';
         document.getElementById('prodImagePreview').style.display = 'none';
+        document.getElementById('prodDetailImages').value = '';
+        document.getElementById('prodDetailDesc').value = '';
         renderProducts();
+        renderBossView();
     } catch (err) { toast(err.message, 'error'); }
 }
 
-// 预览图片URL
 document.getElementById('prodImageUrl').addEventListener('input', function() {
     previewProdImageUrl('prodImageUrl', 'prodImagePreview');
 });
@@ -1227,6 +1257,7 @@ async function renderBossView() {
         let html = '';
         for (const p of products) {
             const remaining = p.quantity - p.sold;
+            const productId = p.id;
             let imgHtml = '';
             if (p.image) {
                 imgHtml = `<img src="${p.image}" style="width:100%;height:100px;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);\\'>'+(p.game==='暗区突围'?'🎯':'🚁')+'</div>'" />`;
@@ -1235,7 +1266,7 @@ async function renderBossView() {
                 imgHtml = `<div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);color:var(--product-img-icon);">${icon}</div>`;
             }
             html += `
-                <div class="product-card">
+                <div class="product-card" onclick="openProductDetail('${productId}')">
                     <div style="position:relative;">
                         ${imgHtml}
                         <div class="tag">${p.game || '暗区突围'}</div>
@@ -1246,7 +1277,7 @@ async function renderBossView() {
                         <div class="product-stock">剩余 ${remaining}</div>
                         <div class="product-bottom">
                             <span class="product-price">¥${p.price}</span>
-                            ${remaining > 0 ? `<button class="btn btn-success btn-sm" onclick="confirmBuy('${p.id}')">购买</button>` : '<span class="status-badge status-soldout">已售罄</span>'}
+                            ${remaining > 0 ? `<button class="btn btn-success btn-sm" onclick="event.stopPropagation();confirmBuy('${productId}')">购买</button>` : '<span class="status-badge status-soldout">已售罄</span>'}
                         </div>
                     </div>
                 </div>
@@ -1274,6 +1305,77 @@ async function renderBossView() {
     } catch (err) { console.error(err); }
 }
 
+// ============================================================
+//  商品详情功能
+// ============================================================
+let currentDetailProductId = null;
+
+async function openProductDetail(productId) {
+    currentDetailProductId = productId;
+    try {
+        const product = await apiRequest('/products/' + productId);
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-product-detail').classList.add('active');
+
+        document.getElementById('productDetailTitle').textContent = product.title || '商品详情';
+        document.getElementById('productDetailPrice').textContent = '¥' + (product.price || 0);
+        document.getElementById('productDetailName').textContent = product.title || '';
+        document.getElementById('productDetailDesc').textContent = product.detail_desc || product.desc || product.description || '暂无描述';
+        document.getElementById('productDetailStock').textContent = product.quantity - (product.sold || 0);
+
+        const carousel = document.getElementById('productDetailCarousel');
+        carousel.innerHTML = '';
+        let images = [];
+        if (product.detail_images) {
+            try { images = JSON.parse(product.detail_images); } catch(e) { images = []; }
+        }
+        if (images.length === 0 && product.image) {
+            images = [product.image];
+        }
+        if (images.length === 0) {
+            const icon = product.game === '暗区突围' ? '🎯' : '🚁';
+            images = ['data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#e8ecf0"/><text x="200" y="160" font-size="60" text-anchor="middle">${icon}</text><text x="200" y="200" font-size="16" fill="#6a6a7a" text-anchor="middle">暂无图片</text></svg>`)];
+        }
+        images.forEach((img) => {
+            const div = document.createElement('div');
+            div.className = 'slide';
+            const imgEl = document.createElement('img');
+            imgEl.src = img;
+            imgEl.onerror = function() {
+                this.style.display = 'none';
+                div.innerHTML = `<div style="font-size:60px;">${product.game === '暗区突围' ? '🎯' : '🚁'}</div>`;
+            };
+            div.appendChild(imgEl);
+            carousel.appendChild(div);
+        });
+        document.getElementById('productDetailIndex').textContent = '1/' + images.length;
+
+        carousel.onscroll = function() {
+            const itemWidth = this.querySelector('.slide')?.offsetWidth || this.offsetWidth;
+            const index = Math.round(this.scrollLeft / itemWidth) + 1;
+            document.getElementById('productDetailIndex').textContent = index + '/' + images.length;
+        };
+
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+function goBackFromDetail() {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-home').classList.add('active');
+    renderBossView();
+}
+
+function buyFromDetail() {
+    if (currentDetailProductId) {
+        confirmBuy(currentDetailProductId);
+    }
+}
+
+// ============================================================
+//  打赏打手
+// ============================================================
 async function loadTipHandlers() {
     try {
         if (!currentUser) return;
@@ -1295,15 +1397,20 @@ window.sendTip = function() {
     if (!amount || amount < 1) return toast('请输入有效红钻数量', 'warning');
     confirmAction('确认打赏', `确认打赏 ${amount} 红钻给该打手？`, '确认打赏', `doSendTip('${handlerId}', ${amount})`);
 };
+
 async function doSendTip(handlerId, amount) {
     try {
-        const user = await apiRequest('/me');
-        if (user.diamond < amount) return toast('红钻不足', 'error');
-        await apiRequest('/admin/gift', { method: 'POST', body: JSON.stringify({ targetUserId: handlerId, amount }) });
-        toast('✅ 打赏成功！', 'success');
+        const data = await apiRequest('/tip', {
+            method: 'POST',
+            body: JSON.stringify({ handlerId, amount })
+        });
+        toast(data.message || '✅ 打赏成功！', 'success');
         document.getElementById('tipAmount').value = '';
         renderBossView();
-    } catch (err) { toast(err.message, 'error'); }
+        renderHandlerView();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
 }
 
 window.confirmBuy = function(productId) {
@@ -1409,19 +1516,36 @@ async function doClaimMail(mailId) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
+// ============================================================
+//  聊天功能
+// ============================================================
 window.openChat = function(orderId) {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
     apiRequest('/orders/my').then(orders => {
         const order = orders.find(o => o.id === orderId);
         if (!order) return toast('订单不存在', 'error');
+
+        // ===== 修复：安全解析 messages =====
+        let messages = [];
+        try {
+            if (typeof order.messages === 'string') {
+                messages = JSON.parse(order.messages);
+            } else if (Array.isArray(order.messages)) {
+                messages = order.messages;
+            }
+        } catch (e) {
+            messages = [];
+        }
+
         const isEnded = ['completed','canceled','rejected','refunded'].includes(order.status);
-        const messagesHtml = order.messages && order.messages.length > 0 ?
-            order.messages.map(msg => {
+        const messagesHtml = messages.length > 0 ?
+            messages.map(msg => {
                 const senderName = msg.sender === 'boss' ? '老板' : msg.sender === 'handler' ? '打手' : '系统';
                 const senderClass = msg.sender === 'boss' ? 'boss' : msg.sender === 'handler' ? 'handler' : 'system';
                 return `<div class="chat-msg ${senderClass}"><strong>${senderName}:</strong> ${msg.content} <span class="time">${msg.time}</span></div>`;
             }).join('') :
             '<div class="empty-state"><p>暂无消息</p></div>';
+
         showCustomModal(`
             <h3><i class="fas fa-comment"></i> 订单 ${orderId} 聊天</h3>
             <p style="font-size:13px;color:var(--text-secondary);">${order.game} · ${order.title}</p>
@@ -1689,8 +1813,13 @@ async function doRequestRefund(orderId) {
 window.viewOrderDetail = function(orderId) {
     apiRequest('/orders/' + orderId).then(order => {
         const handlerName = order.handler_id ? order.handler_id : '未指派';
-        const messagesHtml = order.messages && order.messages.length > 0 ?
-            order.messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:var(--text-muted);">${msg.time}</span></div>`).join('') :
+        let messages = [];
+        try {
+            if (typeof order.messages === 'string') messages = JSON.parse(order.messages);
+            else if (Array.isArray(order.messages)) messages = order.messages;
+        } catch (e) { messages = []; }
+        const messagesHtml = messages.length > 0 ?
+            messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:var(--text-muted);">${msg.time}</span></div>`).join('') :
             '暂无消息';
         showCustomModal(`
             <h3><i class="fas fa-info-circle"></i> 订单详情</h3>
@@ -1799,8 +1928,7 @@ async function doSubmitComplete(orderId) {
 async function init() {
     document.getElementById('authPage').style.display = 'flex';
     document.getElementById('mainApp').classList.add('hidden');
-    
-    // 应用折叠状态
+
     applyCollapseStates();
 
     if (token) {
