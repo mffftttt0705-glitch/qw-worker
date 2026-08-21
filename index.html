@@ -2338,7 +2338,7 @@ async function init() {
     loadAnnounce();
     renderBossView();
 
-    // 检查 token 是否存在
+    // ===== 关键修复：从 localStorage 读取 token =====
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
         token = savedToken;
