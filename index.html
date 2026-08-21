@@ -81,6 +81,7 @@
             --header-border: rgba(0,0,0,0.06);
             --brand-text: #1a1a2e;
             --brand-small: #6a6a7a;
+            --badge-red: #ef4444;
         }
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','PingFang SC',Roboto,sans-serif}
         body{background:var(--bg-primary);background-image:radial-gradient(ellipse at 20% 50%,var(--gradient-start) 0%,var(--gradient-end) 100%);color:var(--text-primary);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:12px}
@@ -195,9 +196,10 @@
         textarea.admin-form-control{resize:vertical;min-height:60px}
         .action-group{display:flex;gap:4px;flex-wrap:wrap}
         .tab-nav{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;overflow-x:auto}
-        .tab-nav button{padding:8px 16px;border-radius:30px;border:none;background:var(--bg-input);color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+        .tab-nav button{padding:8px 16px;border-radius:30px;border:none;background:var(--bg-input);color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;position:relative}
         .tab-nav button.active{background:#f5c842;color:#0b0d10}
         .tab-nav button i{margin-right:6px}
+        .tab-nav .badge-dot{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:50%;font-size:10px;padding:0 5px;min-width:18px;text-align:center;line-height:18px;font-weight:600}
         .table-wrap{overflow-x:auto;margin-top:8px}
         table{width:100%;border-collapse:collapse;font-size:13px}
         thead{border-bottom:2px solid var(--border-color)}
@@ -268,6 +270,10 @@
         .detail-index{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.6);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px}
         .dispatcher-card{border-left:4px solid #a855f7}
         .dispatcher-card .admin-card-title i{color:#a855f7}
+        .user-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+        .user-filter button{padding:6px 16px;border-radius:30px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-muted);font-size:12px;cursor:pointer;transition:all 0.2s}
+        .user-filter button.active{background:#f5c842;color:#0b0d10;border-color:#f5c842}
+        .user-filter button:hover{background:var(--bg-card-hover)}
         @media(max-width:420px){.app-wrapper{border-radius:28px;padding-bottom:66px}.view-container{padding:16px 14px}.entry-grid{gap:12px}.entry-card{padding:18px 8px}.entry-icon{width:48px;height:48px;font-size:22px}.entry-title{font-size:14px}.bottom-nav{padding:6px 0 10px}.nav-item i{font-size:18px}.nav-item span{font-size:10px}#authPage{min-height:600px}.product-card .product-img{height:80px}.product-card .product-img img{height:80px}.product-card .product-title{font-size:12px}.product-card .product-price{font-size:14px}.product-grid{gap:8px}.detail-carousel .slide{height:200px}.detail-carousel .slide img{max-height:200px}}
     </style>
 </head>
@@ -382,8 +388,8 @@
                 <button class="active" data-tab="tab-dashboard"><i class="fas fa-chart-pie"></i> 仪表盘</button>
                 <button data-tab="tab-products"><i class="fas fa-boxes"></i> 商品管理</button>
                 <button data-tab="tab-orders"><i class="fas fa-list-ul"></i> 订单管理</button>
-                <button data-tab="tab-recharges"><i class="fas fa-coins"></i> 充值管理</button>
-                <button data-tab="tab-users"><i class="fas fa-users"></i> 用户管理</button>
+                <button data-tab="tab-recharges" id="tabRechargesBtn"><i class="fas fa-coins"></i> 充值管理<span class="badge-dot" id="rechargeBadge" style="display:none;">0</span></button>
+                <button data-tab="tab-users" id="tabUsersBtn"><i class="fas fa-users"></i> 用户管理<span class="badge-dot" id="userBadge" style="display:none;">0</span></button>
                 <button data-tab="tab-announce"><i class="fas fa-bullhorn"></i> 公告管理</button>
             </div>
             <div class="tab-page active" id="tab-dashboard">
@@ -447,7 +453,13 @@
                 <div class="admin-card">
                     <div class="collapse-toggle" onclick="toggleCollapse('usersList')"><span>👥 用户管理</span><span id="usersListArrow">▶</span></div>
                     <div class="collapse-content" id="usersListContent">
-                        <div style="margin-bottom:12px;"><div class="admin-form-group"><label>搜索用户</label><input class="admin-form-control" id="searchUser" placeholder="输入用户名搜索" oninput="renderUsers()"></div></div>
+                        <div class="user-filter">
+                            <button class="active" data-filter="all" onclick="setUserFilter('all')">全部</button>
+                            <button data-filter="boss" onclick="setUserFilter('boss')">老板</button>
+                            <button data-filter="handler" onclick="setUserFilter('handler')">打手</button>
+                            <button data-filter="dispatcher" onclick="setUserFilter('dispatcher')">派单</button>
+                            <button data-filter="pending" onclick="setUserFilter('pending')">待审核</button>
+                        </div>
                         <div id="usersList"></div>
                     </div>
                 </div>
@@ -541,6 +553,7 @@ const API_URL = '/api';
 let currentUser = null;
 let token = localStorage.getItem('token');
 let announceImages = [];
+let userFilter = 'all';
 
 // ============================================================
 //  折叠状态管理
@@ -685,6 +698,38 @@ function previewProdImageUrl(inputId, previewId) {
         img.onerror = function() { this.style.display = 'none'; };
     } else {
         img.style.display = 'none';
+    }
+}
+
+// ============================================================
+//  红点更新
+// ============================================================
+async function updateBadges() {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    try {
+        // 充值待处理数量
+        const rechargeRes = await apiRequest('/admin/recharges/pending-count');
+        const rechargeCount = rechargeRes.count || 0;
+        const rechargeBadge = document.getElementById('rechargeBadge');
+        if (rechargeCount > 0) {
+            rechargeBadge.style.display = 'inline-block';
+            rechargeBadge.textContent = rechargeCount > 99 ? '99+' : rechargeCount;
+        } else {
+            rechargeBadge.style.display = 'none';
+        }
+
+        // 用户待审核数量
+        const userRes = await apiRequest('/admin/users/pending-count');
+        const userCount = userRes.count || 0;
+        const userBadge = document.getElementById('userBadge');
+        if (userCount > 0) {
+            userBadge.style.display = 'inline-block';
+            userBadge.textContent = userCount > 99 ? '99+' : userCount;
+        } else {
+            userBadge.style.display = 'none';
+        }
+    } catch (err) {
+        console.error('更新红点失败', err);
     }
 }
 
@@ -874,6 +919,10 @@ function afterLogin() {
     renderDispatcherAll();
     loadTipHandlers();
     updateHeaderDiamond();
+    updateBadges();
+    // 定期刷新红点（每30秒）
+    if (window._badgeTimer) clearInterval(window._badgeTimer);
+    window._badgeTimer = setInterval(updateBadges, 30000);
 }
 
 function doLogout() {
@@ -883,7 +932,20 @@ function doLogout() {
     document.getElementById('authStatusText').textContent = '未登录';
     document.getElementById('logoutBtn2').style.display = 'none';
     updateHeaderDiamond();
+    if (window._badgeTimer) {
+        clearInterval(window._badgeTimer);
+        window._badgeTimer = null;
+    }
     toast('已退出', 'warning');
+}
+
+// 修改 logout 函数，去掉 confirmAction 的重复
+function logout() {
+    if (!currentUser) {
+        toast('请先登录', 'warning');
+        return;
+    }
+    confirmAction('确认退出', '确定要退出登录吗？', '退出', `doLogout()`);
 }
 
 function updateAccountInfo() {
@@ -960,11 +1022,21 @@ document.querySelectorAll('#view-admin .tab-nav button').forEach(btn => {
         if (tab === 'tab-dashboard') renderDashboard();
         else if (tab === 'tab-products') renderProducts();
         else if (tab === 'tab-orders') renderAdminOrders();
-        else if (tab === 'tab-recharges') renderRecharges();
-        else if (tab === 'tab-users') renderUsers();
+        else if (tab === 'tab-recharges') { renderRecharges(); updateBadges(); }
+        else if (tab === 'tab-users') { renderUsers(); updateBadges(); }
         else if (tab === 'tab-announce') loadAnnounce();
     });
 });
+
+// ============================================================
+//  用户管理分类
+// ============================================================
+function setUserFilter(filter) {
+    userFilter = filter;
+    document.querySelectorAll('.user-filter button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.user-filter button[data-filter="${filter}"]`)?.classList.add('active');
+    renderUsers();
+}
 
 // ============================================================
 //  派单员渲染
@@ -1090,6 +1162,7 @@ async function renderAdminAll() {
     await renderUsers();
     await populateGiftUsers();
     applyCollapseStates();
+    updateBadges();
 }
 
 async function renderDashboard() {
@@ -1473,6 +1546,7 @@ async function renderRecharges() {
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
+        updateBadges();
     } catch (err) { console.error(err); }
 }
 
@@ -1483,7 +1557,24 @@ async function renderUsers() {
     try {
         const search = document.getElementById('searchUser')?.value.toLowerCase() || '';
         const users = await apiRequest('/admin/users');
-        let filtered = users.filter(u => u.username.toLowerCase().includes(search));
+        
+        // 应用分类过滤
+        let filtered = users;
+        if (userFilter === 'boss') {
+            filtered = users.filter(u => u.role === 'boss');
+        } else if (userFilter === 'handler') {
+            filtered = users.filter(u => u.role === 'handler');
+        } else if (userFilter === 'dispatcher') {
+            filtered = users.filter(u => u.role === 'dispatcher');
+        } else if (userFilter === 'pending') {
+            filtered = users.filter(u => u.status === 'pending');
+        }
+        
+        // 搜索过滤
+        if (search) {
+            filtered = filtered.filter(u => u.username.toLowerCase().includes(search));
+        }
+        
         const container = document.getElementById('usersList');
         if (filtered.length === 0) {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>暂无用户</p></div>';
@@ -1507,6 +1598,7 @@ async function renderUsers() {
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
+        updateBadges();
     } catch (err) { console.error(err); }
 }
 
@@ -1518,6 +1610,7 @@ async function doApproveHandler(userId) {
         await apiRequest('/admin/users/' + userId + '/approve', { method: 'PUT' });
         toast('✅ 审核通过', 'success');
         renderUsers();
+        updateBadges();
     } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -1551,7 +1644,6 @@ async function renderBossView() {
         if (!currentUser) {
             document.getElementById('bossDiamond').textContent = '请登录';
             document.getElementById('bossProductCount').textContent = '0';
-            // 仍然显示商品（游客模式）
             const products = await apiRequest('/products').catch(() => []);
             document.getElementById('bossProductCount').textContent = products.length;
             const container = document.getElementById('bossProductList');
@@ -1928,6 +2020,7 @@ async function doApproveRecharge(rechargeId) {
         renderRecharges();
         renderBossView();
         updateHeaderDiamond();
+        updateBadges();
     } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -1939,6 +2032,7 @@ async function doRejectRecharge(rechargeId) {
         await apiRequest('/admin/recharges/' + rechargeId + '/reject', { method: 'PUT' });
         toast('已拒绝', 'warning');
         renderRecharges();
+        updateBadges();
     } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -1950,6 +2044,7 @@ async function doDeleteRecharge(rechargeId) {
         await apiRequest('/admin/recharges/' + rechargeId, { method: 'DELETE' });
         toast('已删除', 'success');
         renderRecharges();
+        updateBadges();
     } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -1987,6 +2082,7 @@ async function doToggleUserBan(userId) {
         await apiRequest('/admin/users/' + userId + '/ban', { method: 'PUT' });
         toast('用户状态已更新', 'success');
         renderUsers();
+        updateBadges();
     } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -2261,10 +2357,10 @@ async function doSubmitComplete(orderId) {
 }
 
 // ============================================================
-//  初始化 - 直接进入商城
+//  初始化 - 直接进入商城，保持登录状态
 // ============================================================
 async function init() {
-    // ===== 直接进入商城，登录页默认隐藏 =====
+    // 直接进入商城
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
     applyCollapseStates();
@@ -2278,6 +2374,7 @@ async function init() {
     loadAnnounce();
     renderBossView();
 
+    // 如果有 token，尝试自动登录（保持登录状态）
     if (token) {
         try {
             const user = await apiRequest('/me');
@@ -2294,12 +2391,16 @@ async function init() {
             renderDispatcherAll();
             loadTipHandlers();
             updateHeaderDiamond();
+            updateBadges();
+            // 定期刷新红点
+            if (window._badgeTimer) clearInterval(window._badgeTimer);
+            window._badgeTimer = setInterval(updateBadges, 30000);
         } catch (err) {
+            // token 无效，清除但保持游客状态
             localStorage.removeItem('token');
             token = null;
             currentUser = null;
             document.getElementById('authStatusText').textContent = '未登录';
-            // 保持商城显示
             renderBossView();
         }
     }
