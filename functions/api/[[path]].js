@@ -1,6 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
-//  功能：商品详情、打赏、IP限制、订单撤销、指派打手、派单员
+//  功能：店铺系统 + 派单员 + 商品管理 + 订单管理
 // ============================================================
 
 // ===== IP注册缓存 =====
@@ -87,7 +87,6 @@ async function handleRegister(env, body, request) {
     }
 
     const id = generateId();
-    // 派单员和打手需要审核
     const userStatus = (role === 'handler' || role === 'dispatcher') ? 'pending' : (status || 'active');
     await runDB(env,
         'INSERT INTO users (id, username, password, role, diamond, balance, status, phone, register_ip, created_at) VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?)',
@@ -168,8 +167,28 @@ function verifyAndGetUserId(authHeader) {
 //  商品相关
 // ============================================================
 
-async function handleGetProducts(env) {
-    const result = await queryDB(env, 'SELECT * FROM products WHERE hidden = 0 ORDER BY created_at DESC');
+async function handleGetProducts(env, authHeader) {
+    const userId = verifyAndGetUserId(authHeader);
+    let shopId = null;
+
+    if (userId) {
+        const user = await getUserById(env, userId);
+        if (user && user.shop_id) {
+            shopId = user.shop_id;
+        }
+    }
+
+    if (!shopId) {
+        const result = await queryDB(env,
+            'SELECT * FROM products WHERE hidden = 0 AND shop_id = "shop_platform" ORDER BY created_at DESC'
+        );
+        return jsonResponse(result.results || []);
+    }
+
+    const result = await queryDB(env,
+        'SELECT * FROM products WHERE hidden = 0 AND shop_id = ? ORDER BY created_at DESC',
+        [shopId]
+    );
     return jsonResponse(result.results || []);
 }
 
@@ -195,8 +214,9 @@ async function handleAdminCreateProduct(env, body) {
     const id = generateId();
     const detailImagesJson = Array.isArray(detail_images) ? JSON.stringify(detail_images) : (detail_images || '[]');
     await runDB(env,
-        'INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, detail_images, detail_desc) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)',
-        [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', detailImagesJson, detail_desc || '']
+        `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, detail_images, detail_desc, shop_id) 
+         VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?)`,
+        [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', detailImagesJson, detail_desc || '', 'shop_platform']
     );
     return jsonResponse({ success: true, id });
 }
@@ -265,10 +285,12 @@ async function handleBuyProduct(env, authHeader, body) {
     const status = assignedHandlerId ? 'ongoing' : 'pending';
     const messages = [{ sender: 'system', content: assignedHandlerId ? '🎉 订单已创建并指派打手' : '🎉 订单已创建', time: new Date().toISOString() }];
 
+    const shopId = product.shop_id || 'shop_platform';
+
     await runDB(env,
-        `INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages, assigned_handler_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderId, productId, userId, status, product.price, product.game, product.title, product.desc || '', JSON.stringify(messages), assignedHandlerId || null]
+        `INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages, assigned_handler_id, shop_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [orderId, productId, userId, status, product.price, product.game, product.title, product.desc || '', JSON.stringify(messages), assignedHandlerId || null, shopId]
     );
 
     if (assignedHandlerId) {
@@ -286,7 +308,6 @@ async function handleDirectPublish(env, authHeader, body) {
     const user = await getUserById(env, userId);
     if (!user) return errorResponse('用户不存在', 404);
 
-    // 只有管理员或派单员可以发布
     if (user.role !== 'admin' && user.role !== 'dispatcher') {
         return errorResponse('无权限，只有管理员或派单员可以发布订单', 403);
     }
@@ -298,10 +319,13 @@ async function handleDirectPublish(env, authHeader, body) {
     const status = assignedHandlerId ? 'ongoing' : 'pending';
     const messages = [{ sender: 'system', content: assignedHandlerId ? '🎉 订单已创建并指派打手' : '🎉 订单已创建', time: new Date().toISOString() }];
 
+    // 获取用户的 shop_id
+    const shopId = user.shop_id || 'shop_platform';
+
     await runDB(env,
-        `INSERT INTO orders (id, boss_id, status, price, game, title, description, messages, assigned_handler_id, dispatcher_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderId, userId, status, parseFloat(price), game || '暗区突围', title, desc || '', JSON.stringify(messages), assignedHandlerId || null, userId]
+        `INSERT INTO orders (id, boss_id, status, price, game, title, description, messages, assigned_handler_id, dispatcher_id, shop_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [orderId, userId, status, parseFloat(price), game || '暗区突围', title, desc || '', JSON.stringify(messages), assignedHandlerId || null, userId, shopId]
     );
 
     if (assignedHandlerId) {
@@ -323,7 +347,6 @@ async function handleCancelOrder(env, authHeader, orderId, body) {
     const order = (result.results && result.results[0]) || null;
     if (!order) return errorResponse('订单不存在', 404);
 
-    // 已完成的订单不能撤销
     if (order.status === 'completed' || order.status === 'settled') {
         return errorResponse('已完成或已结算的订单不能撤销', 400);
     }
@@ -331,12 +354,10 @@ async function handleCancelOrder(env, authHeader, orderId, body) {
         return errorResponse('订单已撤销', 400);
     }
 
-    // 权限检查：管理员可以撤销所有，派单员只能撤销自己发布的
     if (user.role === 'dispatcher' && order.dispatcher_id !== userId) {
         return errorResponse('无权撤销其他派单员发布的订单', 403);
     }
 
-    // 如果订单是老板购买的，退还红钻
     if (order.boss_id && order.status !== 'canceled') {
         await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [order.price * 10, order.boss_id]);
     }
@@ -353,7 +374,7 @@ async function handleGetAvailableHandlers(env) {
     return jsonResponse(result.results || []);
 }
 
-// 获取我的订单（打手看到所有待接单 + 自己的订单）
+// 获取我的订单
 async function handleGetMyOrders(env, authHeader) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -384,7 +405,6 @@ async function handleGetMyOrders(env, authHeader) {
         });
         return jsonResponse(unique);
     } else if (user.role === 'dispatcher') {
-        // 派单员看到自己发布的订单
         sql = 'SELECT * FROM orders WHERE dispatcher_id = ? ORDER BY created_at DESC';
         params = [userId];
     } else {
@@ -771,7 +791,7 @@ async function handleChangeUsername(env, targetUserId, body) {
 }
 
 // ============================================================
-//  派单员获取自己的订单（用于仪表盘）
+//  派单员获取自己的订单
 // ============================================================
 
 async function handleDispatcherGetOrders(env, authHeader) {
@@ -812,8 +832,18 @@ async function handleDispatcherGetStats(env, authHeader) {
 }
 
 // ============================================================
+//  管理员获取店铺独立数据
+// ============================================================
+
+async function handleAdminGetShops(env) {
+    const result = await queryDB(env, 'SELECT * FROM shops ORDER BY created_at DESC');
+    return jsonResponse(result.results || []);
+}
+
+// ============================================================
 //  Pages Functions 入口
 // ============================================================
+
 export async function onRequest(context) {
     const request = context.request;
     const url = new URL(request.url);
@@ -848,7 +878,7 @@ export async function onRequest(context) {
             return await handleLogin(env, body, request);
         }
         if (path === '/api/products' && method === 'GET') {
-            return await handleGetProducts(env);
+            return await handleGetProducts(env, authHeader);
         }
         if (path === '/api/announce' && method === 'GET') {
             return await handleGetAnnounce(env);
@@ -880,12 +910,19 @@ export async function onRequest(context) {
         if (path === '/api/tip' && method === 'POST') {
             return await handleTip(env, authHeader, body);
         }
+        if (path === '/api/admin/shops' && method === 'GET') {
+            return await handleAdminGetShops(env);
+        }
+
         // ===== 派单员接口 =====
         if (path === '/api/dispatcher/orders' && method === 'GET') {
             return await handleDispatcherGetOrders(env, authHeader);
         }
         if (path === '/api/dispatcher/stats' && method === 'GET') {
             return await handleDispatcherGetStats(env, authHeader);
+        }
+        if (path === '/api/dispatcher/publish' && method === 'POST') {
+            return await handleDirectPublish(env, authHeader, body);
         }
 
         // ===== 带参数的订单接口 =====
@@ -1045,21 +1082,6 @@ export async function onRequest(context) {
                 // 公告管理
                 if (path === '/api/admin/announce' && method === 'PUT') {
                     return await handleAdminUpdateAnnounce(env, body);
-                }
-            }
-
-            // ===== 派单员接口（部分权限） =====
-            if (user && user.role === 'dispatcher') {
-                // 直接发布订单（派单员）
-                if (path === '/api/dispatcher/publish' && method === 'POST') {
-                    return await handleDirectPublish(env, authHeader, body);
-                }
-                // 获取派单员自己的订单
-                if (path === '/api/dispatcher/orders' && method === 'GET') {
-                    return await handleDispatcherGetOrders(env, authHeader);
-                }
-                if (path === '/api/dispatcher/stats' && method === 'GET') {
-                    return await handleDispatcherGetStats(env, authHeader);
                 }
             }
         }
