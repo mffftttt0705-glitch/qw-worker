@@ -225,7 +225,7 @@
         .account-info .info-row{display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-input);border-radius:12px}
         .account-info .info-row .label{color:var(--text-muted)}
         .account-info .info-row .value{color:var(--text-primary);font-weight:500}
-        #authPage{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;background:var(--auth-bg);border-radius:40px}
+        #authPage{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;background:var(--auth-bg);border-radius:40px}
         #authPage .logo{font-size:32px;font-weight:700;background:linear-gradient(135deg,#f5c842,#dbaa2a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
         #authPage .logo i{font-size:40px;color:#f5c842;-webkit-text-fill-color:#f5c842;margin-right:10px}
         #authPage .sub{color:var(--text-muted);font-size:14px;margin-bottom:30px}
@@ -273,7 +273,7 @@
 </head>
 <body>
 
-<!-- ===== 登录/注册页面 ===== -->
+<!-- ===== 登录/注册页面（默认隐藏） ===== -->
 <div id="authPage">
     <div class="logo"><i class="fas fa-crosshairs"></i> QW电竞</div>
     <div class="sub">护航平台 · 暗区突围 / 三角洲</div>
@@ -295,7 +295,7 @@
 </div>
 
 <!-- ===== 主应用 ===== -->
-<div id="mainApp" class="app-wrapper hidden">
+<div id="mainApp" class="app-wrapper">
     <div class="view-container">
         <div class="app-header">
             <div class="brand">
@@ -880,10 +880,9 @@ function doLogout() {
     localStorage.removeItem('token');
     token = null;
     currentUser = null;
-    document.getElementById('mainApp').classList.add('hidden');
-    document.getElementById('authPage').style.display = 'flex';
     document.getElementById('authStatusText').textContent = '未登录';
     document.getElementById('logoutBtn2').style.display = 'none';
+    updateHeaderDiamond();
     toast('已退出', 'warning');
 }
 
@@ -1552,6 +1551,44 @@ async function renderBossView() {
         if (!currentUser) {
             document.getElementById('bossDiamond').textContent = '请登录';
             document.getElementById('bossProductCount').textContent = '0';
+            // 仍然显示商品（游客模式）
+            const products = await apiRequest('/products').catch(() => []);
+            document.getElementById('bossProductCount').textContent = products.length;
+            const container = document.getElementById('bossProductList');
+            if (products.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无商品</p></div>';
+                return;
+            }
+            let html = '';
+            for (const p of products) {
+                const remaining = p.quantity - p.sold;
+                const productId = p.id;
+                let imgHtml = '';
+                if (p.image) {
+                    imgHtml = `<img src="${p.image}" style="width:100%;height:100px;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);\\'>'+(p.game==='暗区突围'?'🎯':'🚁')+'</div>'" />`;
+                } else {
+                    const icon = p.game === '暗区突围' ? '🎯' : '🚁';
+                    imgHtml = `<div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);color:var(--product-img-icon);">${icon}</div>`;
+                }
+                html += `
+                    <div class="product-card" onclick="openProductDetail('${productId}')">
+                        <div style="position:relative;">
+                            ${imgHtml}
+                            <div class="tag">${p.game || '暗区突围'}</div>
+                        </div>
+                        <div class="product-body">
+                            <div class="product-title">${p.title}</div>
+                            <div class="product-desc">${p.desc || ''}</div>
+                            <div class="product-stock">剩余 ${remaining}</div>
+                            <div class="product-bottom">
+                                <span class="product-price">¥${p.price}</span>
+                                ${remaining > 0 ? `<div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn btn-success btn-sm" onclick="event.stopPropagation();toast('请先登录', 'warning')">购买</button></div>` : '<span class="status-badge status-soldout">已售罄</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
             return;
         }
         const user = await apiRequest('/me');
@@ -2224,26 +2261,33 @@ async function doSubmitComplete(orderId) {
 }
 
 // ============================================================
-//  初始化
+//  初始化 - 直接进入商城
 // ============================================================
 async function init() {
-    document.getElementById('authPage').style.display = 'flex';
-    document.getElementById('mainApp').classList.add('hidden');
+    // ===== 直接进入商城，登录页默认隐藏 =====
+    document.getElementById('authPage').style.display = 'none';
+    document.getElementById('mainApp').classList.remove('hidden');
     applyCollapseStates();
+
+    // 未登录状态显示
+    document.getElementById('authStatusText').textContent = '未登录';
+    document.getElementById('headerDiamond').textContent = '0';
+    document.getElementById('headerUnreadMail').textContent = '0';
+
+    // 加载公告和商品（游客可见）
+    loadAnnounce();
+    renderBossView();
 
     if (token) {
         try {
             const user = await apiRequest('/me');
             currentUser = user;
-            document.getElementById('authPage').style.display = 'none';
-            document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('authStatusText').textContent = user.username;
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('view-home').classList.add('active');
             document.querySelector('.bottom-nav .nav-item[data-target="home"]').classList.add('active');
             updateRoleBasedUI();
-            loadAnnounce();
             updateAccountInfo();
             renderBossView();
             renderAdminAll();
@@ -2253,8 +2297,10 @@ async function init() {
         } catch (err) {
             localStorage.removeItem('token');
             token = null;
-            document.getElementById('authPage').style.display = 'flex';
-            document.getElementById('mainApp').classList.add('hidden');
+            currentUser = null;
+            document.getElementById('authStatusText').textContent = '未登录';
+            // 保持商城显示
+            renderBossView();
         }
     }
 }
