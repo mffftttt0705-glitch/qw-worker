@@ -707,7 +707,6 @@ function previewProdImageUrl(inputId, previewId) {
 async function updateBadges() {
     if (!currentUser || currentUser.role !== 'admin') return;
     try {
-        // 充值待处理数量
         const rechargeRes = await apiRequest('/admin/recharges/pending-count');
         const rechargeCount = rechargeRes.count || 0;
         const rechargeBadge = document.getElementById('rechargeBadge');
@@ -718,7 +717,6 @@ async function updateBadges() {
             rechargeBadge.style.display = 'none';
         }
 
-        // 用户待审核数量
         const userRes = await apiRequest('/admin/users/pending-count');
         const userCount = userRes.count || 0;
         const userBadge = document.getElementById('userBadge');
@@ -920,7 +918,6 @@ function afterLogin() {
     loadTipHandlers();
     updateHeaderDiamond();
     updateBadges();
-    // 定期刷新红点（每30秒）
     if (window._badgeTimer) clearInterval(window._badgeTimer);
     window._badgeTimer = setInterval(updateBadges, 30000);
 }
@@ -939,7 +936,6 @@ function doLogout() {
     toast('已退出', 'warning');
 }
 
-// 修改 logout 函数，去掉 confirmAction 的重复
 function logout() {
     if (!currentUser) {
         toast('请先登录', 'warning');
@@ -1558,7 +1554,6 @@ async function renderUsers() {
         const search = document.getElementById('searchUser')?.value.toLowerCase() || '';
         const users = await apiRequest('/admin/users');
         
-        // 应用分类过滤
         let filtered = users;
         if (userFilter === 'boss') {
             filtered = users.filter(u => u.role === 'boss');
@@ -1570,7 +1565,6 @@ async function renderUsers() {
             filtered = users.filter(u => u.status === 'pending');
         }
         
-        // 搜索过滤
         if (search) {
             filtered = filtered.filter(u => u.username.toLowerCase().includes(search));
         }
@@ -2392,11 +2386,9 @@ async function init() {
             loadTipHandlers();
             updateHeaderDiamond();
             updateBadges();
-            // 定期刷新红点
             if (window._badgeTimer) clearInterval(window._badgeTimer);
             window._badgeTimer = setInterval(updateBadges, 30000);
         } catch (err) {
-            // token 无效，清除但保持游客状态
             localStorage.removeItem('token');
             token = null;
             currentUser = null;
