@@ -1,6 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
-//  功能：店铺系统 + 派单员 + 商品管理 + 订单管理
+//  功能：商城（无店铺过滤）+ 派单员 + 商品管理 + 订单管理
 // ============================================================
 
 // ===== IP注册缓存 =====
@@ -164,31 +164,11 @@ function verifyAndGetUserId(authHeader) {
 }
 
 // ============================================================
-//  商品相关
+//  商品相关（无店铺过滤，所有商品直接显示在商城）
 // ============================================================
 
-async function handleGetProducts(env, authHeader) {
-    const userId = verifyAndGetUserId(authHeader);
-    let shopId = null;
-
-    if (userId) {
-        const user = await getUserById(env, userId);
-        if (user && user.shop_id) {
-            shopId = user.shop_id;
-        }
-    }
-
-    if (!shopId) {
-        const result = await queryDB(env,
-            'SELECT * FROM products WHERE hidden = 0 AND shop_id = "shop_platform" ORDER BY created_at DESC'
-        );
-        return jsonResponse(result.results || []);
-    }
-
-    const result = await queryDB(env,
-        'SELECT * FROM products WHERE hidden = 0 AND shop_id = ? ORDER BY created_at DESC',
-        [shopId]
-    );
+async function handleGetProducts(env) {
+    const result = await queryDB(env, 'SELECT * FROM products WHERE hidden = 0 ORDER BY created_at DESC');
     return jsonResponse(result.results || []);
 }
 
@@ -214,9 +194,9 @@ async function handleAdminCreateProduct(env, body) {
     const id = generateId();
     const detailImagesJson = Array.isArray(detail_images) ? JSON.stringify(detail_images) : (detail_images || '[]');
     await runDB(env,
-        `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, detail_images, detail_desc, shop_id) 
-         VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?)`,
-        [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', detailImagesJson, detail_desc || '', 'shop_platform']
+        `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, detail_images, detail_desc) 
+         VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)`,
+        [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', detailImagesJson, detail_desc || '']
     );
     return jsonResponse({ success: true, id });
 }
@@ -259,7 +239,6 @@ async function handleAdminDeleteProduct(env, productId) {
 //  订单相关
 // ============================================================
 
-// 购买商品（老板下单，可选指派打手）
 async function handleBuyProduct(env, authHeader, body) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -285,12 +264,10 @@ async function handleBuyProduct(env, authHeader, body) {
     const status = assignedHandlerId ? 'ongoing' : 'pending';
     const messages = [{ sender: 'system', content: assignedHandlerId ? '🎉 订单已创建并指派打手' : '🎉 订单已创建', time: new Date().toISOString() }];
 
-    const shopId = product.shop_id || 'shop_platform';
-
     await runDB(env,
-        `INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages, assigned_handler_id, shop_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderId, productId, userId, status, product.price, product.game, product.title, product.desc || '', JSON.stringify(messages), assignedHandlerId || null, shopId]
+        `INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages, assigned_handler_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [orderId, productId, userId, status, product.price, product.game, product.title, product.desc || '', JSON.stringify(messages), assignedHandlerId || null]
     );
 
     if (assignedHandlerId) {
@@ -301,7 +278,6 @@ async function handleBuyProduct(env, authHeader, body) {
     return jsonResponse({ orderId, message: '购买成功' });
 }
 
-// 派单员/管理员直接发布订单（可指派打手）
 async function handleDirectPublish(env, authHeader, body) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -319,13 +295,10 @@ async function handleDirectPublish(env, authHeader, body) {
     const status = assignedHandlerId ? 'ongoing' : 'pending';
     const messages = [{ sender: 'system', content: assignedHandlerId ? '🎉 订单已创建并指派打手' : '🎉 订单已创建', time: new Date().toISOString() }];
 
-    // 获取用户的 shop_id
-    const shopId = user.shop_id || 'shop_platform';
-
     await runDB(env,
-        `INSERT INTO orders (id, boss_id, status, price, game, title, description, messages, assigned_handler_id, dispatcher_id, shop_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderId, userId, status, parseFloat(price), game || '暗区突围', title, desc || '', JSON.stringify(messages), assignedHandlerId || null, userId, shopId]
+        `INSERT INTO orders (id, boss_id, status, price, game, title, description, messages, assigned_handler_id, dispatcher_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [orderId, userId, status, parseFloat(price), game || '暗区突围', title, desc || '', JSON.stringify(messages), assignedHandlerId || null, userId]
     );
 
     if (assignedHandlerId) {
@@ -335,7 +308,6 @@ async function handleDirectPublish(env, authHeader, body) {
     return jsonResponse({ success: true, orderId });
 }
 
-// 撤销订单（管理员/派单员只能撤销自己发布的）
 async function handleCancelOrder(env, authHeader, orderId, body) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -368,13 +340,11 @@ async function handleCancelOrder(env, authHeader, orderId, body) {
     return jsonResponse({ success: true, message: '订单已撤销' });
 }
 
-// 获取可指派打手列表
 async function handleGetAvailableHandlers(env) {
     const result = await queryDB(env, 'SELECT id, username, balance, status FROM users WHERE role = "handler" AND status = "active"');
     return jsonResponse(result.results || []);
 }
 
-// 获取我的订单
 async function handleGetMyOrders(env, authHeader) {
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
@@ -832,15 +802,6 @@ async function handleDispatcherGetStats(env, authHeader) {
 }
 
 // ============================================================
-//  管理员获取店铺独立数据
-// ============================================================
-
-async function handleAdminGetShops(env) {
-    const result = await queryDB(env, 'SELECT * FROM shops ORDER BY created_at DESC');
-    return jsonResponse(result.results || []);
-}
-
-// ============================================================
 //  Pages Functions 入口
 // ============================================================
 
@@ -878,7 +839,7 @@ export async function onRequest(context) {
             return await handleLogin(env, body, request);
         }
         if (path === '/api/products' && method === 'GET') {
-            return await handleGetProducts(env, authHeader);
+            return await handleGetProducts(env);
         }
         if (path === '/api/announce' && method === 'GET') {
             return await handleGetAnnounce(env);
@@ -909,9 +870,6 @@ export async function onRequest(context) {
         }
         if (path === '/api/tip' && method === 'POST') {
             return await handleTip(env, authHeader, body);
-        }
-        if (path === '/api/admin/shops' && method === 'GET') {
-            return await handleAdminGetShops(env);
         }
 
         // ===== 派单员接口 =====
