@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>QW电竞 · 护航平台</title>
+    
+    <!-- ===== PWA 配置 ===== -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="QW电竞">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#1a6aff">
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
         :root {
@@ -299,6 +310,7 @@
         <div style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;">打手/派单账号需管理员审核通过后方可使用</div>
     </div>
 </div>
+
 <!-- ===== 主应用 ===== -->
 <div id="mainApp" class="app-wrapper">
     <div class="view-container">
@@ -647,6 +659,7 @@
     </div>
 </div>
 <div id="toast" class="toast"></div>
+
 <script>
 // ============================================================
 //  配置
@@ -1115,6 +1128,7 @@ function setUserFilter(filter) {
     document.querySelector(`.user-filter button[data-filter="${filter}"]`)?.classList.add('active');
     renderUsers();
 }
+
 // ============================================================
 //  分类管理功能
 // ============================================================
@@ -1469,7 +1483,6 @@ async function renderDispatcherOrders() {
         const container = document.getElementById('dispatcherOrdersList');
         if (!container) return;
         
-        // 更新订单数量
         const countEl = document.getElementById('dispatcherOrderCount');
         if (countEl) countEl.textContent = `(${orders.length})`;
         
@@ -1607,6 +1620,7 @@ async function doDispatcherDirectPublish(game, title, desc, price) {
         toast(err.message, 'error');
     }
 }
+
 // ============================================================
 //  管理员渲染
 // ============================================================
@@ -1939,6 +1953,7 @@ async function doAdminCancelOrder(orderId, reason) {
         toast(err.message, 'error');
     }
 }
+
 // ============================================================
 //  管理员查看聊天
 // ============================================================
@@ -2257,6 +2272,7 @@ function buyFromDetail() {
         showBuyWithHandler(currentDetailProductId);
     }
 }
+
 // ============================================================
 //  打赏打手
 // ============================================================
@@ -2661,6 +2677,7 @@ window.viewOrderDetail = function(orderId) {
         `);
     }).catch(err => toast(err.message, 'error'));
 };
+
 async function renderHandlerView() {
     try {
         if (!currentUser) { document.getElementById('handlerBalance').textContent = '请登录'; return; }
@@ -2863,6 +2880,19 @@ async function init() {
             document.getElementById('authStatusText').textContent = '未登录';
             renderCategoryProducts();
         }
+    }
+
+    // ===== 注册 Service Worker（PWA） =====
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js')
+                .then(function(registration) {
+                    console.log('✅ Service Worker 注册成功，范围:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('❌ Service Worker 注册失败:', error);
+                });
+        });
     }
 }
 
