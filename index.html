@@ -1431,6 +1431,7 @@ async function doDispatcherCancelOrder(orderId, reason) {
         renderDispatcherStats();
         renderAdminOrders();
         renderHandlerView();
+        updateHeaderDiamond();
     } catch (err) {
         toast(err.message, 'error');
     }
@@ -1457,12 +1458,17 @@ async function renderDispatcherAll() {
     await renderDispatcherOrders();
 }
 
+// ============================================================
+//  派单员发布订单（修复：调用 /api/dispatcher/publish）
+// ============================================================
+
 async function dispatcherDirectPublish() {
     const game = document.getElementById('dispatcherDirectGame').value;
     const title = document.getElementById('dispatcherDirectTitle').value.trim();
     const desc = document.getElementById('dispatcherDirectDesc').value.trim();
     const price = parseFloat(document.getElementById('dispatcherDirectPrice').value);
     if (!title || !price) return toast('请填写完整信息', 'error');
+    if (price < 1) return toast('价格至少为1红钻', 'error');
 
     try {
         const handlers = await apiRequest('/handlers');
@@ -1472,7 +1478,7 @@ async function dispatcherDirectPublish() {
         });
         showCustomModal(`
             <h3><i class="fas fa-paper-plane"></i> 确认发布订单</h3>
-            <p style="color:var(--text-muted);font-size:14px;">确认发布订单「${title}」？可选择指定打手</p>
+            <p style="color:var(--text-muted);font-size:14px;">确认发布订单「${title}」？将消耗 ${price} 红钻</p>
             <div class="form-group"><label>选择打手（可选）</label><select class="admin-form-control" id="dispatcherDirectHandlerSelect">${options}</select></div>
             <div class="btn-row">
                 <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
@@ -1489,11 +1495,18 @@ async function doDispatcherDirectPublish(game, title, desc, price) {
     const handlerId = document.getElementById('dispatcherDirectHandlerSelect').value;
     closeCustomModal();
     try {
-        await apiRequest('/dispatcher/publish', {
+        // 调用新的派单发布接口
+        const result = await apiRequest('/dispatcher/publish', {
             method: 'POST',
-            body: JSON.stringify({ game, title, desc, price, assignedHandlerId: handlerId || null })
+            body: JSON.stringify({ 
+                game, 
+                title, 
+                desc, 
+                price, 
+                assignedHandlerId: handlerId || null 
+            })
         });
-        toast('✅ 订单已发布' + (handlerId ? '并指派打手' : ''), 'success');
+        toast(result.message || '✅ 订单已发布', 'success');
         document.getElementById('dispatcherDirectTitle').value = '';
         document.getElementById('dispatcherDirectDesc').value = '';
         document.getElementById('dispatcherDirectPrice').value = '';
@@ -1501,6 +1514,7 @@ async function doDispatcherDirectPublish(game, title, desc, price) {
         renderDispatcherStats();
         renderAdminOrders();
         renderHandlerView();
+        updateHeaderDiamond();
     } catch (err) {
         toast(err.message, 'error');
     }
@@ -1604,7 +1618,6 @@ window.openEditProduct = function(productId) {
         const p = products.find(x => x.id === productId);
         if (!p) return toast('商品不存在', 'error');
         
-        // 获取分类列表
         apiRequest('/categories').then(categories => {
             let categoryOptions = '<option value="">无分类</option>';
             categories.forEach(c => {
@@ -1817,6 +1830,7 @@ async function doAdminCancelOrder(orderId, reason) {
         renderHandlerView();
         renderDispatcherOrders();
         renderDispatcherStats();
+        updateHeaderDiamond();
     } catch (err) {
         toast(err.message, 'error');
     }
