@@ -1,7 +1,7 @@
 // ============================================================
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
 //  修复：下架商品、聊天系统、管理员查看聊天权限
-//  新增：分类系统、红钻结算、派单确认
+//  新增：分类系统、红钻结算、派单确认、派单发布订单
 // ============================================================
 
 function generateId() {
@@ -276,6 +276,70 @@ async function handleDispatcherCreateProduct(env, authHeader, body) {
     [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', category_id || null, userId]
   );
   return jsonResponse({ success: true, id, message: '商品上架成功' });
+}
+
+// ============================================================
+//  派单员发布订单
+// ============================================================
+
+async function handleDispatcherPublish(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  if (user.role !== 'dispatcher' && user.role !== 'admin') {
+    return errorResponse('只有派单员或管理员可发布订单', 403);
+  }
+
+  const { game, title, desc, price, assignedHandlerId } = body;
+  if (!title || !price) return errorResponse('请填写完整信息');
+  if (price < 1) return errorResponse('价格至少为1红钻');
+
+  // 检查红钻是否足够（发布订单需要冻结红钻）
+  if (user.diamond < price) {
+    return errorResponse(`红钻不足，需要 ${price} 红钻，当前仅有 ${user.diamond} 红钻`, 400);
+  }
+
+  // 冻结派单员的红钻（发布订单时先冻结，完成后扣除）
+  await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [price, userId]);
+
+  const orderId = generateId();
+  
+  // 如果有指定打手，直接指派
+  let status = 'pending';
+  let handlerId = assignedHandlerId || null;
+  let messages = JSON.stringify([{ 
+    sender: 'system', 
+    content: `📋 派单员发布订单：${title}`, 
+    time: new Date().toISOString() 
+  }]);
+  
+  if (handlerId) {
+    // 检查打手是否存在且可用
+    const handlerCheck = await queryDB(env, 'SELECT * FROM users WHERE id = ? AND role = "handler" AND status = "active"', [handlerId]);
+    if (handlerCheck.results && handlerCheck.results.length > 0) {
+      status = 'ongoing';
+      messages = JSON.stringify([{ 
+        sender: 'system', 
+        content: `📋 派单员发布订单：${title}，已指派打手`, 
+        time: new Date().toISOString() 
+      }]);
+    } else {
+      handlerId = null;
+    }
+  }
+
+  await runDB(env,
+    `INSERT INTO orders (id, boss_id, handler_id, status, price, game, title, description, messages, start_time) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [orderId, userId, handlerId, status, parseFloat(price), game || '暗区突围', title, desc || '', messages, handlerId ? new Date().toISOString() : null]
+  );
+
+  return jsonResponse({ 
+    success: true, 
+    orderId, 
+    message: `订单发布成功，已冻结 ${price} 红钻${handlerId ? '，已指派打手' : ''}` 
+  });
 }
 
 // ============================================================
@@ -814,6 +878,26 @@ async function handleDispatcherStats(env, authHeader) {
 }
 
 // ============================================================
+//  获取派单员订单列表
+// ============================================================
+
+async function handleDispatcherOrders(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  if (user.role !== 'dispatcher' && user.role !== 'admin') {
+    return errorResponse('无权查看', 403);
+  }
+
+  const result = await queryDB(env, 
+    'SELECT * FROM orders WHERE boss_id = ? ORDER BY created_at DESC',
+    [userId]
+  );
+  return jsonResponse(result.results || []);
+}
+
+// ============================================================
 //  Pages Functions 入口
 // ============================================================
 export async function onRequest(context) {
@@ -896,8 +980,14 @@ export async function onRequest(context) {
     if (path === '/api/dispatcher/stats' && method === 'GET') {
       return await handleDispatcherStats(env, authHeader);
     }
+    if (path === '/api/dispatcher/orders' && method === 'GET') {
+      return await handleDispatcherOrders(env, authHeader);
+    }
     if (path === '/api/dispatcher/products' && method === 'POST') {
       return await handleDispatcherCreateProduct(env, authHeader, body);
+    }
+    if (path === '/api/dispatcher/publish' && method === 'POST') {
+      return await handleDispatcherPublish(env, authHeader, body);
     }
 
     // ===== 带参数的订单接口 =====
