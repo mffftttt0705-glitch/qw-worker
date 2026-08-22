@@ -2,6 +2,7 @@
 //  QW电竞 - 完整后端 API（Pages Functions 版本）
 //  修复：下架商品、聊天系统、管理员查看聊天权限
 //  新增：分类系统、红钻结算、派单确认、派单发布订单
+//  审核：打手/派单员需要管理员审核通过才能登录
 // ============================================================
 
 function generateId() {
@@ -54,13 +55,17 @@ async function handleRegister(env, body) {
   }
 
   const id = generateId();
-  const userStatus = role === 'handler' ? 'pending' : (status || 'active');
+  // 打手和派单员默认状态为 pending（待审核），老板默认为 active
+  const userStatus = (role === 'handler' || role === 'dispatcher') ? 'pending' : (status || 'active');
   await runDB(env,
     'INSERT INTO users (id, username, password, role, diamond, balance, status) VALUES (?, ?, ?, ?, 0, 0, ?)',
     [id, username, password, role || 'boss', userStatus]
   );
 
-  return jsonResponse({ message: '注册成功', id });
+  return jsonResponse({ 
+    message: (role === 'handler' || role === 'dispatcher') ? '注册成功，请等待管理员审核' : '注册成功', 
+    id 
+  });
 }
 
 async function handleLogin(env, body) {
@@ -72,7 +77,11 @@ async function handleLogin(env, body) {
   if (!user) return errorResponse('用户不存在');
   if (user.password !== password) return errorResponse('密码错误');
   if (user.status === 'banned') return errorResponse('账号已被封禁');
-  if (user.status === 'pending') return errorResponse('账号待审核，请等待管理员通过');
+  
+  // ===== 打手和派单员需要审核通过才能登录 =====
+  if ((user.role === 'handler' || user.role === 'dispatcher') && user.status !== 'active') {
+    return errorResponse('账号待审核，请等待管理员审核通过后再登录');
+  }
 
   const token = generateId() + '.' + user.id;
 
@@ -115,30 +124,49 @@ function verifyAndGetUserId(authHeader) {
 // ============================================================
 
 async function handleGetCategories(env) {
-  const result = await queryDB(env, 'SELECT * FROM categories ORDER BY sort_order, created_at DESC');
+  const result = await queryDB(env, 'SELECT * FROM categories ORDER BY sort_order ASC, created_at DESC');
   return jsonResponse(result.results || []);
 }
 
 async function handleAdminCreateCategory(env, body) {
-  const { name, image } = body;
+  const { name, image, sort_order } = body;
   if (!name) return errorResponse('请填写分类名称');
   
   const id = generateId();
   await runDB(env,
     'INSERT INTO categories (id, name, image, sort_order, created_at) VALUES (?, ?, ?, ?, ?)',
-    [id, name, image || '', 0, new Date().toISOString()]
+    [id, name, image || '', sort_order || 0, new Date().toISOString()]
   );
   return jsonResponse({ success: true, id, message: '分类创建成功' });
 }
 
 async function handleAdminUpdateCategory(env, categoryId, body) {
   const { name, image, sort_order } = body;
-  if (!name) return errorResponse('请填写分类名称');
+  if (!name && sort_order === undefined) return errorResponse('请填写分类名称或排序');
   
-  await runDB(env,
-    'UPDATE categories SET name = ?, image = ?, sort_order = ? WHERE id = ?',
-    [name, image || '', sort_order || 0, categoryId]
-  );
+  let sql = 'UPDATE categories SET ';
+  const params = [];
+  const updates = [];
+  
+  if (name !== undefined) {
+    updates.push('name = ?');
+    params.push(name);
+  }
+  if (image !== undefined) {
+    updates.push('image = ?');
+    params.push(image || '');
+  }
+  if (sort_order !== undefined) {
+    updates.push('sort_order = ?');
+    params.push(sort_order || 0);
+  }
+  
+  if (updates.length === 0) return errorResponse('没有要更新的字段');
+  
+  sql += updates.join(', ') + ' WHERE id = ?';
+  params.push(categoryId);
+  
+  await runDB(env, sql, params);
   return jsonResponse({ success: true, message: '分类已更新' });
 }
 
@@ -193,6 +221,21 @@ async function handleGetProductDetail(env, productId) {
   );
   const product = (result.results && result.results[0]) || null;
   if (!product) return errorResponse('商品不存在', 404);
+  
+  // 处理详情图片
+  let detailImages = [];
+  if (product.detail_images) {
+    try {
+      detailImages = JSON.parse(product.detail_images);
+    } catch(e) {
+      detailImages = [];
+    }
+  }
+  if (detailImages.length === 0 && product.image) {
+    detailImages = [product.image];
+  }
+  product.detail_images = detailImages;
+  
   return jsonResponse(product);
 }
 
@@ -295,17 +338,14 @@ async function handleDispatcherPublish(env, authHeader, body) {
   if (!title || !price) return errorResponse('请填写完整信息');
   if (price < 1) return errorResponse('价格至少为1红钻');
 
-  // 检查红钻是否足够（发布订单需要冻结红钻）
   if (user.diamond < price) {
     return errorResponse(`红钻不足，需要 ${price} 红钻，当前仅有 ${user.diamond} 红钻`, 400);
   }
 
-  // 冻结派单员的红钻（发布订单时先冻结，完成后扣除）
   await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [price, userId]);
 
   const orderId = generateId();
   
-  // 如果有指定打手，直接指派
   let status = 'pending';
   let handlerId = assignedHandlerId || null;
   let messages = JSON.stringify([{ 
@@ -315,7 +355,6 @@ async function handleDispatcherPublish(env, authHeader, body) {
   }]);
   
   if (handlerId) {
-    // 检查打手是否存在且可用
     const handlerCheck = await queryDB(env, 'SELECT * FROM users WHERE id = ? AND role = "handler" AND status = "active"', [handlerId]);
     if (handlerCheck.results && handlerCheck.results.length > 0) {
       status = 'ongoing';
@@ -362,7 +401,6 @@ async function handleBuyProduct(env, authHeader, body) {
   const sold = product.sold || 0;
   if (product.quantity <= sold) return errorResponse('库存不足');
 
-  // 使用红钻支付（1元 = 10红钻）
   const diamondCost = product.price * 10;
   if (user.diamond < diamondCost) return errorResponse('红钻不足，请先充值');
 
@@ -525,16 +563,13 @@ async function handleDispatcherConfirmComplete(env, authHeader, orderId) {
     return errorResponse('只有进行中或待接单可确认', 400);
   }
 
-  // 检查派单员红钻是否足够
   const diamondCost = order.price;
   if (user.diamond < diamondCost) {
     return errorResponse(`红钻不足，需要 ${diamondCost} 红钻支付订单`);
   }
 
-  // 扣除派单员红钻
   await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [diamondCost, userId]);
 
-  // 给打手结算红钻（80%给打手，20%平台抽成）
   const handlerEarning = Math.floor(order.price * 0.8);
   if (order.handler_id) {
     await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [handlerEarning, order.handler_id]);
@@ -586,7 +621,7 @@ async function handleAdminGetOrders(env) {
 }
 
 async function handleAdminGetUsers(env) {
-  const result = await queryDB(env, 'SELECT id, username, role, diamond, balance, status FROM users');
+  const result = await queryDB(env, 'SELECT id, username, role, diamond, balance, status, created_at FROM users');
   return jsonResponse(result.results || []);
 }
 
@@ -639,7 +674,6 @@ async function handleAdminSettle(env, orderId, body) {
   if (order.status !== 'completed') return errorResponse('只有已完成订单可结算');
 
   if (order.handler_id) {
-    // 使用红钻结算
     const diamondAmount = amount * 10;
     await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [diamondAmount, order.handler_id]);
   }
@@ -684,7 +718,12 @@ async function handleCreateRecharge(env, authHeader, body) {
 }
 
 async function handleAdminGetRecharges(env) {
-  const result = await queryDB(env, 'SELECT * FROM recharges ORDER BY created_at DESC');
+  const result = await queryDB(env,
+    `SELECT r.*, u.username 
+     FROM recharges r 
+     LEFT JOIN users u ON r.user_id = u.id 
+     ORDER BY r.created_at DESC`
+  );
   return jsonResponse(result.results || []);
 }
 
