@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>QW电竞 · 护航平台</title>
     
-    <!-- ===== PWA 配置 ===== -->
+    <!-- PWA 配置 -->
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -348,6 +348,7 @@
                 </div>
             </div>
         </div>
+
         <!-- ===== 商城页面 ===== -->
         <div class="view active" id="view-home">
             <div class="announcement" id="homeAnnounce">
@@ -710,6 +711,7 @@
     </div>
 </div>
 <div id="toast" class="toast"></div>
+
 <script>
 // ============================================================
 //  配置
@@ -1912,6 +1914,7 @@ async function sendMessage() {
     }
 }
 
+// 消息弹窗通知
 async function requestNotificationPermission() {
     if ('Notification' in window && Notification.permission === 'default') {
         const result = await Notification.requestPermission();
@@ -1921,12 +1924,22 @@ async function requestNotificationPermission() {
     }
 }
 
-// 定时检查未读消息
+// 定时轮询未读消息（用于弹窗）
+let lastUnreadCount = 0;
 setInterval(async () => {
     if (!currentUser) return;
     try {
         const result = await apiRequest('/messages/unread');
         const unread = result.unread || 0;
+        // 如果有新消息且通知权限已授权，弹窗
+        if (unread > lastUnreadCount && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification('📩 新消息', {
+                body: `您有 ${unread - lastUnreadCount} 条新消息`,
+                icon: '/icons/icon-192x192.png'
+            });
+        }
+        lastUnreadCount = unread;
+        // 更新红点
         const badge = document.getElementById('msgBadge');
         if (unread > 0) {
             badge.style.display = 'inline-block';
@@ -1934,8 +1947,11 @@ setInterval(async () => {
         } else {
             badge.style.display = 'none';
         }
+        // 更新未读总数显示
+        const totalEl = document.getElementById('msgUnreadTotal');
+        if (totalEl) totalEl.textContent = unread > 0 ? `(${unread}条未读)` : '';
     } catch (e) {}
-}, 15000);
+}, 10000); // 每10秒检查一次
 
 // ============================================================
 //  管理员渲染
@@ -3259,6 +3275,5 @@ document.getElementById('dispatcherProdImageUrl')?.addEventListener('input', fun
     }
 });
 </script>
-
 </body>
 </html>
