@@ -1,5 +1,5 @@
 // ============================================================
-//  QW电竞 - 完整后端 API（Pages Functions 版本）
+//  QW电竞 - 完整后端 API
 //  功能：用户认证、商品管理、订单系统、充值系统、
 //        消息系统、客服系统、红钻结算
 // ============================================================
@@ -76,7 +76,6 @@ async function handleLogin(env, body) {
   if (user.password !== password) return errorResponse('密码错误');
   if (user.status === 'banned') return errorResponse('账号已被封禁');
   
-  // 打手、派单员、客服需要审核通过才能登录
   if ((user.role === 'handler' || user.role === 'dispatcher' || user.role === 'service') && user.status !== 'active') {
     return errorResponse('账号待审核，请等待管理员审核通过后再登录');
   }
@@ -455,7 +454,7 @@ async function handleGetOrderDetail(env, authHeader, orderId) {
   const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
   const order = (result.results && result.results[0]) || null;
   if (!order) return errorResponse('订单不存在', 404);
-  if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin') {
+  if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin' && user.role !== 'service') {
     return errorResponse('无权查看', 403);
   }
   return jsonResponse(order);
@@ -716,15 +715,11 @@ async function handleProcessRecharge(env, authHeader, body) {
   if (request.status !== 'pending') return errorResponse('已处理');
   
   if (action === 'approve') {
-    // 检查客服红钻是否足够
     if (user.diamond < request.diamond) {
       return errorResponse(`红钻不足，需要 ${request.diamond} 红钻`);
     }
-    // 扣除客服红钻
     await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [request.diamond, userId]);
-    // 给用户加红钻
     await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [request.diamond, request.user_id]);
-    // 更新状态
     await runDB(env,
       'UPDATE recharge_requests SET status = "approved", handler_id = ?, handled_at = ? WHERE id = ?',
       [userId, new Date().toISOString(), requestId]
@@ -767,14 +762,11 @@ async function handleServiceGiftDiamond(env, authHeader, body) {
   if (!targetUserId || !amount) return errorResponse('请填写完整信息');
   if (amount < 1) return errorResponse('数量至少为1');
   
-  // 检查客服红钻是否足够
   if (user.diamond < amount) {
     return errorResponse(`红钻不足，需要 ${amount} 红钻`);
   }
   
-  // 扣除客服红钻
   await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [amount, userId]);
-  // 给目标用户加红钻
   await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [amount, targetUserId]);
   
   return jsonResponse({ 
@@ -800,7 +792,6 @@ async function handleSendMessage(env, authHeader, body) {
   const receiver = await getUserById(env, receiverId);
   if (!receiver) return errorResponse('接收者不存在', 404);
   
-  // 检查权限：普通用户只能给客服和管理员发消息
   if (user.role !== 'admin' && user.role !== 'service') {
     if (receiver.role !== 'admin' && receiver.role !== 'service') {
       return errorResponse('只能联系客服或管理员', 403);
@@ -813,7 +804,6 @@ async function handleSendMessage(env, authHeader, body) {
     [id, userId, receiverId, content.trim(), new Date().toISOString()]
   );
   
-  // 更新发送者的联系人
   const contactCheck1 = await queryDB(env,
     'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?',
     [userId, receiverId]
@@ -830,7 +820,6 @@ async function handleSendMessage(env, authHeader, body) {
     );
   }
   
-  // 更新接收者的联系人
   const contactCheck2 = await queryDB(env,
     'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?',
     [receiverId, userId]
@@ -860,7 +849,6 @@ async function handleGetContacts(env, authHeader) {
   let params = [];
   
   if (user.role === 'admin' || user.role === 'service') {
-    // 管理员和客服能看到所有联系人
     sql = `SELECT DISTINCT 
             u.id, u.username, u.role,
             mc.last_message, mc.last_time, mc.unread_count
@@ -870,7 +858,6 @@ async function handleGetContacts(env, authHeader) {
             ORDER BY mc.last_time DESC`;
     params = [userId];
   } else {
-    // 普通用户只能看到客服和管理员
     sql = `SELECT DISTINCT 
             u.id, u.username, u.role,
             mc.last_message, mc.last_time, mc.unread_count
@@ -893,7 +880,6 @@ async function handleGetMessages(env, authHeader, body) {
   const { contactId } = body;
   if (!contactId) return errorResponse('请选择联系人');
   
-  // 验证权限
   const contact = await getUserById(env, contactId);
   if (!contact) return errorResponse('联系人不存在', 404);
   const user = await getUserById(env, userId);
@@ -913,7 +899,6 @@ async function handleGetMessages(env, authHeader, body) {
     [userId, contactId, contactId, userId]
   );
   
-  // 标记为已读
   await runDB(env,
     'UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?',
     [contactId, userId]
