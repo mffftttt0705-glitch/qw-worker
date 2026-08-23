@@ -96,7 +96,7 @@
         }
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','PingFang SC',Roboto,sans-serif}
         body{background:var(--bg-primary);background-image:radial-gradient(ellipse at 20% 50%,var(--gradient-start) 0%,var(--gradient-end) 100%);color:var(--text-primary);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:12px}
-        .app-wrapper{max-width:480px;width:100%;background:var(--bg-secondary);backdrop-filter:blur(20px);border-radius:40px;box-shadow:var(--shadow);border:1px solid var(--border-light);overflow:hidden;position:relative;padding-bottom:72px;min-height:700px}
+        .app-wrapper{max-width:480px;width:100%;background:var(--bg-secondary);backdrop-filter:blur(20px);border-radius:40px;box-shadow:var(--shadow);border:1px solid var(--border-light);overflow:hidden;position:relative;padding-bottom:80px;min-height:700px}
         .view-container{padding:20px 20px 16px}
         .view{display:none;animation:fadeUp 0.3s ease}
         .view.active{display:block}
@@ -150,12 +150,13 @@
         .btn-sm{padding:4px 14px;font-size:12px}
         .btn-xs{padding:2px 10px;font-size:11px}
         .btn-block{width:100%;justify-content:center}
-        .bottom-nav{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-around;align-items:center;background:var(--bottom-nav-bg);backdrop-filter:blur(16px);padding:8px 0 12px;border-top:1px solid var(--border-light);border-radius:0 0 40px 40px}
-        .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text-nav);font-size:11px;cursor:pointer;padding:4px 12px;border-radius:30px;background:transparent;border:none;font-family:inherit}
+        .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:480px;width:100%;display:flex;justify-content:space-around;align-items:center;background:var(--bottom-nav-bg);backdrop-filter:blur(16px);padding:8px 0 12px;border-top:1px solid var(--border-light);border-radius:40px 40px 0 0;z-index:1000;box-shadow:0 -4px 20px rgba(0,0,0,0.08)}
+        .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text-nav);font-size:11px;cursor:pointer;padding:4px 12px;border-radius:30px;background:transparent;border:none;font-family:inherit;position:relative}
         .nav-item i{font-size:20px}
         .nav-item.active{color:var(--text-primary)}
         .nav-item.active i{color:#3a7eff;text-shadow:0 0 20px rgba(0,80,255,0.3)}
         .nav-item.hidden-nav{display:none!important}
+        .nav-item .badge{position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;border-radius:50%;font-size:10px;padding:0 6px;min-width:18px;text-align:center;line-height:18px}
         .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);justify-content:center;align-items:center;z-index:999}
         .modal-overlay.active{display:flex}
         .modal-box{background:var(--modal-bg);border:1px solid var(--border-color);border-radius:32px;padding:32px 28px;max-width:420px;width:90%;text-align:center;animation:fadeUp 0.25s ease;max-height:90vh;overflow-y:auto}
@@ -281,16 +282,25 @@
         .detail-index{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.6);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px}
         .dispatcher-card{border-left:4px solid #a855f7}
         .dispatcher-card .admin-card-title i{color:#a855f7}
+        .service-card{border-left:4px solid #22c55e}
+        .service-card .admin-card-title i{color:#22c55e}
         .user-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
         .user-filter button{padding:6px 16px;border-radius:30px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-muted);font-size:12px;cursor:pointer;transition:all 0.2s}
         .user-filter button.active{background:#f5c842;color:#0b0d10;border-color:#f5c842}
         .user-filter button:hover{background:var(--bg-card-hover)}
-        @media(max-width:420px){.app-wrapper{border-radius:28px;padding-bottom:66px}.view-container{padding:16px 14px}.entry-grid{gap:12px}.entry-card{padding:18px 8px}.entry-icon{width:48px;height:48px;font-size:22px}.entry-title{font-size:14px}.bottom-nav{padding:6px 0 10px}.nav-item i{font-size:18px}.nav-item span{font-size:10px}#authPage{min-height:600px}.product-card .product-img{height:80px}.product-card .product-img img{height:80px}.product-card .product-title{font-size:12px}.product-card .product-price{font-size:14px}.product-grid{gap:8px}.detail-carousel .slide{height:200px}.detail-carousel .slide img{max-height:200px}}
+        .contact-item{padding:12px 16px;border-bottom:1px solid var(--border-color);cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+        .contact-item:hover{background:var(--bg-card-hover)}
+        .contact-item .unread-badge{background:#ef4444;color:#fff;border-radius:50%;padding:0 8px;font-size:11px;min-width:20px;text-align:center;line-height:20px}
+        .chat-bubble{display:inline-block;padding:8px 14px;border-radius:12px;max-width:80%;word-break:break-word;margin:2px 0}
+        .chat-bubble.me{background:#1a6aff;color:#fff;align-self:flex-end}
+        .chat-bubble.other{background:var(--bg-card);color:var(--text-primary);align-self:flex-start;border:1px solid var(--border-color)}
+        .chat-bubble .time{font-size:10px;opacity:0.7;margin-top:2px}
+        @media(max-width:420px){.app-wrapper{border-radius:28px;padding-bottom:76px}.view-container{padding:16px 14px}.entry-grid{gap:12px}.entry-card{padding:18px 8px}.entry-icon{width:48px;height:48px;font-size:22px}.entry-title{font-size:14px}.bottom-nav{padding:6px 0 10px}.nav-item i{font-size:18px}.nav-item span{font-size:10px}#authPage{min-height:600px}.product-card .product-img{height:80px}.product-card .product-img img{height:80px}.product-card .product-title{font-size:12px}.product-card .product-price{font-size:14px}.product-grid{gap:8px}.detail-carousel .slide{height:200px}.detail-carousel .slide img{max-height:200px}}
     </style>
 </head>
 <body>
 
-<!-- ===== 登录/注册页面（默认隐藏） ===== -->
+<!-- ===== 登录/注册页面 ===== -->
 <div id="authPage">
     <div class="logo"><i class="fas fa-crosshairs"></i> QW电竞</div>
     <div class="sub">护航平台 · 暗区突围 / 三角洲</div>
@@ -306,8 +316,9 @@
             <label><input type="radio" name="authRole" value="boss" checked> 老板</label>
             <label><input type="radio" name="authRole" value="handler"> 打手</label>
             <label><input type="radio" name="authRole" value="dispatcher"> 派单</label>
+            <label><input type="radio" name="authRole" value="service"> 客服</label>
         </div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;">打手/派单账号需管理员审核通过后方可使用</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;">打手/派单/客服需管理员审核通过后方可使用</div>
     </div>
 </div>
 
@@ -530,6 +541,7 @@
                             <button data-filter="boss" onclick="setUserFilter('boss')">老板</button>
                             <button data-filter="handler" onclick="setUserFilter('handler')">打手</button>
                             <button data-filter="dispatcher" onclick="setUserFilter('dispatcher')">派单</button>
+                            <button data-filter="service" onclick="setUserFilter('service')">客服</button>
                             <button data-filter="pending" onclick="setUserFilter('pending')">待审核</button>
                         </div>
                         <div id="usersList"></div>
@@ -615,6 +627,44 @@
             </div>
         </div>
 
+        <!-- ===== 客服视图 ===== -->
+        <div class="view" id="view-service">
+            <div class="admin-card service-card">
+                <div class="admin-card-title"><i class="fas fa-headset" style="color:#22c55e;"></i> 客服面板</div>
+                <div id="serviceStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"></div>
+            </div>
+            <div class="admin-card service-card">
+                <div class="admin-card-title"><i class="fas fa-coins" style="color:#22c55e;"></i> 充值审核</div>
+                <div id="serviceRechargeList"></div>
+            </div>
+            <div class="admin-card service-card">
+                <div class="admin-card-title"><i class="fas fa-gift" style="color:#22c55e;"></i> 赠送红钻</div>
+                <div class="admin-form-group"><label>选择用户</label><select class="admin-form-control" id="serviceGiftUser"></select></div>
+                <div class="admin-form-group"><label>红钻数量</label><input class="admin-form-control" id="serviceGiftAmount" type="number" placeholder="数量" /></div>
+                <button class="btn btn-success" onclick="serviceSendGift()"><i class="fas fa-gift"></i> 赠送（扣除自己红钻）</button>
+            </div>
+        </div>
+
+        <!-- ===== 消息页面 ===== -->
+        <div class="view" id="view-messages">
+            <div class="app-header" style="margin-bottom:12px;">
+                <span style="font-size:18px;font-weight:600;">💬 消息</span>
+                <span style="font-size:12px;color:var(--text-muted);" id="msgUnreadTotal"></span>
+            </div>
+            <div id="contactList"></div>
+            <div id="chatView" style="display:none;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                    <button class="btn btn-outline btn-sm" onclick="backToContacts()"><i class="fas fa-arrow-left"></i> 返回</button>
+                    <span id="chatContactName" style="font-weight:600;"></span>
+                </div>
+                <div id="chatMessages" style="max-height:400px;overflow-y:auto;padding:12px;background:var(--bg-input);border-radius:12px;display:flex;flex-direction:column;"></div>
+                <div style="display:flex;gap:8px;margin-top:12px;">
+                    <input class="admin-form-control" id="chatInput" placeholder="输入消息..." />
+                    <button class="btn btn-success" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== 账号管理 ===== -->
         <div class="view" id="view-account">
             <div class="admin-card">
@@ -643,8 +693,10 @@
     <div class="bottom-nav">
         <button class="nav-item active" data-target="home"><i class="fas fa-store"></i><span>商城</span></button>
         <button class="nav-item" data-target="orders" id="navOrders"><i class="fas fa-receipt"></i><span>订单</span></button>
+        <button class="nav-item" data-target="messages" id="navMessages"><i class="fas fa-comment-dots"></i><span>消息</span><span class="badge" id="msgBadge" style="display:none;">0</span></button>
         <button class="nav-item" data-target="handler" id="navHandler" style="display:none;"><i class="fas fa-gamepad"></i><span>打手</span></button>
         <button class="nav-item" data-target="dispatcher" id="navDispatcher" style="display:none;"><i class="fas fa-paper-plane"></i><span>派单</span></button>
+        <button class="nav-item" data-target="service" id="navService" style="display:none;"><i class="fas fa-headset"></i><span>客服</span></button>
         <button class="nav-item" data-target="admin" id="navAdmin" style="display:none;"><i class="fas fa-user-cog"></i><span>管理</span></button>
         <button class="nav-item" data-target="account"><i class="fas fa-user"></i><span>我的</span></button>
     </div>
@@ -670,6 +722,7 @@ let token = localStorage.getItem('token');
 let announceImages = [];
 let userFilter = 'all';
 let currentCategoryFilter = 'all';
+let currentContactId = null;
 
 // ============================================================
 //  折叠状态管理
@@ -796,15 +849,17 @@ function updateRoleBasedUI() {
     const isDispatcher = role === 'dispatcher';
     const isHandler = role === 'handler';
     const isBoss = role === 'boss';
+    const isService = role === 'service';
 
     document.getElementById('navHandler').style.display = (isHandler || isAdmin || isDispatcher) ? 'flex' : 'none';
     document.getElementById('navAdmin').style.display = isAdmin ? 'flex' : 'none';
     document.getElementById('navDispatcher').style.display = (isDispatcher || isAdmin) ? 'flex' : 'none';
-    document.getElementById('navOrders').style.display = (isBoss || isAdmin || isDispatcher || isHandler) ? 'flex' : 'none';
+    document.getElementById('navService').style.display = (isService || isAdmin) ? 'flex' : 'none';
+    document.getElementById('navOrders').style.display = (isBoss || isAdmin || isDispatcher || isHandler || isService) ? 'flex' : 'none';
 
-    let roleName = isBoss ? '老板' : isHandler ? '打手' : isDispatcher ? '派单员' : '管理员';
+    let roleName = isBoss ? '老板' : isHandler ? '打手' : isDispatcher ? '派单员' : isService ? '客服' : '管理员';
     document.getElementById('authStatusText').textContent = currentUser.username + ' (' + roleName + ')';
-    document.getElementById('authStatus').style.borderColor = isAdmin ? '#22c55e' : isDispatcher ? '#a855f7' : '#3a7eff';
+    document.getElementById('authStatus').style.borderColor = isAdmin ? '#22c55e' : isDispatcher ? '#a855f7' : isService ? '#22c55e' : '#3a7eff';
 }
 
 function previewProdImageUrl(inputId, previewId) {
@@ -823,9 +878,24 @@ function previewProdImageUrl(inputId, previewId) {
 //  红点更新
 // ============================================================
 async function updateBadges() {
-    if (!currentUser || currentUser.role !== 'admin') return;
+    if (!currentUser) return;
+    
+    // 消息红点
     try {
-        const recharges = await apiRequest('/admin/recharges');
+        const result = await apiRequest('/messages/unread');
+        const unread = result.unread || 0;
+        const badge = document.getElementById('msgBadge');
+        if (unread > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = unread > 99 ? '99+' : unread;
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch (e) {}
+    
+    if (currentUser.role !== 'admin') return;
+    try {
+        const recharges = await apiRequest('/service/recharges');
         const pendingRecharges = recharges.filter(r => r.status === 'pending');
         const rechargeBadge = document.getElementById('rechargeBadge');
         if (pendingRecharges.length > 0) {
@@ -836,7 +906,7 @@ async function updateBadges() {
         }
 
         const users = await apiRequest('/admin/users');
-        const pendingUsers = users.filter(u => u.status === 'pending' && (u.role === 'handler' || u.role === 'dispatcher'));
+        const pendingUsers = users.filter(u => u.status === 'pending' && (u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service'));
         const userBadge = document.getElementById('userBadge');
         if (pendingUsers.length > 0) {
             userBadge.style.display = 'inline-block';
@@ -909,6 +979,7 @@ function showRegisterModal() {
                 <option value="boss">老板</option>
                 <option value="handler">打手</option>
                 <option value="dispatcher">派单</option>
+                <option value="service">客服</option>
             </select>
         </div>
         <div id="regError" style="color:#ef4444;font-size:13px;min-height:20px;"></div>
@@ -935,7 +1006,7 @@ async function doRegister() {
     }
     try {
         const data = await apiRequest('/register', { method: 'POST', body: JSON.stringify({ username, password, role }) });
-        if (role === 'handler' || role === 'dispatcher') {
+        if (role === 'handler' || role === 'dispatcher' || role === 'service') {
             toast('注册成功，请等待管理员审核', 'success');
         } else {
             toast('注册成功，请登录', 'success');
@@ -975,13 +1046,13 @@ function logout() {
 function updateAccountInfo() {
     if (!currentUser) return;
     document.getElementById('accUsername').textContent = currentUser.username;
-    const roleMap = { 'boss': '老板', 'handler': currentUser.status === 'pending' ? '待审核打手' : '打手', 'dispatcher': currentUser.status === 'pending' ? '待审核派单' : '派单员', 'admin': '管理员' };
+    const roleMap = { 'boss': '老板', 'handler': currentUser.status === 'pending' ? '待审核打手' : '打手', 'dispatcher': currentUser.status === 'pending' ? '待审核派单' : '派单员', 'service': currentUser.status === 'pending' ? '待审核客服' : '客服', 'admin': '管理员' };
     document.getElementById('accRole').textContent = roleMap[currentUser.role] || currentUser.role;
     const statusMap = { 'active': '正常', 'pending': '待审核', 'banned': '封禁' };
     document.getElementById('accStatus').textContent = statusMap[currentUser.status] || currentUser.status;
     document.getElementById('accDiamond').textContent = currentUser.diamond || 0;
     document.getElementById('accBalance').textContent = (currentUser.balance || 0) + ' 红钻';
-    document.getElementById('accDiamondRow').style.display = (currentUser.role === 'boss' || currentUser.role === 'admin' || currentUser.role === 'dispatcher') ? 'flex' : 'none';
+    document.getElementById('accDiamondRow').style.display = 'flex';
     document.getElementById('accBalanceRow').style.display = (currentUser.role === 'handler' || currentUser.role === 'admin') ? 'flex' : 'none';
     document.getElementById('logoutBtn2').style.display = 'inline-block';
 }
@@ -1086,14 +1157,16 @@ document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
             renderCategoryProducts();
             return;
         }
-        const viewMap = { 'orders': 'view-orders', 'handler': 'view-handler', 'dispatcher': 'view-dispatcher', 'admin': 'view-admin', 'account': 'view-account' };
+        const viewMap = { 'orders': 'view-orders', 'handler': 'view-handler', 'dispatcher': 'view-dispatcher', 'service': 'view-service', 'admin': 'view-admin', 'messages': 'view-messages', 'account': 'view-account' };
         const viewId = viewMap[target];
         if (viewId) {
             document.getElementById(viewId).classList.add('active');
             if (target === 'orders') { renderBossView(); loadTipHandlers(); }
             else if (target === 'handler') renderHandlerView();
             else if (target === 'dispatcher') renderDispatcherAll();
+            else if (target === 'service') renderServiceView();
             else if (target === 'admin') renderAdminAll();
+            else if (target === 'messages') loadContacts();
             else if (target === 'account') updateAccountInfo();
         }
     });
@@ -1622,6 +1695,254 @@ async function doDispatcherDirectPublish(game, title, desc, price) {
 }
 
 // ============================================================
+//  客服功能
+// ============================================================
+
+async function renderServiceView() {
+    if (!currentUser) return;
+    await renderServiceStats();
+    await renderServiceRecharges();
+    await loadServiceUsers();
+}
+
+async function renderServiceStats() {
+    try {
+        const recharges = await apiRequest('/service/recharges');
+        const pending = recharges.filter(r => r.status === 'pending').length;
+        const user = await apiRequest('/me');
+        document.getElementById('serviceStats').innerHTML = `
+            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;">${pending}</div><div style="font-size:12px;color:var(--text-muted);">待审核充值</div></div>
+            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;">${user.diamond || 0}</div><div style="font-size:12px;color:var(--text-muted);">我的红钻</div></div>
+            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#22c55e;">${recharges.filter(r => r.status === 'approved').length}</div><div style="font-size:12px;color:var(--text-muted);">已处理</div></div>
+        `;
+    } catch (err) { console.error(err); }
+}
+
+async function renderServiceRecharges() {
+    try {
+        const recharges = await apiRequest('/service/recharges');
+        const container = document.getElementById('serviceRechargeList');
+        if (recharges.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>暂无待审核充值申请</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>用户</th><th>金额</th><th>红钻</th><th>操作</th></tr></thead><tbody>';
+        for (const r of recharges) {
+            html += `<tr>
+                <td>${r.username || r.user_id}</td>
+                <td>¥${r.amount}</td>
+                <td>${r.diamond}</td>
+                <td>
+                    <button class="btn btn-success btn-xs" onclick="serviceApproveRecharge('${r.id}')">通过</button>
+                    <button class="btn btn-danger btn-xs" onclick="serviceRejectRecharge('${r.id}')">拒绝</button>
+                </td>
+            </tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+async function serviceApproveRecharge(requestId) {
+    confirmAction('确认通过', '确认通过此充值申请？将扣除您的红钻。', '确认通过', `doServiceApproveRecharge('${requestId}')`);
+}
+
+async function doServiceApproveRecharge(requestId) {
+    try {
+        const result = await apiRequest('/service/process', {
+            method: 'POST',
+            body: JSON.stringify({ requestId, action: 'approve' })
+        });
+        toast(result.message || '✅ 充值已处理', 'success');
+        renderServiceView();
+        renderCategoryProducts();
+        updateHeaderDiamond();
+        updateBadges();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function serviceRejectRecharge(requestId) {
+    const reason = prompt('请输入拒绝原因：');
+    if (reason === null) return;
+    try {
+        const result = await apiRequest('/service/process', {
+            method: 'POST',
+            body: JSON.stringify({ requestId, action: 'reject', rejectReason: reason })
+        });
+        toast('已拒绝', 'warning');
+        renderServiceView();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function loadServiceUsers() {
+    try {
+        const users = await apiRequest('/service/users');
+        const sel = document.getElementById('serviceGiftUser');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">-- 请选择 --</option>';
+        users.forEach(u => {
+            sel.innerHTML += `<option value="${u.id}">${u.username} (${u.role})</option>`;
+        });
+    } catch (err) { console.error(err); }
+}
+
+async function serviceSendGift() {
+    const targetUserId = document.getElementById('serviceGiftUser').value;
+    const amount = parseInt(document.getElementById('serviceGiftAmount').value);
+    if (!targetUserId) return toast('请选择用户', 'warning');
+    if (!amount || amount < 1) return toast('请输入有效数量', 'warning');
+    confirmAction('确认赠送', `确认赠送 ${amount} 红钻？将扣除您的红钻。`, '确认赠送', `doServiceSendGift('${targetUserId}', ${amount})`);
+}
+
+async function doServiceSendGift(targetUserId, amount) {
+    try {
+        const result = await apiRequest('/service/gift', {
+            method: 'POST',
+            body: JSON.stringify({ targetUserId, amount })
+        });
+        toast(result.message || '✅ 赠送成功', 'success');
+        document.getElementById('serviceGiftAmount').value = '';
+        renderServiceView();
+        renderCategoryProducts();
+        updateHeaderDiamond();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  消息系统
+// ============================================================
+
+async function loadContacts() {
+    try {
+        const contacts = await apiRequest('/messages/contacts');
+        const container = document.getElementById('contactList');
+        if (!container) return;
+        
+        // 更新未读总数
+        const totalUnread = contacts.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+        const totalEl = document.getElementById('msgUnreadTotal');
+        if (totalEl) totalEl.textContent = totalUnread > 0 ? `(${totalUnread}条未读)` : '';
+        
+        if (contacts.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无联系人</p></div>';
+            return;
+        }
+        let html = '';
+        contacts.forEach(c => {
+            const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
+            const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
+            html += `
+                <div class="contact-item" onclick="openChat('${c.id}','${c.username}')">
+                    <div>
+                        <strong>${c.username}</strong> ${roleIcon}
+                        ${unreadBadge}
+                        <div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-muted);">${c.last_time ? new Date(c.last_time).toLocaleTimeString() : ''}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('加载联系人失败', err);
+    }
+}
+
+async function openChat(contactId, username) {
+    currentContactId = contactId;
+    document.getElementById('contactList').style.display = 'none';
+    document.getElementById('chatView').style.display = 'block';
+    document.getElementById('chatContactName').textContent = username;
+    
+    try {
+        const messages = await apiRequest('/messages/history', {
+            method: 'POST',
+            body: JSON.stringify({ contactId })
+        });
+        const container = document.getElementById('chatMessages');
+        if (messages.length === 0) {
+            container.innerHTML = '<div class="empty-state"><p>暂无消息</p></div>';
+        } else {
+            let html = '';
+            messages.forEach(m => {
+                const isMe = m.sender_id === currentUser.id;
+                html += `
+                    <div style="display:flex;justify-content:${isMe ? 'flex-end' : 'flex-start'};">
+                        <div class="chat-bubble ${isMe ? 'me' : 'other'}">
+                            ${m.content}
+                            <div class="time">${new Date(m.created_at).toLocaleTimeString()}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+        // 更新红点
+        updateBadges();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+function backToContacts() {
+    document.getElementById('contactList').style.display = 'block';
+    document.getElementById('chatView').style.display = 'none';
+    currentContactId = null;
+    loadContacts();
+}
+
+async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const content = input.value.trim();
+    if (!content) return toast('请输入消息', 'warning');
+    if (!currentContactId) return toast('请选择联系人', 'warning');
+    
+    try {
+        await apiRequest('/messages/send', {
+            method: 'POST',
+            body: JSON.stringify({ receiverId: currentContactId, content })
+        });
+        input.value = '';
+        openChat(currentContactId, document.getElementById('chatContactName').textContent);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// 消息通知权限请求
+async function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        const result = await Notification.requestPermission();
+        if (result === 'granted') {
+            toast('✅ 消息通知已开启', 'success');
+        }
+    }
+}
+
+// 定时检查未读消息
+setInterval(async () => {
+    if (!currentUser) return;
+    try {
+        const result = await apiRequest('/messages/unread');
+        const unread = result.unread || 0;
+        const badge = document.getElementById('msgBadge');
+        if (unread > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = unread > 99 ? '99+' : unread;
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch (e) {}
+}, 15000);
+
+// ============================================================
 //  管理员渲染
 // ============================================================
 async function renderAdminAll() {
@@ -1978,8 +2299,8 @@ function renderChatModal(order, isAdmin = false) {
     const isEnded = ['completed','canceled','rejected','refunded'].includes(order.status);
     const messagesHtml = messages.length > 0 ?
         messages.map(msg => {
-            const senderName = msg.sender === 'boss' ? '👤老板' : msg.sender === 'handler' ? '🎮打手' : msg.sender === 'dispatcher' ? '📋派单' : '📢系统';
-            const senderClass = msg.sender === 'boss' ? 'boss' : msg.sender === 'handler' ? 'handler' : msg.sender === 'dispatcher' ? 'dispatcher' : 'system';
+            const senderName = msg.sender === 'boss' ? '👤老板' : msg.sender === 'handler' ? '🎮打手' : msg.sender === 'dispatcher' ? '📋派单' : msg.sender === 'service' ? '🎧客服' : '📢系统';
+            const senderClass = msg.sender === 'boss' ? 'boss' : msg.sender === 'handler' ? 'handler' : msg.sender === 'dispatcher' ? 'dispatcher' : msg.sender === 'service' ? 'dispatcher' : 'system';
             return `<div class="chat-msg ${senderClass}"><strong>${senderName}:</strong> ${msg.content} <span class="time">${msg.time}</span></div>`;
         }).join('') :
         '<div class="empty-state"><p>暂无消息</p></div>';
@@ -2020,14 +2341,14 @@ function renderChatModal(order, isAdmin = false) {
 }
 
 // ============================================================
-//  充值管理
+//  充值管理（管理员）
 // ============================================================
 async function renderRecharges() {
     try {
         const recharges = await apiRequest('/admin/recharges');
         const container = document.getElementById('rechargeList');
         if (recharges.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-coins"></i><p>暂无充值申请</p></div>';
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-coins"></i><p>暂无充值记录</p></div>';
             return;
         }
         let html = '<div class="table-wrap"><table><thead><tr><th>用户</th><th>金额</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
@@ -2064,8 +2385,10 @@ async function renderUsers() {
             filtered = users.filter(u => u.role === 'handler');
         } else if (userFilter === 'dispatcher') {
             filtered = users.filter(u => u.role === 'dispatcher');
+        } else if (userFilter === 'service') {
+            filtered = users.filter(u => u.role === 'service');
         } else if (userFilter === 'pending') {
-            filtered = users.filter(u => u.status === 'pending' && (u.role === 'handler' || u.role === 'dispatcher'));
+            filtered = users.filter(u => u.status === 'pending' && (u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service'));
         }
         
         if (search) {
@@ -2079,12 +2402,12 @@ async function renderUsers() {
         }
         let html = '<div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>红钻</th><th>余额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const u of filtered) {
-            let roleText = u.role === 'boss' ? '老板' : u.role === 'handler' ? (u.status === 'pending' ? '待审核打手' : '打手') : u.role === 'dispatcher' ? (u.status === 'pending' ? '待审核派单' : '派单员') : '管理员';
+            let roleText = u.role === 'boss' ? '老板' : u.role === 'handler' ? (u.status === 'pending' ? '待审核打手' : '打手') : u.role === 'dispatcher' ? (u.status === 'pending' ? '待审核派单' : '派单员') : u.role === 'service' ? (u.status === 'pending' ? '待审核客服' : '客服') : '管理员';
             let statusText2 = u.status === 'active' ? '正常' : u.status === 'pending' ? '待审核' : '封禁';
             let statusCls = u.status === 'active' ? 'status-onsale' : u.status === 'pending' ? 'status-pending' : 'status-canceled';
             let actions = '';
             if (u.role !== 'admin') {
-                if ((u.role === 'handler' || u.role === 'dispatcher') && u.status === 'pending') {
+                if ((u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service') && u.status === 'pending') {
                     actions += `<button class="btn btn-success btn-xs" onclick="approveHandler('${u.id}')">审核通过</button>`;
                 }
                 actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>`;
@@ -2138,10 +2461,26 @@ async function doChangeUsername(userId) {
 // ============================================================
 async function renderBossView() {
     try {
-        const products = await apiRequest('/products').catch(() => []);
-        document.getElementById('bossProductCount').textContent = products.length;
-        const container = document.getElementById('bossProductList');
-        if (!container) return;
+        const orders = await apiRequest('/orders/my');
+        const myContainer = document.getElementById('bossMyOrders');
+        if (!myContainer) return;
+        if (orders.length === 0) {
+            myContainer.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><p>暂无订单</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>订单号</th><th>标题</th><th>金额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const o of orders) {
+            let actions = '';
+            if (o.status === 'review') actions += `<button class="btn btn-success btn-xs" onclick="confirmBossComplete('${o.id}')">确认完成</button>`;
+            if (o.status === 'ongoing' || o.status === 'pending') {
+                actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
+            }
+            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">聊天</button>`;
+            actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
+            html += `<tr><td>${o.id}</td><td>${o.title}</td><td>${o.price} 红钻</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        myContainer.innerHTML = html;
     } catch (err) { console.error(err); }
 }
 
@@ -2315,57 +2654,51 @@ async function doSendTip(handlerId, amount) {
 }
 
 // ============================================================
-//  其他功能
+//  充值功能（自定义金额）
 // ============================================================
-const rechargeOptions = [
-    { amount: 1, diamond: 10 },
-    { amount: 6, diamond: 60 },
-    { amount: 68, diamond: 700 },
-    { amount: 128, diamond: 1330 },
-    { amount: 328, diamond: 3430 },
-    { amount: 648, diamond: 6800 }
-];
-let selectedRecharge = null;
-
 window.openRecharge = function() {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
     const html = `
         <h3><i class="fas fa-plus-circle"></i> 充值红钻</h3>
-        <p style="color:var(--text-muted);font-size:14px;">选择充值档位，提交后等待管理员审核。</p>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0;">
-            ${rechargeOptions.map(opt => `<div class="recharge-option" onclick="selectRecharge(this, ${opt.amount}, ${opt.diamond})">
-                <div style="font-weight:600;font-size:16px;">¥${opt.amount}</div>
-                <div style="font-size:12px;color:var(--text-muted);">${opt.diamond} 红钻</div>
-            </div>`).join('')}
+        <p style="color:var(--text-muted);font-size:14px;">1元 = 10红钻，提交后等待客服审核</p>
+        <div class="form-group">
+            <label>充值金额（元）</label>
+            <input class="admin-form-control" id="rechargeAmount" type="number" placeholder="输入金额" min="1" />
         </div>
-        <div style="text-align:center;margin:8px 0;"><span id="selectedRecharge" style="color:#f5c842;">请选择档位</span></div>
+        <div style="text-align:center;margin:8px 0;">
+            <span style="font-size:20px;font-weight:700;color:#f5c842;" id="rechargePreview">0 红钻</span>
+        </div>
         <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeRecharge()">取消</button>
-            <button class="btn btn-success" id="submitRechargeBtn" disabled>提交充值</button>
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="submitCustomRecharge()">提交申请</button>
         </div>
     `;
-    document.getElementById('customModalContent').innerHTML = html;
-    document.getElementById('customModal').classList.add('active');
-    document.getElementById('submitRechargeBtn').addEventListener('click', submitRecharge);
-};
-window.selectRecharge = function(el, amount, diamond) {
-    document.querySelectorAll('.recharge-option').forEach(e => e.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedRecharge = { amount, diamond };
-    document.getElementById('selectedRecharge').textContent = `已选 ¥${amount} → ${diamond} 红钻`;
-    document.getElementById('submitRechargeBtn').disabled = false;
-};
-function submitRecharge() {
-    if (!selectedRecharge) return toast('请选择档位', 'warning');
-    apiRequest('/recharges', { method: 'POST', body: JSON.stringify({ amount: selectedRecharge.amount, diamond: selectedRecharge.diamond }) })
-        .then(() => { closeRecharge(); toast('充值申请已提交', 'success'); renderCategoryProducts(); updateHeaderDiamond(); })
-        .catch(err => toast(err.message, 'error'));
-}
-window.closeRecharge = function() {
-    document.getElementById('customModal').classList.remove('active');
-    selectedRecharge = null;
+    showCustomModal(html);
+    document.getElementById('rechargeAmount').addEventListener('input', function() {
+        const amount = parseFloat(this.value) || 0;
+        document.getElementById('rechargePreview').textContent = Math.floor(amount * 10) + ' 红钻';
+    });
 };
 
+async function submitCustomRecharge() {
+    const amount = parseFloat(document.getElementById('rechargeAmount').value);
+    if (!amount || amount < 1) return toast('请输入有效金额', 'warning');
+    try {
+        await apiRequest('/recharge/custom', {
+            method: 'POST',
+            body: JSON.stringify({ amount })
+        });
+        closeCustomModal();
+        toast('充值申请已提交，请等待客服审核', 'success');
+        updateBadges();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  其他功能
+// ============================================================
 window.openMail = function() {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
     apiRequest('/mails').then(mails => {
@@ -2404,7 +2737,7 @@ async function doClaimMail(mailId) {
 }
 
 // ============================================================
-//  聊天功能
+//  聊天功能（订单聊天）
 // ============================================================
 window.openChat = function(orderId) {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
@@ -2778,9 +3111,12 @@ function afterLogin() {
     loadCategoriesForSelectors();
     renderAdminAll();
     renderDispatcherAll();
+    renderServiceView();
+    loadContacts();
     loadTipHandlers();
     updateHeaderDiamond();
     updateBadges();
+    requestNotificationPermission();
     if (window._badgeTimer) clearInterval(window._badgeTimer);
     window._badgeTimer = setInterval(updateBadges, 30000);
 }
@@ -2822,7 +3158,7 @@ async function doAuthRegister() {
     }
     try {
         const data = await apiRequest('/register', { method: 'POST', body: JSON.stringify({ username, password, role }) });
-        if (role === 'handler' || role === 'dispatcher') {
+        if (role === 'handler' || role === 'dispatcher' || role === 'service') {
             toast('注册成功，请等待管理员审核', 'success');
         } else {
             toast('注册成功，请登录', 'success');
@@ -2868,9 +3204,12 @@ async function init() {
             renderCategoryProducts();
             renderAdminAll();
             renderDispatcherAll();
+            renderServiceView();
+            loadContacts();
             loadTipHandlers();
             updateHeaderDiamond();
             updateBadges();
+            requestNotificationPermission();
             if (window._badgeTimer) clearInterval(window._badgeTimer);
             window._badgeTimer = setInterval(updateBadges, 30000);
         } catch (err) {
@@ -2882,12 +3221,12 @@ async function init() {
         }
     }
 
-    // ===== 注册 Service Worker（PWA） =====
+    // 注册 Service Worker（PWA）
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('/sw.js')
                 .then(function(registration) {
-                    console.log('✅ Service Worker 注册成功，范围:', registration.scope);
+                    console.log('✅ Service Worker 注册成功');
                 })
                 .catch(function(error) {
                     console.log('❌ Service Worker 注册失败:', error);
@@ -2899,7 +3238,6 @@ async function init() {
 document.getElementById('logoutBtn')?.addEventListener('click', logout);
 init();
 console.log('✅ QW电竞护航平台已加载');
-console.log('后端地址:', API_URL);
 
 // 图片预览事件
 document.getElementById('categoryImage')?.addEventListener('input', function() {
