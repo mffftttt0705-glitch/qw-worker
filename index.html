@@ -348,7 +348,6 @@
                 </div>
             </div>
         </div>
-
         <!-- ===== 商城页面 ===== -->
         <div class="view active" id="view-home">
             <div class="announcement" id="homeAnnounce">
@@ -711,7 +710,6 @@
     </div>
 </div>
 <div id="toast" class="toast"></div>
-
 <script>
 // ============================================================
 //  配置
@@ -1824,7 +1822,6 @@ async function loadContacts() {
         const container = document.getElementById('contactList');
         if (!container) return;
         
-        // 更新未读总数
         const totalUnread = contacts.reduce((sum, c) => sum + (c.unread_count || 0), 0);
         const totalEl = document.getElementById('msgUnreadTotal');
         if (totalEl) totalEl.textContent = totalUnread > 0 ? `(${totalUnread}条未读)` : '';
@@ -1884,7 +1881,6 @@ async function openChat(contactId, username) {
             container.innerHTML = html;
             container.scrollTop = container.scrollHeight;
         }
-        // 更新红点
         updateBadges();
     } catch (err) {
         toast(err.message, 'error');
@@ -1916,7 +1912,6 @@ async function sendMessage() {
     }
 }
 
-// 消息通知权限请求
 async function requestNotificationPermission() {
     if ('Notification' in window && Notification.permission === 'default') {
         const result = await Notification.requestPermission();
