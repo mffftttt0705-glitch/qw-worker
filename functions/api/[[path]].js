@@ -1,6 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API (Cloudflare Workers + D1)
-//  包含：用户、商品、订单、分类、充值、客服、消息、提现
+//  修复：消息系统权限、联系人列表、客服功能
 // ============================================================
 
 function generateId() {
@@ -403,7 +403,6 @@ async function handleTakeOrder(env, authHeader, orderId) {
   if (user.role !== 'handler') return errorResponse('只有打手可接单');
   if (user.status !== 'active') return errorResponse('账号未激活，请联系管理员');
   
-  // 检查是否有至少100红钻（冻结）
   if ((user.diamond || 0) < 100) {
     return errorResponse('接单需要至少100红钻（冻结），请先充值', 400);
   }
@@ -413,9 +412,7 @@ async function handleTakeOrder(env, authHeader, orderId) {
   if (!order) return errorResponse('订单不存在', 404);
   if (order.status !== 'pending') return errorResponse('订单不可接');
   
-  // 冻结100红钻
   await runDB(env, 'UPDATE users SET diamond = diamond - 100 WHERE id = ?', [userId]);
-  // 创建冻结记录
   await runDB(env,
     'INSERT INTO frozen_diamonds (id, user_id, amount, order_id, created_at) VALUES (?, ?, 100, ?, ?)',
     [generateId(), userId, orderId, new Date().toISOString()]
@@ -580,7 +577,6 @@ async function handleRequestWithdraw(env, authHeader, body) {
   const { amount } = body;
   if (!amount || amount < 1) return errorResponse('请输入有效数量');
   
-  // 可提现 = 总红钻 - 100（冻结）
   const available = Math.max(0, (user.diamond || 0) - 100);
   if (amount > available) {
     return errorResponse(`可提现红钻不足，可用：${available} 红钻（需保留100冻结）`, 400);
@@ -591,7 +587,6 @@ async function handleRequestWithdraw(env, authHeader, body) {
     'INSERT INTO withdrawals (id, user_id, amount, status, created_at) VALUES (?, ?, ?, "pending", ?)',
     [id, userId, amount, new Date().toISOString()]
   );
-  // 冻结金额（扣除但未真正消耗，提现通过后才真正扣除）
   await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [amount, userId]);
   
   return jsonResponse({ success: true, message: '提现申请已提交，等待管理员审核' });
@@ -615,7 +610,6 @@ async function handleAdminApproveWithdraw(env, withdrawId) {
   
   await runDB(env, 'UPDATE withdrawals SET status = "approved", processed_at = ? WHERE id = ?', 
     [new Date().toISOString(), withdrawId]);
-  // 金额已经在申请时扣除了，这里不再扣除
   return jsonResponse({ success: true, message: '提现已通过' });
 }
 
@@ -628,7 +622,6 @@ async function handleAdminRejectWithdraw(env, withdrawId, body) {
   const { reason } = body;
   await runDB(env, 'UPDATE withdrawals SET status = "rejected", reject_reason = ?, processed_at = ? WHERE id = ?', 
     [reason || '无原因', new Date().toISOString(), withdrawId]);
-  // 退还红钻
   await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [withdraw.amount, withdraw.user_id]);
   return jsonResponse({ success: true, message: '已拒绝，红钻已退还' });
 }
@@ -720,7 +713,7 @@ async function handleServiceGift(env, authHeader, body) {
 }
 
 // ============================================================
-//  消息系统
+//  消息系统（修复版）
 // ============================================================
 async function handleSendMessage(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -731,6 +724,27 @@ async function handleSendMessage(env, authHeader, body) {
   if (!receiverId || !content || !content.trim()) return errorResponse('请完整填写');
   const receiver = await getUserById(env, receiverId);
   if (!receiver) return errorResponse('接收者不存在', 404);
+  
+  // 权限检查：普通用户只能发给客服/管理员，或回复已有联系人
+  if (user.role !== 'admin' && user.role !== 'service') {
+    // 检查是否已有对话记录
+    const existingContact = await queryDB(env,
+      'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?',
+      [userId, receiverId]
+    );
+    // 如果接收者不是客服/管理员，且没有已有对话，则拒绝
+    if (receiver.role !== 'admin' && receiver.role !== 'service' && 
+        (!existingContact.results || existingContact.results.length === 0)) {
+      // 允许发送给任何已经有对话的人
+      const hasContact = await queryDB(env,
+        'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?',
+        [userId, receiverId]
+      );
+      if (!hasContact.results || hasContact.results.length === 0) {
+        return errorResponse('只能联系客服或管理员，或回复已有联系人', 403);
+      }
+    }
+  }
   
   const id = generateId();
   await runDB(env,
@@ -775,6 +789,7 @@ async function handleGetContacts(env, authHeader) {
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
   
+  // 获取所有联系人
   const result = await queryDB(env,
     `SELECT 
       u.id, u.username, u.role,
@@ -785,7 +800,41 @@ async function handleGetContacts(env, authHeader) {
       ORDER BY mc.last_time DESC`,
     [userId]
   );
-  return jsonResponse(result.results || []);
+  let contacts = result.results || [];
+  
+  // 如果是普通用户（非客服/管理员），确保客服/管理员在联系人列表中
+  if (user.role !== 'admin' && user.role !== 'service') {
+    // 获取所有客服和管理员
+    const serviceUsers = await queryDB(env,
+      'SELECT id, username, role FROM users WHERE role IN ("admin", "service") AND status = "active"'
+    );
+    const serviceList = serviceUsers.results || [];
+    
+    // 检查联系人中是否已有客服/管理员
+    const contactIds = new Set(contacts.map(c => c.id));
+    for (const svc of serviceList) {
+      if (!contactIds.has(svc.id) && svc.id !== userId) {
+        // 添加默认联系人（但没有消息记录）
+        contacts.push({
+          id: svc.id,
+          username: svc.username,
+          role: svc.role,
+          last_message: '联系客服',
+          last_time: new Date().toISOString(),
+          unread_count: 0
+        });
+      }
+    }
+  }
+  
+  // 按最后消息时间排序
+  contacts.sort((a, b) => {
+    const timeA = a.last_time ? new Date(a.last_time).getTime() : 0;
+    const timeB = b.last_time ? new Date(b.last_time).getTime() : 0;
+    return timeB - timeA;
+  });
+  
+  return jsonResponse(contacts);
 }
 
 async function handleGetMessages(env, authHeader, body) {
@@ -797,6 +846,20 @@ async function handleGetMessages(env, authHeader, body) {
   if (!contactId) return errorResponse('请选择联系人');
   const contact = await getUserById(env, contactId);
   if (!contact) return errorResponse('联系人不存在', 404);
+  
+  // 权限检查：普通用户只能查看与客服/管理员或已有联系人的聊天
+  if (user.role !== 'admin' && user.role !== 'service') {
+    if (contact.role !== 'admin' && contact.role !== 'service') {
+      // 检查是否已有对话记录
+      const existing = await queryDB(env,
+        'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?',
+        [userId, contactId]
+      );
+      if (!existing.results || existing.results.length === 0) {
+        return errorResponse('只能查看与客服或管理员的聊天', 403);
+      }
+    }
+  }
   
   const result = await queryDB(env,
     `SELECT * FROM messages 
