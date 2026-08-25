@@ -1,5 +1,5 @@
 // ============================================================
-//  QW电竞 - 完整后端 API（全功能版）
+//  QW电竞 - 完整后端 API（含全部原有功能 + 新增功能）
 // ============================================================
 
 function generateId() {
@@ -51,7 +51,7 @@ function verifyAndGetUserId(authHeader) {
 }
 
 // ============================================================
-//  用户认证
+//  用户认证（注册/登录/获取信息）
 // ============================================================
 async function handleRegister(env, body) {
   const { username, password, role } = body;
@@ -143,12 +143,14 @@ async function handleAdminDeleteSubCategory(env, subCategoryId) {
 }
 
 async function handleAdminDeleteCategory(env, categoryId) {
+  // 先删除子分类
+  await runDB(env, 'DELETE FROM sub_categories WHERE category_id = ?', [categoryId]);
   await runDB(env, 'DELETE FROM categories WHERE id = ?', [categoryId]);
   return jsonResponse({ success: true, message: '已删除' });
 }
 
 // ============================================================
-//  商品（含子分类）
+//  商品管理（含子分类）
 // ============================================================
 async function handleGetProducts(env, url) {
   const category = url?.searchParams?.get('category');
@@ -326,6 +328,20 @@ async function handleGetMyOrders(env, authHeader) {
   return jsonResponse(result.results || []);
 }
 
+async function handleGetOrderDetail(env, authHeader, orderId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
+  const order = (result.results && result.results[0]) || null;
+  if (!order) return errorResponse('订单不存在', 404);
+  if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin' && user.role !== 'service') {
+    return errorResponse('无权查看', 403);
+  }
+  return jsonResponse(order);
+}
+
 // ============================================================
 //  提现功能（打手）
 // ============================================================
@@ -389,7 +405,7 @@ async function handleProcessWithdraw(env, authHeader, body) {
 }
 
 // ============================================================
-//  用户详情（含订单统计）
+//  用户详情（含订单统计、红钻操作）
 // ============================================================
 async function handleGetUserDetail(env, authHeader, targetUserId) {
   const userId = verifyAndGetUserId(authHeader);
@@ -457,7 +473,7 @@ async function handleAddContact(env, authHeader, body) {
 }
 
 // ============================================================
-//  消息系统
+//  消息系统（每个用户独立对话）
 // ============================================================
 async function handleSendMessage(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -477,6 +493,7 @@ async function handleSendMessage(env, authHeader, body) {
     'INSERT INTO messages (id, sender_id, receiver_id, content, is_read, created_at) VALUES (?, ?, ?, ?, 0, ?)',
     [id, userId, receiverId, content.trim(), new Date().toISOString()]
   );
+  // 更新联系人
   const c1 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [userId, receiverId]);
   if (!c1.results || c1.results.length === 0) {
     await runDB(env,
@@ -562,7 +579,7 @@ async function handleGetAllUsers(env, authHeader) {
 }
 
 // ============================================================
-//  充值系统
+//  充值系统（自定义金额，客服审核）
 // ============================================================
 async function handleCustomRecharge(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -621,6 +638,175 @@ async function handleAdminGetUsers(env) {
 }
 
 // ============================================================
+//  管理员封禁/解禁用户
+// ============================================================
+async function handleAdminToggleBan(env, targetUserId) {
+  const user = await getUserById(env, targetUserId);
+  if (!user) return errorResponse('用户不存在', 404);
+  const newStatus = user.status === 'active' ? 'banned' : 'active';
+  await runDB(env, 'UPDATE users SET status = ? WHERE id = ?', [newStatus, targetUserId]);
+  return jsonResponse({ success: true, message: '状态已更新' });
+}
+
+// ============================================================
+//  管理员审核用户（打手/派单/客服）
+// ============================================================
+async function handleApproveUser(env, targetUserId) {
+  const user = await getUserById(env, targetUserId);
+  if (!user) return errorResponse('用户不存在', 404);
+  if (user.role !== 'handler' && user.role !== 'dispatcher' && user.role !== 'service') {
+    return errorResponse('该用户不需要审核', 400);
+  }
+  if (user.status !== 'pending') return errorResponse('该用户不需要审核', 400);
+  await runDB(env, 'UPDATE users SET status = "active" WHERE id = ?', [targetUserId]);
+  return jsonResponse({ success: true, message: '审核通过' });
+}
+
+// ============================================================
+//  原有功能：公告管理
+// ============================================================
+async function handleGetAnnounce(env) {
+  const result = await queryDB(env, 'SELECT * FROM announces ORDER BY updated_at DESC LIMIT 1');
+  const data = (result.results && result.results[0]) || { content: '欢迎使用 QW电竞护航平台！', images: '[]' };
+  if (typeof data.images === 'string') {
+    try { data.images = JSON.parse(data.images); } catch(e) { data.images = []; }
+  }
+  return jsonResponse(data);
+}
+
+async function handleAdminUpdateAnnounce(env, body) {
+  const { content, images } = body;
+  await runDB(env, 'DELETE FROM announces');
+  const imagesJson = Array.isArray(images) ? JSON.stringify(images) : '[]';
+  await runDB(env,
+    'INSERT INTO announces (id, content, images, updated_at) VALUES (?, ?, ?, ?)',
+    [generateId(), content || '欢迎使用 QW电竞护航平台！', imagesJson, new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, message: '公告已更新' });
+}
+
+// ============================================================
+//  原有功能：邮件系统
+// ============================================================
+async function handleGetMails(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const result = await queryDB(env, 'SELECT * FROM mails WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+  return jsonResponse(result.results || []);
+}
+
+async function handleClaimMail(env, authHeader, mailId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const mail = await queryDB(env, 'SELECT * FROM mails WHERE id = ?', [mailId]);
+  const mailData = (mail.results && mail.results[0]) || null;
+  if (!mailData) return errorResponse('邮件不存在', 404);
+  if (mailData.user_id !== userId) return errorResponse('无权操作', 403);
+  if (mailData.status === 'read') return errorResponse('已领取');
+  await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [mailData.diamond || 0, userId]);
+  await runDB(env, 'UPDATE mails SET status = "read", claim_time = ? WHERE id = ?', [new Date().toISOString(), mailId]);
+  return jsonResponse({ message: '领取成功' });
+}
+
+// ============================================================
+//  原有功能：派单员统计和订单列表
+// ============================================================
+async function handleDispatcherStats(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (user.role !== 'dispatcher' && user.role !== 'admin') return errorResponse('无权查看', 403);
+  const result = await queryDB(env,
+    `SELECT COUNT(*) as total,
+            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN status = 'ongoing' THEN 1 ELSE 0 END) as ongoing,
+            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
+     FROM orders WHERE boss_id = ?`,
+    [userId]
+  );
+  return jsonResponse((result.results && result.results[0]) || { total: 0, pending: 0, ongoing: 0, completed: 0 });
+}
+
+async function handleDispatcherOrders(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (user.role !== 'dispatcher' && user.role !== 'admin') return errorResponse('无权查看', 403);
+  const result = await queryDB(env, 'SELECT * FROM orders WHERE boss_id = ? ORDER BY created_at DESC', [userId]);
+  return jsonResponse(result.results || []);
+}
+
+async function handleDispatcherPublish(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (user.role !== 'dispatcher' && user.role !== 'admin') return errorResponse('只有派单员可发布', 403);
+  const { game, title, desc, price, assignedHandlerId } = body;
+  if (!title || !price) return errorResponse('请填写完整信息');
+  if (user.diamond < price) return errorResponse(`红钻不足，需要 ${price} 红钻`);
+  await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [price, userId]);
+  const orderId = generateId();
+  let handlerId = assignedHandlerId || null;
+  let status = 'pending';
+  let messages = JSON.stringify([{ sender: 'system', content: `📋 派单员发布订单：${title}`, time: new Date().toISOString() }]);
+  if (handlerId) {
+    const handlerCheck = await queryDB(env, 'SELECT * FROM users WHERE id = ? AND role = "handler" AND status = "active"', [handlerId]);
+    if (handlerCheck.results && handlerCheck.results.length > 0) {
+      status = 'ongoing';
+      messages = JSON.stringify([{ sender: 'system', content: `📋 派单员发布订单：${title}，已指派打手`, time: new Date().toISOString() }]);
+    } else {
+      handlerId = null;
+    }
+  }
+  await runDB(env,
+    `INSERT INTO orders (id, boss_id, handler_id, status, price, game, title, description, messages, start_time) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [orderId, userId, handlerId, status, parseFloat(price), game || '暗区突围', title, desc || '', messages, handlerId ? new Date().toISOString() : null]
+  );
+  return jsonResponse({ success: true, orderId, message: `订单发布成功，已冻结 ${price} 红钻` });
+}
+
+async function handleDispatcherCreateProduct(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (user.role !== 'dispatcher' && user.role !== 'admin') return errorResponse('只有派单员可上架', 403);
+  const { game, title, desc, price, quantity, image, category_id } = body;
+  if (!title || !price) return errorResponse('请填写完整信息');
+  const id = generateId();
+  await runDB(env,
+    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, category_id, created_by) 
+     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)`,
+    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', category_id || null, userId]
+  );
+  return jsonResponse({ success: true, id, message: '商品上架成功' });
+}
+
+// ============================================================
+//  原有功能：打赏
+// ============================================================
+async function handleSendTip(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  const { handlerId, amount } = body;
+  if (!handlerId || !amount || amount < 1) return errorResponse('请选择打手并输入有效红钻数量');
+  if (user.diamond < amount) return errorResponse('红钻不足');
+  await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [amount, userId]);
+  await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [amount, handlerId]);
+  return jsonResponse({ success: true, message: `打赏 ${amount} 红钻成功` });
+}
+
+// ============================================================
+//  原有功能：获取所有打手列表
+// ============================================================
+async function handleGetHandlers(env) {
+  const result = await queryDB(env, 'SELECT id, username FROM users WHERE role = "handler" AND status = "active"');
+  return jsonResponse(result.results || []);
+}
+
+// ============================================================
 //  入口路由
 // ============================================================
 export async function onRequest(context) {
@@ -662,27 +848,43 @@ export async function onRequest(context) {
       const categoryId = url.searchParams.get('categoryId');
       return await handleGetSubCategories(env, categoryId);
     }
+    if (path === '/api/announce' && method === 'GET') return await handleGetAnnounce(env);
+    if (path === '/api/handlers' && method === 'GET') return await handleGetHandlers(env);
 
     const userId = verifyAndGetUserId(authHeader);
     if (!userId) return errorResponse('请先登录', 401);
     const user = await getUserById(env, userId);
     if (!user) return errorResponse('用户不存在', 404);
 
-    // 需登录
+    // 需登录通用接口
     if (path === '/api/me' && method === 'GET') return await handleGetMe(env, authHeader);
     if (path === '/api/orders/buy' && method === 'POST') return await handleBuyProduct(env, authHeader, body);
     if (path === '/api/orders/take' && method === 'POST') return await handleTakeOrder(env, authHeader, body);
     if (path === '/api/orders/submit' && method === 'POST') return await handleSubmitComplete(env, authHeader, body);
     if (path === '/api/orders/confirm' && method === 'POST') return await handleBossConfirm(env, authHeader, body);
     if (path === '/api/orders/my' && method === 'GET') return await handleGetMyOrders(env, authHeader);
+    if (path === '/api/orders/detail' && method === 'GET') {
+      const orderId = url.searchParams.get('id');
+      return await handleGetOrderDetail(env, authHeader, orderId);
+    }
     if (path === '/api/recharge/custom' && method === 'POST') return await handleCustomRecharge(env, authHeader, body);
     if (path === '/api/withdraw' && method === 'POST') return await handleWithdraw(env, authHeader, body);
     if (path === '/api/messages/send' && method === 'POST') return await handleSendMessage(env, authHeader, body);
     if (path === '/api/messages/contacts' && method === 'GET') return await handleGetContacts(env, authHeader);
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
+    if (path === '/api/mails' && method === 'GET') return await handleGetMails(env, authHeader);
+    if (path === '/api/mails/claim' && method === 'POST') {
+      const mailId = body.mailId;
+      return await handleClaimMail(env, authHeader, mailId);
+    }
+    if (path === '/api/tip' && method === 'POST') return await handleSendTip(env, authHeader, body);
+    if (path === '/api/dispatcher/stats' && method === 'GET') return await handleDispatcherStats(env, authHeader);
+    if (path === '/api/dispatcher/orders' && method === 'GET') return await handleDispatcherOrders(env, authHeader);
+    if (path === '/api/dispatcher/publish' && method === 'POST') return await handleDispatcherPublish(env, authHeader, body);
+    if (path === '/api/dispatcher/products' && method === 'POST') return await handleDispatcherCreateProduct(env, authHeader, body);
 
-    // 管理员/客服
+    // 管理员/客服专用接口
     if (user.role === 'admin' || user.role === 'service') {
       if (path === '/api/admin/categories' && method === 'POST') return await handleAdminCreateCategory(env, body);
       if (path === '/api/admin/categories' && method === 'DELETE') return await handleAdminDeleteCategory(env, body.categoryId);
@@ -703,8 +905,11 @@ export async function onRequest(context) {
         return await handleGetUserDetail(env, authHeader, targetUserId);
       }
       if (path === '/api/admin/users/diamond' && method === 'POST') return await handleAdminModifyDiamond(env, authHeader, body);
+      if (path === '/api/admin/users/ban' && method === 'POST') return await handleAdminToggleBan(env, body.userId);
+      if (path === '/api/admin/users/approve' && method === 'POST') return await handleApproveUser(env, body.userId);
       if (path === '/api/admin/users/all' && method === 'GET') return await handleGetAllUsers(env, authHeader);
       if (path === '/api/admin/contacts/add' && method === 'POST') return await handleAddContact(env, authHeader, body);
+      if (path === '/api/admin/announce' && method === 'PUT') return await handleAdminUpdateAnnounce(env, body);
     }
 
     return errorResponse('接口不存在', 404);
