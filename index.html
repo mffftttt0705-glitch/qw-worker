@@ -324,33 +324,6 @@
         <div style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;">打手/派单/客服需管理员审核通过后方可使用</div>
     </div>
 </div>
-
-<!-- ===== 主应用 ===== -->
-<div id="mainApp" class="app-wrapper">
-    <div class="view-container">
-        <div class="app-header">
-            <div class="brand">
-                <div class="brand-icon">QW</div>
-                <span class="brand-name" id="brandName">电竞 <small>· 护航</small></span>
-            </div>
-            <div class="header-right">
-                <div id="diamondArea" style="display:flex;align-items:center;gap:8px;">
-                    <div class="diamond-display" onclick="openRecharge()">
-                        <i class="fas fa-gem"></i>
-                        <span id="headerDiamond">0</span>
-                        <span class="plus">+</span>
-                    </div>
-                    <div class="mail-badge" onclick="openMail()">
-                        <i class="fas fa-envelope"></i>
-                        <span class="badge-num" id="headerUnreadMail">0</span>
-                    </div>
-                </div>
-                <div class="auth-status" onclick="toggleAuthModal()" id="authStatus">
-                    <i class="fas fa-user"></i>
-                    <span id="authStatusText">未登录</span>
-                </div>
-            </div>
-        </div>
         <!-- ===== 商城页面 ===== -->
         <div class="view active" id="view-home">
             <div class="announcement" id="homeAnnounce">
@@ -583,10 +556,9 @@
 <!-- ===== 模态框 ===== -->
 <div class="modal-overlay" id="customModal"><div class="modal-box" id="customModalContent"></div></div>
 <div id="toast" class="toast"></div>
-
 <script>
 // ============================================================
-//  配置 & 全局变量
+//  配置
 // ============================================================
 const API_URL = '/api';
 let currentUser = null;
@@ -651,6 +623,7 @@ function statusClass(s) {
     if (s === 'settled') return 'status-settled';
     return 'status-' + s;
 }
+
 // ============================================================
 //  认证功能
 // ============================================================
@@ -774,7 +747,6 @@ async function loadCategories() {
             html += `<div class="cat-item" data-category="${c.id}" onclick="selectCategory('${c.id}')">${c.name}</div>`;
         });
         container.innerHTML = html;
-        // 加载子分类
         await loadSubCategories();
         renderProducts();
     } catch (err) { console.error(err); }
@@ -932,6 +904,7 @@ async function openProductDetail(productId) {
         };
     } catch (err) { toast(err.message, 'error'); }
 }
+
 // ============================================================
 //  订单功能
 // ============================================================
@@ -1005,8 +978,7 @@ async function doConfirmOrder(orderId) {
 }
 
 function viewOrderDetail(orderId) {
-    apiRequest('/orders/my').then(orders => {
-        const order = orders.find(o => o.id === orderId);
+    apiRequest('/orders/detail?id=' + orderId).then(order => {
         if (!order) return toast('订单不存在', 'error');
         let messages = [];
         try { messages = JSON.parse(order.messages || '[]'); } catch(e) { messages = []; }
@@ -1103,7 +1075,6 @@ async function doSubmitWithdraw(amount, account) {
         renderHandlerView();
     } catch (err) { toast(err.message, 'error'); }
 }
-
 // ============================================================
 //  派单功能
 // ============================================================
@@ -1130,6 +1101,53 @@ async function renderDispatcherView() {
         html += '</tbody></table></div>';
         container.innerHTML = html;
     } catch (err) { console.error(err); }
+}
+
+async function dispatcherDirectPublish() {
+    if (!currentUser) return toast('请先登录', 'warning');
+    const game = document.getElementById('dispatcherDirectGame').value;
+    const title = document.getElementById('dispatcherDirectTitle').value.trim();
+    const desc = document.getElementById('dispatcherDirectDesc').value.trim();
+    const price = parseFloat(document.getElementById('dispatcherDirectPrice').value);
+    if (!title || !price) return toast('请填写完整信息', 'error');
+    if (price < 1) return toast('价格至少为1红钻', 'error');
+    try {
+        const result = await apiRequest('/dispatcher/publish', {
+            method: 'POST',
+            body: JSON.stringify({ game, title, desc, price })
+        });
+        toast(result.message || '✅ 订单已发布', 'success');
+        document.getElementById('dispatcherDirectTitle').value = '';
+        document.getElementById('dispatcherDirectDesc').value = '';
+        document.getElementById('dispatcherDirectPrice').value = '';
+        renderDispatcherView();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function dispatcherShelfProduct() {
+    if (!currentUser) return toast('请先登录', 'warning');
+    const category_id = document.getElementById('dispatcherProdCategory').value;
+    const game = document.getElementById('dispatcherProdGame').value;
+    const title = document.getElementById('dispatcherProdTitle').value.trim();
+    const desc = document.getElementById('dispatcherProdDesc').value.trim();
+    const price = parseFloat(document.getElementById('dispatcherProdPrice').value);
+    const quantity = parseInt(document.getElementById('dispatcherProdQuantity').value) || 1;
+    const image = document.getElementById('dispatcherProdImage').value.trim();
+    if (!category_id) return toast('请选择分类', 'warning');
+    if (!title || !price) return toast('请填写完整信息', 'error');
+    try {
+        await apiRequest('/dispatcher/products', {
+            method: 'POST',
+            body: JSON.stringify({ game, title, desc, price, quantity, image, category_id })
+        });
+        toast('上架成功', 'success');
+        document.getElementById('dispatcherProdTitle').value = '';
+        document.getElementById('dispatcherProdDesc').value = '';
+        document.getElementById('dispatcherProdPrice').value = '';
+        document.getElementById('dispatcherProdImage').value = '';
+        renderProducts();
+        renderAdminProducts();
+    } catch (err) { toast(err.message, 'error'); }
 }
 
 // ============================================================
@@ -1171,7 +1189,6 @@ async function renderServiceView() {
             html += '</tbody></table></div>';
             wc.innerHTML = html;
         }
-        // 添加联系人列表
         await loadServiceUsers();
     } catch (err) { console.error(err); }
 }
@@ -1233,6 +1250,7 @@ async function serviceAddContact() {
         loadContacts();
     } catch (err) { toast(err.message, 'error'); }
 }
+
 // ============================================================
 //  消息系统
 // ============================================================
@@ -1263,7 +1281,6 @@ async function loadContacts() {
             `;
         });
         container.innerHTML = html;
-        // 更新红点
         const badge = document.getElementById('msgBadge');
         if (totalUnread > 0) {
             badge.style.display = 'inline-block';
@@ -1324,7 +1341,6 @@ async function sendMessage() {
     } catch (err) { toast(err.message, 'error'); }
 }
 
-// 消息弹窗通知
 async function requestNotificationPermission() {
     if ('Notification' in window && Notification.permission === 'default') {
         const result = await Notification.requestPermission();
@@ -1350,8 +1366,7 @@ setInterval(async () => {
         }
         document.getElementById('msgUnreadTotal').textContent = unread > 0 ? `(${unread}条未读)` : '';
     } catch (e) {}
-}, 15000);
-
+}, 15000)；
 // ============================================================
 //  管理员功能
 // ============================================================
@@ -1387,7 +1402,7 @@ async function renderAdminProducts() {
         const products = await apiRequest('/products');
         const container = document.getElementById('productsContent');
         if (products.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>暂无商品</p></div>';
+            container.innerHTML = '<div class="admin-card"><div class="admin-card-title"><i class="fas fa-boxes"></i> 商品管理</div><div class="empty-state"><i class="fas fa-box-open"></i><p>暂无商品</p></div></div>';
             return;
         }
         let html = '<div class="admin-card"><div class="admin-card-title"><i class="fas fa-boxes"></i> 商品管理</div><div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead><tbody>';
@@ -1408,6 +1423,7 @@ async function renderAdminProducts() {
         container.innerHTML = html;
     } catch (err) { console.error(err); }
 }
+
 async function adminUnshelf(id) { confirmAction('确认下架', '确认下架此商品？', '确认下架', `doAdminUnshelf('${id}')`); }
 async function doAdminUnshelf(id) { try { await apiRequest('/admin/products/unshelf', { method: 'POST', body: { productId: id } }); toast('已下架', 'success'); renderAdminAll(); renderProducts(); } catch(err) { toast(err.message, 'error'); } }
 async function adminReshelf(id) { confirmAction('确认上架', '确认重新上架此商品？', '确认上架', `doAdminReshelf('${id}')`); }
@@ -1464,6 +1480,7 @@ async function renderAdminUsers() {
                 <td><span class="status-badge ${u.status==='active'?'status-onsale':u.status==='pending'?'status-pending':'status-canceled'}">${statusText2}</span></td>
                 <td>
                     ${u.role !== 'admin' ? `<button class="btn btn-warning btn-xs" onclick="adminToggleBan('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>` : ''}
+                    ${(u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service') && u.status === 'pending' ? `<button class="btn btn-success btn-xs" onclick="adminApproveUser('${u.id}')">审核通过</button>` : ''}
                     <button class="btn btn-primary btn-xs" onclick="viewUserDetail('${u.id}')">详情</button>
                 </td>
             </tr>`;
@@ -1473,7 +1490,9 @@ async function renderAdminUsers() {
     } catch (err) { console.error(err); }
 }
 async function adminToggleBan(id) { confirmAction('确认操作', '确认更改此用户状态？', '确认', `doAdminToggleBan('${id}')`); }
-async function doAdminToggleBan(id) { try { await apiRequest('/admin/users/toggle-ban', { method: 'POST', body: { userId: id } }); toast('状态已更新', 'success'); renderAdminUsers(); } catch(err) { toast(err.message, 'error'); } }
+async function doAdminToggleBan(id) { try { await apiRequest('/admin/users/ban', { method: 'POST', body: { userId: id } }); toast('状态已更新', 'success'); renderAdminUsers(); } catch(err) { toast(err.message, 'error'); } }
+async function adminApproveUser(id) { confirmAction('审核通过', '确认通过此用户审核？', '确认通过', `doAdminApproveUser('${id}')`); }
+async function doAdminApproveUser(id) { try { await apiRequest('/admin/users/approve', { method: 'POST', body: { userId: id } }); toast('审核通过', 'success'); renderAdminUsers(); } catch(err) { toast(err.message, 'error'); } }
 
 async function viewUserDetail(userId) {
     try {
@@ -1651,6 +1670,72 @@ document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
 });
 
 // ============================================================
+//  公告加载
+// ============================================================
+async function loadAnnounce() {
+    try {
+        const data = await fetch(API_URL + '/announce').then(r => r.json());
+        document.getElementById('announceContent').textContent = data.content || '欢迎使用 QW电竞护航平台！';
+        const imagesContainer = document.getElementById('announceImages');
+        imagesContainer.innerHTML = '';
+        if (data.images && data.images.length > 0) {
+            data.images.forEach(img => {
+                const imgEl = document.createElement('img');
+                imgEl.src = img;
+                imgEl.onclick = function() { showImgPreview(img); };
+                imagesContainer.appendChild(imgEl);
+            });
+        }
+        if (data.updatedAt) {
+            document.getElementById('announceTime').textContent = '更新于：' + new Date(data.updatedAt).toLocaleString();
+        }
+    } catch (err) { console.error('加载公告失败', err); }
+}
+
+function showImgPreview(src) {
+    showCustomModal(`<div style="padding:10px;"><img src="${src}" style="width:100%;border-radius:12px;" /><div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div></div>`);
+}
+
+// ============================================================
+//  邮件功能
+// ============================================================
+window.openMail = function() {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    apiRequest('/mails').then(mails => {
+        let listHtml = mails.length === 0 ? '<div class="empty-state"><i class="fas fa-envelope"></i><p>暂无邮件</p></div>' :
+            mails.map(m => `
+                <div class="mail-item">
+                    <div style="display:flex;justify-content:space-between;">
+                        <span class="mail-title">${m.title}</span>
+                        <span class="mail-status"><span class="status-badge ${m.status==='unread'?'status-pending':'status-claimed'}">${m.status==='unread'?'未领取':'已领取'}</span></span>
+                    </div>
+                    <div style="font-size:14px;color:var(--text-secondary);padding:4px 0;">${m.content}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);">
+                        <span>${m.create_time}</span>
+                        ${m.status === 'unread' && m.diamond > 0 ? `<button class="btn btn-success btn-xs" onclick="confirmClaimMail('${m.id}')">领取 ${m.diamond} 红钻</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        showCustomModal(`
+            <h3><i class="fas fa-envelope"></i> 我的邮件</h3>
+            <div style="margin-top:12px;max-height:400px;overflow-y:auto;">${listHtml}</div>
+            <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
+        `);
+    }).catch(err => toast(err.message, 'error'));
+};
+window.confirmClaimMail = function(mailId) {
+    confirmAction('领取红钻', '确认领取此邮件中的红钻？', '确认领取', `doClaimMail('${mailId}')`);
+};
+async function doClaimMail(mailId) {
+    try {
+        await apiRequest('/mails/claim', { method: 'POST', body: { mailId } });
+        toast('领取成功', 'success');
+        openMail();
+        updateHeaderDiamond();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
 //  初始化
 // ============================================================
 async function init() {
@@ -1659,7 +1744,10 @@ async function init() {
     document.getElementById('authStatusText').textContent = '未登录';
     document.getElementById('headerDiamond').textContent = '0';
     document.getElementById('headerUnreadMail').textContent = '0';
+    
+    loadAnnounce();
     loadCategories();
+    
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
         token = savedToken;
@@ -1691,8 +1779,12 @@ async function init() {
             token = null;
             currentUser = null;
             document.getElementById('authStatusText').textContent = '未登录';
+            renderProducts();
         }
+    } else {
+        renderProducts();
     }
+    
     // 注册Service Worker
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
@@ -1700,6 +1792,7 @@ async function init() {
         });
     }
 }
+
 init();
 console.log('✅ QW电竞平台已加载');
 </script>
