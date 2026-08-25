@@ -99,16 +99,58 @@
             --badge-red: #ef4444;
         }
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','PingFang SC',Roboto,sans-serif}
-        body{background:var(--bg-primary);background-image:radial-gradient(ellipse at 20% 50%,var(--gradient-start) 0%,var(--gradient-end) 100%);color:var(--text-primary);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:12px}
-        .app-wrapper{max-width:480px;width:100%;background:var(--bg-secondary);backdrop-filter:blur(20px);border-radius:40px;box-shadow:var(--shadow);border:1px solid var(--border-light);overflow:hidden;position:relative;min-height:700px;padding-bottom:0}
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        body{
+            background:var(--bg-primary);
+            background-image:radial-gradient(ellipse at 20% 50%,var(--gradient-start) 0%,var(--gradient-end) 100%);
+            color:var(--text-primary);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:12px;
+            height:100vh;
+            overflow:hidden;
+        }
         
-        /* ===== 底部导航固定 ===== */
-        .app-wrapper .bottom-nav {
-            position: sticky;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
+        /* ===== 主容器 - 修复底部留白 ===== */
+        .app-wrapper{
+            max-width:480px;
+            width:100%;
+            height:100%;
+            max-height:100vh;
+            background:var(--bg-secondary);
+            backdrop-filter:blur(20px);
+            border-radius:40px;
+            box-shadow:var(--shadow);
+            border:1px solid var(--border-light);
+            overflow:hidden;
+            position:relative;
+            display:flex;
+            flex-direction:column;
+        }
+        
+        /* ===== 内容区域 - 可滚动 ===== */
+        .view-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 16px 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .view-container::-webkit-scrollbar {
+            width: 3px;
+        }
+        .view-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+        
+        /* ===== 底部导航 - 固定在底部无留白 ===== */
+        .bottom-nav {
+            flex-shrink: 0;
             background: var(--bottom-nav-bg);
             backdrop-filter: blur(16px);
             border-top: 1px solid var(--border-light);
@@ -119,20 +161,13 @@
             align-items: center;
             padding: 6px 0 10px;
             width: 100%;
-            flex-shrink: 0;
+            position: relative;
+            bottom: 0;
+            z-index: 100;
         }
-        
-        .view-container {
-            padding: 20px 20px 8px;
-            flex: 1;
-            overflow-y: auto;
-            max-height: calc(100vh - 160px);
-        }
-        
-        .app-wrapper {
-            display: flex;
-            flex-direction: column;
-            max-height: 95vh;
+        /* 修复底部留白 - 去除多余空间 */
+        .bottom-nav::after {
+            display: none;
         }
         
         /* ===== 分类导航 - 可左右滑动 ===== */
@@ -142,8 +177,8 @@
             white-space: nowrap;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
-            padding: 4px 0 12px;
-            margin-bottom: 8px;
+            padding: 4px 0 10px;
+            margin-bottom: 4px;
             display: flex;
             gap: 8px;
             flex-wrap: nowrap;
@@ -185,13 +220,12 @@
             transform: scale(0.95);
         }
         
-        /* ===== 子分类 ===== */
         .sub-category-wrapper {
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
-            padding: 4px 0 8px;
-            margin-bottom: 4px;
+            padding: 2px 0 8px;
+            margin-bottom: 2px;
         }
         .sub-category-wrapper .sub-btn {
             padding: 4px 14px;
@@ -220,7 +254,7 @@
             display: block;
         }
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(18px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -229,9 +263,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 12px;
+            padding-bottom: 10px;
             border-bottom: 1px solid var(--header-border);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             flex-shrink: 0;
         }
         .brand {
@@ -259,17 +293,17 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            color: var(--text-primary);
         }
         .brand-name small {
             font-weight: 300;
             font-size: 11px;
+            -webkit-text-fill-color: var(--text-muted);
             color: var(--text-muted);
         }
         .header-right {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-size: 13px;
             color: var(--text-muted);
         }
@@ -282,7 +316,7 @@
             align-items: center;
             gap: 4px;
             background: var(--bg-input);
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
             border: 1px solid var(--border-color);
             font-size: 13px;
@@ -326,7 +360,7 @@
             font-size: 12px;
             color: var(--text-muted);
             cursor: pointer;
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
             border: 1px solid var(--border-color);
             background: var(--bg-input);
@@ -340,20 +374,26 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
+            gap: 1px;
             color: var(--text-nav);
             font-size: 10px;
             cursor: pointer;
-            padding: 4px 10px;
+            padding: 2px 8px;
             border-radius: 30px;
             background: transparent;
             border: none;
             font-family: inherit;
             position: relative;
-            min-width: 44px;
+            min-width: 40px;
+            transition: all 0.2s;
         }
         .nav-item i {
             font-size: 18px;
+            transition: all 0.2s;
+        }
+        .nav-item span {
+            font-size: 9px;
+            line-height: 1.2;
         }
         .nav-item.active {
             color: var(--text-primary);
@@ -383,22 +423,22 @@
         .admin-card {
             background: var(--admin-card-bg);
             border-radius: 20px;
-            padding: 16px 14px;
-            margin-bottom: 12px;
+            padding: 14px 12px;
+            margin-bottom: 10px;
             border: 1px solid var(--admin-card-border);
             box-shadow: var(--admin-card-shadow);
         }
         .admin-card-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: var(--admin-card-title);
             display: flex;
             align-items: center;
             gap: 8px;
         }
         .admin-form-group {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .admin-form-group label {
             display: block;
@@ -500,76 +540,28 @@
             display: inline-block;
             font-weight: 500;
         }
-        .status-pending {
-            background: var(--status-pending-bg);
-            color: #f59e0b;
-            border: 1px solid #f59e0b44;
-        }
-        .status-ongoing {
-            background: var(--status-ongoing-bg);
-            color: #3b82f6;
-            border: 1px solid #3b82f644;
-        }
-        .status-review {
-            background: var(--status-review-bg);
-            color: #a855f7;
-            border: 1px solid #a855f744;
-        }
-        .status-completed {
-            background: var(--status-completed-bg);
-            color: #22c55e;
-            border: 1px solid #22c55e44;
-        }
-        .status-canceled {
-            background: #6b728022;
-            color: #9ca3af;
-            border: 1px solid #6b728044;
-        }
-        .status-rejected {
-            background: #ef444422;
-            color: #ef4444;
-            border: 1px solid #ef444444;
-        }
-        .status-onsale {
-            background: #22c55e22;
-            color: #22c55e;
-            border: 1px solid #22c55e44;
-        }
-        .status-soldout {
-            background: #6b728022;
-            color: #9ca3af;
-            border: 1px solid #6b728044;
-        }
-        .status-hidden {
-            background: #6b728022;
-            color: #6b7280;
-            border: 1px solid #6b728044;
-        }
-        .status-refund_pending {
-            background: #f59e0b22;
-            color: #f59e0b;
-            border: 1px solid #f59e0b44;
-        }
-        .status-refunded {
-            background: #a855f722;
-            color: #a855f7;
-            border: 1px solid #a855f744;
-        }
-        .status-settled {
-            background: #22c55e22;
-            color: #22c55e;
-            border: 1px solid #22c55e44;
-        }
+        .status-pending { background: var(--status-pending-bg); color: #f59e0b; border: 1px solid #f59e0b44; }
+        .status-ongoing { background: var(--status-ongoing-bg); color: #3b82f6; border: 1px solid #3b82f644; }
+        .status-review { background: var(--status-review-bg); color: #a855f7; border: 1px solid #a855f744; }
+        .status-completed { background: var(--status-completed-bg); color: #22c55e; border: 1px solid #22c55e44; }
+        .status-canceled { background: #6b728022; color: #9ca3af; border: 1px solid #6b728044; }
+        .status-rejected { background: #ef444422; color: #ef4444; border: 1px solid #ef444444; }
+        .status-onsale { background: #22c55e22; color: #22c55e; border: 1px solid #22c55e44; }
+        .status-soldout { background: #6b728022; color: #9ca3af; border: 1px solid #6b728044; }
+        .status-hidden { background: #6b728022; color: #6b7280; border: 1px solid #6b728044; }
+        .status-refund_pending { background: #f59e0b22; color: #f59e0b; border: 1px solid #f59e0b44; }
+        .status-refunded { background: #a855f722; color: #a855f7; border: 1px solid #a855f744; }
+        .status-settled { background: #22c55e22; color: #22c55e; border: 1px solid #22c55e44; }
         .empty-state {
             text-align: center;
-            padding: 30px 20px;
+            padding: 24px 16px;
             color: var(--empty-text);
         }
         .empty-state i {
-            font-size: 36px;
+            font-size: 32px;
             opacity: 0.4;
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .empty-state p {
             font-size: 14px;
@@ -666,11 +658,11 @@
         }
         .toast {
             position: fixed;
-            top: 24px;
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--toast-bg);
-            padding: 12px 28px;
+            padding: 10px 24px;
             border-radius: 40px;
             z-index: 9999;
             box-shadow: var(--toast-shadow);
@@ -693,7 +685,7 @@
         }
         .table-wrap {
             overflow-x: auto;
-            margin-top: 6px;
+            margin-top: 4px;
         }
         table {
             width: 100%;
@@ -704,7 +696,7 @@
             border-bottom: 2px solid var(--border-color);
         }
         th {
-            padding: 8px 6px;
+            padding: 6px 4px;
             text-align: left;
             font-weight: 600;
             color: var(--table-header);
@@ -714,7 +706,7 @@
             white-space: nowrap;
         }
         td {
-            padding: 8px 6px;
+            padding: 6px 4px;
             border-bottom: 1px solid var(--border-color);
             vertical-align: middle;
         }
@@ -722,7 +714,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-top: 6px;
+            margin-top: 4px;
         }
         .product-card {
             background: var(--product-card-bg);
@@ -826,32 +818,11 @@
             max-width: 85%;
             word-break: break-word;
         }
-        .chat-msg.boss {
-            background: #1a2a4a;
-            color: #b0c8e6;
-            align-self: flex-start;
-        }
-        .chat-msg.handler {
-            background: #2a4a2a;
-            color: #b0e6b0;
-            align-self: flex-end;
-        }
-        .chat-msg.dispatcher {
-            background: #2a2a4a;
-            color: #b0b0e6;
-            align-self: flex-start;
-        }
-        .chat-msg.system {
-            background: #3a3a4a;
-            color: #d0d0e0;
-            align-self: center;
-            font-style: italic;
-        }
-        .chat-msg .time {
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-left: 8px;
-        }
+        .chat-msg.boss { background: #1a2a4a; color: #b0c8e6; align-self: flex-start; }
+        .chat-msg.handler { background: #2a4a2a; color: #b0e6b0; align-self: flex-end; }
+        .chat-msg.dispatcher { background: #2a2a4a; color: #b0b0e6; align-self: flex-start; }
+        .chat-msg.system { background: #3a3a4a; color: #d0d0e0; align-self: center; font-style: italic; }
+        .chat-msg .time { font-size: 10px; color: var(--text-muted); margin-left: 8px; }
         .chat-input-area {
             display: flex;
             gap: 8px;
@@ -876,6 +847,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: background 0.2s;
         }
         .contact-item:hover {
             background: var(--bg-card-hover);
@@ -917,7 +889,7 @@
         .tab-nav {
             display: flex;
             gap: 6px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
             overflow-x: auto;
         }
@@ -963,7 +935,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: var(--collapse-text);
         }
         .collapse-toggle:hover {
@@ -971,7 +943,7 @@
         }
         .collapse-content {
             display: none;
-            padding: 8px 0;
+            padding: 6px 0;
         }
         .collapse-content.open {
             display: block;
@@ -984,12 +956,12 @@
         }
         .user-filter {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .user-filter button {
-            padding: 6px 16px;
+            padding: 6px 14px;
             border-radius: 30px;
             border: 1px solid var(--border-color);
             background: var(--bg-input);
@@ -1044,49 +1016,152 @@
             padding-top: 12px;
             margin-top: 12px;
         }
-        
-        /* ===== 响应式 ===== */
-        @media(max-width:420px) {
-            .app-wrapper {
-                border-radius: 28px;
-                max-height: 98vh;
-            }
-            .view-container {
-                padding: 14px 12px 6px;
-                max-height: calc(100vh - 130px);
-            }
-            .bottom-nav {
-                padding: 4px 0 8px;
-            }
-            .nav-item {
-                padding: 2px 6px;
-                min-width: 36px;
-                font-size: 9px;
-            }
-            .nav-item i {
-                font-size: 16px;
-            }
-            .product-card .product-img {
-                height: 80px;
-            }
-            .product-card .product-img img {
-                height: 80px;
-            }
-            .product-grid {
-                gap: 8px;
-            }
-            .category-nav-wrapper .category-btn {
-                padding: 8px 14px;
-                font-size: 13px;
-            }
-            .admin-card {
-                padding: 12px 10px;
-            }
-            .modal-box {
-                padding: 20px 16px;
-            }
+        .withdraw-input-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .withdraw-input-group input {
+            flex: 1;
+            min-width: 100px;
+        }
+        .announcement {
+            background: var(--announce-bg);
+            border: 1px solid var(--announce-border);
+            border-radius: 16px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+        }
+        .announcement .content {
+            font-size: 14px;
+            color: var(--announce-content);
+            line-height: 1.6;
+        }
+        .announcement .images {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .announcement .images img {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        .announcement .time {
+            font-size: 11px;
+            color: var(--announce-time);
+            margin-top: 6px;
+        }
+        .announce-editor textarea {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            resize: vertical;
+            min-height: 80px;
+        }
+        .announce-editor textarea:focus {
+            border-color: #f5c842;
+        }
+        .announce-editor .image-upload {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: 8px 0;
+        }
+        .announce-editor .image-upload input[type="file"] {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            max-width: 200px;
+        }
+        .announce-editor .preview-images {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .announce-editor .preview-images img {
+            max-width: 60px;
+            max-height: 60px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .dispatcher-card {
+            border-left: 4px solid #a855f7;
+        }
+        .service-card {
+            border-left: 4px solid #22c55e;
+        }
+        .admin-card .action-group {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .detail-carousel {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 0;
+            border-radius: 16px;
+            scroll-behavior: smooth;
+        }
+        .detail-carousel::-webkit-scrollbar {
+            display: none;
+        }
+        .detail-carousel .slide {
+            min-width: 100%;
+            scroll-snap-align: start;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            background: var(--product-img-bg);
+        }
+        .detail-carousel .slide img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+        }
+        .detail-index {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .upload-preview {
+            max-width: 80px;
+            max-height: 80px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-top: 4px;
+        }
+        .img-preview-modal .modal-box {
+            max-width: 90%;
+            padding: 10px;
+        }
+        .img-preview-modal img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
         }
         
+        /* ===== 登录页 ===== */
         #authPage {
             display: none;
             flex-direction: column;
@@ -1177,174 +1252,33 @@
         .hidden {
             display: none !important;
         }
-        .detail-carousel {
-            display: flex;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            gap: 0;
-            border-radius: 16px;
-            scroll-behavior: smooth;
+        
+        /* ===== 响应式 ===== */
+        @media(max-width:420px) {
+            body { padding: 8px; }
+            .app-wrapper { border-radius: 28px; }
+            .view-container { padding: 12px 10px 4px; }
+            .bottom-nav { padding: 4px 0 8px; border-radius: 0 0 28px 28px; }
+            .nav-item { padding: 2px 4px; min-width: 32px; font-size: 9px; }
+            .nav-item i { font-size: 16px; }
+            .nav-item span { font-size: 8px; }
+            .product-card .product-img { height: 80px; }
+            .product-card .product-img img { height: 80px; }
+            .product-grid { gap: 8px; }
+            .category-nav-wrapper .category-btn { padding: 8px 14px; font-size: 13px; }
+            .admin-card { padding: 12px 10px; }
+            .modal-box { padding: 20px 16px; }
+            .app-header { padding-bottom: 8px; margin-bottom: 8px; }
+            .brand-name { font-size: 16px; }
+            .brand-icon { width: 30px; height: 30px; font-size: 14px; }
+            .diamond-display { padding: 2px 8px; font-size: 12px; }
+            .auth-status { padding: 2px 8px; font-size: 11px; }
         }
-        .detail-carousel::-webkit-scrollbar {
-            display: none;
-        }
-        .detail-carousel .slide {
-            min-width: 100%;
-            scroll-snap-align: start;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 300px;
-            background: var(--product-img-bg);
-        }
-        .detail-carousel .slide img {
-            max-width: 100%;
-            max-height: 300px;
-            object-fit: contain;
-        }
-        .detail-index {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            background: rgba(0,0,0,0.6);
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-        }
-        .upload-preview {
-            max-width: 80px;
-            max-height: 80px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-top: 4px;
-        }
-        .img-preview-modal .modal-box {
-            max-width: 90%;
-            padding: 10px;
-        }
-        .img-preview-modal img {
-            width: 100%;
-            height: auto;
-            border-radius: 12px;
-        }
-        .announcement {
-            background: var(--announce-bg);
-            border: 1px solid var(--announce-border);
-            border-radius: 16px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-        }
-        .announcement .content {
-            font-size: 14px;
-            color: var(--announce-content);
-            line-height: 1.6;
-        }
-        .announcement .images {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-        .announcement .images img {
-            max-width: 100px;
-            max-height: 100px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-        }
-        .announcement .time {
-            font-size: 11px;
-            color: var(--announce-time);
-            margin-top: 6px;
-        }
-        .announce-editor textarea {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 10px 14px;
-            color: var(--text-primary);
-            font-size: 14px;
-            outline: none;
-            resize: vertical;
-            min-height: 80px;
-        }
-        .announce-editor textarea:focus {
-            border-color: #f5c842;
-        }
-        .announce-editor .image-upload {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-            margin: 8px 0;
-        }
-        .announce-editor .image-upload input[type="file"] {
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 6px 12px;
-            color: var(--text-secondary);
-            font-size: 13px;
-            max-width: 200px;
-        }
-        .announce-editor .preview-images {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .announce-editor .preview-images img {
-            max-width: 60px;
-            max-height: 60px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-        .dispatcher-card {
-            border-left: 4px solid #a855f7;
-        }
-        .service-card {
-            border-left: 4px solid #22c55e;
-        }
-        .admin-card .action-group {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-        .sub-category-wrapper {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            padding: 4px 0 8px;
-            margin-bottom: 4px;
-        }
-        .sub-category-wrapper .sub-btn {
-            padding: 4px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-input);
-            color: var(--text-muted);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .sub-category-wrapper .sub-btn.active {
-            background: #1a6aff;
-            color: #fff;
-            border-color: #1a6aff;
-        }
-        .sub-category-wrapper .sub-btn:active {
-            transform: scale(0.95);
-        }
-        .withdraw-input-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .withdraw-input-group input {
-            flex: 1;
-            min-width: 100px;
+        @media(max-width:360px) {
+            .bottom-nav { padding: 2px 0 6px; }
+            .nav-item { min-width: 28px; }
+            .nav-item i { font-size: 14px; }
+            .nav-item span { font-size: 7px; }
         }
     </style>
 </head>
@@ -1381,7 +1315,7 @@
                 <span class="brand-name" id="brandName">电竞 <small>· 护航</small></span>
             </div>
             <div class="header-right">
-                <div id="diamondArea" style="display:flex;align-items:center;gap:8px;">
+                <div id="diamondArea" style="display:flex;align-items:center;gap:6px;">
                     <div class="diamond-display" onclick="openRecharge()">
                         <i class="fas fa-gem"></i>
                         <span id="headerDiamond">0</span>
@@ -1407,13 +1341,11 @@
                 <div class="time" id="announceTime"></div>
             </div>
             
-            <!-- ===== 分类导航（可左右滑动） ===== -->
             <div class="category-nav-wrapper" id="categoryNavWrapper">
                 <button class="category-btn active" data-category="all" onclick="filterProducts('all')">🏷️ 全部</button>
                 <div id="categoryButtons" style="display:flex;gap:8px;flex-wrap:nowrap;"></div>
             </div>
             
-            <!-- ===== 子分类导航 ===== -->
             <div class="sub-category-wrapper" id="subCategoryWrapper">
                 <button class="sub-btn active" data-sub="all" onclick="filterSubCategory('all')">全部</button>
                 <button class="sub-btn" data-sub="暗区突围" onclick="filterSubCategory('暗区突围')">🎯 暗区突围</button>
@@ -1421,7 +1353,7 @@
             </div>
             
             <div class="admin-card" style="padding:10px 12px;">
-                <div class="admin-form-group" style="margin-bottom:8px;">
+                <div class="admin-form-group" style="margin-bottom:6px;">
                     <input class="admin-form-control" id="searchProduct" placeholder="🔍 搜索商品名称..." oninput="renderCategoryProducts()" />
                 </div>
                 <div id="categoryProducts"></div>
@@ -1430,20 +1362,20 @@
 
         <!-- ===== 商品详情页面 ===== -->
         <div class="view" id="view-product-detail">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
                 <button class="btn btn-outline btn-sm" onclick="goBackFromDetail()"><i class="fas fa-arrow-left"></i> 返回</button>
                 <span style="font-size:16px;font-weight:600;" id="productDetailTitle">商品详情</span>
             </div>
             <div id="productDetailContent">
-                <div style="position:relative;background:var(--product-img-bg);border-radius:16px;overflow:hidden;margin-bottom:16px;">
+                <div style="position:relative;background:var(--product-img-bg);border-radius:16px;overflow:hidden;margin-bottom:12px;">
                     <div class="detail-carousel" id="productDetailCarousel"></div>
                     <div class="detail-index" id="productDetailIndex">1/1</div>
                 </div>
                 <div style="padding:0 4px;">
                     <div style="font-size:24px;font-weight:700;color:var(--price-color);margin-bottom:4px;" id="productDetailPrice">0 红钻</div>
                     <div style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:6px;" id="productDetailName">商品名称</div>
-                    <div style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;" id="productDetailDesc">商品描述</div>
-                    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">库存：<span id="productDetailStock">0</span></div>
+                    <div style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;" id="productDetailDesc">商品描述</div>
+                    <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">库存：<span id="productDetailStock">0</span></div>
                     <button class="btn btn-success btn-block" onclick="buyFromDetail()"><i class="fas fa-shopping-cart"></i> 立即购买</button>
                 </div>
             </div>
@@ -1494,14 +1426,14 @@
                 <button data-tab="tab-withdrawals"><i class="fas fa-money-bill-wave"></i> 提现管理</button>
             </div>
             <div class="tab-page active" id="tab-dashboard">
-                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-chart-simple"></i> 数据概览</div><div id="statsGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"></div></div>
+                <div class="admin-card"><div class="admin-card-title"><i class="fas fa-chart-simple"></i> 数据概览</div><div id="statsGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;"></div></div>
                 <div class="admin-card">
                     <div class="collapse-toggle" onclick="toggleCollapse('recentOrders')">
                         <span>📋 最近订单</span>
                         <span id="recentOrdersArrow">▶</span>
                     </div>
                     <div class="collapse-content" id="recentOrdersContent">
-                        <div class="admin-form-group" style="margin-bottom:8px;">
+                        <div class="admin-form-group" style="margin-bottom:6px;">
                             <input class="admin-form-control" id="searchRecentOrder" placeholder="🔍 搜索订单号/标题..." oninput="renderDashboard()" />
                         </div>
                         <div id="recentOrdersList"></div>
@@ -1565,7 +1497,7 @@
                     </div>
                     <button class="btn btn-success" onclick="createCategory()"><i class="fas fa-plus"></i> 创建分类</button>
                 </div>
-                <div class="admin-card" style="border-left:4px solid #a855f7;margin-top:12px;">
+                <div class="admin-card" style="border-left:4px solid #a855f7;margin-top:10px;">
                     <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#a855f7;"></i> 创建子分类（游戏标签）</div>
                     <div class="admin-form-group">
                         <label><i class="fas fa-tags"></i> 所属主分类</label>
@@ -1582,9 +1514,9 @@
                 <div class="admin-card">
                     <div class="collapse-toggle" onclick="toggleCollapse('adminOrders')"><span>📋 所有订单</span><span id="adminOrdersArrow">▶</span></div>
                     <div class="collapse-content" id="adminOrdersContent">
-                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-                            <input class="admin-form-control" id="searchOrder" placeholder="🔍 搜索订单号/标题..." style="flex:1;min-width:150px;" oninput="renderAdminOrders()" />
-                            <select class="admin-form-control" id="filterOrderStatus" style="width:140px;padding:6px 12px;" onchange="renderAdminOrders()">
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+                            <input class="admin-form-control" id="searchOrder" placeholder="🔍 搜索订单号/标题..." style="flex:1;min-width:120px;" oninput="renderAdminOrders()" />
+                            <select class="admin-form-control" id="filterOrderStatus" style="width:120px;padding:6px 10px;" onchange="renderAdminOrders()">
                                 <option value="all">全部状态</option>
                                 <option value="pending">待接单</option>
                                 <option value="ongoing">进行中</option>
@@ -1616,7 +1548,7 @@
                 <div class="admin-card">
                     <div class="collapse-toggle" onclick="toggleCollapse('usersList')"><span>👥 用户管理</span><span id="usersListArrow">▶</span></div>
                     <div class="collapse-content" id="usersListContent">
-                        <div class="admin-form-group" style="margin-bottom:8px;">
+                        <div class="admin-form-group" style="margin-bottom:6px;">
                             <input class="admin-form-control" id="searchUser" placeholder="🔍 搜索用户名..." oninput="renderUsers()" />
                         </div>
                         <div class="user-filter">
@@ -1656,7 +1588,7 @@
         <div class="view" id="view-dispatcher">
             <div class="admin-card dispatcher-card">
                 <div class="admin-card-title"><i class="fas fa-chart-simple" style="color:#a855f7;"></i> 派单仪表盘</div>
-                <div id="dispatcherStats" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;"></div>
+                <div id="dispatcherStats" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;"></div>
             </div>
             <div class="admin-card dispatcher-card">
                 <div class="collapse-toggle" onclick="toggleCollapse('dispatcherOrders')">
@@ -1669,7 +1601,7 @@
             </div>
             <div class="admin-card" style="border-left:4px solid #f59e0b;">
                 <div class="admin-card-title"><i class="fas fa-paper-plane" style="color:#f59e0b;"></i> 直接发布订单</div>
-                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">无需老板购买，直接创建订单，打手可接单。</p>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">无需老板购买，直接创建订单，打手可接单。</p>
                 <div class="admin-form-group"><label><i class="fas fa-gamepad"></i> 游戏</label><select class="admin-form-control" id="dispatcherDirectGame"><option value="暗区突围">🎯 暗区突围</option><option value="三角洲">🚁 三角洲</option></select></div>
                 <div class="admin-form-group"><label><i class="fas fa-tag"></i> 标题</label><input class="admin-form-control" id="dispatcherDirectTitle" placeholder="标题"></div>
                 <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="dispatcherDirectDesc" rows="2" placeholder="服务详情"></textarea></div>
@@ -1720,7 +1652,7 @@
         <div class="view" id="view-service">
             <div class="admin-card service-card">
                 <div class="admin-card-title"><i class="fas fa-headset" style="color:#22c55e;"></i> 客服面板</div>
-                <div id="serviceStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"></div>
+                <div id="serviceStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;"></div>
             </div>
             <div class="admin-card service-card">
                 <div class="admin-card-title"><i class="fas fa-coins" style="color:#22c55e;"></i> 充值审核</div>
@@ -1740,22 +1672,22 @@
 
         <!-- ===== 消息页面 ===== -->
         <div class="view" id="view-messages">
-            <div class="app-header" style="margin-bottom:12px;">
+            <div class="app-header" style="margin-bottom:10px;">
                 <span style="font-size:18px;font-weight:600;">💬 消息</span>
                 <span style="font-size:12px;color:var(--text-muted);" id="msgUnreadTotal"></span>
             </div>
-            <div class="admin-form-group" style="margin-bottom:8px;">
+            <div class="admin-form-group" style="margin-bottom:6px;">
                 <input class="admin-form-control" id="searchContact" placeholder="🔍 搜索联系人..." oninput="loadContacts()" />
             </div>
             <div id="contactList"></div>
             <div id="chatView" style="display:none;">
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
                     <button class="btn btn-outline btn-sm" onclick="backToContacts()"><i class="fas fa-arrow-left"></i> 返回</button>
                     <span id="chatContactName" style="font-weight:600;"></span>
                     <span id="chatContactRole" style="font-size:12px;color:var(--text-muted);"></span>
                 </div>
                 <div id="chatMessages" style="max-height:400px;overflow-y:auto;padding:12px;background:var(--bg-input);border-radius:12px;display:flex;flex-direction:column;"></div>
-                <div style="display:flex;gap:8px;margin-top:12px;">
+                <div style="display:flex;gap:8px;margin-top:10px;">
                     <input class="admin-form-control" id="chatInput" placeholder="输入消息..." />
                     <button class="btn btn-success" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
                 </div>
@@ -1819,7 +1751,6 @@ let userFilter = 'all';
 let currentCategoryFilter = 'all';
 let currentSubCategoryFilter = 'all';
 let currentContactId = null;
-let currentSubCategoryId = null;
 
 // ============================================================
 //  工具函数
@@ -1960,57 +1891,6 @@ function updateHeaderDiamond() {
 }
 
 // ============================================================
-//  图片预览
-// ============================================================
-document.getElementById('categoryImage')?.addEventListener('input', function() {
-    const url = this.value.trim();
-    const img = document.getElementById('categoryImagePreview');
-    if (url) {
-        img.src = url;
-        img.style.display = 'block';
-        img.onerror = function() { this.style.display = 'none'; };
-    } else {
-        img.style.display = 'none';
-    }
-});
-
-document.getElementById('dispatcherProdImageUrl')?.addEventListener('input', function() {
-    const url = this.value.trim();
-    const img = document.getElementById('dispatcherProdImagePreview');
-    if (url) {
-        img.src = url;
-        img.style.display = 'block';
-        img.onerror = function() { this.style.display = 'none'; };
-    } else {
-        img.style.display = 'none';
-    }
-});
-
-document.getElementById('prodImageUrl')?.addEventListener('input', function() {
-    const url = this.value.trim();
-    const img = document.getElementById('prodImagePreview');
-    if (url) {
-        img.src = url;
-        img.style.display = 'block';
-        img.onerror = function() { this.style.display = 'none'; };
-    } else {
-        img.style.display = 'none';
-    }
-});
-
-function previewProdImageUrl(inputId, previewId) {
-    const url = document.getElementById(inputId).value.trim();
-    const img = document.getElementById(previewId);
-    if (url) {
-        img.src = url;
-        img.style.display = 'block';
-        img.onerror = function() { this.style.display = 'none'; };
-    } else {
-        img.style.display = 'none';
-    }
-}
-
-// ============================================================
 //  公告功能
 // ============================================================
 async function loadAnnounce() {
@@ -2086,7 +1966,6 @@ async function loadCategoryNav() {
         const container = document.getElementById('categoryButtons');
         if (!container) return;
         container.innerHTML = '';
-        // 只显示主分类（parent_id 为 null）
         const mainCategories = categories.filter(c => !c.parent_id);
         mainCategories.forEach(c => {
             const btn = document.createElement('button');
@@ -2118,7 +1997,6 @@ async function loadCategoriesForSelectors() {
                 sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
             });
         });
-        // 子分类父级选择器
         const parentSel = document.getElementById('subCategoryParent');
         if (parentSel) {
             parentSel.innerHTML = '<option value="">-- 请选择主分类 --</option>';
@@ -2175,7 +2053,6 @@ async function renderCategories() {
                     <button class="btn btn-danger btn-xs" onclick="confirmDeleteCategory('${c.id}')">删除</button>
                 </td>
             </tr>`;
-            // 子分类
             children.forEach(child => {
                 html += `<tr style="background:var(--bg-card-hover);">
                     <td style="padding-left:20px;">子分类</td>
@@ -2371,7 +2248,6 @@ async function renderCategoryProducts() {
             products = await apiRequest('/categories/' + currentCategoryFilter + '/products');
         }
         
-        // 子分类筛选（按游戏）
         if (currentSubCategoryFilter !== 'all') {
             products = products.filter(p => p.game === currentSubCategoryFilter);
         }
@@ -2569,7 +2445,7 @@ async function renderBossView() {
             if (o.status === 'ongoing' || o.status === 'pending') {
                 actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
             }
-            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">聊天</button>`;
+            actions += `<button class="btn btn-primary btn-xs" onclick="openOrderChat('${o.id}')">聊天</button>`;
             actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
             html += `<tr><td>${o.id}</td><td>${o.title}</td><td>${o.price} 红钻</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
         }
@@ -2638,7 +2514,7 @@ async function renderHandlerView() {
         } else {
             let html = '';
             for (const o of pending) {
-                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game || '暗区突围'} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻</span></div><button class="btn btn-primary btn-sm" onclick="confirmTake('${o.id}')">接单</button></div></div>`;
+                html += `<div class="admin-card" style="padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game || '暗区突围'} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻</span></div><button class="btn btn-primary btn-sm" onclick="confirmTake('${o.id}')">接单</button></div></div>`;
             }
             pContainer.innerHTML = html;
         }
@@ -2653,9 +2529,9 @@ async function renderHandlerView() {
                 const statusCls = o.status === 'ongoing' ? 'status-ongoing' : 'status-review';
                 let actions = '';
                 if (o.status === 'ongoing') actions += `<button class="btn btn-warning btn-sm" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
-                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button>`;
+                actions += `<button class="btn btn-primary btn-sm" onclick="openOrderChat('${o.id}')">聊天</button>`;
                 actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
-                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game || '暗区突围'} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻 ｜ 状态：<span class="status-badge ${statusCls}">${statusText2}</span></span></div><div style="display:flex;gap:4px;flex-wrap:wrap;">${actions}</div></div></div>`;
+                html += `<div class="admin-card" style="padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game || '暗区突围'} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻 ｜ 状态：<span class="status-badge ${statusCls}">${statusText2}</span></span></div><div style="display:flex;gap:4px;flex-wrap:wrap;">${actions}</div></div></div>`;
             }
             oContainer.innerHTML = html;
         }
@@ -2668,7 +2544,7 @@ async function renderHandlerView() {
             for (const o of completed) {
                 const settledText = o.settled ? '已结算' : '待结算';
                 const settledCls = o.settled ? 'status-onsale' : 'status-pending';
-                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game || '暗区突围'} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻 ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.created_at}</span></div><button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button><button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button></div></div>`;
+                html += `<div class="admin-card" style="padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game || '暗区突围'} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻 ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.created_at}</span></div><button class="btn btn-primary btn-sm" onclick="openOrderChat('${o.id}')">聊天</button><button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button></div></div>`;
             }
             cContainer.innerHTML = html;
         }
@@ -2850,9 +2726,9 @@ async function renderDashboard() {
         const pending = orders.filter(o => o.status === 'pending').length;
         const completed = orders.filter(o => o.status === 'completed').length;
         document.getElementById('statsGrid').innerHTML = `
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;">${total}</div><div style="font-size:12px;color:var(--text-muted);">总订单</div></div>
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#f59e0b;">${pending}</div><div style="font-size:12px;color:var(--text-muted);">待接单</div></div>
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#22c55e;">${completed}</div><div style="font-size:12px;color:var(--text-muted);">已完成</div></div>
+            <div class="admin-card" style="padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;">${total}</div><div style="font-size:12px;color:var(--text-muted);">总订单</div></div>
+            <div class="admin-card" style="padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#f59e0b;">${pending}</div><div style="font-size:12px;color:var(--text-muted);">待接单</div></div>
+            <div class="admin-card" style="padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#22c55e;">${completed}</div><div style="font-size:12px;color:var(--text-muted);">已完成</div></div>
         `;
         
         let recent = orders.slice(0, 20);
@@ -3617,10 +3493,10 @@ async function renderDispatcherStats() {
     try {
         const stats = await apiRequest('/dispatcher/stats');
         document.getElementById('dispatcherStats').innerHTML = `
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;">${stats.total || 0}</div><div style="font-size:12px;color:var(--text-muted);">总订单</div></div>
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#f59e0b;">${stats.pending || 0}</div><div style="font-size:12px;color:var(--text-muted);">待接单</div></div>
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#3b82f6;">${stats.ongoing || 0}</div><div style="font-size:12px;color:var(--text-muted);">进行中</div></div>
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#22c55e;">${stats.completed || 0}</div><div style="font-size:12px;color:var(--text-muted);">已完成</div></div>
+            <div class="admin-card" style="padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;">${stats.total || 0}</div><div style="font-size:12px;color:var(--text-muted);">总订单</div></div>
+            <div class="admin-card" style="padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#f59e0b;">${stats.pending || 0}</div><div style="font-size:12px;color:var(--text-muted);">待接单</div></div>
+            <div class="admin-card" style="padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#3b82f6;">${stats.ongoing || 0}</div><div style="font-size:12px;color:var(--text-muted);">进行中</div></div>
+            <div class="admin-card" style="padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#22c55e;">${stats.completed || 0}</div><div style="font-size:12px;color:var(--text-muted);">已完成</div></div>
         `;
     } catch (err) { console.error(err); }
 }
@@ -3648,7 +3524,7 @@ async function renderDispatcherOrders() {
             if (o.status === 'ongoing' || o.status === 'pending') {
                 actions += `<button class="btn btn-success btn-xs" onclick="dispatcherConfirmOrder('${o.id}')">✅ 确认</button>`;
             }
-            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">💬聊天</button>`;
+            actions += `<button class="btn btn-primary btn-xs" onclick="openOrderChat('${o.id}')">💬聊天</button>`;
             html += `<tr>
                 <td>${o.id}</td>
                 <td>${o.title}</td>
@@ -3801,21 +3677,6 @@ async function dispatcherShelfProduct() {
     }
 }
 
-async function loadCategoriesForDispatcher() {
-    try {
-        const categories = await apiRequest('/categories');
-        const mainCats = categories.filter(c => !c.parent_id);
-        const sel = document.getElementById('dispatcherProdCategory');
-        if (!sel) return;
-        sel.innerHTML = '<option value="">-- 请选择分类 --</option>';
-        mainCats.forEach(c => {
-            sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-        });
-    } catch (err) {
-        console.error('加载分类失败', err);
-    }
-}
-
 // ============================================================
 //  客服功能
 // ============================================================
@@ -3833,9 +3694,9 @@ async function renderServiceStats() {
         const pending = recharges.filter(r => r.status === 'pending').length;
         const user = await apiRequest('/me');
         document.getElementById('serviceStats').innerHTML = `
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;">${pending}</div><div style="font-size:12px;color:var(--text-muted);">待审核充值</div></div>
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;">${user.diamond || 0}</div><div style="font-size:12px;color:var(--text-muted);">我的红钻</div></div>
-            <div class="admin-card" style="padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#22c55e;">${recharges.filter(r => r.status === 'approved').length}</div><div style="font-size:12px;color:var(--text-muted);">已处理</div></div>
+            <div class="admin-card" style="padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;">${pending}</div><div style="font-size:12px;color:var(--text-muted);">待审核充值</div></div>
+            <div class="admin-card" style="padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;">${user.diamond || 0}</div><div style="font-size:12px;color:var(--text-muted);">我的红钻</div></div>
+            <div class="admin-card" style="padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#22c55e;">${recharges.filter(r => r.status === 'approved').length}</div><div style="font-size:12px;color:var(--text-muted);">已处理</div></div>
         `;
     } catch (err) { console.error(err); }
 }
@@ -3967,7 +3828,7 @@ async function loadServiceContacts() {
 }
 
 // ============================================================
-//  消息系统
+//  消息系统（修复版）
 // ============================================================
 async function loadContacts() {
     try {
@@ -3976,7 +3837,7 @@ async function loadContacts() {
         const container = document.getElementById('contactList');
         if (!container) return;
         
-        // 如果是客服/管理员，显示所有用户可添加
+        // 判断是否是客服/管理员
         const isService = currentUser && (currentUser.role === 'service' || currentUser.role === 'admin');
         
         let filtered = contacts;
@@ -3988,13 +3849,16 @@ async function loadContacts() {
         const totalEl = document.getElementById('msgUnreadTotal');
         if (totalEl) totalEl.textContent = totalUnread > 0 ? `(${totalUnread}条未读)` : '';
         
-        if (filtered.length === 0) {
+        // 普通用户：如果没有联系人，显示提示并自动添加客服
+        if (!isService && filtered.length === 0) {
             container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无联系人</p>
-                ${isService ? `<button class="btn btn-primary btn-sm" onclick="showAddContact()"><i class="fas fa-user-plus"></i> 添加用户对话</button>` : ''}
+                <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">联系客服或管理员开始对话</p>
+                <button class="btn btn-primary btn-sm" onclick="contactService()" style="margin-top:8px;"><i class="fas fa-headset"></i> 联系客服</button>
             </div>`;
             return;
         }
-        let html = `${isService ? `<button class="btn btn-primary btn-sm" onclick="showAddContact()" style="margin-bottom:12px;"><i class="fas fa-user-plus"></i> 添加用户对话</button>` : ''}`;
+        
+        let html = `${isService ? `<button class="btn btn-primary btn-sm" onclick="showAddContact()" style="margin-bottom:10px;"><i class="fas fa-user-plus"></i> 添加用户对话</button>` : ''}`;
         filtered.forEach(c => {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
@@ -4012,6 +3876,62 @@ async function loadContacts() {
         container.innerHTML = html;
     } catch (err) {
         console.error('加载联系人失败', err);
+    }
+}
+
+// 普通用户联系客服
+async function contactService() {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    try {
+        // 获取所有客服和管理员
+        const users = await apiRequest('/admin/users');
+        const services = users.filter(u => 
+            (u.role === 'service' || u.role === 'admin') && 
+            u.id !== currentUser.id &&
+            u.status === 'active'
+        );
+        if (services.length === 0) {
+            toast('暂无客服在线', 'warning');
+            return;
+        }
+        // 选择第一个客服
+        const service = services[0];
+        // 发送初始消息
+        showCustomModal(`
+            <h3><i class="fas fa-headset"></i> 联系客服</h3>
+            <p style="color:var(--text-muted);font-size:14px;">向 ${service.username} 发送消息：</p>
+            <div class="form-group"><label>消息内容</label>
+                <textarea class="admin-form-control" id="contactServiceMessage" rows="3" placeholder="请输入您的问题..."></textarea>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doContactService('${service.id}')">发送</button>
+            </div>
+        `);
+        document.getElementById('customModal').classList.add('active');
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function doContactService(serviceId) {
+    const content = document.getElementById('contactServiceMessage').value.trim();
+    if (!content) return toast('请输入消息内容', 'warning');
+    closeCustomModal();
+    try {
+        await apiRequest('/messages/send', {
+            method: 'POST',
+            body: JSON.stringify({ receiverId: serviceId, content })
+        });
+        toast('✅ 消息已发送', 'success');
+        loadContacts();
+        updateBadges();
+        // 打开聊天
+        setTimeout(() => {
+            openChat(serviceId, '客服');
+        }, 500);
+    } catch (err) {
+        toast(err.message, 'error');
     }
 }
 
@@ -4068,7 +3988,7 @@ async function openChat(contactId, username) {
     currentContactId = contactId;
     document.getElementById('contactList').style.display = 'none';
     document.getElementById('chatView').style.display = 'block';
-    document.getElementById('chatContactName').textContent = username;
+    document.getElementById('chatContactName').textContent = username || '用户';
     
     // 获取联系人角色
     try {
@@ -4107,6 +4027,8 @@ async function openChat(contactId, username) {
         updateBadges();
     } catch (err) {
         toast(err.message, 'error');
+        // 即使加载消息失败，也显示聊天界面
+        document.getElementById('chatMessages').innerHTML = '<div class="empty-state"><p>无法加载消息，请重试</p></div>';
     }
 }
 
@@ -4115,7 +4037,9 @@ function backToContacts() {
     document.getElementById('chatView').style.display = 'none';
     currentContactId = null;
     loadContacts();
-    loadServiceContacts();
+    if (currentUser && (currentUser.role === 'service' || currentUser.role === 'admin')) {
+        loadServiceContacts();
+    }
 }
 
 async function sendMessage() {
@@ -4130,25 +4054,27 @@ async function sendMessage() {
             body: JSON.stringify({ receiverId: currentContactId, content })
         });
         input.value = '';
-        openChat(currentContactId, document.getElementById('chatContactName').textContent);
+        // 重新加载聊天
+        const name = document.getElementById('chatContactName').textContent;
+        await openChat(currentContactId, name);
     } catch (err) {
         toast(err.message, 'error');
     }
 }
 
 // ============================================================
-//  订单聊天
+//  订单聊天（统一函数）
 // ============================================================
-window.openChat = function(orderId) {
+window.openOrderChat = function(orderId) {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
     apiRequest('/orders/my').then(orders => {
         const order = orders.find(o => o.id === orderId);
         if (!order) return toast('订单不存在', 'error');
-        renderChatModal(order, false);
+        renderOrderChatModal(order);
     }).catch(err => toast(err.message, 'error'));
 };
 
-function renderChatModal(order, isAdmin = false) {
+function renderOrderChatModal(order) {
     let messages = [];
     try {
         if (typeof order.messages === 'string') {
@@ -4167,8 +4093,8 @@ function renderChatModal(order, isAdmin = false) {
         '<div class="empty-state"><p>暂无消息</p></div>';
     const isReadonly = isEnded || !currentUser;
     showCustomModal(`
-        <h3><i class="fas fa-comment"></i> 💬 订单聊天 ${isAdmin ? '（管理员视角）' : ''}</h3>
-        <p style="font-size:13px;color:var(--text-secondary);">${order.game} · ${order.title}</p>
+        <h3><i class="fas fa-comment"></i> 💬 订单聊天</h3>
+        <p style="font-size:13px;color:var(--text-secondary);">${order.game || '暗区突围'} · ${order.title}</p>
         <p style="font-size:12px;color:var(--text-muted);">状态：${statusText(order.status)} ${isEnded ? '（已结束，只读）' : ''}</p>
         <div class="chat-messages" id="chatMessages">${messagesHtml}</div>
         <div class="${isReadonly ? 'chat-readonly' : ''}">
@@ -4191,8 +4117,7 @@ function renderChatModal(order, isAdmin = false) {
             apiRequest('/orders/' + order.id + '/chat', { method: 'POST', body: JSON.stringify({ content: text }) })
                 .then(() => { 
                     toast('消息已发送', 'success'); 
-                    if (isAdmin) adminOpenChat(order.id); 
-                    else openChat(order.id); 
+                    openOrderChat(order.id); 
                 })
                 .catch(err => toast(err.message, 'error'));
         };
@@ -4206,7 +4131,7 @@ window.adminOpenChat = function(orderId) {
     apiRequest('/admin/orders').then(orders => {
         const order = orders.find(o => o.id === orderId);
         if (!order) return toast('订单不存在', 'error');
-        renderChatModal(order, true);
+        renderOrderChatModal(order);
     }).catch(err => toast(err.message, 'error'));
 };
 
@@ -4261,9 +4186,9 @@ window.openMail = function() {
     apiRequest('/mails').then(mails => {
         let listHtml = mails.length === 0 ? '<div class="empty-state"><i class="fas fa-envelope"></i><p>暂无邮件</p></div>' :
             mails.map(m => `
-                <div class="mail-item">
+                <div class="mail-item" style="padding:10px;border-bottom:1px solid var(--border-color);">
                     <div style="display:flex;justify-content:space-between;">
-                        <span class="mail-title">${m.title}</span>
+                        <span class="mail-title" style="font-weight:600;">${m.title}</span>
                         <span class="mail-status"><span class="status-badge ${m.status==='unread'?'status-pending':'status-claimed'}">${m.status==='unread'?'未领取':'已领取'}</span></span>
                     </div>
                     <div style="font-size:14px;color:var(--text-secondary);padding:4px 0;">${m.content}</div>
@@ -4714,6 +4639,55 @@ async function init() {
 document.getElementById('logoutBtn')?.addEventListener('click', logout);
 init();
 console.log('✅ QW电竞护航平台已加载');
+
+// 图片预览
+document.getElementById('categoryImage')?.addEventListener('input', function() {
+    const url = this.value.trim();
+    const img = document.getElementById('categoryImagePreview');
+    if (url) {
+        img.src = url;
+        img.style.display = 'block';
+        img.onerror = function() { this.style.display = 'none'; };
+    } else {
+        img.style.display = 'none';
+    }
+});
+
+document.getElementById('dispatcherProdImageUrl')?.addEventListener('input', function() {
+    const url = this.value.trim();
+    const img = document.getElementById('dispatcherProdImagePreview');
+    if (url) {
+        img.src = url;
+        img.style.display = 'block';
+        img.onerror = function() { this.style.display = 'none'; };
+    } else {
+        img.style.display = 'none';
+    }
+});
+
+document.getElementById('prodImageUrl')?.addEventListener('input', function() {
+    const url = this.value.trim();
+    const img = document.getElementById('prodImagePreview');
+    if (url) {
+        img.src = url;
+        img.style.display = 'block';
+        img.onerror = function() { this.style.display = 'none'; };
+    } else {
+        img.style.display = 'none';
+    }
+});
+
+function previewProdImageUrl(inputId, previewId) {
+    const url = document.getElementById(inputId).value.trim();
+    const img = document.getElementById(previewId);
+    if (url) {
+        img.src = url;
+        img.style.display = 'block';
+        img.onerror = function() { this.style.display = 'none'; };
+    } else {
+        img.style.display = 'none';
+    }
+}
 </script>
 </body>
 </html>
