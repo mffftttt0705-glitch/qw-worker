@@ -64,8 +64,6 @@
             --product-desc: #4a4a5a;
             --product-stock: #6a6a7a;
             --product-bottom-border: rgba(0,0,0,0.06);
-            --product-tag-bg: rgba(0,0,0,0.04);
-            --product-tag-border: rgba(0,0,0,0.06);
             --auth-bg: #f0f2f5;
             --auth-box-bg: #ffffff;
             --auth-box-border: #d0d5dd;
@@ -115,7 +113,7 @@
             overflow:hidden;
         }
         
-        /* ===== 主容器 - 修复底部留白 ===== */
+        /* ===== 主容器 ===== */
         .app-wrapper{
             max-width:480px;
             width:100%;
@@ -132,7 +130,7 @@
             flex-direction:column;
         }
         
-        /* ===== 内容区域 - 可滚动 ===== */
+        /* ===== 内容区域 ===== */
         .view-container {
             flex: 1;
             overflow-y: auto;
@@ -148,7 +146,7 @@
             border-radius: 10px;
         }
         
-        /* ===== 底部导航 - 固定在底部无留白 ===== */
+        /* ===== 底部导航 ===== */
         .bottom-nav {
             flex-shrink: 0;
             background: var(--bottom-nav-bg);
@@ -162,15 +160,15 @@
             padding: 6px 0 10px;
             width: 100%;
             position: relative;
-            bottom: 0;
             z-index: 100;
         }
-        /* 修复底部留白 - 去除多余空间 */
-        .bottom-nav::after {
+        
+        /* ===== 隐藏主应用（登录前） ===== */
+        .app-wrapper.hidden {
             display: none;
         }
         
-        /* ===== 分类导航 - 可左右滑动 ===== */
+        /* ===== 分类导航 ===== */
         .category-nav-wrapper {
             overflow-x: auto;
             overflow-y: hidden;
@@ -1307,8 +1305,9 @@
 </div>
 
 <!-- ===== 主应用 ===== -->
-<div id="mainApp" class="app-wrapper">
+<div id="mainApp" class="app-wrapper hidden">
     <div class="view-container">
+        <!-- 头部 -->
         <div class="app-header">
             <div class="brand">
                 <div class="brand-icon">QW</div>
@@ -3837,7 +3836,6 @@ async function loadContacts() {
         const container = document.getElementById('contactList');
         if (!container) return;
         
-        // 判断是否是客服/管理员
         const isService = currentUser && (currentUser.role === 'service' || currentUser.role === 'admin');
         
         let filtered = contacts;
@@ -3849,7 +3847,6 @@ async function loadContacts() {
         const totalEl = document.getElementById('msgUnreadTotal');
         if (totalEl) totalEl.textContent = totalUnread > 0 ? `(${totalUnread}条未读)` : '';
         
-        // 普通用户：如果没有联系人，显示提示并自动添加客服
         if (!isService && filtered.length === 0) {
             container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无联系人</p>
                 <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">联系客服或管理员开始对话</p>
@@ -3879,11 +3876,9 @@ async function loadContacts() {
     }
 }
 
-// 普通用户联系客服
 async function contactService() {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
     try {
-        // 获取所有客服和管理员
         const users = await apiRequest('/admin/users');
         const services = users.filter(u => 
             (u.role === 'service' || u.role === 'admin') && 
@@ -3894,9 +3889,7 @@ async function contactService() {
             toast('暂无客服在线', 'warning');
             return;
         }
-        // 选择第一个客服
         const service = services[0];
-        // 发送初始消息
         showCustomModal(`
             <h3><i class="fas fa-headset"></i> 联系客服</h3>
             <p style="color:var(--text-muted);font-size:14px;">向 ${service.username} 发送消息：</p>
@@ -3926,7 +3919,6 @@ async function doContactService(serviceId) {
         toast('✅ 消息已发送', 'success');
         loadContacts();
         updateBadges();
-        // 打开聊天
         setTimeout(() => {
             openChat(serviceId, '客服');
         }, 500);
@@ -3990,7 +3982,6 @@ async function openChat(contactId, username) {
     document.getElementById('chatView').style.display = 'block';
     document.getElementById('chatContactName').textContent = username || '用户';
     
-    // 获取联系人角色
     try {
         const users = await apiRequest('/admin/users');
         const user = users.find(u => u.id === contactId);
@@ -4027,7 +4018,6 @@ async function openChat(contactId, username) {
         updateBadges();
     } catch (err) {
         toast(err.message, 'error');
-        // 即使加载消息失败，也显示聊天界面
         document.getElementById('chatMessages').innerHTML = '<div class="empty-state"><p>无法加载消息，请重试</p></div>';
     }
 }
@@ -4054,7 +4044,6 @@ async function sendMessage() {
             body: JSON.stringify({ receiverId: currentContactId, content })
         });
         input.value = '';
-        // 重新加载聊天
         const name = document.getElementById('chatContactName').textContent;
         await openChat(currentContactId, name);
     } catch (err) {
@@ -4576,7 +4565,7 @@ async function doAuthRegister() {
 // ============================================================
 async function init() {
     document.getElementById('authPage').style.display = 'none';
-    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
     applyCollapseStates();
 
     document.getElementById('authStatusText').textContent = '未登录';
@@ -4596,23 +4585,7 @@ async function init() {
         try {
             const user = await apiRequest('/me');
             currentUser = user;
-            document.getElementById('authStatusText').textContent = user.username;
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('view-home').classList.add('active');
-            document.querySelector('.bottom-nav .nav-item[data-target="home"]').classList.add('active');
-            updateRoleBasedUI();
-            updateAccountInfo();
-            renderCategoryProducts();
-            renderAdminAll();
-            renderDispatcherAll();
-            renderServiceView();
-            loadContacts();
-            loadTipHandlers();
-            updateHeaderDiamond();
-            updateBadges();
-            if (window._badgeTimer) clearInterval(window._badgeTimer);
-            window._badgeTimer = setInterval(updateBadges, 30000);
+            afterLogin();
         } catch (err) {
             localStorage.removeItem('token');
             token = null;
@@ -4622,7 +4595,6 @@ async function init() {
         }
     }
 
-    // 注册 Service Worker（PWA）
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('/sw.js')
