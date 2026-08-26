@@ -1413,8 +1413,12 @@
                 <div id="categoryButtons" style="display:flex;gap:8px;flex-wrap:nowrap;"></div>
             </div>
             
-            <!-- ===== 子分类导航（根据当前主分类动态加载） ===== -->
-            <div class="sub-category-wrapper" id="subCategoryWrapper" style="display:none;"></div>
+            <!-- ===== 子分类导航 ===== -->
+            <div class="sub-category-wrapper" id="subCategoryWrapper">
+                <button class="sub-btn active" data-sub="all" onclick="filterSubCategory('all')">全部</button>
+                <button class="sub-btn" data-sub="暗区突围" onclick="filterSubCategory('暗区突围')">🎯 暗区突围</button>
+                <button class="sub-btn" data-sub="三角洲" onclick="filterSubCategory('三角洲')">🚁 三角洲</button>
+            </div>
             
             <div class="admin-card" style="padding:10px 12px;">
                 <div class="admin-form-group" style="margin-bottom:8px;">
@@ -1562,39 +1566,16 @@
                     <button class="btn btn-success" onclick="createCategory()"><i class="fas fa-plus"></i> 创建分类</button>
                 </div>
                 <div class="admin-card" style="border-left:4px solid #a855f7;margin-top:12px;">
-                    <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#a855f7;"></i> 创建子分类</div>
+                    <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#a855f7;"></i> 创建子分类（游戏标签）</div>
                     <div class="admin-form-group">
                         <label><i class="fas fa-tags"></i> 所属主分类</label>
                         <select class="admin-form-control" id="subCategoryParent"></select>
                     </div>
                     <div class="admin-form-group">
                         <label><i class="fas fa-tag"></i> 子分类名称</label>
-                        <input class="admin-form-control" id="subCategoryName" placeholder="如：排位、陪玩、装备" />
-                    </div>
-                    <div class="admin-form-group">
-                        <label><i class="fas fa-sort-numeric-down"></i> 排序权重</label>
-                        <input class="admin-form-control" id="subCategorySortOrder" type="number" placeholder="0" value="0" />
-                    </div>
-                    <div class="admin-form-group">
-                        <label><i class="fas fa-image"></i> 子分类图片URL（可选）</label>
-                        <input class="admin-form-control" id="subCategoryImage" placeholder="输入图片URL" />
+                        <input class="admin-form-control" id="subCategoryName" placeholder="如：暗区突围-排位" />
                     </div>
                     <button class="btn btn-primary" onclick="createSubCategory()"><i class="fas fa-plus"></i> 创建子分类</button>
-                </div>
-                <div class="admin-card" style="border-left:4px solid #06b6d4;margin-top:12px;">
-                    <div class="collapse-toggle" onclick="toggleCollapse('subCategoriesManagement')">
-                        <span><i class="fas fa-layer-group" style="color:#06b6d4;"></i> 子分类管理</span>
-                        <span id="subCategoriesManagementArrow">▶</span>
-                    </div>
-                    <div class="collapse-content" id="subCategoriesManagementContent">
-                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;">
-                            <select class="admin-form-control" id="subCategoryFilterParent" style="flex:1;min-width:150px;" onchange="renderSubCategories()">
-                                <option value="all">全部主分类</option>
-                            </select>
-                            <button class="btn btn-outline btn-sm" onclick="renderSubCategories()"><i class="fas fa-sync"></i> 刷新</button>
-                        </div>
-                        <div id="subCategoriesManagementList"></div>
-                    </div>
                 </div>
             </div>
             <div class="tab-page" id="tab-orders">
@@ -1839,7 +1820,6 @@ let currentCategoryFilter = 'all';
 let currentSubCategoryFilter = 'all';
 let currentContactId = null;
 let currentSubCategoryId = null;
-let cachedCategories = [];
 
 // ============================================================
 //  工具函数
@@ -1931,7 +1911,7 @@ function toggleCollapse(id) {
 }
 
 function applyCollapseStates() {
-    const keys = ['recentOrders', 'productsList', 'adminOrders', 'rechargesList', 'usersList', 'categoriesList', 'subCategoriesManagement', 'dispatcherOrders'];
+    const keys = ['recentOrders', 'productsList', 'adminOrders', 'rechargesList', 'usersList', 'categoriesList', 'dispatcherOrders'];
     keys.forEach(id => {
         const content = document.getElementById(id + 'Content');
         const arrow = document.getElementById(id + 'Arrow');
@@ -2103,17 +2083,11 @@ async function saveAnnounce() {
 async function loadCategoryNav() {
     try {
         const categories = await apiRequest('/categories');
-        cachedCategories = Array.isArray(categories) ? categories : [];
-
         const container = document.getElementById('categoryButtons');
         if (!container) return;
         container.innerHTML = '';
-
-        // 第一行只显示“全部 + 主分类”，不再显示暗区突围/三角洲等历史硬编码游戏分类。
-        const mainCategories = cachedCategories
-            .filter(c => !c.parent_id)
-            .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
-
+        // 只显示主分类（parent_id 为 null）
+        const mainCategories = categories.filter(c => !c.parent_id);
         mainCategories.forEach(c => {
             const btn = document.createElement('button');
             btn.className = 'category-btn';
@@ -2126,65 +2100,9 @@ async function loadCategoryNav() {
             btn.onclick = function() { filterProducts(c.id); };
             container.appendChild(btn);
         });
-
-        // 保持当前主分类的选中状态；如果当前主分类已不存在，则回到全部。
-        const mainExists = currentCategoryFilter !== 'all' && mainCategories.some(c => c.id === currentCategoryFilter);
-        if (!mainExists) {
-            currentCategoryFilter = 'all';
-            currentSubCategoryFilter = 'all';
-            currentSubCategoryId = null;
-        }
-
-        document.querySelectorAll('#categoryNavWrapper .category-btn').forEach(b => b.classList.remove('active'));
-        const activeCategory = document.querySelector(`#categoryNavWrapper .category-btn[data-category="${currentCategoryFilter}"]`);
-        if (activeCategory) activeCategory.classList.add('active');
-
-        renderSubCategoryNav(currentCategoryFilter === 'all' ? null : currentCategoryFilter, cachedCategories);
-    } catch (err) {
+    } catch (err) { 
         console.error('加载分类导航失败', err);
     }
-}
-
-// 根据当前主分类动态显示对应子分类。
-// 全部：不混合不同主分类的子分类，只显示“全部”。
-function renderSubCategoryNav(parentId, categories = cachedCategories) {
-    const wrapper = document.getElementById('subCategoryWrapper');
-    if (!wrapper) return;
-
-    const subCategories = (categories || [])
-        .filter(c => c.parent_id && c.parent_id === parentId)
-        .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
-
-    // 没有主分类/没有子分类时不占页面空间。
-    if (!parentId || subCategories.length === 0) {
-        wrapper.innerHTML = '';
-        wrapper.style.display = 'none';
-        currentSubCategoryFilter = 'all';
-        currentSubCategoryId = null;
-        return;
-    }
-
-    currentSubCategoryFilter = 'all';
-    currentSubCategoryId = null;
-    wrapper.style.display = 'flex';
-    wrapper.innerHTML = '';
-
-    const allBtn = document.createElement('button');
-    allBtn.className = 'sub-btn active';
-    allBtn.dataset.sub = 'all';
-    allBtn.textContent = '全部';
-    allBtn.onclick = () => filterSubCategory('all');
-    wrapper.appendChild(allBtn);
-
-    subCategories.forEach(c => {
-        const btn = document.createElement('button');
-        btn.className = 'sub-btn';
-        btn.dataset.sub = c.id;
-        btn.textContent = c.image ? `◉ ${c.name}` : c.name;
-        btn.title = c.name;
-        btn.onclick = () => filterSubCategory(c.id);
-        wrapper.appendChild(btn);
-    });
 }
 
 async function loadCategoriesForSelectors() {
@@ -2208,16 +2126,6 @@ async function loadCategoriesForSelectors() {
                 parentSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
             });
         }
-        const subFilter = document.getElementById('subCategoryFilterParent');
-        if (subFilter) {
-            const current = subFilter.value || 'all';
-            subFilter.innerHTML = '<option value="all">全部主分类</option>';
-            mainCats.forEach(c => {
-                subFilter.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-            });
-            subFilter.value = mainCats.some(c => c.id === current) ? current : 'all';
-        }
-        await renderSubCategories();
     } catch (err) {
         console.error('加载分类失败', err);
     }
@@ -2275,15 +2183,14 @@ async function renderCategories() {
                     <td><span class="status-badge status-pending">子分类</span></td>
                     <td>${child.image ? `<img src="${child.image}" style="max-width:40px;max-height:40px;border-radius:4px;" />` : '-'}</td>
                     <td>
-                        <button class="btn btn-primary btn-xs" onclick="editSubCategory('${child.id}')">编辑</button>
-                        <button class="btn btn-danger btn-xs" onclick="confirmDeleteSubCategory('${child.id}')">删除</button>
+                        <button class="btn btn-primary btn-xs" onclick="editCategory('${child.id}')">编辑</button>
+                        <button class="btn btn-danger btn-xs" onclick="confirmDeleteCategory('${child.id}')">删除</button>
                     </td>
                 </tr>`;
             });
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
-        await renderSubCategories();
     } catch (err) { 
         console.error('加载分类失败', err);
     }
@@ -2356,173 +2263,17 @@ async function createCategory() {
 async function createSubCategory() {
     const parent_id = document.getElementById('subCategoryParent').value;
     const name = document.getElementById('subCategoryName').value.trim();
-    const sort_order = parseInt(document.getElementById('subCategorySortOrder').value) || 0;
-    const image = document.getElementById('subCategoryImage').value.trim();
     if (!parent_id) return toast('请选择主分类', 'warning');
     if (!name) return toast('请输入子分类名称', 'warning');
-
     try {
         await apiRequest('/admin/categories', {
             method: 'POST',
-            body: JSON.stringify({ name, image, parent_id, sort_order })
+            body: JSON.stringify({ name, parent_id, sort_order: 0 })
         });
         toast('子分类创建成功', 'success');
         document.getElementById('subCategoryName').value = '';
-        document.getElementById('subCategorySortOrder').value = '0';
-        document.getElementById('subCategoryImage').value = '';
-        await renderCategories();
-        await renderSubCategories();
+        renderCategories();
         loadCategoryNav();
-        loadCategoriesForSelectors();
-        loadCategoriesForDispatcher();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-async function renderSubCategories() {
-    try {
-        const categories = await apiRequest('/categories');
-        const mainCats = categories.filter(c => !c.parent_id);
-        const subCats = categories.filter(c => c.parent_id);
-        const container = document.getElementById('subCategoriesManagementList');
-        const filter = document.getElementById('subCategoryFilterParent');
-        if (!container) return;
-
-        if (filter) {
-            const currentValue = filter.value || 'all';
-            filter.innerHTML = '<option value="all">全部主分类</option>' +
-                mainCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            filter.value = mainCats.some(c => c.id === currentValue) ? currentValue : 'all';
-        }
-
-        const selectedParent = filter?.value || 'all';
-        const visibleSubs = selectedParent === 'all'
-            ? subCats
-            : subCats.filter(s => s.parent_id === selectedParent);
-
-        if (visibleSubs.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-layer-group"></i><p>暂无子分类</p></div>';
-            return;
-        }
-
-        const mainMap = Object.fromEntries(mainCats.map(c => [c.id, c.name]));
-        visibleSubs.sort((a, b) => {
-            const pa = mainMap[a.parent_id] || '';
-            const pb = mainMap[b.parent_id] || '';
-            return pa.localeCompare(pb) || ((Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
-        });
-
-        let html = '<div class="table-wrap"><table><thead><tr><th>所属主分类</th><th>子分类名称</th><th>排序</th><th>图片</th><th>操作</th></tr></thead><tbody>';
-        visibleSubs.forEach(child => {
-            html += `<tr>
-                <td><span class="status-badge status-onsale">${mainMap[child.parent_id] || '未知主分类'}</span></td>
-                <td>${child.name}</td>
-                <td>
-                    <input type="number" class="admin-form-control" style="width:70px;padding:4px 6px;font-size:12px;" value="${Number(child.sort_order) || 0}" onchange="updateSubCategorySort('${child.id}', this.value)" />
-                </td>
-                <td>${child.image ? `<img src="${child.image}" style="max-width:45px;max-height:45px;border-radius:6px;object-fit:cover;" />` : '-'}</td>
-                <td style="white-space:nowrap;">
-                    <button class="btn btn-primary btn-xs" onclick="editSubCategory('${child.id}')"><i class="fas fa-edit"></i> 编辑</button>
-                    <button class="btn btn-danger btn-xs" onclick="confirmDeleteSubCategory('${child.id}')"><i class="fas fa-trash"></i> 删除</button>
-                </td>
-            </tr>`;
-        });
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
-    } catch (err) {
-        console.error('加载子分类管理失败', err);
-        toast(err.message, 'error');
-    }
-}
-
-async function updateSubCategorySort(categoryId, sortOrder) {
-    try {
-        await apiRequest('/admin/categories/' + categoryId + '/edit', {
-            method: 'PUT',
-            body: JSON.stringify({ sort_order: parseInt(sortOrder) || 0 })
-        });
-        toast('子分类排序已更新', 'success');
-        await renderCategories();
-        await renderSubCategories();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-async function editSubCategory(categoryId) {
-    try {
-        const categories = await apiRequest('/categories');
-        const cat = categories.find(c => c.id === categoryId);
-        if (!cat || !cat.parent_id) return toast('子分类不存在', 'error');
-        const parent = categories.find(c => c.id === cat.parent_id);
-
-        showCustomModal(`
-            <h3><i class="fas fa-layer-group"></i> 编辑子分类</h3>
-            <div class="form-group"><label>所属主分类</label>
-                <input class="admin-form-control" value="${parent ? parent.name : '未知主分类'}" disabled />
-            </div>
-            <div class="form-group"><label>子分类名称</label>
-                <input class="admin-form-control" id="editSubCategoryName" value="${cat.name}" />
-            </div>
-            <div class="form-group"><label>分类图片URL</label>
-                <input class="admin-form-control" id="editSubCategoryImage" value="${cat.image || ''}" />
-                ${cat.image ? `<img src="${cat.image}" style="max-width:80px;max-height:60px;border-radius:6px;margin-top:4px;" />` : ''}
-            </div>
-            <div class="form-group"><label>排序权重</label>
-                <input class="admin-form-control" id="editSubCategorySortOrder" type="number" value="${Number(cat.sort_order) || 0}" />
-            </div>
-            <div class="btn-row">
-                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-                <button class="btn btn-success" onclick="doEditSubCategory('${categoryId}')">保存</button>
-            </div>
-        `);
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-async function doEditSubCategory(categoryId) {
-    const name = document.getElementById('editSubCategoryName').value.trim();
-    const image = document.getElementById('editSubCategoryImage').value.trim();
-    const sort_order = parseInt(document.getElementById('editSubCategorySortOrder').value) || 0;
-    if (!name) return toast('请输入子分类名称', 'warning');
-
-    try {
-        await apiRequest('/admin/categories/' + categoryId + '/edit', {
-            method: 'PUT',
-            body: JSON.stringify({ name, image, sort_order })
-        });
-        closeCustomModal();
-        toast('子分类已更新', 'success');
-        await renderCategories();
-        await renderSubCategories();
-        loadCategoryNav();
-        loadCategoriesForSelectors();
-        loadCategoriesForDispatcher();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.confirmDeleteSubCategory = function(categoryId) {
-    confirmAction(
-        '确认删除子分类',
-        '删除后无法恢复。如果该子分类下还有商品，需要先修改商品分类。确定继续吗？',
-        '确认删除',
-        `doDeleteSubCategory('${categoryId}')`
-    );
-};
-
-async function doDeleteSubCategory(categoryId) {
-    try {
-        await apiRequest('/admin/categories/' + categoryId, { method: 'DELETE' });
-        toast('子分类已删除', 'success');
-        await renderCategories();
-        await renderSubCategories();
-        loadCategoryNav();
-        loadCategoriesForSelectors();
-        loadCategoriesForDispatcher();
     } catch (err) {
         toast(err.message, 'error');
     }
@@ -2532,10 +2283,9 @@ async function editCategory(categoryId) {
     const categories = await apiRequest('/categories');
     const cat = categories.find(c => c.id === categoryId);
     if (!cat) return toast('分类不存在', 'error');
-    if (cat.parent_id) return editSubCategory(categoryId);
-
+    
     showCustomModal(`
-        <h3><i class="fas fa-edit"></i> 编辑主分类</h3>
+        <h3><i class="fas fa-edit"></i> 编辑分类</h3>
         <div class="form-group"><label>分类名称</label>
             <input class="admin-form-control" id="editCategoryName" value="${cat.name}" />
         </div>
@@ -2558,16 +2308,32 @@ async function doEditCategory(categoryId) {
     const image = document.getElementById('editCategoryImage').value.trim();
     const sort_order = parseInt(document.getElementById('editCategorySortOrder').value) || 0;
     if (!name) return toast('请输入分类名称', 'error');
-
+    
     try {
         await apiRequest('/admin/categories/' + categoryId + '/edit', {
             method: 'PUT',
             body: JSON.stringify({ name, image, sort_order })
         });
         closeCustomModal();
-        toast('主分类已更新', 'success');
-        await renderCategories();
-        await renderSubCategories();
+        toast('分类已更新', 'success');
+        renderCategories();
+        loadCategoryNav();
+        loadCategoriesForDispatcher();
+        loadCategoriesForSelectors();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.confirmDeleteCategory = function(categoryId) {
+    confirmAction('确认删除', '确认删除此分类？', '确认删除', `doDeleteCategory('${categoryId}')`);
+};
+
+async function doDeleteCategory(categoryId) {
+    try {
+        await apiRequest('/admin/categories/' + categoryId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderCategories();
         loadCategoryNav();
         loadCategoriesForDispatcher();
         loadCategoriesForSelectors();
@@ -2580,31 +2346,18 @@ async function doEditCategory(categoryId) {
 //  商品筛选
 // ============================================================
 async function filterProducts(categoryId) {
-    currentCategoryFilter = categoryId || 'all';
-    currentSubCategoryFilter = 'all';
-    currentSubCategoryId = null;
-
+    currentCategoryFilter = categoryId;
     document.querySelectorAll('#categoryNavWrapper .category-btn').forEach(b => b.classList.remove('active'));
-    const targetBtn = document.querySelector(`#categoryNavWrapper .category-btn[data-category="${currentCategoryFilter}"]`);
+    const targetBtn = document.querySelector(`#categoryNavWrapper .category-btn[data-category="${categoryId}"]`);
     if (targetBtn) targetBtn.classList.add('active');
-
-    // 切换主分类时，第二行立即换成该主分类自己的子分类。
-    renderSubCategoryNav(
-        currentCategoryFilter === 'all' ? null : currentCategoryFilter,
-        cachedCategories
-    );
-
     await renderCategoryProducts();
 }
 
-async function filterSubCategory(subCategoryId) {
-    currentSubCategoryFilter = subCategoryId || 'all';
-    currentSubCategoryId = currentSubCategoryFilter === 'all' ? null : currentSubCategoryFilter;
-
+async function filterSubCategory(subCategory) {
+    currentSubCategoryFilter = subCategory;
     document.querySelectorAll('#subCategoryWrapper .sub-btn').forEach(b => b.classList.remove('active'));
-    const targetBtn = document.querySelector(`#subCategoryWrapper .sub-btn[data-sub="${currentSubCategoryFilter}"]`);
+    const targetBtn = document.querySelector(`#subCategoryWrapper .sub-btn[data-sub="${subCategory}"]`);
     if (targetBtn) targetBtn.classList.add('active');
-
     await renderCategoryProducts();
 }
 
@@ -2612,17 +2365,15 @@ async function renderCategoryProducts() {
     try {
         const search = document.getElementById('searchProduct')?.value.toLowerCase() || '';
         let products;
-        let queryCategoryId = currentCategoryFilter;
-
-        // 选择子分类时直接查询该子分类；选择主分类时由后端返回该主分类及其全部子分类商品。
-        if (currentSubCategoryFilter !== 'all') {
-            queryCategoryId = currentSubCategoryFilter;
-        }
-
-        if (queryCategoryId === 'all') {
+        if (currentCategoryFilter === 'all') {
             products = await apiRequest('/products');
         } else {
-            products = await apiRequest('/categories/' + queryCategoryId + '/products');
+            products = await apiRequest('/categories/' + currentCategoryFilter + '/products');
+        }
+        
+        // 子分类筛选（按游戏）
+        if (currentSubCategoryFilter !== 'all') {
+            products = products.filter(p => p.game === currentSubCategoryFilter);
         }
         
         if (search) {
@@ -3185,15 +2936,49 @@ window.openEditProduct = function(productId) {
         
         apiRequest('/categories').then(categories => {
             const mainCats = categories.filter(c => !c.parent_id);
-            let categoryOptions = '<option value="">无分类</option>';
+            const subCats = categories.filter(c => c.parent_id);
+
+            // 兼容旧数据：以前 category_id 可能保存的是主分类，game 保存的是游戏名。
+            // 新结构以“子分类 ID”为商品 category_id，game 同步保存子分类名称。
+            let selectedMainId = '';
+            let selectedSubId = '';
+            const categoryById = Object.fromEntries(categories.map(c => [c.id, c]));
+            const currentCategory = categoryById[p.category_id];
+
+            if (currentCategory?.parent_id) {
+                selectedSubId = currentCategory.id;
+                selectedMainId = currentCategory.parent_id;
+            } else if (currentCategory) {
+                selectedMainId = currentCategory.id;
+                const legacySub = subCats.find(c => c.parent_id === currentCategory.id && c.name === p.game);
+                if (legacySub) selectedSubId = legacySub.id;
+            }
+            if (!selectedSubId && p.game) {
+                const legacySub = subCats.find(c => c.name === p.game);
+                if (legacySub) {
+                    selectedSubId = legacySub.id;
+                    selectedMainId = legacySub.parent_id;
+                }
+            }
+
+            let categoryOptions = '<option value="">请选择主分类</option>';
             mainCats.forEach(c => {
-                categoryOptions += `<option value="${c.id}" ${p.category_id === c.id ? 'selected' : ''}>${c.name}</option>`;
+                categoryOptions += `<option value="${c.id}" ${selectedMainId === c.id ? 'selected' : ''}>${c.name}</option>`;
             });
-            
+
+            const buildSubOptions = (mainId, selectedId = '') => {
+                const list = subCats.filter(c => c.parent_id === mainId);
+                let html = '<option value="">请选择子分类</option>';
+                list.forEach(c => {
+                    html += `<option value="${c.id}" ${selectedId === c.id ? 'selected' : ''}>${c.name}</option>`;
+                });
+                return html;
+            };
+
             showCustomModal(`
                 <h3><i class="fas fa-edit"></i> 编辑商品</h3>
-                <div class="admin-form-group"><label>分类</label><select class="admin-form-control" id="editProdCategory">${categoryOptions}</select></div>
-                <div class="admin-form-group"><label>游戏</label><select class="admin-form-control" id="editProdGame"><option value="暗区突围" ${p.game==='暗区突围'?'selected':''}>🎯 暗区突围</option><option value="三角洲" ${p.game==='三角洲'?'selected':''}>🚁 三角洲</option></select></div>
+                <div class="admin-form-group"><label>主分类</label><select class="admin-form-control" id="editProdCategory">${categoryOptions}</select></div>
+                <div class="admin-form-group"><label>子分类</label><select class="admin-form-control" id="editProdSubCategory">${buildSubOptions(selectedMainId, selectedSubId)}</select></div>
                 <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="editProdTitle" value="${p.title}" /></div>
                 <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="editProdDesc" rows="2">${p.description||''}</textarea></div>
                 <div class="admin-form-group"><label>价格（红钻）</label><input class="admin-form-control" id="editProdPrice" type="number" value="${p.price}" /></div>
@@ -3213,13 +2998,24 @@ window.openEditProduct = function(productId) {
                     <button class="btn btn-success" onclick="doEditProduct()">保存修改</button>
                 </div>
             `);
+
+            // 主分类切换时，实时刷新对应的子分类
+            const mainSelect = document.getElementById('editProdCategory');
+            const subSelect = document.getElementById('editProdSubCategory');
+            if (mainSelect && subSelect) {
+                mainSelect.addEventListener('change', function() {
+                    subSelect.innerHTML = buildSubOptions(this.value, '');
+                });
+            }
         });
     }).catch(err => toast(err.message, 'error'));
 };
 
 window.doEditProduct = function() {
-    const category_id = document.getElementById('editProdCategory').value || null;
-    const game = document.getElementById('editProdGame').value;
+    const mainCategoryId = document.getElementById('editProdCategory').value || null;
+    const category_id = document.getElementById('editProdSubCategory').value || null;
+    const subSelect = document.getElementById('editProdSubCategory');
+    const game = subSelect?.options[subSelect.selectedIndex]?.textContent?.trim() || '';
     const title = document.getElementById('editProdTitle').value.trim();
     const desc = document.getElementById('editProdDesc').value.trim();
     const price = parseFloat(document.getElementById('editProdPrice').value);
@@ -3228,6 +3024,8 @@ window.doEditProduct = function() {
     const detail_images_raw = document.getElementById('editProdDetailImages').value.trim();
     const detail_desc = document.getElementById('editProdDetailDesc').value.trim();
     const detail_images = detail_images_raw ? detail_images_raw.split(',').map(s => s.trim()).filter(s => s) : [];
+    if (!mainCategoryId) return toast('请选择主分类', 'warning');
+    if (!category_id) return toast('请选择子分类', 'warning');
     if (!title || !price) return toast('请填写完整信息', 'error');
     apiRequest('/admin/products/' + editProductId + '/edit', {
         method: 'PUT',
@@ -4202,7 +4000,7 @@ async function loadServiceContacts() {
         contacts.forEach(c => {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             html += `
-                <div class="contact-item" onclick="openMessageChat('${c.id}','${c.username}')">
+                <div class="contact-item" onclick="openChat('${c.id}','${c.username}')">
                     <div>
                         <strong>${c.username}</strong> ${unreadBadge}
                         <div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div>
@@ -4248,7 +4046,7 @@ async function loadContacts() {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
             html += `
-                <div class="contact-item" onclick="openMessageChat('${c.id}','${c.username}')">
+                <div class="contact-item" onclick="openChat('${c.id}','${c.username}')">
                     <div>
                         <strong>${c.username}</strong> ${roleIcon}
                         ${unreadBadge}
@@ -4265,7 +4063,7 @@ async function loadContacts() {
 }
 
 function showAddContact() {
-    apiRequest('/messages/users').then(users => {
+    apiRequest('/admin/users').then(users => {
         const currentUsers = apiRequest('/messages/contacts').then(contacts => {
             const contactIds = contacts.map(c => c.id);
             const available = users.filter(u => 
@@ -4313,15 +4111,15 @@ async function doAddContact() {
     }
 }
 
-async function openMessageChat(contactId, username) {
+async function openChat(contactId, username) {
     currentContactId = contactId;
     document.getElementById('contactList').style.display = 'none';
     document.getElementById('chatView').style.display = 'block';
     document.getElementById('chatContactName').textContent = username;
     
-    // 获取联系人角色（消息模块使用公开的登录用户接口，客服也可正常访问）
+    // 获取联系人角色
     try {
-        const users = await apiRequest('/messages/users');
+        const users = await apiRequest('/admin/users');
         const user = users.find(u => u.id === contactId);
         if (user) {
             const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
@@ -4379,7 +4177,7 @@ async function sendMessage() {
             body: JSON.stringify({ receiverId: currentContactId, content })
         });
         input.value = '';
-        openMessageChat(currentContactId, document.getElementById('chatContactName').textContent);
+        openChat(currentContactId, document.getElementById('chatContactName').textContent);
     } catch (err) {
         toast(err.message, 'error');
     }
