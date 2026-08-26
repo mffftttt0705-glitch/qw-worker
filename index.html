@@ -20,7 +20,6 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ===== CSS Variables ===== */
         :root {
             --bg-primary: #f0f2f5;
             --bg-secondary: #ffffff;
@@ -67,15 +66,6 @@
             --auth-bg: #f0f2f5;
             --auth-box-bg: #ffffff;
             --auth-box-border: #d0d5dd;
-            --entry-card-bg: #ffffff;
-            --entry-card-border: rgba(0,0,0,0.06);
-            --entry-card-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            --entry-card-title: #1a1a2e;
-            --entry-card-sub: #4a4a5a;
-            --entry-card-badge: rgba(0,0,0,0.04);
-            --entry-card-badge-text: #6a6a7a;
-            --entry-card-icon: #6a6a7a;
-            --entry-card-icon-bg: linear-gradient(145deg,#e8ecf0,#d0d5dd);
             --admin-card-bg: #ffffff;
             --admin-card-border: rgba(0,0,0,0.06);
             --admin-card-shadow: 0 4px 20px rgba(0,0,0,0.06);
@@ -112,8 +102,6 @@
             height:100vh;
             overflow:hidden;
         }
-        
-        /* ===== 主容器 ===== */
         .app-wrapper{
             max-width:480px;
             width:100%;
@@ -129,8 +117,9 @@
             display:flex;
             flex-direction:column;
         }
-        
-        /* ===== 内容区域 ===== */
+        .app-wrapper.hidden {
+            display: none !important;
+        }
         .view-container {
             flex: 1;
             overflow-y: auto;
@@ -145,8 +134,6 @@
             background: var(--border-color);
             border-radius: 10px;
         }
-        
-        /* ===== 底部导航 ===== */
         .bottom-nav {
             flex-shrink: 0;
             background: var(--bottom-nav-bg);
@@ -162,13 +149,98 @@
             position: relative;
             z-index: 100;
         }
-        
-        /* ===== 隐藏主应用（登录前） ===== */
-        .app-wrapper.hidden {
-            display: none;
+        #authPage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+            background: var(--auth-bg);
+            border-radius: 40px;
+            max-width:480px;
+            width:100%;
         }
-        
-        /* ===== 分类导航 ===== */
+        #authPage.hidden {
+            display: none !important;
+        }
+        #authPage .logo {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg,#f5c842,#dbaa2a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        #authPage .logo i {
+            font-size: 40px;
+            color: #f5c842;
+            -webkit-text-fill-color: #f5c842;
+            margin-right: 10px;
+        }
+        #authPage .sub {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        #authPage .auth-box {
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--auth-box-bg);
+            padding: 32px 24px;
+            border-radius: 24px;
+            border: 1px solid var(--auth-box-border);
+            box-shadow: var(--shadow);
+        }
+        #authPage .auth-box input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 60px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+        }
+        #authPage .auth-box input:focus {
+            border-color: #f5c842;
+        }
+        #authPage .auth-box .btn-row {
+            display: flex;
+            gap: 10px;
+        }
+        #authPage .auth-box .btn-row button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 60px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        #authPage .auth-box .role-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        #authPage .auth-box .role-row label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+        #authPage .auth-box .auth-error {
+            color: #ef4444;
+            font-size: 13px;
+            min-height: 20px;
+        }
         .category-nav-wrapper {
             overflow-x: auto;
             overflow-y: hidden;
@@ -217,7 +289,6 @@
         .category-nav-wrapper .category-btn:active {
             transform: scale(0.95);
         }
-        
         .sub-category-wrapper {
             display: flex;
             gap: 6px;
@@ -243,7 +314,6 @@
         .sub-category-wrapper .sub-btn:active {
             transform: scale(0.95);
         }
-
         .view {
             display: none;
             animation: fadeUp 0.3s ease;
@@ -255,8 +325,6 @@
             from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        /* ===== 头部 ===== */
         .app-header {
             display: flex;
             justify-content: space-between;
@@ -366,8 +434,6 @@
         .auth-status:hover {
             background: var(--bg-card-hover);
         }
-
-        /* ===== 底部导航按钮 ===== */
         .nav-item {
             display: flex;
             flex-direction: column;
@@ -416,8 +482,6 @@
             text-align: center;
             line-height: 16px;
         }
-
-        /* ===== 其他样式 ===== */
         .admin-card {
             background: var(--admin-card-bg);
             border-radius: 20px;
@@ -992,23 +1056,6 @@
             color: var(--text-primary);
             font-weight: 500;
         }
-        .user-detail-item {
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .user-detail-item:hover {
-            background: var(--bg-card-hover);
-        }
-        .user-detail-item .name {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .user-detail-item .sub {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
         .withdraw-section {
             border-top: 1px solid var(--border-color);
             padding-top: 12px;
@@ -1158,100 +1205,6 @@
             height: auto;
             border-radius: 12px;
         }
-        
-        /* ===== 登录页 ===== */
-        #authPage {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            text-align: center;
-            background: var(--auth-bg);
-            border-radius: 40px;
-        }
-        #authPage .logo {
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(135deg,#f5c842,#dbaa2a);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-        #authPage .logo i {
-            font-size: 40px;
-            color: #f5c842;
-            -webkit-text-fill-color: #f5c842;
-            margin-right: 10px;
-        }
-        #authPage .sub {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-        #authPage .auth-box {
-            width: 100%;
-            max-width: 320px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: var(--auth-box-bg);
-            padding: 32px 24px;
-            border-radius: 24px;
-            border: 1px solid var(--auth-box-border);
-            box-shadow: var(--shadow);
-        }
-        #authPage .auth-box input {
-            width: 100%;
-            padding: 14px;
-            border-radius: 60px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            font-size: 16px;
-            text-align: center;
-            outline: none;
-        }
-        #authPage .auth-box input:focus {
-            border-color: #f5c842;
-        }
-        #authPage .auth-box .btn-row {
-            display: flex;
-            gap: 10px;
-        }
-        #authPage .auth-box .btn-row button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 60px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        #authPage .auth-box .role-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-        #authPage .auth-box .role-row label {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-        }
-        #authPage .auth-box .auth-error {
-            color: #ef4444;
-            font-size: 13px;
-            min-height: 20px;
-        }
-        .hidden {
-            display: none !important;
-        }
-        
-        /* ===== 响应式 ===== */
         @media(max-width:420px) {
             body { padding: 8px; }
             .app-wrapper { border-radius: 28px; }
@@ -1307,7 +1260,6 @@
 <!-- ===== 主应用 ===== -->
 <div id="mainApp" class="app-wrapper hidden">
     <div class="view-container">
-        <!-- 头部 -->
         <div class="app-header">
             <div class="brand">
                 <div class="brand-icon">QW</div>
@@ -1715,7 +1667,7 @@
         </div>
     </div>
 
-    <!-- ===== 底部导航（固定） ===== -->
+    <!-- ===== 底部导航 ===== -->
     <div class="bottom-nav">
         <button class="nav-item active" data-target="home"><i class="fas fa-store"></i><span>商城</span></button>
         <button class="nav-item" data-target="orders" id="navOrders"><i class="fas fa-receipt"></i><span>订单</span></button>
@@ -1887,6 +1839,20 @@ function updateHeaderDiamond() {
         const unread = mails.filter(m => m.status === 'unread').length;
         document.getElementById('headerUnreadMail').textContent = unread;
     }).catch(() => {});
+}
+
+// ============================================================
+//  显示/隐藏主应用
+// ============================================================
+function showMainApp() {
+    document.getElementById('authPage').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    console.log('✅ 主应用已显示');
+}
+
+function hideMainApp() {
+    document.getElementById('authPage').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
 }
 
 // ============================================================
@@ -3827,7 +3793,7 @@ async function loadServiceContacts() {
 }
 
 // ============================================================
-//  消息系统（修复版）
+//  消息系统
 // ============================================================
 async function loadContacts() {
     try {
@@ -4052,7 +4018,7 @@ async function sendMessage() {
 }
 
 // ============================================================
-//  订单聊天（统一函数）
+//  订单聊天
 // ============================================================
 window.openOrderChat = function(orderId) {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
@@ -4334,6 +4300,7 @@ async function doLogin() {
         localStorage.setItem('token', token);
         currentUser = data.user;
         closeCustomModal();
+        showMainApp();
         afterLogin();
         toast('欢迎回来，' + username, 'success');
     } catch (err) {
@@ -4398,6 +4365,7 @@ function doLogout() {
     currentUser = null;
     document.getElementById('authStatusText').textContent = '未登录';
     document.getElementById('logoutBtn2').style.display = 'none';
+    hideMainApp();
     updateHeaderDiamond();
     if (window._badgeTimer) {
         clearInterval(window._badgeTimer);
@@ -4483,11 +4451,9 @@ document.querySelectorAll('#view-admin .tab-nav button').forEach(btn => {
 });
 
 // ============================================================
-//  认证模块（登录后）
+//  登录后的初始化
 // ============================================================
 function afterLogin() {
-    document.getElementById('authPage').style.display = 'none';
-    document.getElementById('mainApp').classList.remove('hidden');
     document.getElementById('authStatusText').textContent = currentUser.username;
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
@@ -4508,12 +4474,13 @@ function afterLogin() {
     loadTipHandlers();
     updateHeaderDiamond();
     updateBadges();
+    applyCollapseStates();
     if (window._badgeTimer) clearInterval(window._badgeTimer);
     window._badgeTimer = setInterval(updateBadges, 30000);
 }
 
 // ============================================================
-//  登录/注册页面按钮
+//  登录页按钮
 // ============================================================
 async function doAuthLogin() {
     const username = document.getElementById('authUsername').value.trim();
@@ -4529,6 +4496,7 @@ async function doAuthLogin() {
         token = data.token;
         localStorage.setItem('token', token);
         currentUser = data.user;
+        showMainApp();
         afterLogin();
         toast('欢迎回来，' + username, 'success');
     } catch (err) {
@@ -4564,10 +4532,8 @@ async function doAuthRegister() {
 //  初始化
 // ============================================================
 async function init() {
-    document.getElementById('authPage').style.display = 'none';
-    document.getElementById('mainApp').classList.add('hidden');
-    applyCollapseStates();
-
+    hideMainApp();
+    
     document.getElementById('authStatusText').textContent = '未登录';
     document.getElementById('headerDiamond').textContent = '0';
     document.getElementById('headerUnreadMail').textContent = '0';
@@ -4578,6 +4544,7 @@ async function init() {
     renderCategoryProducts();
     loadCategoriesForDispatcher();
     loadCategoriesForSelectors();
+    applyCollapseStates();
 
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
@@ -4585,12 +4552,16 @@ async function init() {
         try {
             const user = await apiRequest('/me');
             currentUser = user;
+            showMainApp();
             afterLogin();
+            console.log('✅ 自动登录成功');
         } catch (err) {
+            console.error('自动登录失败:', err);
             localStorage.removeItem('token');
             token = null;
             currentUser = null;
             document.getElementById('authStatusText').textContent = '未登录';
+            hideMainApp();
             renderCategoryProducts();
         }
     }
@@ -4607,10 +4578,6 @@ async function init() {
         });
     }
 }
-
-document.getElementById('logoutBtn')?.addEventListener('click', logout);
-init();
-console.log('✅ QW电竞护航平台已加载');
 
 // 图片预览
 document.getElementById('categoryImage')?.addEventListener('input', function() {
@@ -4660,6 +4627,12 @@ function previewProdImageUrl(inputId, previewId) {
         img.style.display = 'none';
     }
 }
+
+document.getElementById('logoutBtn')?.addEventListener('click', logout);
+
+// 启动
+init();
+console.log('✅ QW电竞护航平台已加载');
 </script>
 </body>
 </html>
