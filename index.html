@@ -1413,11 +1413,9 @@
                 <div id="categoryButtons" style="display:flex;gap:8px;flex-wrap:nowrap;"></div>
             </div>
             
-            <!-- ===== 子分类导航 ===== -->
+            <!-- ===== 子分类导航：根据当前主分类从 D1 动态加载 ===== -->
             <div class="sub-category-wrapper" id="subCategoryWrapper">
                 <button class="sub-btn active" data-sub="all" onclick="filterSubCategory('all')">全部</button>
-                <button class="sub-btn" data-sub="暗区突围" onclick="filterSubCategory('暗区突围')">🎯 暗区突围</button>
-                <button class="sub-btn" data-sub="三角洲" onclick="filterSubCategory('三角洲')">🚁 三角洲</button>
             </div>
             
             <div class="admin-card" style="padding:10px 12px;">
@@ -2085,24 +2083,72 @@ async function loadCategoryNav() {
         const categories = await apiRequest('/categories');
         const container = document.getElementById('categoryButtons');
         if (!container) return;
+
+        const mainCategories = categories
+            .filter(c => !c.parent_id)
+            .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+
         container.innerHTML = '';
-        // 只显示主分类（parent_id 为 null）
-        const mainCategories = categories.filter(c => !c.parent_id);
         mainCategories.forEach(c => {
             const btn = document.createElement('button');
             btn.className = 'category-btn';
             btn.dataset.category = c.id;
-            if (c.image) {
-                btn.innerHTML = `<img src="${c.image}" /> ${c.name}`;
-            } else {
-                btn.textContent = c.name;
-            }
+            btn.innerHTML = c.image
+                ? `<img src="${c.image}" /> ${c.name}`
+                : c.name;
             btn.onclick = function() { filterProducts(c.id); };
             container.appendChild(btn);
         });
-    } catch (err) { 
+
+        // 第一次加载时，根据当前主分类状态渲染动态子分类。
+        renderSubCategoryNav(categories);
+    } catch (err) {
         console.error('加载分类导航失败', err);
     }
+}
+
+// 根据当前选中的主分类，动态生成对应的子分类按钮。
+// 不再写死“暗区突围 / 三角洲”。
+function renderSubCategoryNav(categories) {
+    const wrapper = document.getElementById('subCategoryWrapper');
+    if (!wrapper) return;
+
+    const allSubCats = (categories || []).filter(c => !!c.parent_id)
+        .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+
+    let subCats;
+    if (currentCategoryFilter === 'all') {
+        subCats = allSubCats;
+    } else {
+        subCats = allSubCats.filter(c => String(c.parent_id) === String(currentCategoryFilter));
+    }
+
+    // 当前子分类如果已经不属于新主分类，则重置为“全部”。
+    if (currentSubCategoryFilter !== 'all' && !subCats.some(c => String(c.id) === String(currentSubCategoryFilter))) {
+        currentSubCategoryFilter = 'all';
+    }
+
+    wrapper.innerHTML = '';
+
+    const allBtn = document.createElement('button');
+    allBtn.className = 'sub-btn' + (currentSubCategoryFilter === 'all' ? ' active' : '');
+    allBtn.dataset.sub = 'all';
+    allBtn.textContent = '全部';
+    allBtn.onclick = () => filterSubCategory('all');
+    wrapper.appendChild(allBtn);
+
+    subCats.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'sub-btn' + (String(currentSubCategoryFilter) === String(c.id) ? ' active' : '');
+        btn.dataset.sub = c.id;
+        btn.textContent = c.name;
+        btn.title = c.name;
+        btn.onclick = () => filterSubCategory(c.id);
+        wrapper.appendChild(btn);
+    });
+
+    // 没有子分类时隐藏第二行，避免出现空白导航。
+    wrapper.style.display = subCats.length ? 'flex' : 'none';
 }
 
 async function loadCategoriesForSelectors() {
@@ -2347,9 +2393,18 @@ async function doDeleteCategory(categoryId) {
 // ============================================================
 async function filterProducts(categoryId) {
     currentCategoryFilter = categoryId;
+    currentSubCategoryFilter = 'all';
     document.querySelectorAll('#categoryNavWrapper .category-btn').forEach(b => b.classList.remove('active'));
     const targetBtn = document.querySelector(`#categoryNavWrapper .category-btn[data-category="${categoryId}"]`);
     if (targetBtn) targetBtn.classList.add('active');
+
+    // 主分类切换后重新读取 D1 分类，让第二行只显示该主分类自己的子分类。
+    try {
+        const categories = await apiRequest('/categories');
+        renderSubCategoryNav(categories);
+    } catch (e) {
+        console.error('刷新子分类失败', e);
+    }
     await renderCategoryProducts();
 }
 
@@ -2373,7 +2428,7 @@ async function renderCategoryProducts() {
         
         // 子分类筛选（按游戏）
         if (currentSubCategoryFilter !== 'all') {
-            products = products.filter(p => p.game === currentSubCategoryFilter);
+            products = products.filter(p => String(p.category_id) === String(currentSubCategoryFilter));
         }
         
         if (search) {
@@ -2394,9 +2449,9 @@ async function renderCategoryProducts() {
             html += `
                 <div class="product-card" onclick="openProductDetail('${p.id}')">
                     <div style="position:relative;">
-                        ${p.image ? `<img src="${p.image}" style="width:100%;height:100px;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);\\'>${p.game === '暗区突围' ? '🎯' : '🚁'}</div>'" />` : 
-                        `<div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);color:var(--product-img-icon);">${p.game === '暗区突围' ? '🎯' : '🚁'}</div>`}
-                        <div class="tag">${p.category_name || p.game || '暗区突围'}</div>
+                        ${p.image ? `<img src="${p.image}" style="width:100%;height:100px;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);\\'>🏷️</div>'" />` : 
+                        `<div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);color:var(--product-img-icon);">🏷️</div>`}
+                        <div class="tag">${p.category_name || p.game || '未分类'}</div>
                     </div>
                     <div class="product-body">
                         <div class="product-title">${p.title}</div>
@@ -2455,7 +2510,7 @@ async function openProductDetail(productId) {
             images = [product.image];
         }
         if (images.length === 0) {
-            const icon = product.game === '暗区突围' ? '🎯' : '🚁';
+            const icon = '🏷️';
             images = ['data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#e8ecf0"/><text x="200" y="160" font-size="60" text-anchor="middle">${icon}</text><text x="200" y="200" font-size="16" fill="#6a6a7a" text-anchor="middle">暂无图片</text></svg>`)];
         }
         images.forEach((img) => {
@@ -2470,7 +2525,7 @@ async function openProductDetail(productId) {
                 imgEl.style.maxHeight = '300px';
                 imgEl.style.objectFit = 'contain';
                 imgEl.onerror = function() {
-                    const icon = product.game === '暗区突围' ? '🎯' : '🚁';
+                    const icon = '🏷️';
                     div.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:300px;font-size:60px;background:var(--product-img-bg);">${icon}</div>`;
                 };
                 div.appendChild(imgEl);
