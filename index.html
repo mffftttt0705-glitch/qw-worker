@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -3954,7 +3953,7 @@ async function loadServiceContacts() {
         contacts.forEach(c => {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             html += `
-                <div class="contact-item" onclick="openChat('${c.id}','${c.username}')">
+                <div class="contact-item" onclick="openMessageChat('${c.id}','${c.username}')">
                     <div>
                         <strong>${c.username}</strong> ${unreadBadge}
                         <div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div>
@@ -4000,7 +3999,7 @@ async function loadContacts() {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
             html += `
-                <div class="contact-item" onclick="openChat('${c.id}','${c.username}')">
+                <div class="contact-item" onclick="openMessageChat('${c.id}','${c.username}')">
                     <div>
                         <strong>${c.username}</strong> ${roleIcon}
                         ${unreadBadge}
@@ -4017,7 +4016,7 @@ async function loadContacts() {
 }
 
 function showAddContact() {
-    apiRequest('/admin/users').then(users => {
+    apiRequest('/messages/users').then(users => {
         const currentUsers = apiRequest('/messages/contacts').then(contacts => {
             const contactIds = contacts.map(c => c.id);
             const available = users.filter(u => 
@@ -4065,15 +4064,15 @@ async function doAddContact() {
     }
 }
 
-async function openChat(contactId, username) {
+async function openMessageChat(contactId, username) {
     currentContactId = contactId;
     document.getElementById('contactList').style.display = 'none';
     document.getElementById('chatView').style.display = 'block';
     document.getElementById('chatContactName').textContent = username;
     
-    // 获取联系人角色
+    // 获取联系人角色（消息模块使用公开的登录用户接口，客服也可正常访问）
     try {
-        const users = await apiRequest('/admin/users');
+        const users = await apiRequest('/messages/users');
         const user = users.find(u => u.id === contactId);
         if (user) {
             const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
@@ -4131,7 +4130,7 @@ async function sendMessage() {
             body: JSON.stringify({ receiverId: currentContactId, content })
         });
         input.value = '';
-        openChat(currentContactId, document.getElementById('chatContactName').textContent);
+        openMessageChat(currentContactId, document.getElementById('chatContactName').textContent);
     } catch (err) {
         toast(err.message, 'error');
     }
