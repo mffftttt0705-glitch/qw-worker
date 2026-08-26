@@ -250,14 +250,42 @@ async function handleAdminDeleteCategory(env, categoryId) {
 }
 
 async function handleGetCategoryProducts(env, categoryId) {
-  const result = await queryDB(env,
-    `SELECT p.*, c.name as category_name 
-     FROM products p 
-     LEFT JOIN categories c ON p.category_id = c.id 
-     WHERE p.category_id = ? AND p.hidden = 0 
-     ORDER BY p.created_at DESC`,
+  // 主分类：同时返回直接挂在主分类下，以及挂在该主分类所有子分类下的商品。
+  // 子分类：只返回该子分类自己的商品。
+  const categoryResult = await queryDB(
+    env,
+    'SELECT id, parent_id FROM categories WHERE id = ?',
     [categoryId]
   );
+  const category = categoryResult.results && categoryResult.results[0];
+  if (!category) return jsonResponse([]);
+
+  let result;
+  if (!category.parent_id) {
+    result = await queryDB(
+      env,
+      `SELECT p.*, c.name as category_name
+       FROM products p
+       LEFT JOIN categories c ON p.category_id = c.id
+       WHERE p.hidden = 0
+         AND (p.category_id = ? OR p.category_id IN (
+           SELECT id FROM categories WHERE parent_id = ?
+         ))
+       ORDER BY p.created_at DESC`,
+      [categoryId, categoryId]
+    );
+  } else {
+    result = await queryDB(
+      env,
+      `SELECT p.*, c.name as category_name
+       FROM products p
+       LEFT JOIN categories c ON p.category_id = c.id
+       WHERE p.category_id = ? AND p.hidden = 0
+       ORDER BY p.created_at DESC`,
+      [categoryId]
+    );
+  }
+
   return jsonResponse(result.results || []);
 }
 
