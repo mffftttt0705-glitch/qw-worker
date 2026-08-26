@@ -117,9 +117,6 @@
             display:flex;
             flex-direction:column;
         }
-        .app-wrapper.hidden {
-            display: none !important;
-        }
         .view-container {
             flex: 1;
             overflow-y: auto;
@@ -134,6 +131,8 @@
             background: var(--border-color);
             border-radius: 10px;
         }
+        
+        /* ===== 底部导航 - 固定 ===== */
         .bottom-nav {
             flex-shrink: 0;
             background: var(--bottom-nav-bg);
@@ -149,98 +148,58 @@
             position: relative;
             z-index: 100;
         }
-        #authPage {
+        
+        /* ===== 导航按钮 ===== */
+        .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            text-align: center;
-            background: var(--auth-bg);
-            border-radius: 40px;
-            max-width:480px;
-            width:100%;
+            gap: 1px;
+            color: var(--text-nav);
+            font-size: 10px;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 30px;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            position: relative;
+            min-width: 40px;
+            transition: all 0.2s;
         }
-        #authPage.hidden {
+        .nav-item i {
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .nav-item span {
+            font-size: 9px;
+            line-height: 1.2;
+        }
+        .nav-item.active {
+            color: var(--text-primary);
+        }
+        .nav-item.active i {
+            color: #3a7eff;
+            text-shadow: 0 0 20px rgba(0,80,255,0.3);
+        }
+        .nav-item.hidden-nav {
             display: none !important;
         }
-        #authPage .logo {
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(135deg,#f5c842,#dbaa2a);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-        #authPage .logo i {
-            font-size: 40px;
-            color: #f5c842;
-            -webkit-text-fill-color: #f5c842;
-            margin-right: 10px;
-        }
-        #authPage .sub {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-        #authPage .auth-box {
-            width: 100%;
-            max-width: 320px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: var(--auth-box-bg);
-            padding: 32px 24px;
-            border-radius: 24px;
-            border: 1px solid var(--auth-box-border);
-            box-shadow: var(--shadow);
-        }
-        #authPage .auth-box input {
-            width: 100%;
-            padding: 14px;
-            border-radius: 60px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            font-size: 16px;
+        .nav-item .badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ef4444;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 9px;
+            padding: 0 5px;
+            min-width: 16px;
             text-align: center;
-            outline: none;
+            line-height: 16px;
         }
-        #authPage .auth-box input:focus {
-            border-color: #f5c842;
-        }
-        #authPage .auth-box .btn-row {
-            display: flex;
-            gap: 10px;
-        }
-        #authPage .auth-box .btn-row button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 60px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        #authPage .auth-box .role-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-        #authPage .auth-box .role-row label {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-        }
-        #authPage .auth-box .auth-error {
-            color: #ef4444;
-            font-size: 13px;
-            min-height: 20px;
-        }
+
+        /* ===== 其他样式 ===== */
         .category-nav-wrapper {
             overflow-x: auto;
             overflow-y: hidden;
@@ -433,54 +392,6 @@
         }
         .auth-status:hover {
             background: var(--bg-card-hover);
-        }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1px;
-            color: var(--text-nav);
-            font-size: 10px;
-            cursor: pointer;
-            padding: 2px 8px;
-            border-radius: 30px;
-            background: transparent;
-            border: none;
-            font-family: inherit;
-            position: relative;
-            min-width: 40px;
-            transition: all 0.2s;
-        }
-        .nav-item i {
-            font-size: 18px;
-            transition: all 0.2s;
-        }
-        .nav-item span {
-            font-size: 9px;
-            line-height: 1.2;
-        }
-        .nav-item.active {
-            color: var(--text-primary);
-        }
-        .nav-item.active i {
-            color: #3a7eff;
-            text-shadow: 0 0 20px rgba(0,80,255,0.3);
-        }
-        .nav-item.hidden-nav {
-            display: none !important;
-        }
-        .nav-item .badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            background: #ef4444;
-            color: #fff;
-            border-radius: 50%;
-            font-size: 9px;
-            padding: 0 5px;
-            min-width: 16px;
-            text-align: center;
-            line-height: 16px;
         }
         .admin-card {
             background: var(--admin-card-bg);
@@ -1205,6 +1116,76 @@
             height: auto;
             border-radius: 12px;
         }
+        
+        /* ===== "我的"页面 - 登录框 ===== */
+        .login-box {
+            background: var(--bg-input);
+            border-radius: 20px;
+            padding: 24px 20px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 12px;
+        }
+        .login-box .login-title {
+            font-size: 18px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+        .login-box .login-title i {
+            color: #3a7eff;
+            margin-right: 8px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        .login-box input:focus {
+            border-color: #3a7eff;
+        }
+        .login-box .btn-row {
+            display: flex;
+            gap: 10px;
+        }
+        .login-box .btn-row button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .login-box .role-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 8px 0;
+        }
+        .login-box .role-row label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+        .login-box .auth-error {
+            color: #ef4444;
+            font-size: 13px;
+            min-height: 20px;
+            text-align: center;
+        }
+        
+        /* ===== 响应式 ===== */
         @media(max-width:420px) {
             body { padding: 8px; }
             .app-wrapper { border-radius: 28px; }
@@ -1224,6 +1205,7 @@
             .brand-icon { width: 30px; height: 30px; font-size: 14px; }
             .diamond-display { padding: 2px 8px; font-size: 12px; }
             .auth-status { padding: 2px 8px; font-size: 11px; }
+            .login-box { padding: 16px 14px; }
         }
         @media(max-width:360px) {
             .bottom-nav { padding: 2px 0 6px; }
@@ -1235,31 +1217,10 @@
 </head>
 <body>
 
-<!-- ===== 登录/注册页面 ===== -->
-<div id="authPage">
-    <div class="logo"><i class="fas fa-crosshairs"></i> QW电竞</div>
-    <div class="sub">护航平台 · 暗区突围 / 三角洲</div>
-    <div class="auth-box">
-        <input type="text" id="authUsername" placeholder="用户名" />
-        <input type="password" id="authPassword" placeholder="密码" />
-        <div id="authError" class="auth-error"></div>
-        <div class="btn-row">
-            <button class="btn btn-success" onclick="doAuthLogin()" style="flex:1;background:#22c55e;color:#fff;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer">登录</button>
-            <button class="btn btn-primary" onclick="doAuthRegister()" style="flex:1;background:linear-gradient(145deg,#1a6aff,#0044cc);color:#fff;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer">注册</button>
-        </div>
-        <div class="role-row">
-            <label><input type="radio" name="authRole" value="boss" checked> 老板</label>
-            <label><input type="radio" name="authRole" value="handler"> 打手</label>
-            <label><input type="radio" name="authRole" value="dispatcher"> 派单</label>
-            <label><input type="radio" name="authRole" value="service"> 客服</label>
-        </div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;">打手/派单/客服需管理员审核通过后方可使用</div>
-    </div>
-</div>
-
 <!-- ===== 主应用 ===== -->
-<div id="mainApp" class="app-wrapper hidden">
+<div id="mainApp" class="app-wrapper">
     <div class="view-container">
+        <!-- 头部 -->
         <div class="app-header">
             <div class="brand">
                 <div class="brand-icon">QW</div>
@@ -1645,29 +1606,49 @@
             </div>
         </div>
 
-        <!-- ===== 账号管理 ===== -->
+        <!-- ===== "我的"页面（包含登录/注册） ===== -->
         <div class="view" id="view-account">
-            <div class="admin-card">
-                <div class="admin-card-title"><i class="fas fa-user"></i> 账号信息</div>
-                <div id="accountInfo" class="account-info">
-                    <div class="info-row"><span class="label">用户名</span><span class="value" id="accUsername">-</span></div>
-                    <div class="info-row"><span class="label">角色</span><span class="value" id="accRole">-</span></div>
-                    <div class="info-row"><span class="label">状态</span><span class="value" id="accStatus">-</span></div>
-                    <div class="info-row" id="accDiamondRow"><span class="label">红钻余额</span><span class="value" id="accDiamond">0</span></div>
+            <!-- 未登录时显示登录框 -->
+            <div id="accountLoginArea">
+                <div class="login-box">
+                    <div class="login-title"><i class="fas fa-sign-in-alt"></i> 登录 / 注册</div>
+                    <input type="text" id="accLoginUsername" placeholder="用户名" />
+                    <input type="password" id="accLoginPassword" placeholder="密码" />
+                    <div id="accLoginError" class="auth-error"></div>
+                    <div class="role-row">
+                        <label><input type="radio" name="accAuthRole" value="boss" checked> 老板</label>
+                        <label><input type="radio" name="accAuthRole" value="handler"> 打手</label>
+                        <label><input type="radio" name="accAuthRole" value="dispatcher"> 派单</label>
+                        <label><input type="radio" name="accAuthRole" value="service"> 客服</label>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn btn-success" onclick="doAccLogin()" style="background:#22c55e;color:#fff;">登录</button>
+                        <button class="btn btn-primary" onclick="doAccRegister()" style="background:linear-gradient(145deg,#1a6aff,#0044cc);color:#fff;">注册</button>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:8px;">打手/派单/客服需管理员审核</div>
                 </div>
             </div>
-            <div class="admin-card" style="border-left:4px solid #22c55e;">
-                <div class="admin-card-title"><i class="fas fa-sign-in-alt" style="color:#22c55e;"></i> 账号管理</div>
-                <div id="accountActions" style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn btn-primary" onclick="showLoginModal()"><i class="fas fa-sign-in-alt"></i> 登录</button>
-                    <button class="btn btn-outline" onclick="showRegisterModal()"><i class="fas fa-user-plus"></i> 注册</button>
-                    <button class="btn btn-danger" onclick="logout()" id="logoutBtn2" style="display:none;"><i class="fas fa-sign-out-alt"></i> 退出</button>
+            
+            <!-- 已登录时显示账号信息 -->
+            <div id="accountInfoArea" style="display:none;">
+                <div class="admin-card">
+                    <div class="admin-card-title"><i class="fas fa-user"></i> 账号信息</div>
+                    <div class="account-info">
+                        <div class="info-row"><span class="label">用户名</span><span class="value" id="accUsername">-</span></div>
+                        <div class="info-row"><span class="label">角色</span><span class="value" id="accRole">-</span></div>
+                        <div class="info-row"><span class="label">状态</span><span class="value" id="accStatus">-</span></div>
+                        <div class="info-row"><span class="label">红钻余额</span><span class="value" id="accDiamond">0</span></div>
+                    </div>
+                </div>
+                <div class="admin-card" style="border-left:4px solid #ef4444;">
+                    <div class="admin-card-title"><i class="fas fa-sign-out-alt" style="color:#ef4444;"></i> 账号管理</div>
+                    <button class="btn btn-danger btn-block" onclick="doAccLogout()"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===== 底部导航 ===== -->
+    <!-- ===== 底部导航（固定） ===== -->
     <div class="bottom-nav">
         <button class="nav-item active" data-target="home"><i class="fas fa-store"></i><span>商城</span></button>
         <button class="nav-item" data-target="orders" id="navOrders"><i class="fas fa-receipt"></i><span>订单</span></button>
@@ -1839,20 +1820,6 @@ function updateHeaderDiamond() {
         const unread = mails.filter(m => m.status === 'unread').length;
         document.getElementById('headerUnreadMail').textContent = unread;
     }).catch(() => {});
-}
-
-// ============================================================
-//  显示/隐藏主应用
-// ============================================================
-function showMainApp() {
-    document.getElementById('authPage').classList.add('hidden');
-    document.getElementById('mainApp').classList.remove('hidden');
-    console.log('✅ 主应用已显示');
-}
-
-function hideMainApp() {
-    document.getElementById('authPage').classList.remove('hidden');
-    document.getElementById('mainApp').classList.add('hidden');
 }
 
 // ============================================================
@@ -4258,91 +4225,64 @@ async function updateBadges() {
 }
 
 // ============================================================
-//  认证相关
+//  ===== "我的"页面 - 登录/注册功能 =====
 // ============================================================
-function toggleAuthModal() {
-    if (currentUser) {
-        confirmAction('确认退出', '确定要退出登录吗？', '退出', `doLogout()`);
-        return;
-    }
-    showLoginModal();
+
+// 显示登录/注册界面
+function showAccountLogin() {
+    document.getElementById('accountLoginArea').style.display = 'block';
+    document.getElementById('accountInfoArea').style.display = 'none';
 }
 
-function showLoginModal() {
-    showCustomModal(`
-        <h3><i class="fas fa-sign-in-alt"></i> 登录</h3>
-        <div class="form-group"><label>用户名</label><input class="admin-form-control" id="loginUsername" placeholder="请输入用户名" /></div>
-        <div class="form-group"><label>密码</label><input class="admin-form-control" id="loginPassword" type="password" placeholder="请输入密码" /></div>
-        <div id="loginError" style="color:#ef4444;font-size:13px;min-height:20px;"></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="doLogin()">登录</button>
-        </div>
-        <div style="margin-top:12px;font-size:13px;color:var(--text-muted);">
-            还没有账号？<button class="btn btn-outline btn-sm" onclick="closeCustomModal();showRegisterModal()">去注册</button>
-        </div>
-    `);
-    document.getElementById('customModal').classList.add('active');
+// 显示账号信息界面
+function showAccountInfo() {
+    document.getElementById('accountLoginArea').style.display = 'none';
+    document.getElementById('accountInfoArea').style.display = 'block';
 }
 
-async function doLogin() {
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
-    const errorEl = document.getElementById('loginError');
+// "我的"页面 - 登录
+async function doAccLogin() {
+    const username = document.getElementById('accLoginUsername').value.trim();
+    const password = document.getElementById('accLoginPassword').value.trim();
+    const errorEl = document.getElementById('accLoginError');
     errorEl.textContent = '';
+    
     if (!username || !password) {
         errorEl.textContent = '请填写用户名和密码';
         return;
     }
+    
     try {
         const data = await apiRequest('/login', { method: 'POST', body: JSON.stringify({ username, password }) });
         token = data.token;
         localStorage.setItem('token', token);
         currentUser = data.user;
-        closeCustomModal();
-        showMainApp();
+        
+        // 更新UI
         afterLogin();
         toast('欢迎回来，' + username, 'success');
+        // 切换到"我的"页面显示账号信息
+        showAccountInfo();
+        updateAccountInfoDisplay();
     } catch (err) {
         errorEl.textContent = err.message || '登录失败';
     }
 }
 
-function showRegisterModal() {
-    showCustomModal(`
-        <h3><i class="fas fa-user-plus"></i> 注册</h3>
-        <div class="form-group"><label>用户名</label><input class="admin-form-control" id="regUsername" placeholder="请输入用户名" /></div>
-        <div class="form-group"><label>密码</label><input class="admin-form-control" id="regPassword" type="password" placeholder="请输入密码" /></div>
-        <div class="form-group"><label>角色</label>
-            <select class="admin-form-control" id="regRole">
-                <option value="boss">老板</option>
-                <option value="handler">打手</option>
-                <option value="dispatcher">派单</option>
-                <option value="service">客服</option>
-            </select>
-        </div>
-        <div id="regError" style="color:#ef4444;font-size:13px;min-height:20px;"></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-primary" onclick="doRegister()">注册</button>
-        </div>
-        <div style="margin-top:12px;font-size:13px;color:var(--text-muted);">
-            已有账号？<button class="btn btn-outline btn-sm" onclick="closeCustomModal();showLoginModal()">去登录</button>
-        </div>
-    `);
-    document.getElementById('customModal').classList.add('active');
-}
-
-async function doRegister() {
-    const username = document.getElementById('regUsername').value.trim();
-    const password = document.getElementById('regPassword').value.trim();
-    const role = document.getElementById('regRole').value;
-    const errorEl = document.getElementById('regError');
+// "我的"页面 - 注册
+async function doAccRegister() {
+    const username = document.getElementById('accLoginUsername').value.trim();
+    const password = document.getElementById('accLoginPassword').value.trim();
+    const roleEl = document.querySelector('input[name="accAuthRole"]:checked');
+    const role = roleEl ? roleEl.value : 'boss';
+    const errorEl = document.getElementById('accLoginError');
     errorEl.textContent = '';
+    
     if (!username || !password) {
         errorEl.textContent = '请填写用户名和密码';
         return;
     }
+    
     try {
         const data = await apiRequest('/register', { method: 'POST', body: JSON.stringify({ username, password, role }) });
         if (role === 'handler' || role === 'dispatcher' || role === 'service') {
@@ -4350,40 +4290,35 @@ async function doRegister() {
         } else {
             toast('注册成功，请登录', 'success');
         }
-        closeCustomModal();
-        showLoginModal();
-        document.getElementById('loginUsername').value = username;
-        document.getElementById('loginPassword').value = password;
+        document.getElementById('accLoginPassword').value = '';
     } catch (err) {
         errorEl.textContent = err.message || '注册失败';
     }
 }
 
-function doLogout() {
+// "我的"页面 - 退出
+function doAccLogout() {
+    confirmAction('确认退出', '确定要退出登录吗？', '退出', `doLogoutFromAccount()`);
+}
+
+function doLogoutFromAccount() {
     localStorage.removeItem('token');
     token = null;
     currentUser = null;
     document.getElementById('authStatusText').textContent = '未登录';
-    document.getElementById('logoutBtn2').style.display = 'none';
-    hideMainApp();
     updateHeaderDiamond();
     if (window._badgeTimer) {
         clearInterval(window._badgeTimer);
         window._badgeTimer = null;
     }
     renderCategoryProducts();
+    // 切换到登录界面
+    showAccountLogin();
     toast('已退出', 'warning');
 }
 
-function logout() {
-    if (!currentUser) {
-        toast('请先登录', 'warning');
-        return;
-    }
-    confirmAction('确认退出', '确定要退出登录吗？', '退出', `doLogout()`);
-}
-
-function updateAccountInfo() {
+// 更新账号信息显示
+function updateAccountInfoDisplay() {
     if (!currentUser) return;
     document.getElementById('accUsername').textContent = currentUser.username;
     const roleMap = { 'boss': '老板', 'handler': currentUser.status === 'pending' ? '待审核打手' : '打手', 'dispatcher': currentUser.status === 'pending' ? '待审核派单' : '派单员', 'service': currentUser.status === 'pending' ? '待审核客服' : '客服', 'admin': '管理员' };
@@ -4391,41 +4326,85 @@ function updateAccountInfo() {
     const statusMap = { 'active': '正常', 'pending': '待审核', 'banned': '封禁' };
     document.getElementById('accStatus').textContent = statusMap[currentUser.status] || currentUser.status;
     document.getElementById('accDiamond').textContent = currentUser.diamond || 0;
-    document.getElementById('logoutBtn2').style.display = 'inline-block';
+}
+
+// 头部的认证状态点击
+function toggleAuthModal() {
+    if (currentUser) {
+        // 已登录，跳转到"我的"页面
+        navigateTo('account');
+        return;
+    }
+    // 未登录，跳转到"我的"页面
+    navigateTo('account');
+}
+
+// 导航到指定页面
+function navigateTo(target) {
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    
+    if (target === 'home') {
+        document.getElementById('view-home').classList.add('active');
+        document.querySelector('.bottom-nav .nav-item[data-target="home"]').classList.add('active');
+        loadAnnounce();
+        renderCategoryProducts();
+        return;
+    }
+    const viewMap = { 'orders': 'view-orders', 'handler': 'view-handler', 'dispatcher': 'view-dispatcher', 'service': 'view-service', 'admin': 'view-admin', 'messages': 'view-messages', 'account': 'view-account' };
+    const viewId = viewMap[target];
+    if (viewId) {
+        document.getElementById(viewId).classList.add('active');
+        document.querySelector(`.bottom-nav .nav-item[data-target="${target}"]`).classList.add('active');
+        if (target === 'orders') { renderBossView(); loadTipHandlers(); }
+        else if (target === 'handler') renderHandlerView();
+        else if (target === 'dispatcher') renderDispatcherAll();
+        else if (target === 'service') renderServiceView();
+        else if (target === 'admin') renderAdminAll();
+        else if (target === 'messages') loadContacts();
+        else if (target === 'account') {
+            if (currentUser) {
+                showAccountInfo();
+                updateAccountInfoDisplay();
+            } else {
+                showAccountLogin();
+            }
+        }
+    }
 }
 
 // ============================================================
-//  导航切换
+//  认证后的初始化
+// ============================================================
+function afterLogin() {
+    document.getElementById('authStatusText').textContent = currentUser.username;
+    updateRoleBasedUI();
+    loadAnnounce();
+    renderCategories();
+    loadCategoryNav();
+    renderCategoryProducts();
+    loadCategoriesForDispatcher();
+    loadCategoriesForSelectors();
+    renderAdminAll();
+    renderDispatcherAll();
+    renderServiceView();
+    loadContacts();
+    loadTipHandlers();
+    updateHeaderDiamond();
+    updateBadges();
+    applyCollapseStates();
+    if (window._badgeTimer) clearInterval(window._badgeTimer);
+    window._badgeTimer = setInterval(updateBadges, 30000);
+}
+
+// ============================================================
+//  导航切换（底部栏）
 // ============================================================
 document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
     item.addEventListener('click', function() {
-        if (!currentUser && this.dataset.target !== 'home' && this.dataset.target !== 'account') {
-            toast('请先登录', 'warning');
-            return;
-        }
         const target = this.dataset.target;
         if (this.style.display === 'none') return;
-        document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-        this.classList.add('active');
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        if (target === 'home') {
-            document.getElementById('view-home').classList.add('active');
-            loadAnnounce();
-            renderCategoryProducts();
-            return;
-        }
-        const viewMap = { 'orders': 'view-orders', 'handler': 'view-handler', 'dispatcher': 'view-dispatcher', 'service': 'view-service', 'admin': 'view-admin', 'messages': 'view-messages', 'account': 'view-account' };
-        const viewId = viewMap[target];
-        if (viewId) {
-            document.getElementById(viewId).classList.add('active');
-            if (target === 'orders') { renderBossView(); loadTipHandlers(); }
-            else if (target === 'handler') renderHandlerView();
-            else if (target === 'dispatcher') renderDispatcherAll();
-            else if (target === 'service') renderServiceView();
-            else if (target === 'admin') renderAdminAll();
-            else if (target === 'messages') loadContacts();
-            else if (target === 'account') updateAccountInfo();
-        }
+        navigateTo(target);
     });
 });
 
@@ -4451,92 +4430,15 @@ document.querySelectorAll('#view-admin .tab-nav button').forEach(btn => {
 });
 
 // ============================================================
-//  登录后的初始化
-// ============================================================
-function afterLogin() {
-    document.getElementById('authStatusText').textContent = currentUser.username;
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('view-home').classList.add('active');
-    document.querySelector('.bottom-nav .nav-item[data-target="home"]').classList.add('active');
-    updateRoleBasedUI();
-    loadAnnounce();
-    updateAccountInfo();
-    renderCategories();
-    loadCategoryNav();
-    renderCategoryProducts();
-    loadCategoriesForDispatcher();
-    loadCategoriesForSelectors();
-    renderAdminAll();
-    renderDispatcherAll();
-    renderServiceView();
-    loadContacts();
-    loadTipHandlers();
-    updateHeaderDiamond();
-    updateBadges();
-    applyCollapseStates();
-    if (window._badgeTimer) clearInterval(window._badgeTimer);
-    window._badgeTimer = setInterval(updateBadges, 30000);
-}
-
-// ============================================================
-//  登录页按钮
-// ============================================================
-async function doAuthLogin() {
-    const username = document.getElementById('authUsername').value.trim();
-    const password = document.getElementById('authPassword').value.trim();
-    const errorEl = document.getElementById('authError');
-    errorEl.textContent = '';
-    if (!username || !password) {
-        errorEl.textContent = '请填写用户名和密码';
-        return;
-    }
-    try {
-        const data = await apiRequest('/login', { method: 'POST', body: JSON.stringify({ username, password }) });
-        token = data.token;
-        localStorage.setItem('token', token);
-        currentUser = data.user;
-        showMainApp();
-        afterLogin();
-        toast('欢迎回来，' + username, 'success');
-    } catch (err) {
-        errorEl.textContent = err.message || '登录失败';
-    }
-}
-
-async function doAuthRegister() {
-    const username = document.getElementById('authUsername').value.trim();
-    const password = document.getElementById('authPassword').value.trim();
-    const roleEl = document.querySelector('input[name="authRole"]:checked');
-    const role = roleEl ? roleEl.value : 'boss';
-    const errorEl = document.getElementById('authError');
-    errorEl.textContent = '';
-    if (!username || !password) {
-        errorEl.textContent = '请填写用户名和密码';
-        return;
-    }
-    try {
-        const data = await apiRequest('/register', { method: 'POST', body: JSON.stringify({ username, password, role }) });
-        if (role === 'handler' || role === 'dispatcher' || role === 'service') {
-            toast('注册成功，请等待管理员审核', 'success');
-        } else {
-            toast('注册成功，请登录', 'success');
-        }
-        document.getElementById('authPassword').value = '';
-    } catch (err) {
-        errorEl.textContent = err.message || '注册失败';
-    }
-}
-
-// ============================================================
 //  初始化
 // ============================================================
 async function init() {
-    hideMainApp();
-    
     document.getElementById('authStatusText').textContent = '未登录';
     document.getElementById('headerDiamond').textContent = '0';
     document.getElementById('headerUnreadMail').textContent = '0';
+
+    // 显示登录界面
+    showAccountLogin();
 
     loadAnnounce();
     renderCategories();
@@ -4552,7 +4454,9 @@ async function init() {
         try {
             const user = await apiRequest('/me');
             currentUser = user;
-            showMainApp();
+            // 登录成功，显示账号信息
+            showAccountInfo();
+            updateAccountInfoDisplay();
             afterLogin();
             console.log('✅ 自动登录成功');
         } catch (err) {
@@ -4561,7 +4465,7 @@ async function init() {
             token = null;
             currentUser = null;
             document.getElementById('authStatusText').textContent = '未登录';
-            hideMainApp();
+            showAccountLogin();
             renderCategoryProducts();
         }
     }
@@ -4627,8 +4531,6 @@ function previewProdImageUrl(inputId, previewId) {
         img.style.display = 'none';
     }
 }
-
-document.getElementById('logoutBtn')?.addEventListener('click', logout);
 
 // 启动
 init();
