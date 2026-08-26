@@ -1413,12 +1413,8 @@
                 <div id="categoryButtons" style="display:flex;gap:8px;flex-wrap:nowrap;"></div>
             </div>
             
-            <!-- ===== 子分类导航 ===== -->
-            <div class="sub-category-wrapper" id="subCategoryWrapper">
-                <button class="sub-btn active" data-sub="all" onclick="filterSubCategory('all')">全部</button>
-                <button class="sub-btn" data-sub="暗区突围" onclick="filterSubCategory('暗区突围')">🎯 暗区突围</button>
-                <button class="sub-btn" data-sub="三角洲" onclick="filterSubCategory('三角洲')">🚁 三角洲</button>
-            </div>
+            <!-- ===== 子分类导航（根据当前主分类动态加载） ===== -->
+            <div class="sub-category-wrapper" id="subCategoryWrapper" style="display:none;"></div>
             
             <div class="admin-card" style="padding:10px 12px;">
                 <div class="admin-form-group" style="margin-bottom:8px;">
@@ -1843,6 +1839,7 @@ let currentCategoryFilter = 'all';
 let currentSubCategoryFilter = 'all';
 let currentContactId = null;
 let currentSubCategoryId = null;
+let cachedCategories = [];
 
 // ============================================================
 //  工具函数
@@ -2106,11 +2103,17 @@ async function saveAnnounce() {
 async function loadCategoryNav() {
     try {
         const categories = await apiRequest('/categories');
+        cachedCategories = Array.isArray(categories) ? categories : [];
+
         const container = document.getElementById('categoryButtons');
         if (!container) return;
         container.innerHTML = '';
-        // 只显示主分类（parent_id 为 null）
-        const mainCategories = categories.filter(c => !c.parent_id);
+
+        // 第一行只显示“全部 + 主分类”，不再显示暗区突围/三角洲等历史硬编码游戏分类。
+        const mainCategories = cachedCategories
+            .filter(c => !c.parent_id)
+            .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+
         mainCategories.forEach(c => {
             const btn = document.createElement('button');
             btn.className = 'category-btn';
@@ -2123,9 +2126,65 @@ async function loadCategoryNav() {
             btn.onclick = function() { filterProducts(c.id); };
             container.appendChild(btn);
         });
-    } catch (err) { 
+
+        // 保持当前主分类的选中状态；如果当前主分类已不存在，则回到全部。
+        const mainExists = currentCategoryFilter !== 'all' && mainCategories.some(c => c.id === currentCategoryFilter);
+        if (!mainExists) {
+            currentCategoryFilter = 'all';
+            currentSubCategoryFilter = 'all';
+            currentSubCategoryId = null;
+        }
+
+        document.querySelectorAll('#categoryNavWrapper .category-btn').forEach(b => b.classList.remove('active'));
+        const activeCategory = document.querySelector(`#categoryNavWrapper .category-btn[data-category="${currentCategoryFilter}"]`);
+        if (activeCategory) activeCategory.classList.add('active');
+
+        renderSubCategoryNav(currentCategoryFilter === 'all' ? null : currentCategoryFilter, cachedCategories);
+    } catch (err) {
         console.error('加载分类导航失败', err);
     }
+}
+
+// 根据当前主分类动态显示对应子分类。
+// 全部：不混合不同主分类的子分类，只显示“全部”。
+function renderSubCategoryNav(parentId, categories = cachedCategories) {
+    const wrapper = document.getElementById('subCategoryWrapper');
+    if (!wrapper) return;
+
+    const subCategories = (categories || [])
+        .filter(c => c.parent_id && c.parent_id === parentId)
+        .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+
+    // 没有主分类/没有子分类时不占页面空间。
+    if (!parentId || subCategories.length === 0) {
+        wrapper.innerHTML = '';
+        wrapper.style.display = 'none';
+        currentSubCategoryFilter = 'all';
+        currentSubCategoryId = null;
+        return;
+    }
+
+    currentSubCategoryFilter = 'all';
+    currentSubCategoryId = null;
+    wrapper.style.display = 'flex';
+    wrapper.innerHTML = '';
+
+    const allBtn = document.createElement('button');
+    allBtn.className = 'sub-btn active';
+    allBtn.dataset.sub = 'all';
+    allBtn.textContent = '全部';
+    allBtn.onclick = () => filterSubCategory('all');
+    wrapper.appendChild(allBtn);
+
+    subCategories.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'sub-btn';
+        btn.dataset.sub = c.id;
+        btn.textContent = c.image ? `◉ ${c.name}` : c.name;
+        btn.title = c.name;
+        btn.onclick = () => filterSubCategory(c.id);
+        wrapper.appendChild(btn);
+    });
 }
 
 async function loadCategoriesForSelectors() {
@@ -2521,18 +2580,31 @@ async function doEditCategory(categoryId) {
 //  商品筛选
 // ============================================================
 async function filterProducts(categoryId) {
-    currentCategoryFilter = categoryId;
+    currentCategoryFilter = categoryId || 'all';
+    currentSubCategoryFilter = 'all';
+    currentSubCategoryId = null;
+
     document.querySelectorAll('#categoryNavWrapper .category-btn').forEach(b => b.classList.remove('active'));
-    const targetBtn = document.querySelector(`#categoryNavWrapper .category-btn[data-category="${categoryId}"]`);
+    const targetBtn = document.querySelector(`#categoryNavWrapper .category-btn[data-category="${currentCategoryFilter}"]`);
     if (targetBtn) targetBtn.classList.add('active');
+
+    // 切换主分类时，第二行立即换成该主分类自己的子分类。
+    renderSubCategoryNav(
+        currentCategoryFilter === 'all' ? null : currentCategoryFilter,
+        cachedCategories
+    );
+
     await renderCategoryProducts();
 }
 
-async function filterSubCategory(subCategory) {
-    currentSubCategoryFilter = subCategory;
+async function filterSubCategory(subCategoryId) {
+    currentSubCategoryFilter = subCategoryId || 'all';
+    currentSubCategoryId = currentSubCategoryFilter === 'all' ? null : currentSubCategoryFilter;
+
     document.querySelectorAll('#subCategoryWrapper .sub-btn').forEach(b => b.classList.remove('active'));
-    const targetBtn = document.querySelector(`#subCategoryWrapper .sub-btn[data-sub="${subCategory}"]`);
+    const targetBtn = document.querySelector(`#subCategoryWrapper .sub-btn[data-sub="${currentSubCategoryFilter}"]`);
     if (targetBtn) targetBtn.classList.add('active');
+
     await renderCategoryProducts();
 }
 
@@ -2540,15 +2612,17 @@ async function renderCategoryProducts() {
     try {
         const search = document.getElementById('searchProduct')?.value.toLowerCase() || '';
         let products;
-        if (currentCategoryFilter === 'all') {
+        let queryCategoryId = currentCategoryFilter;
+
+        // 选择子分类时直接查询该子分类；选择主分类时由后端返回该主分类及其全部子分类商品。
+        if (currentSubCategoryFilter !== 'all') {
+            queryCategoryId = currentSubCategoryFilter;
+        }
+
+        if (queryCategoryId === 'all') {
             products = await apiRequest('/products');
         } else {
-            products = await apiRequest('/categories/' + currentCategoryFilter + '/products');
-        }
-        
-        // 子分类筛选（按游戏）
-        if (currentSubCategoryFilter !== 'all') {
-            products = products.filter(p => p.game === currentSubCategoryFilter);
+            products = await apiRequest('/categories/' + queryCategoryId + '/products');
         }
         
         if (search) {
