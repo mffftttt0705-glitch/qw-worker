@@ -52,7 +52,6 @@ async function handleRegister(env, body) {
   }
 
   const id = generateId();
-  // 打手、派单、客服默认为待审核
   const userStatus = (role === 'handler' || role === 'dispatcher' || role === 'service') ? 'pending' : (status || 'active');
   await runDB(env,
     'INSERT INTO users (id, username, password, role, diamond, balance, status) VALUES (?, ?, ?, ?, 0, 0, ?)',
@@ -75,7 +74,6 @@ async function handleLogin(env, body) {
   if (user.password !== password) return errorResponse('密码错误');
   if (user.status === 'banned') return errorResponse('账号已被封禁');
   
-  // 打手/派单/客服需审核通过
   if ((user.role === 'handler' || user.role === 'dispatcher' || user.role === 'service') && user.status !== 'active') {
     return errorResponse('账号待审核，请等待管理员审核通过后再登录');
   }
@@ -124,25 +122,25 @@ async function handleGetCategories(env) {
 }
 
 async function handleAdminCreateCategory(env, body) {
-  const { name, image, sort_order } = body;
+  const { name, image, sort_order, parent_id } = body;
   if (!name) return errorResponse('请填写分类名称');
   const id = generateId();
   await runDB(env,
-    'INSERT INTO categories (id, name, image, sort_order, created_at) VALUES (?, ?, ?, ?, ?)',
-    [id, name, image || '', sort_order || 0, new Date().toISOString()]
+    'INSERT INTO categories (id, name, image, sort_order, parent_id, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    [id, name, image || '', sort_order || 0, parent_id || null, new Date().toISOString()]
   );
   return jsonResponse({ success: true, id, message: '分类创建成功' });
 }
 
 async function handleAdminUpdateCategory(env, categoryId, body) {
-  const { name, image, sort_order } = body;
-  if (!name && sort_order === undefined) return errorResponse('请填写分类名称或排序');
+  const { name, image, sort_order, parent_id } = body;
   let sql = 'UPDATE categories SET ';
   const params = [];
   const updates = [];
   if (name !== undefined) { updates.push('name = ?'); params.push(name); }
   if (image !== undefined) { updates.push('image = ?'); params.push(image || ''); }
   if (sort_order !== undefined) { updates.push('sort_order = ?'); params.push(sort_order || 0); }
+  if (parent_id !== undefined) { updates.push('parent_id = ?'); params.push(parent_id || null); }
   if (updates.length === 0) return errorResponse('没有要更新的字段');
   sql += updates.join(', ') + ' WHERE id = ?';
   params.push(categoryId);
@@ -155,13 +153,16 @@ async function handleAdminDeleteCategory(env, categoryId) {
   if (check.results && check.results[0] && check.results[0].count > 0) {
     return errorResponse('该分类下还有商品，请先移除商品', 400);
   }
+  // 检查是否有子分类
+  const childCheck = await queryDB(env, 'SELECT COUNT(*) as count FROM categories WHERE parent_id = ?', [categoryId]);
+  if (childCheck.results && childCheck.results[0] && childCheck.results[0].count > 0) {
+    return errorResponse('该分类下还有子分类，请先删除子分类', 400);
+  }
   await runDB(env, 'DELETE FROM categories WHERE id = ?', [categoryId]);
   return jsonResponse({ success: true, message: '分类已删除' });
 }
 
 async function handleGetCategoryProducts(env, categoryId) {
-  // 主分类：返回主分类自身以及其全部子分类商品；
-  // 子分类：只返回该子分类商品。
   const categoryResult = await queryDB(
     env,
     'SELECT id, parent_id FROM categories WHERE id = ?',
@@ -267,7 +268,6 @@ async function handleAdminUpdateProduct(env, productId, body) {
   let finalGame = game || '';
   let finalCategoryId = category_id || null;
 
-  // 新分类体系：商品必须绑定子分类；game 自动同步为子分类名称，避免前端写死游戏。
   if (finalCategoryId) {
     const categoryResult = await queryDB(
       env,
@@ -685,7 +685,7 @@ async function handleServiceGift(env, authHeader, body) {
 }
 
 // ============================================================
-//  消息系统
+//  消息系统（修复版）
 // ============================================================
 async function handleSendMessage(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -697,12 +697,8 @@ async function handleSendMessage(env, authHeader, body) {
   const receiver = await getUserById(env, receiverId);
   if (!receiver) return errorResponse('接收者不存在', 404);
   
-  // 普通用户只能发给客服或管理员
-  if (user.role !== 'admin' && user.role !== 'service') {
-    if (receiver.role !== 'admin' && receiver.role !== 'service') {
-      return errorResponse('只能联系客服或管理员', 403);
-    }
-  }
+  // 不能给自己发消息
+  if (userId === receiverId) return errorResponse('不能给自己发消息', 403);
   
   const id = generateId();
   await runDB(env,
@@ -751,7 +747,6 @@ async function handleGetContacts(env, authHeader) {
   let params = [];
   
   if (user.role === 'admin' || user.role === 'service') {
-    // 管理员/客服看全部联系人
     sql = `SELECT DISTINCT 
             u.id, u.username, u.role,
             mc.last_message, mc.last_time, mc.unread_count
@@ -761,14 +756,12 @@ async function handleGetContacts(env, authHeader) {
             ORDER BY mc.last_time DESC`;
     params = [userId];
   } else {
-    // 普通用户只看客服和管理员
     sql = `SELECT DISTINCT 
             u.id, u.username, u.role,
             mc.last_message, mc.last_time, mc.unread_count
             FROM message_contacts mc
             JOIN users u ON mc.contact_id = u.id
-            WHERE mc.user_id = ? 
-            AND u.role IN ('admin', 'service')
+            WHERE mc.user_id = ?
             ORDER BY mc.last_time DESC`;
     params = [userId];
   }
@@ -786,13 +779,6 @@ async function handleGetMessages(env, authHeader, body) {
   if (!contactId) return errorResponse('请选择联系人');
   const contact = await getUserById(env, contactId);
   if (!contact) return errorResponse('联系人不存在', 404);
-  
-  // 权限检查
-  if (user.role !== 'admin' && user.role !== 'service') {
-    if (contact.role !== 'admin' && contact.role !== 'service') {
-      return errorResponse('只能查看与客服或管理员的聊天', 403);
-    }
-  }
   
   const result = await queryDB(env,
     `SELECT * FROM messages 
@@ -826,8 +812,16 @@ async function handleGetUnreadCount(env, authHeader) {
   return jsonResponse({ unread: total });
 }
 
+// 获取可联系的管理员/客服
+async function handleGetSupportContacts(env) {
+  const result = await queryDB(env, 
+    'SELECT id, username, role FROM users WHERE role IN ("admin", "service") AND status = "active"'
+  );
+  return jsonResponse(result.results || []);
+}
+
 // ============================================================
-//  管理员功能（原有，已包含）
+//  管理员功能
 // ============================================================
 async function handleAdminGetOrders(env) {
   const result = await queryDB(env, 'SELECT * FROM orders ORDER BY created_at DESC');
@@ -912,7 +906,7 @@ async function handleAdminDeleteOrder(env, orderId) {
 }
 
 // ============================================================
-//  管理员充值管理
+//  管理员充值管理（修复版）
 // ============================================================
 async function handleAdminGetRecharges(env) {
   const result = await queryDB(env,
@@ -928,7 +922,7 @@ async function handleAdminApproveRecharge(env, rechargeId) {
   const result = await queryDB(env, 'SELECT * FROM recharge_requests WHERE id = ?', [rechargeId]);
   const recharge = (result.results && result.results[0]) || null;
   if (!recharge || recharge.status !== 'pending') return errorResponse('记录不存在或已处理');
-  await runDB(env, 'UPDATE recharge_requests SET status = "approved", approve_time = ? WHERE id = ?', [new Date().toISOString(), rechargeId]);
+  await runDB(env, 'UPDATE recharge_requests SET status = "approved", handled_at = ? WHERE id = ?', [new Date().toISOString(), rechargeId]);
   if (recharge.user_id) {
     await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [recharge.diamond || 0, recharge.user_id]);
   }
@@ -939,7 +933,7 @@ async function handleAdminRejectRecharge(env, rechargeId) {
   const result = await queryDB(env, 'SELECT * FROM recharge_requests WHERE id = ?', [rechargeId]);
   const recharge = (result.results && result.results[0]) || null;
   if (!recharge || recharge.status !== 'pending') return errorResponse('记录不存在或已处理');
-  await runDB(env, 'UPDATE recharge_requests SET status = "rejected", approve_time = ? WHERE id = ?', [new Date().toISOString(), rechargeId]);
+  await runDB(env, 'UPDATE recharge_requests SET status = "rejected", handled_at = ? WHERE id = ?', [new Date().toISOString(), rechargeId]);
   return jsonResponse({ success: true, message: '已拒绝' });
 }
 
@@ -1156,6 +1150,7 @@ export async function onRequest(context) {
     if (path === '/api/categories' && method === 'GET') return await handleGetCategories(env);
     if (path === '/api/announce' && method === 'GET') return await handleGetAnnounce(env);
     if (path === '/api/handlers' && method === 'GET') return await handleGetHandlers(env);
+    if (path === '/api/support-contacts' && method === 'GET') return await handleGetSupportContacts(env);
     if (path.startsWith('/api/categories/') && path.endsWith('/products') && method === 'GET') {
       const categoryId = path.replace('/api/categories/', '').replace('/products', '');
       return await handleGetCategoryProducts(env, categoryId);
