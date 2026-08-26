@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (Cloudflare Workers + D1)
-//  修复：消息系统权限、联系人列表、客服功能
+//  QW电竞 - 完整后端 API
+//  包含：用户、商品、订单、分类、充值、客服、消息
 // ============================================================
 
 function generateId() {
@@ -52,9 +52,10 @@ async function handleRegister(env, body) {
   }
 
   const id = generateId();
+  // 打手、派单、客服默认为待审核
   const userStatus = (role === 'handler' || role === 'dispatcher' || role === 'service') ? 'pending' : (status || 'active');
   await runDB(env,
-    'INSERT INTO users (id, username, password, role, diamond, status) VALUES (?, ?, ?, ?, 0, ?)',
+    'INSERT INTO users (id, username, password, role, diamond, balance, status) VALUES (?, ?, ?, ?, 0, 0, ?)',
     [id, username, password, role || 'boss', userStatus]
   );
 
@@ -74,6 +75,7 @@ async function handleLogin(env, body) {
   if (user.password !== password) return errorResponse('密码错误');
   if (user.status === 'banned') return errorResponse('账号已被封禁');
   
+  // 打手/派单/客服需审核通过
   if ((user.role === 'handler' || user.role === 'dispatcher' || user.role === 'service') && user.status !== 'active') {
     return errorResponse('账号待审核，请等待管理员审核通过后再登录');
   }
@@ -86,6 +88,7 @@ async function handleLogin(env, body) {
       username: user.username,
       role: user.role || 'boss',
       diamond: user.diamond || 0,
+      balance: user.balance || 0,
       status: user.status || 'active'
     }
   });
@@ -113,50 +116,137 @@ function verifyAndGetUserId(authHeader) {
 }
 
 // ============================================================
-//  分类管理（支持父子分类）
+//  分类管理
 // ============================================================
 async function handleGetCategories(env) {
-  const result = await queryDB(env, 'SELECT * FROM categories ORDER BY sort_order ASC, parent_id NULLS FIRST, created_at DESC');
+  const result = await queryDB(env, 'SELECT * FROM categories ORDER BY sort_order ASC, created_at DESC');
   return jsonResponse(result.results || []);
 }
 
 async function handleAdminCreateCategory(env, body) {
   const { name, image, sort_order, parent_id } = body;
-  if (!name) return errorResponse('请填写分类名称');
+  const categoryName = String(name || '').trim();
+  if (!categoryName) return errorResponse('请填写分类名称');
+
+  // 子分类必须挂在真实存在的主分类下面
+  if (parent_id) {
+    const parent = await queryDB(
+      env,
+      "SELECT id FROM categories WHERE id = ? AND (parent_id IS NULL OR parent_id = '')",
+      [parent_id]
+    );
+    if (!parent.results || parent.results.length === 0) {
+      return errorResponse('所属主分类不存在', 400);
+    }
+  }
+
   const id = generateId();
   await runDB(env,
-    'INSERT INTO categories (id, name, image, sort_order, parent_id, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-    [id, name, image || '', sort_order || 0, parent_id || null, new Date().toISOString()]
+    `INSERT INTO categories
+      (id, name, image, sort_order, parent_id, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      categoryName,
+      image || '',
+      Number.isFinite(Number(sort_order)) ? Number(sort_order) : 0,
+      parent_id || null,
+      new Date().toISOString()
+    ]
   );
-  return jsonResponse({ success: true, id, message: '分类创建成功' });
+
+  return jsonResponse({
+    success: true,
+    id,
+    parent_id: parent_id || null,
+    message: parent_id ? '子分类创建成功' : '主分类创建成功'
+  });
 }
 
 async function handleAdminUpdateCategory(env, categoryId, body) {
-  const { name, image, sort_order } = body;
-  let sql = 'UPDATE categories SET ';
-  const params = [];
+  const { name, image, sort_order, parent_id } = body;
+
+  const currentResult = await queryDB(env, 'SELECT * FROM categories WHERE id = ?', [categoryId]);
+  const current = currentResult.results && currentResult.results[0];
+  if (!current) return errorResponse('分类不存在', 404);
+
+  if (name === undefined && image === undefined && sort_order === undefined && parent_id === undefined) {
+    return errorResponse('没有要更新的字段');
+  }
+
+  if (parent_id !== undefined) {
+    if (parent_id && parent_id === categoryId) {
+      return errorResponse('分类不能设置自己为父分类', 400);
+    }
+    if (parent_id) {
+      const parent = await queryDB(
+        env,
+        "SELECT id FROM categories WHERE id = ? AND (parent_id IS NULL OR parent_id = '')",
+        [parent_id]
+      );
+      if (!parent.results || parent.results.length === 0) {
+        return errorResponse('所属主分类不存在', 400);
+      }
+    }
+  }
+
   const updates = [];
-  if (name !== undefined) { updates.push('name = ?'); params.push(name); }
-  if (image !== undefined) { updates.push('image = ?'); params.push(image || ''); }
-  if (sort_order !== undefined) { updates.push('sort_order = ?'); params.push(sort_order || 0); }
-  if (updates.length === 0) return errorResponse('没有要更新的字段');
-  sql += updates.join(', ') + ' WHERE id = ?';
+  const params = [];
+  if (name !== undefined) {
+    const categoryName = String(name || '').trim();
+    if (!categoryName) return errorResponse('分类名称不能为空');
+    updates.push('name = ?');
+    params.push(categoryName);
+  }
+  if (image !== undefined) {
+    updates.push('image = ?');
+    params.push(image || '');
+  }
+  if (sort_order !== undefined) {
+    updates.push('sort_order = ?');
+    params.push(Number.isFinite(Number(sort_order)) ? Number(sort_order) : 0);
+  }
+  if (parent_id !== undefined) {
+    updates.push('parent_id = ?');
+    params.push(parent_id || null);
+  }
+
   params.push(categoryId);
-  await runDB(env, sql, params);
+  await runDB(env, `UPDATE categories SET ${updates.join(', ')} WHERE id = ?`, params);
   return jsonResponse({ success: true, message: '分类已更新' });
 }
 
 async function handleAdminDeleteCategory(env, categoryId) {
-  const check = await queryDB(env, 'SELECT COUNT(*) as count FROM products WHERE category_id = ?', [categoryId]);
-  if (check.results && check.results[0] && check.results[0].count > 0) {
-    return errorResponse('该分类下还有商品，请先移除商品', 400);
+  const categoryResult = await queryDB(env, 'SELECT id, parent_id FROM categories WHERE id = ?', [categoryId]);
+  const category = categoryResult.results && categoryResult.results[0];
+  if (!category) return errorResponse('分类不存在', 404);
+
+  const productCheck = await queryDB(
+    env,
+    'SELECT COUNT(*) as count FROM products WHERE category_id = ?',
+    [categoryId]
+  );
+  if (productCheck.results && productCheck.results[0] && productCheck.results[0].count > 0) {
+    return errorResponse('该分类下还有商品，请先移除商品或修改商品分类', 400);
   }
-  const children = await queryDB(env, 'SELECT COUNT(*) as count FROM categories WHERE parent_id = ?', [categoryId]);
-  if (children.results && children.results[0] && children.results[0].count > 0) {
-    return errorResponse('该分类下还有子分类，请先删除子分类', 400);
+
+  // 主分类还有子分类时禁止删除，避免产生孤儿子分类
+  if (!category.parent_id) {
+    const childCheck = await queryDB(
+      env,
+      'SELECT COUNT(*) as count FROM categories WHERE parent_id = ?',
+      [categoryId]
+    );
+    if (childCheck.results && childCheck.results[0] && childCheck.results[0].count > 0) {
+      return errorResponse('该主分类下还有子分类，请先删除或迁移子分类', 400);
+    }
   }
+
   await runDB(env, 'DELETE FROM categories WHERE id = ?', [categoryId]);
-  return jsonResponse({ success: true, message: '分类已删除' });
+  return jsonResponse({
+    success: true,
+    message: category.parent_id ? '子分类已删除' : '主分类已删除'
+  });
 }
 
 async function handleGetCategoryProducts(env, categoryId) {
@@ -340,13 +430,14 @@ async function handleBuyProduct(env, authHeader, body) {
   if (!product) return errorResponse('商品不存在', 404);
   const sold = product.sold || 0;
   if (product.quantity <= sold) return errorResponse('库存不足');
-  if (user.diamond < product.price) return errorResponse('红钻不足，请先充值');
-  await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [product.price, userId]);
+  const diamondCost = product.price * 10;
+  if (user.diamond < diamondCost) return errorResponse('红钻不足，请先充值');
+  await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [diamondCost, userId]);
   const orderId = generateId();
   await runDB(env,
     `INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages, handler_id) 
      VALUES (?, ?, ?, "pending", ?, ?, ?, ?, ?, ?)`,
-    [orderId, productId, userId, product.price, product.game, product.title, product.description || '', 
+    [orderId, productId, userId, product.price, product.game, product.title, product.desc || '', 
      JSON.stringify([{ sender: 'system', content: '🎉 订单已创建', time: new Date().toISOString() }]),
      assignedHandlerId || null]
   );
@@ -393,7 +484,7 @@ async function handleGetOrderDetail(env, authHeader, orderId) {
 }
 
 // ============================================================
-//  打手功能（含100红钻冻结）
+//  打手功能
 // ============================================================
 async function handleTakeOrder(env, authHeader, orderId) {
   const userId = verifyAndGetUserId(authHeader);
@@ -402,24 +493,12 @@ async function handleTakeOrder(env, authHeader, orderId) {
   if (!user) return errorResponse('用户不存在', 404);
   if (user.role !== 'handler') return errorResponse('只有打手可接单');
   if (user.status !== 'active') return errorResponse('账号未激活，请联系管理员');
-  
-  if ((user.diamond || 0) < 100) {
-    return errorResponse('接单需要至少100红钻（冻结），请先充值', 400);
-  }
-  
   const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
   const order = (result.results && result.results[0]) || null;
   if (!order) return errorResponse('订单不存在', 404);
   if (order.status !== 'pending') return errorResponse('订单不可接');
-  
-  await runDB(env, 'UPDATE users SET diamond = diamond - 100 WHERE id = ?', [userId]);
-  await runDB(env,
-    'INSERT INTO frozen_diamonds (id, user_id, amount, order_id, created_at) VALUES (?, ?, 100, ?, ?)',
-    [generateId(), userId, orderId, new Date().toISOString()]
-  );
-  
   await runDB(env, 'UPDATE orders SET handler_id = ?, status = "ongoing", start_time = ? WHERE id = ?', [userId, new Date().toISOString(), orderId]);
-  return jsonResponse({ message: '接单成功，已冻结100红钻' });
+  return jsonResponse({ message: '接单成功' });
 }
 
 async function handleSubmitComplete(env, authHeader, orderId) {
@@ -479,7 +558,7 @@ async function handleRefundRequest(env, authHeader, orderId, body) {
 }
 
 // ============================================================
-//  派单员确认完成
+//  派单员确认完成（扣除自己红钻）
 // ============================================================
 async function handleDispatcherConfirmComplete(env, authHeader, orderId) {
   const userId = verifyAndGetUserId(authHeader);
@@ -535,7 +614,7 @@ async function handleSendTip(env, authHeader, body) {
 }
 
 // ============================================================
-//  充值功能
+//  自定义充值（用户提交）
 // ============================================================
 async function handleCustomRecharge(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -562,68 +641,6 @@ async function handleGetMyRecharges(env, authHeader) {
     [userId]
   );
   return jsonResponse(result.results || []);
-}
-
-// ============================================================
-//  提现功能
-// ============================================================
-async function handleRequestWithdraw(env, authHeader, body) {
-  const userId = verifyAndGetUserId(authHeader);
-  if (!userId) return errorResponse('请先登录', 401);
-  const user = await getUserById(env, userId);
-  if (!user) return errorResponse('用户不存在', 404);
-  if (user.role !== 'handler') return errorResponse('只有打手可提现', 403);
-  
-  const { amount } = body;
-  if (!amount || amount < 1) return errorResponse('请输入有效数量');
-  
-  const available = Math.max(0, (user.diamond || 0) - 100);
-  if (amount > available) {
-    return errorResponse(`可提现红钻不足，可用：${available} 红钻（需保留100冻结）`, 400);
-  }
-  
-  const id = generateId();
-  await runDB(env,
-    'INSERT INTO withdrawals (id, user_id, amount, status, created_at) VALUES (?, ?, ?, "pending", ?)',
-    [id, userId, amount, new Date().toISOString()]
-  );
-  await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [amount, userId]);
-  
-  return jsonResponse({ success: true, message: '提现申请已提交，等待管理员审核' });
-}
-
-async function handleAdminGetWithdrawals(env) {
-  const result = await queryDB(env,
-    `SELECT w.*, u.username 
-     FROM withdrawals w 
-     LEFT JOIN users u ON w.user_id = u.id 
-     ORDER BY w.created_at DESC`
-  );
-  return jsonResponse(result.results || []);
-}
-
-async function handleAdminApproveWithdraw(env, withdrawId) {
-  const result = await queryDB(env, 'SELECT * FROM withdrawals WHERE id = ?', [withdrawId]);
-  const withdraw = (result.results && result.results[0]) || null;
-  if (!withdraw) return errorResponse('提现记录不存在', 404);
-  if (withdraw.status !== 'pending') return errorResponse('已处理', 400);
-  
-  await runDB(env, 'UPDATE withdrawals SET status = "approved", processed_at = ? WHERE id = ?', 
-    [new Date().toISOString(), withdrawId]);
-  return jsonResponse({ success: true, message: '提现已通过' });
-}
-
-async function handleAdminRejectWithdraw(env, withdrawId, body) {
-  const result = await queryDB(env, 'SELECT * FROM withdrawals WHERE id = ?', [withdrawId]);
-  const withdraw = (result.results && result.results[0]) || null;
-  if (!withdraw) return errorResponse('提现记录不存在', 404);
-  if (withdraw.status !== 'pending') return errorResponse('已处理', 400);
-  
-  const { reason } = body;
-  await runDB(env, 'UPDATE withdrawals SET status = "rejected", reject_reason = ?, processed_at = ? WHERE id = ?', 
-    [reason || '无原因', new Date().toISOString(), withdrawId]);
-  await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [withdraw.amount, withdraw.user_id]);
-  return jsonResponse({ success: true, message: '已拒绝，红钻已退还' });
 }
 
 // ============================================================
@@ -690,7 +707,7 @@ async function handleGetUsersForService(env, authHeader) {
     return errorResponse('权限不足', 403);
   }
   const result = await queryDB(env,
-    'SELECT id, username, role FROM users WHERE role NOT IN ("admin", "service")'
+    'SELECT id, username, role FROM users WHERE role NOT IN ("admin", "service", "handler")'
   );
   return jsonResponse(result.results || []);
 }
@@ -713,7 +730,7 @@ async function handleServiceGift(env, authHeader, body) {
 }
 
 // ============================================================
-//  消息系统（修复版）
+//  消息系统
 // ============================================================
 async function handleSendMessage(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -725,26 +742,9 @@ async function handleSendMessage(env, authHeader, body) {
   const receiver = await getUserById(env, receiverId);
   if (!receiver) return errorResponse('接收者不存在', 404);
   
-  // 权限检查：普通用户只能发给客服/管理员，或回复已有联系人
-  if (user.role !== 'admin' && user.role !== 'service') {
-    // 检查是否已有对话记录
-    const existingContact = await queryDB(env,
-      'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?',
-      [userId, receiverId]
-    );
-    // 如果接收者不是客服/管理员，且没有已有对话，则拒绝
-    if (receiver.role !== 'admin' && receiver.role !== 'service' && 
-        (!existingContact.results || existingContact.results.length === 0)) {
-      // 允许发送给任何已经有对话的人
-      const hasContact = await queryDB(env,
-        'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?',
-        [userId, receiverId]
-      );
-      if (!hasContact.results || hasContact.results.length === 0) {
-        return errorResponse('只能联系客服或管理员，或回复已有联系人', 403);
-      }
-    }
-  }
+  // 所有已登录角色均可互相私聊：
+  // 管理员 / 客服 / 老板 / 打手 / 派单均可发送和回复。
+  // 未登录用户仍会在上面的认证检查中被拦截。
   
   const id = generateId();
   await runDB(env,
@@ -789,52 +789,35 @@ async function handleGetContacts(env, authHeader) {
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
   
-  // 获取所有联系人
+  // 所有角色统一查看自己已经建立的对话。
+  // 这样管理员 / 客服 / 老板 / 打手 / 派单之间都能正常进入聊天。
+  const sql = `SELECT DISTINCT 
+          u.id, u.username, u.role,
+          mc.last_message, mc.last_time, mc.unread_count
+          FROM message_contacts mc
+          JOIN users u ON mc.contact_id = u.id
+          WHERE mc.user_id = ?
+          ORDER BY COALESCE(mc.last_time, '') DESC`;
+  const params = [userId];
+  
+  const result = await queryDB(env, sql, params);
+  return jsonResponse(result.results || []);
+}
+
+async function handleGetMessageUsers(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+
   const result = await queryDB(env,
-    `SELECT 
-      u.id, u.username, u.role,
-      mc.last_message, mc.last_time, mc.unread_count
-      FROM message_contacts mc
-      JOIN users u ON mc.contact_id = u.id
-      WHERE mc.user_id = ?
-      ORDER BY mc.last_time DESC`,
+    `SELECT id, username, role, status
+     FROM users
+     WHERE id != ?
+     ORDER BY created_at DESC`,
     [userId]
   );
-  let contacts = result.results || [];
-  
-  // 如果是普通用户（非客服/管理员），确保客服/管理员在联系人列表中
-  if (user.role !== 'admin' && user.role !== 'service') {
-    // 获取所有客服和管理员
-    const serviceUsers = await queryDB(env,
-      'SELECT id, username, role FROM users WHERE role IN ("admin", "service") AND status = "active"'
-    );
-    const serviceList = serviceUsers.results || [];
-    
-    // 检查联系人中是否已有客服/管理员
-    const contactIds = new Set(contacts.map(c => c.id));
-    for (const svc of serviceList) {
-      if (!contactIds.has(svc.id) && svc.id !== userId) {
-        // 添加默认联系人（但没有消息记录）
-        contacts.push({
-          id: svc.id,
-          username: svc.username,
-          role: svc.role,
-          last_message: '联系客服',
-          last_time: new Date().toISOString(),
-          unread_count: 0
-        });
-      }
-    }
-  }
-  
-  // 按最后消息时间排序
-  contacts.sort((a, b) => {
-    const timeA = a.last_time ? new Date(a.last_time).getTime() : 0;
-    const timeB = b.last_time ? new Date(b.last_time).getTime() : 0;
-    return timeB - timeA;
-  });
-  
-  return jsonResponse(contacts);
+  return jsonResponse(result.results || []);
 }
 
 async function handleGetMessages(env, authHeader, body) {
@@ -847,19 +830,8 @@ async function handleGetMessages(env, authHeader, body) {
   const contact = await getUserById(env, contactId);
   if (!contact) return errorResponse('联系人不存在', 404);
   
-  // 权限检查：普通用户只能查看与客服/管理员或已有联系人的聊天
-  if (user.role !== 'admin' && user.role !== 'service') {
-    if (contact.role !== 'admin' && contact.role !== 'service') {
-      // 检查是否已有对话记录
-      const existing = await queryDB(env,
-        'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?',
-        [userId, contactId]
-      );
-      if (!existing.results || existing.results.length === 0) {
-        return errorResponse('只能查看与客服或管理员的聊天', 403);
-      }
-    }
-  }
+  // 所有已登录角色均可查看联系人之间的私聊记录。
+  // 角色权限不再限制消息历史，支持双向沟通。
   
   const result = await queryDB(env,
     `SELECT * FROM messages 
@@ -894,7 +866,7 @@ async function handleGetUnreadCount(env, authHeader) {
 }
 
 // ============================================================
-//  管理员功能
+//  管理员功能（原有，已包含）
 // ============================================================
 async function handleAdminGetOrders(env) {
   const result = await queryDB(env, 'SELECT * FROM orders ORDER BY created_at DESC');
@@ -902,36 +874,8 @@ async function handleAdminGetOrders(env) {
 }
 
 async function handleAdminGetUsers(env) {
-  const result = await queryDB(env, 'SELECT id, username, role, diamond, status, created_at FROM users');
+  const result = await queryDB(env, 'SELECT id, username, role, diamond, balance, status, created_at FROM users');
   return jsonResponse(result.results || []);
-}
-
-async function handleAdminGetUserDetail(env, targetUserId) {
-  const user = await getUserById(env, targetUserId);
-  if (!user) return errorResponse('用户不存在', 404);
-  const orders = await queryDB(env, 'SELECT * FROM orders WHERE boss_id = ? OR handler_id = ? ORDER BY created_at DESC', 
-    [targetUserId, targetUserId]);
-  const { password, ...userData } = user;
-  return jsonResponse({ user: userData, orders: orders.results || [] });
-}
-
-async function handleAdminDeductDiamond(env, targetUserId, body) {
-  const { amount } = body;
-  if (!amount || amount < 1) return errorResponse('请输入有效数量');
-  const user = await getUserById(env, targetUserId);
-  if (!user) return errorResponse('用户不存在', 404);
-  if ((user.diamond || 0) < amount) return errorResponse('用户红钻不足', 400);
-  await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [amount, targetUserId]);
-  return jsonResponse({ success: true, message: `已扣除 ${amount} 红钻` });
-}
-
-async function handleAdminAddDiamond(env, targetUserId, body) {
-  const { amount } = body;
-  if (!amount || amount < 1) return errorResponse('请输入有效数量');
-  const user = await getUserById(env, targetUserId);
-  if (!user) return errorResponse('用户不存在', 404);
-  await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [amount, targetUserId]);
-  return jsonResponse({ success: true, message: `已充值 ${amount} 红钻` });
 }
 
 async function handleAdminAssignHandler(env, orderId, body) {
@@ -941,27 +885,23 @@ async function handleAdminAssignHandler(env, orderId, body) {
   if (!userResult.results || userResult.results.length === 0) {
     return errorResponse('打手不存在');
   }
-  await runDB(env, 'UPDATE orders SET handler_id = ?, status = "ongoing", start_time = ? WHERE id = ?', 
-    [handlerId, new Date().toISOString(), orderId]);
+  await runDB(env, 'UPDATE orders SET handler_id = ?, status = "ongoing", start_time = ? WHERE id = ?', [handlerId, new Date().toISOString(), orderId]);
   return jsonResponse({ message: '指派成功' });
 }
 
 async function handleAdminForceComplete(env, orderId) {
-  await runDB(env, 'UPDATE orders SET status = "completed", end_time = ? WHERE id = ?', 
-    [new Date().toISOString(), orderId]);
+  await runDB(env, 'UPDATE orders SET status = "completed", end_time = ? WHERE id = ?', [new Date().toISOString(), orderId]);
   return jsonResponse({ message: '强制完成成功' });
 }
 
 async function handleAdminConfirm(env, orderId) {
-  await runDB(env, 'UPDATE orders SET status = "completed", end_time = ? WHERE id = ?', 
-    [new Date().toISOString(), orderId]);
+  await runDB(env, 'UPDATE orders SET status = "completed", end_time = ? WHERE id = ?', [new Date().toISOString(), orderId]);
   return jsonResponse({ message: '验收通过' });
 }
 
 async function handleAdminReject(env, orderId, body) {
   const { reason } = body;
-  await runDB(env, 'UPDATE orders SET status = "rejected", refund_reason = ? WHERE id = ?', 
-    [reason || '无原因', orderId]);
+  await runDB(env, 'UPDATE orders SET status = "rejected", refund_reason = ? WHERE id = ?', [reason || '无原因', orderId]);
   return jsonResponse({ message: '已驳回' });
 }
 
@@ -985,30 +925,24 @@ async function handleAdminSettle(env, orderId, body) {
   if (order.settled) return errorResponse('已结算');
   if (order.status !== 'completed') return errorResponse('只有已完成订单可结算');
   if (order.handler_id) {
-    await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [amount, order.handler_id]);
+    const diamondAmount = amount * 10;
+    await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [diamondAmount, order.handler_id]);
   }
   await runDB(env, 'UPDATE orders SET settled = 1, settled_amount = ? WHERE id = ?', [amount, orderId]);
   return jsonResponse({ success: true, message: `结算成功 ${amount} 红钻` });
 }
 
-async function handleAdminRefundOrder(env, orderId, body) {
-  const { approve, rejectReason } = body;
-  const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
-  const order = (result.results && result.results[0]) || null;
-  if (!order) return errorResponse('订单不存在', 404);
-  if (order.status !== 'refund_pending') return errorResponse('不是待退款状态', 400);
-  
-  if (approve) {
-    if (order.boss_id) {
-      await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [order.price, order.boss_id]);
-    }
-    await runDB(env, 'UPDATE orders SET status = "refunded" WHERE id = ?', [orderId]);
-    return jsonResponse({ success: true, message: '退款已通过，红钻已返还' });
-  } else {
-    await runDB(env, 'UPDATE orders SET status = "ongoing", refund_reason = ? WHERE id = ?', 
-      [rejectReason || '退款被拒绝', orderId]);
-    return jsonResponse({ success: true, message: '已拒绝退款' });
-  }
+async function handleAdminDirectPublish(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const { game, title, desc, price } = body;
+  if (!title || !price) return errorResponse('请填写完整信息');
+  const orderId = generateId();
+  await runDB(env,
+    'INSERT INTO orders (id, boss_id, status, price, game, title, description, messages) VALUES (?, ?, "pending", ?, ?, ?, ?, ?)',
+    [orderId, userId, parseFloat(price), game || '暗区突围', title, desc || '', JSON.stringify([{ sender: 'system', content: '🎉 订单已创建（管理员发布）', time: new Date().toISOString() }])]
+  );
+  return jsonResponse({ success: true, orderId });
 }
 
 async function handleAdminDeleteOrder(env, orderId) {
@@ -1033,8 +967,7 @@ async function handleAdminApproveRecharge(env, rechargeId) {
   const result = await queryDB(env, 'SELECT * FROM recharge_requests WHERE id = ?', [rechargeId]);
   const recharge = (result.results && result.results[0]) || null;
   if (!recharge || recharge.status !== 'pending') return errorResponse('记录不存在或已处理');
-  await runDB(env, 'UPDATE recharge_requests SET status = "approved", approve_time = ? WHERE id = ?', 
-    [new Date().toISOString(), rechargeId]);
+  await runDB(env, 'UPDATE recharge_requests SET status = "approved", approve_time = ? WHERE id = ?', [new Date().toISOString(), rechargeId]);
   if (recharge.user_id) {
     await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [recharge.diamond || 0, recharge.user_id]);
   }
@@ -1045,8 +978,7 @@ async function handleAdminRejectRecharge(env, rechargeId) {
   const result = await queryDB(env, 'SELECT * FROM recharge_requests WHERE id = ?', [rechargeId]);
   const recharge = (result.results && result.results[0]) || null;
   if (!recharge || recharge.status !== 'pending') return errorResponse('记录不存在或已处理');
-  await runDB(env, 'UPDATE recharge_requests SET status = "rejected", approve_time = ? WHERE id = ?', 
-    [new Date().toISOString(), rechargeId]);
+  await runDB(env, 'UPDATE recharge_requests SET status = "rejected", approve_time = ? WHERE id = ?', [new Date().toISOString(), rechargeId]);
   return jsonResponse({ success: true, message: '已拒绝' });
 }
 
@@ -1063,7 +995,77 @@ async function handleAdminGiftDiamond(env, body) {
 }
 
 // ============================================================
-//  管理员用户管理
+//  公告
+// ============================================================
+async function handleGetAnnounce(env) {
+  const result = await queryDB(env, 'SELECT * FROM announces ORDER BY updated_at DESC LIMIT 1');
+  const data = (result.results && result.results[0]) || { content: '欢迎使用 QW电竞护航平台！', images: '[]' };
+  if (typeof data.images === 'string') {
+    try { data.images = JSON.parse(data.images); } catch(e) { data.images = []; }
+  }
+  return jsonResponse(data);
+}
+
+async function handleAdminUpdateAnnounce(env, body) {
+  const { content, images } = body;
+  await runDB(env, 'DELETE FROM announces');
+  const imagesJson = Array.isArray(images) ? JSON.stringify(images) : '[]';
+  await runDB(env,
+    'INSERT INTO announces (id, content, images, updated_at) VALUES (?, ?, ?, ?)',
+    [generateId(), content || '欢迎使用 QW电竞护航平台！', imagesJson, new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, message: '公告已更新' });
+}
+
+// ============================================================
+//  邮件
+// ============================================================
+async function handleGetMails(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const result = await queryDB(env, 'SELECT * FROM mails WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+  return jsonResponse(result.results || []);
+}
+
+async function handleClaimMail(env, authHeader, mailId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const result = await queryDB(env, 'SELECT * FROM mails WHERE id = ?', [mailId]);
+  const mail = (result.results && result.results[0]) || null;
+  if (!mail) return errorResponse('邮件不存在', 404);
+  if (mail.user_id !== userId) return errorResponse('无权操作', 403);
+  if (mail.status === 'read') return errorResponse('已领取');
+  await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [mail.diamond || 0, userId]);
+  await runDB(env, 'UPDATE mails SET status = "read", claim_time = ? WHERE id = ?', [new Date().toISOString(), mailId]);
+  return jsonResponse({ message: '领取成功' });
+}
+
+// ============================================================
+//  订单聊天
+// ============================================================
+async function handleSendChat(env, authHeader, orderId, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  const { content } = body;
+  if (!content) return errorResponse('内容不能为空');
+  const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
+  const order = (result.results && result.results[0]) || null;
+  if (!order) return errorResponse('订单不存在', 404);
+  if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin' && user.role !== 'service') {
+    return errorResponse('无权操作', 403);
+  }
+  const sender = user.role === 'boss' ? 'boss' : user.role === 'handler' ? 'handler' : user.role === 'dispatcher' ? 'dispatcher' : user.role === 'service' ? 'service' : 'admin';
+  let messages = [];
+  try { messages = JSON.parse(order.messages || '[]'); } catch (e) { messages = []; }
+  messages.push({ sender, content, time: new Date().toISOString() });
+  await runDB(env, 'UPDATE orders SET messages = ? WHERE id = ?', [JSON.stringify(messages), orderId]);
+  return jsonResponse({ message: '发送成功' });
+}
+
+// ============================================================
+//  管理员：用户管理
 // ============================================================
 async function handleAdminToggleBan(env, targetUserId) {
   const result = await queryDB(env, 'SELECT * FROM users WHERE id = ?', [targetUserId]);
@@ -1149,76 +1151,6 @@ async function handleDispatcherOrders(env, authHeader) {
 }
 
 // ============================================================
-//  公告
-// ============================================================
-async function handleGetAnnounce(env) {
-  const result = await queryDB(env, 'SELECT * FROM announces ORDER BY updated_at DESC LIMIT 1');
-  const data = (result.results && result.results[0]) || { content: '欢迎使用 QW电竞护航平台！', images: '[]' };
-  if (typeof data.images === 'string') {
-    try { data.images = JSON.parse(data.images); } catch(e) { data.images = []; }
-  }
-  return jsonResponse(data);
-}
-
-async function handleAdminUpdateAnnounce(env, body) {
-  const { content, images } = body;
-  await runDB(env, 'DELETE FROM announces');
-  const imagesJson = Array.isArray(images) ? JSON.stringify(images) : '[]';
-  await runDB(env,
-    'INSERT INTO announces (id, content, images, updated_at) VALUES (?, ?, ?, ?)',
-    [generateId(), content || '欢迎使用 QW电竞护航平台！', imagesJson, new Date().toISOString()]
-  );
-  return jsonResponse({ success: true, message: '公告已更新' });
-}
-
-// ============================================================
-//  邮件
-// ============================================================
-async function handleGetMails(env, authHeader) {
-  const userId = verifyAndGetUserId(authHeader);
-  if (!userId) return errorResponse('请先登录', 401);
-  const result = await queryDB(env, 'SELECT * FROM mails WHERE user_id = ? ORDER BY created_at DESC', [userId]);
-  return jsonResponse(result.results || []);
-}
-
-async function handleClaimMail(env, authHeader, mailId) {
-  const userId = verifyAndGetUserId(authHeader);
-  if (!userId) return errorResponse('请先登录', 401);
-  const result = await queryDB(env, 'SELECT * FROM mails WHERE id = ?', [mailId]);
-  const mail = (result.results && result.results[0]) || null;
-  if (!mail) return errorResponse('邮件不存在', 404);
-  if (mail.user_id !== userId) return errorResponse('无权操作', 403);
-  if (mail.status === 'read') return errorResponse('已领取');
-  await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [mail.diamond || 0, userId]);
-  await runDB(env, 'UPDATE mails SET status = "read", claim_time = ? WHERE id = ?', [new Date().toISOString(), mailId]);
-  return jsonResponse({ message: '领取成功' });
-}
-
-// ============================================================
-//  订单聊天
-// ============================================================
-async function handleSendChat(env, authHeader, orderId, body) {
-  const userId = verifyAndGetUserId(authHeader);
-  if (!userId) return errorResponse('请先登录', 401);
-  const user = await getUserById(env, userId);
-  if (!user) return errorResponse('用户不存在', 404);
-  const { content } = body;
-  if (!content) return errorResponse('内容不能为空');
-  const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
-  const order = (result.results && result.results[0]) || null;
-  if (!order) return errorResponse('订单不存在', 404);
-  if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin' && user.role !== 'service') {
-    return errorResponse('无权操作', 403);
-  }
-  const sender = user.role === 'boss' ? 'boss' : user.role === 'handler' ? 'handler' : user.role === 'dispatcher' ? 'dispatcher' : user.role === 'service' ? 'service' : 'admin';
-  let messages = [];
-  try { messages = JSON.parse(order.messages || '[]'); } catch (e) { messages = []; }
-  messages.push({ sender, content, time: new Date().toISOString() });
-  await runDB(env, 'UPDATE orders SET messages = ? WHERE id = ?', [JSON.stringify(messages), orderId]);
-  return jsonResponse({ message: '发送成功' });
-}
-
-// ============================================================
 //  健康检查
 // ============================================================
 async function handleHealthCheck(env) {
@@ -1282,7 +1214,6 @@ export async function onRequest(context) {
     if (path === '/api/dispatcher/orders' && method === 'GET') return await handleDispatcherOrders(env, authHeader);
     if (path === '/api/dispatcher/products' && method === 'POST') return await handleDispatcherCreateProduct(env, authHeader, body);
     if (path === '/api/dispatcher/publish' && method === 'POST') return await handleDispatcherPublish(env, authHeader, body);
-    if (path === '/api/withdraw/request' && method === 'POST') return await handleRequestWithdraw(env, authHeader, body);
     
     // 充值
     if (path === '/api/recharge/custom' && method === 'POST') return await handleCustomRecharge(env, authHeader, body);
@@ -1297,6 +1228,7 @@ export async function onRequest(context) {
     // 消息
     if (path === '/api/messages/send' && method === 'POST') return await handleSendMessage(env, authHeader, body);
     if (path === '/api/messages/contacts' && method === 'GET') return await handleGetContacts(env, authHeader);
+    if (path === '/api/messages/users' && method === 'GET') return await handleGetMessageUsers(env, authHeader);
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
 
@@ -1325,12 +1257,7 @@ export async function onRequest(context) {
       const user = await getUserById(env, userId);
       if (user && user.role === 'admin') {
         if (path === '/api/admin/orders' && method === 'GET') return await handleAdminGetOrders(env);
-        if (path === '/api/admin/withdrawals' && method === 'GET') return await handleAdminGetWithdrawals(env);
-        if (path.startsWith('/api/admin/withdrawals/')) {
-          const wId = path.replace('/api/admin/withdrawals/', '');
-          if (wId.endsWith('/approve') && method === 'PUT') { const id = wId.replace('/approve', ''); return await handleAdminApproveWithdraw(env, id); }
-          if (wId.endsWith('/reject') && method === 'PUT') { const id = wId.replace('/reject', ''); return await handleAdminRejectWithdraw(env, id, body); }
-        }
+        if (path === '/api/admin/orders/direct' && method === 'POST') return await handleAdminDirectPublish(env, authHeader, body);
         if (path.startsWith('/api/admin/orders/')) {
           const orderId = path.replace('/api/admin/orders/', '');
           if (orderId.endsWith('/assign') && method === 'PUT') { const id = orderId.replace('/assign', ''); return await handleAdminAssignHandler(env, id, body); }
@@ -1339,7 +1266,6 @@ export async function onRequest(context) {
           if (orderId.endsWith('/reject') && method === 'PUT') { const id = orderId.replace('/reject', ''); return await handleAdminReject(env, id, body); }
           if (orderId.endsWith('/cancel') && method === 'PUT') { const id = orderId.replace('/cancel', ''); return await handleAdminCancelOrder(env, id); }
           if (orderId.endsWith('/settle') && method === 'PUT') { const id = orderId.replace('/settle', ''); return await handleAdminSettle(env, id, body); }
-          if (orderId.endsWith('/refund') && method === 'PUT') { const id = orderId.replace('/refund', ''); return await handleAdminRefundOrder(env, id, body); }
           if (method === 'DELETE') return await handleAdminDeleteOrder(env, orderId);
         }
         if (path === '/api/admin/products' && method === 'GET') return await handleAdminGetProducts(env);
@@ -1362,9 +1288,6 @@ export async function onRequest(context) {
         if (path === '/api/admin/gift' && method === 'POST') return await handleAdminGiftDiamond(env, body);
         if (path.startsWith('/api/admin/users/')) {
           const targetUserId = path.replace('/api/admin/users/', '');
-          if (targetUserId.endsWith('/detail') && method === 'GET') { const id = targetUserId.replace('/detail', ''); return await handleAdminGetUserDetail(env, id); }
-          if (targetUserId.endsWith('/deduct-diamond') && method === 'PUT') { const id = targetUserId.replace('/deduct-diamond', ''); return await handleAdminDeductDiamond(env, id, body); }
-          if (targetUserId.endsWith('/add-diamond') && method === 'PUT') { const id = targetUserId.replace('/add-diamond', ''); return await handleAdminAddDiamond(env, id, body); }
           if (targetUserId.endsWith('/ban') && method === 'PUT') { const id = targetUserId.replace('/ban', ''); return await handleAdminToggleBan(env, id); }
           if (targetUserId.endsWith('/reset-password') && method === 'PUT') { const id = targetUserId.replace('/reset-password', ''); return await handleAdminResetPassword(env, id); }
           if (targetUserId.endsWith('/approve') && method === 'PUT') { const id = targetUserId.replace('/approve', ''); return await handleApproveHandler(env, id); }
