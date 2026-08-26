@@ -1346,6 +1346,29 @@
             flex: 1;
             min-width: 100px;
         }
+        /* 客服/管理员联系按钮样式 */
+        .support-contact-section {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: var(--bg-card-hover);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .support-contact-section .title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .support-contact-section .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .support-contact-section .btn-group .btn {
+            font-size: 12px;
+            padding: 6px 14px;
+        }
     </style>
 </head>
 <body>
@@ -1517,7 +1540,7 @@
                         <select class="admin-form-control" id="prodCategory"></select>
                     </div>
                     <div class="admin-form-group"><label><i class="fas fa-tag"></i> 子分类（游戏）</label>
-                        <select class="admin-form-control" id="prodGame"><option value="暗区突围">🎯 暗区突围</option><option value="三角洲">🚁 三角洲</option></select>
+                        <select class="admin-form-control" id="prodGame"><option value="">-- 请选择子分类 --</option></select>
                     </div>
                     <div class="admin-form-group"><label><i class="fas fa-tag"></i> 标题</label><input class="admin-form-control" id="prodTitle" placeholder="标题"></div>
                     <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="prodDesc" rows="2" placeholder="服务详情"></textarea></div>
@@ -1668,7 +1691,9 @@
             <div class="admin-card" style="border-left:4px solid #f59e0b;">
                 <div class="admin-card-title"><i class="fas fa-paper-plane" style="color:#f59e0b;"></i> 直接发布订单</div>
                 <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">无需老板购买，直接创建订单，打手可接单。</p>
-                <div class="admin-form-group"><label><i class="fas fa-gamepad"></i> 游戏</label><select class="admin-form-control" id="dispatcherDirectGame"><option value="暗区突围">🎯 暗区突围</option><option value="三角洲">🚁 三角洲</option></select></div>
+                <div class="admin-form-group"><label><i class="fas fa-gamepad"></i> 游戏</label>
+                    <select class="admin-form-control" id="dispatcherDirectGame"><option value="">-- 请选择子分类 --</option></select>
+                </div>
                 <div class="admin-form-group"><label><i class="fas fa-tag"></i> 标题</label><input class="admin-form-control" id="dispatcherDirectTitle" placeholder="标题"></div>
                 <div class="admin-form-group"><label><i class="fas fa-align-left"></i> 描述</label><textarea class="admin-form-control" id="dispatcherDirectDesc" rows="2" placeholder="服务详情"></textarea></div>
                 <div class="admin-form-group"><label><i class="fas fa-gem"></i> 价格（红钻）</label><input class="admin-form-control" id="dispatcherDirectPrice" type="number" placeholder="288"></div>
@@ -1683,10 +1708,9 @@
                     </select>
                 </div>
                 <div class="admin-form-group">
-                    <label><i class="fas fa-gamepad"></i> 游戏</label>
+                    <label><i class="fas fa-gamepad"></i> 游戏（子分类）</label>
                     <select class="admin-form-control" id="dispatcherProdGame">
-                        <option value="暗区突围">🎯 暗区突围</option>
-                        <option value="三角洲">🚁 三角洲</option>
+                        <option value="">-- 请选择子分类 --</option>
                     </select>
                 </div>
                 <div class="admin-form-group">
@@ -1956,6 +1980,18 @@ function updateHeaderDiamond() {
         document.getElementById('headerUnreadMail').textContent = unread;
     }).catch(() => {});
 }
+// ============================================================
+//  获取支持联系人（管理员/客服）
+// ============================================================
+async function getSupportContacts() {
+    try {
+        const contacts = await apiRequest('/support-contacts');
+        return contacts || [];
+    } catch (err) {
+        console.error('获取支持联系人失败', err);
+        return [];
+    }
+}
 
 // ============================================================
 //  图片预览
@@ -2100,15 +2136,12 @@ async function loadCategoryNav() {
             container.appendChild(btn);
         });
 
-        // 第一次加载时，根据当前主分类状态渲染动态子分类。
         renderSubCategoryNav(categories);
     } catch (err) {
         console.error('加载分类导航失败', err);
     }
 }
 
-// 根据当前选中的主分类，动态生成对应的子分类按钮。
-// 不再写死“暗区突围 / 三角洲”。
 function renderSubCategoryNav(categories) {
     const wrapper = document.getElementById('subCategoryWrapper');
     if (!wrapper) return;
@@ -2123,7 +2156,6 @@ function renderSubCategoryNav(categories) {
         subCats = allSubCats.filter(c => String(c.parent_id) === String(currentCategoryFilter));
     }
 
-    // 当前子分类如果已经不属于新主分类，则重置为“全部”。
     if (currentSubCategoryFilter !== 'all' && !subCats.some(c => String(c.id) === String(currentSubCategoryFilter))) {
         currentSubCategoryFilter = 'all';
     }
@@ -2147,23 +2179,72 @@ function renderSubCategoryNav(categories) {
         wrapper.appendChild(btn);
     });
 
-    // 没有子分类时隐藏第二行，避免出现空白导航。
     wrapper.style.display = subCats.length ? 'flex' : 'none';
 }
 
+// ============================================================
+//  动态加载子分类到下拉框
+// ============================================================
+async function loadSubCategoriesToSelect(selectId, parentId) {
+    try {
+        const categories = await apiRequest('/categories');
+        const subCats = categories.filter(c => c.parent_id === parentId);
+        const sel = document.getElementById(selectId);
+        if (!sel) return;
+        sel.innerHTML = '<option value="">-- 请选择子分类 --</option>';
+        subCats.forEach(c => {
+            sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        });
+    } catch (err) {
+        console.error('加载子分类失败', err);
+    }
+}
+
+// ============================================================
+//  加载分类到选择器（管理员/派单员）
+// ============================================================
 async function loadCategoriesForSelectors() {
     try {
         const categories = await apiRequest('/categories');
         const mainCats = categories.filter(c => !c.parent_id);
+        const subCats = categories.filter(c => c.parent_id);
+        
+        // 主分类选择器
         const selectorIds = ['prodCategory', 'dispatcherProdCategory'];
         selectorIds.forEach(id => {
             const sel = document.getElementById(id);
             if (!sel) return;
-            sel.innerHTML = '<option value="">-- 请选择分类 --</option>';
+            sel.innerHTML = '<option value="">-- 请选择主分类 --</option>';
             mainCats.forEach(c => {
                 sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
             });
         });
+
+        // 子分类选择器（商品上架 - 根据主分类动态加载）
+        const prodCategorySel = document.getElementById('prodCategory');
+        if (prodCategorySel) {
+            prodCategorySel.onchange = function() {
+                loadSubCategoriesToSelect('prodGame', this.value);
+            };
+        }
+
+        // 派单员商品上架
+        const dispatcherCategorySel = document.getElementById('dispatcherProdCategory');
+        if (dispatcherCategorySel) {
+            dispatcherCategorySel.onchange = function() {
+                loadSubCategoriesToSelect('dispatcherProdGame', this.value);
+            };
+        }
+
+        // 派单员直接发布订单
+        loadSubCategoriesToSelect('dispatcherDirectGame', mainCats.length > 0 ? mainCats[0].id : null);
+        const directGameSel = document.getElementById('dispatcherDirectGame');
+        if (directGameSel && mainCats.length > 0) {
+            // 设置默认第一个主分类
+            const firstMain = mainCats[0];
+            loadSubCategoriesToSelect('dispatcherDirectGame', firstMain.id);
+        }
+
         // 子分类父级选择器
         const parentSel = document.getElementById('subCategoryParent');
         if (parentSel) {
@@ -2172,21 +2253,6 @@ async function loadCategoriesForSelectors() {
                 parentSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
             });
         }
-    } catch (err) {
-        console.error('加载分类失败', err);
-    }
-}
-
-async function loadCategoriesForDispatcher() {
-    try {
-        const categories = await apiRequest('/categories');
-        const mainCats = categories.filter(c => !c.parent_id);
-        const sel = document.getElementById('dispatcherProdCategory');
-        if (!sel) return;
-        sel.innerHTML = '<option value="">-- 请选择分类 --</option>';
-        mainCats.forEach(c => {
-            sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-        });
     } catch (err) {
         console.error('加载分类失败', err);
     }
@@ -2221,7 +2287,6 @@ async function renderCategories() {
                     <button class="btn btn-danger btn-xs" onclick="confirmDeleteCategory('${c.id}')">删除</button>
                 </td>
             </tr>`;
-            // 子分类
             children.forEach(child => {
                 html += `<tr style="background:var(--bg-card-hover);">
                     <td style="padding-left:20px;">子分类</td>
@@ -2299,7 +2364,6 @@ async function createCategory() {
         document.getElementById('categorySortOrder').value = '0';
         renderCategories();
         loadCategoryNav();
-        loadCategoriesForDispatcher();
         loadCategoriesForSelectors();
     } catch (err) {
         toast(err.message, 'error');
@@ -2320,6 +2384,7 @@ async function createSubCategory() {
         document.getElementById('subCategoryName').value = '';
         renderCategories();
         loadCategoryNav();
+        loadCategoriesForSelectors();
     } catch (err) {
         toast(err.message, 'error');
     }
@@ -2364,7 +2429,6 @@ async function doEditCategory(categoryId) {
         toast('分类已更新', 'success');
         renderCategories();
         loadCategoryNav();
-        loadCategoriesForDispatcher();
         loadCategoriesForSelectors();
     } catch (err) {
         toast(err.message, 'error');
@@ -2381,7 +2445,6 @@ async function doDeleteCategory(categoryId) {
         toast('已删除', 'success');
         renderCategories();
         loadCategoryNav();
-        loadCategoriesForDispatcher();
         loadCategoriesForSelectors();
     } catch (err) {
         toast(err.message, 'error');
@@ -2398,7 +2461,6 @@ async function filterProducts(categoryId) {
     const targetBtn = document.querySelector(`#categoryNavWrapper .category-btn[data-category="${categoryId}"]`);
     if (targetBtn) targetBtn.classList.add('active');
 
-    // 主分类切换后重新读取 D1 分类，让第二行只显示该主分类自己的子分类。
     try {
         const categories = await apiRequest('/categories');
         renderSubCategoryNav(categories);
@@ -2426,7 +2488,6 @@ async function renderCategoryProducts() {
             products = await apiRequest('/categories/' + currentCategoryFilter + '/products');
         }
         
-        // 子分类筛选（按游戏）
         if (currentSubCategoryFilter !== 'all') {
             products = products.filter(p => String(p.category_id) === String(currentSubCategoryFilter));
         }
@@ -2475,7 +2536,6 @@ async function renderCategoryProducts() {
         console.error('加载分类商品失败', err);
     }
 }
-
 // ============================================================
 //  商品详情
 // ============================================================
@@ -2680,7 +2740,6 @@ async function renderHandlerView() {
         const user = await apiRequest('/me');
         const balance = user.diamond || 0;
         const frozen = Math.min(100, balance);
-        const available = Math.max(0, balance - 100);
         document.getElementById('handlerBalance').textContent = balance + ' 红钻';
         document.getElementById('handlerFrozenBalance').textContent = frozen + ' 红钻（冻结）';
         
@@ -2878,7 +2937,6 @@ async function doRejectWithdraw(withdrawId, reason) {
         toast(err.message, 'error');
     }
 }
-
 // ============================================================
 //  管理员渲染
 // ============================================================
@@ -2993,8 +3051,6 @@ window.openEditProduct = function(productId) {
             const mainCats = categories.filter(c => !c.parent_id);
             const subCats = categories.filter(c => c.parent_id);
 
-            // 兼容旧数据：以前 category_id 可能保存的是主分类，game 保存的是游戏名。
-            // 新结构以“子分类 ID”为商品 category_id，game 同步保存子分类名称。
             let selectedMainId = '';
             let selectedSubId = '';
             const categoryById = Object.fromEntries(categories.map(c => [c.id, c]));
@@ -3054,7 +3110,6 @@ window.openEditProduct = function(productId) {
                 </div>
             `);
 
-            // 主分类切换时，实时刷新对应的子分类
             const mainSelect = document.getElementById('editProdCategory');
             const subSelect = document.getElementById('editProdSubCategory');
             if (mainSelect && subSelect) {
@@ -3134,7 +3189,8 @@ async function doDeleteProduct(productId) {
 
 async function shelfProduct() {
     const category_id = document.getElementById('prodCategory').value || null;
-    const game = document.getElementById('prodGame').value;
+    const gameSelect = document.getElementById('prodGame');
+    const game = gameSelect?.options[gameSelect.selectedIndex]?.textContent?.trim() || '';
     const title = document.getElementById('prodTitle').value.trim();
     const desc = document.getElementById('prodDesc').value.trim();
     const price = parseFloat(document.getElementById('prodPrice').value);
@@ -3143,12 +3199,14 @@ async function shelfProduct() {
     const detail_images_raw = document.getElementById('prodDetailImages').value.trim();
     const detail_desc = document.getElementById('prodDetailDesc').value.trim();
     const detail_images = detail_images_raw ? detail_images_raw.split(',').map(s => s.trim()).filter(s => s) : [];
-    if (!category_id) return toast('请选择分类', 'warning');
+    if (!category_id) return toast('请选择主分类', 'warning');
+    const subCategoryId = document.getElementById('prodGame').value;
+    if (!subCategoryId) return toast('请选择子分类', 'warning');
     if (!title || !price) return toast('请填写完整信息', 'error');
     try {
         await apiRequest('/admin/products', {
             method: 'POST',
-            body: JSON.stringify({ game, title, desc, price, quantity, image, category_id, detail_images, detail_desc })
+            body: JSON.stringify({ game, title, desc, price, quantity, image, category_id: subCategoryId, detail_images, detail_desc })
         });
         toast('上架成功', 'success');
         document.getElementById('prodTitle').value = '';
@@ -3162,7 +3220,6 @@ async function shelfProduct() {
         renderCategoryProducts();
     } catch (err) { toast(err.message, 'error'); }
 }
-
 // ============================================================
 //  订单管理（管理员）
 // ============================================================
@@ -3816,7 +3873,8 @@ async function doDispatcherCancelOrder(orderId, reason) {
 }
 
 async function dispatcherDirectPublish() {
-    const game = document.getElementById('dispatcherDirectGame').value;
+    const gameSelect = document.getElementById('dispatcherDirectGame');
+    const game = gameSelect?.options[gameSelect.selectedIndex]?.textContent?.trim() || '';
     const title = document.getElementById('dispatcherDirectTitle').value.trim();
     const desc = document.getElementById('dispatcherDirectDesc').value.trim();
     const price = parseFloat(document.getElementById('dispatcherDirectPrice').value);
@@ -3873,8 +3931,9 @@ async function doDispatcherDirectPublish(game, title, desc, price) {
 }
 
 async function dispatcherShelfProduct() {
-    const category_id = document.getElementById('dispatcherProdCategory').value;
-    const game = document.getElementById('dispatcherProdGame').value;
+    const category_id = document.getElementById('dispatcherProdCategory').value || null;
+    const gameSelect = document.getElementById('dispatcherProdGame');
+    const game = gameSelect?.options[gameSelect.selectedIndex]?.textContent?.trim() || '';
     const title = document.getElementById('dispatcherProdTitle').value.trim();
     const desc = document.getElementById('dispatcherProdDesc').value.trim();
     const price = parseFloat(document.getElementById('dispatcherProdPrice').value);
@@ -3882,13 +3941,15 @@ async function dispatcherShelfProduct() {
     const image = document.getElementById('dispatcherProdImageUrl').value.trim();
     
     if (!category_id) return toast('请选择分类', 'warning');
+    const subCategoryId = document.getElementById('dispatcherProdGame').value;
+    if (!subCategoryId) return toast('请选择子分类', 'warning');
     if (!title || !price) return toast('请填写完整信息', 'error');
     if (price < 1) return toast('价格至少为1红钻', 'error');
     
     try {
         await apiRequest('/dispatcher/products', {
             method: 'POST',
-            body: JSON.stringify({ game, title, desc, price, quantity, image, category_id })
+            body: JSON.stringify({ game, title, desc, price, quantity, image, category_id: subCategoryId })
         });
         toast('上架成功', 'success');
         document.getElementById('dispatcherProdTitle').value = '';
@@ -3900,21 +3961,6 @@ async function dispatcherShelfProduct() {
         renderProducts();
     } catch (err) {
         toast(err.message, 'error');
-    }
-}
-
-async function loadCategoriesForDispatcher() {
-    try {
-        const categories = await apiRequest('/categories');
-        const mainCats = categories.filter(c => !c.parent_id);
-        const sel = document.getElementById('dispatcherProdCategory');
-        if (!sel) return;
-        sel.innerHTML = '<option value="">-- 请选择分类 --</option>';
-        mainCats.forEach(c => {
-            sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-        });
-    } catch (err) {
-        console.error('加载分类失败', err);
     }
 }
 
@@ -4069,7 +4115,7 @@ async function loadServiceContacts() {
 }
 
 // ============================================================
-//  消息系统
+//  消息系统（修复版）
 // ============================================================
 async function loadContacts() {
     try {
@@ -4078,7 +4124,7 @@ async function loadContacts() {
         const container = document.getElementById('contactList');
         if (!container) return;
         
-        // 如果是客服/管理员，显示所有用户可添加
+        const supportContacts = await getSupportContacts();
         const isService = currentUser && (currentUser.role === 'service' || currentUser.role === 'admin');
         
         let filtered = contacts;
@@ -4090,13 +4136,39 @@ async function loadContacts() {
         const totalEl = document.getElementById('msgUnreadTotal');
         if (totalEl) totalEl.textContent = totalUnread > 0 ? `(${totalUnread}条未读)` : '';
         
-        if (filtered.length === 0) {
+        // 为普通用户生成联系客服区域
+        let supportHtml = '';
+        if (!isService && supportContacts.length > 0) {
+            const existingContactIds = contacts.map(c => c.id);
+            const availableSupport = supportContacts.filter(s => !existingContactIds.includes(s.id));
+            if (availableSupport.length > 0) {
+                supportHtml = `
+                    <div class="support-contact-section">
+                        <div class="title">📞 联系客服 / 管理员</div>
+                        <div class="btn-group">
+                            ${availableSupport.map(s => `
+                                <button class="btn btn-primary btn-sm" onclick="openChat('${s.id}','${s.username}')">
+                                    <i class="fas fa-headset"></i> ${s.username}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        if (filtered.length === 0 && !supportHtml) {
             container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无联系人</p>
                 ${isService ? `<button class="btn btn-primary btn-sm" onclick="showAddContact()"><i class="fas fa-user-plus"></i> 添加用户对话</button>` : ''}
             </div>`;
             return;
         }
-        let html = `${isService ? `<button class="btn btn-primary btn-sm" onclick="showAddContact()" style="margin-bottom:12px;"><i class="fas fa-user-plus"></i> 添加用户对话</button>` : ''}`;
+        
+        let html = supportHtml;
+        if (isService) {
+            html += `<button class="btn btn-primary btn-sm" onclick="showAddContact()" style="margin-bottom:12px;"><i class="fas fa-user-plus"></i> 添加用户对话</button>`;
+        }
+        
         filtered.forEach(c => {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
@@ -4119,7 +4191,7 @@ async function loadContacts() {
 
 function showAddContact() {
     apiRequest('/admin/users').then(users => {
-        const currentUsers = apiRequest('/messages/contacts').then(contacts => {
+        apiRequest('/messages/contacts').then(contacts => {
             const contactIds = contacts.map(c => c.id);
             const available = users.filter(u => 
                 u.id !== currentUser.id && 
@@ -4172,7 +4244,6 @@ async function openChat(contactId, username) {
     document.getElementById('chatView').style.display = 'block';
     document.getElementById('chatContactName').textContent = username;
     
-    // 获取联系人角色
     try {
         const users = await apiRequest('/admin/users');
         const user = users.find(u => u.id === contactId);
@@ -4354,7 +4425,6 @@ async function submitCustomRecharge() {
         toast(err.message, 'error');
     }
 }
-
 // ============================================================
 //  邮件功能
 // ============================================================
@@ -4687,7 +4757,6 @@ function afterLogin() {
     renderCategories();
     loadCategoryNav();
     renderCategoryProducts();
-    loadCategoriesForDispatcher();
     loadCategoriesForSelectors();
     renderAdminAll();
     renderDispatcherAll();
@@ -4764,7 +4833,6 @@ async function init() {
     renderCategories();
     loadCategoryNav();
     renderCategoryProducts();
-    loadCategoriesForDispatcher();
     loadCategoriesForSelectors();
 
     const savedToken = localStorage.getItem('token');
@@ -4799,7 +4867,6 @@ async function init() {
         }
     }
 
-    // 注册 Service Worker（PWA）
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('/sw.js')
