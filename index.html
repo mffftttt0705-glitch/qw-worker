@@ -1566,16 +1566,39 @@
                     <button class="btn btn-success" onclick="createCategory()"><i class="fas fa-plus"></i> 创建分类</button>
                 </div>
                 <div class="admin-card" style="border-left:4px solid #a855f7;margin-top:12px;">
-                    <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#a855f7;"></i> 创建子分类（游戏标签）</div>
+                    <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#a855f7;"></i> 创建子分类</div>
                     <div class="admin-form-group">
                         <label><i class="fas fa-tags"></i> 所属主分类</label>
                         <select class="admin-form-control" id="subCategoryParent"></select>
                     </div>
                     <div class="admin-form-group">
                         <label><i class="fas fa-tag"></i> 子分类名称</label>
-                        <input class="admin-form-control" id="subCategoryName" placeholder="如：暗区突围-排位" />
+                        <input class="admin-form-control" id="subCategoryName" placeholder="如：排位、陪玩、装备" />
+                    </div>
+                    <div class="admin-form-group">
+                        <label><i class="fas fa-sort-numeric-down"></i> 排序权重</label>
+                        <input class="admin-form-control" id="subCategorySortOrder" type="number" placeholder="0" value="0" />
+                    </div>
+                    <div class="admin-form-group">
+                        <label><i class="fas fa-image"></i> 子分类图片URL（可选）</label>
+                        <input class="admin-form-control" id="subCategoryImage" placeholder="输入图片URL" />
                     </div>
                     <button class="btn btn-primary" onclick="createSubCategory()"><i class="fas fa-plus"></i> 创建子分类</button>
+                </div>
+                <div class="admin-card" style="border-left:4px solid #06b6d4;margin-top:12px;">
+                    <div class="collapse-toggle" onclick="toggleCollapse('subCategoriesManagement')">
+                        <span><i class="fas fa-layer-group" style="color:#06b6d4;"></i> 子分类管理</span>
+                        <span id="subCategoriesManagementArrow">▶</span>
+                    </div>
+                    <div class="collapse-content" id="subCategoriesManagementContent">
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;">
+                            <select class="admin-form-control" id="subCategoryFilterParent" style="flex:1;min-width:150px;" onchange="renderSubCategories()">
+                                <option value="all">全部主分类</option>
+                            </select>
+                            <button class="btn btn-outline btn-sm" onclick="renderSubCategories()"><i class="fas fa-sync"></i> 刷新</button>
+                        </div>
+                        <div id="subCategoriesManagementList"></div>
+                    </div>
                 </div>
             </div>
             <div class="tab-page" id="tab-orders">
@@ -1911,7 +1934,7 @@ function toggleCollapse(id) {
 }
 
 function applyCollapseStates() {
-    const keys = ['recentOrders', 'productsList', 'adminOrders', 'rechargesList', 'usersList', 'categoriesList', 'dispatcherOrders'];
+    const keys = ['recentOrders', 'productsList', 'adminOrders', 'rechargesList', 'usersList', 'categoriesList', 'subCategoriesManagement', 'dispatcherOrders'];
     keys.forEach(id => {
         const content = document.getElementById(id + 'Content');
         const arrow = document.getElementById(id + 'Arrow');
@@ -2126,6 +2149,16 @@ async function loadCategoriesForSelectors() {
                 parentSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
             });
         }
+        const subFilter = document.getElementById('subCategoryFilterParent');
+        if (subFilter) {
+            const current = subFilter.value || 'all';
+            subFilter.innerHTML = '<option value="all">全部主分类</option>';
+            mainCats.forEach(c => {
+                subFilter.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            });
+            subFilter.value = mainCats.some(c => c.id === current) ? current : 'all';
+        }
+        await renderSubCategories();
     } catch (err) {
         console.error('加载分类失败', err);
     }
@@ -2183,14 +2216,15 @@ async function renderCategories() {
                     <td><span class="status-badge status-pending">子分类</span></td>
                     <td>${child.image ? `<img src="${child.image}" style="max-width:40px;max-height:40px;border-radius:4px;" />` : '-'}</td>
                     <td>
-                        <button class="btn btn-primary btn-xs" onclick="editCategory('${child.id}')">编辑</button>
-                        <button class="btn btn-danger btn-xs" onclick="confirmDeleteCategory('${child.id}')">删除</button>
+                        <button class="btn btn-primary btn-xs" onclick="editSubCategory('${child.id}')">编辑</button>
+                        <button class="btn btn-danger btn-xs" onclick="confirmDeleteSubCategory('${child.id}')">删除</button>
                     </td>
                 </tr>`;
             });
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
+        await renderSubCategories();
     } catch (err) { 
         console.error('加载分类失败', err);
     }
@@ -2263,17 +2297,173 @@ async function createCategory() {
 async function createSubCategory() {
     const parent_id = document.getElementById('subCategoryParent').value;
     const name = document.getElementById('subCategoryName').value.trim();
+    const sort_order = parseInt(document.getElementById('subCategorySortOrder').value) || 0;
+    const image = document.getElementById('subCategoryImage').value.trim();
     if (!parent_id) return toast('请选择主分类', 'warning');
     if (!name) return toast('请输入子分类名称', 'warning');
+
     try {
         await apiRequest('/admin/categories', {
             method: 'POST',
-            body: JSON.stringify({ name, parent_id, sort_order: 0 })
+            body: JSON.stringify({ name, image, parent_id, sort_order })
         });
         toast('子分类创建成功', 'success');
         document.getElementById('subCategoryName').value = '';
-        renderCategories();
+        document.getElementById('subCategorySortOrder').value = '0';
+        document.getElementById('subCategoryImage').value = '';
+        await renderCategories();
+        await renderSubCategories();
         loadCategoryNav();
+        loadCategoriesForSelectors();
+        loadCategoriesForDispatcher();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function renderSubCategories() {
+    try {
+        const categories = await apiRequest('/categories');
+        const mainCats = categories.filter(c => !c.parent_id);
+        const subCats = categories.filter(c => c.parent_id);
+        const container = document.getElementById('subCategoriesManagementList');
+        const filter = document.getElementById('subCategoryFilterParent');
+        if (!container) return;
+
+        if (filter) {
+            const currentValue = filter.value || 'all';
+            filter.innerHTML = '<option value="all">全部主分类</option>' +
+                mainCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            filter.value = mainCats.some(c => c.id === currentValue) ? currentValue : 'all';
+        }
+
+        const selectedParent = filter?.value || 'all';
+        const visibleSubs = selectedParent === 'all'
+            ? subCats
+            : subCats.filter(s => s.parent_id === selectedParent);
+
+        if (visibleSubs.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-layer-group"></i><p>暂无子分类</p></div>';
+            return;
+        }
+
+        const mainMap = Object.fromEntries(mainCats.map(c => [c.id, c.name]));
+        visibleSubs.sort((a, b) => {
+            const pa = mainMap[a.parent_id] || '';
+            const pb = mainMap[b.parent_id] || '';
+            return pa.localeCompare(pb) || ((Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+        });
+
+        let html = '<div class="table-wrap"><table><thead><tr><th>所属主分类</th><th>子分类名称</th><th>排序</th><th>图片</th><th>操作</th></tr></thead><tbody>';
+        visibleSubs.forEach(child => {
+            html += `<tr>
+                <td><span class="status-badge status-onsale">${mainMap[child.parent_id] || '未知主分类'}</span></td>
+                <td>${child.name}</td>
+                <td>
+                    <input type="number" class="admin-form-control" style="width:70px;padding:4px 6px;font-size:12px;" value="${Number(child.sort_order) || 0}" onchange="updateSubCategorySort('${child.id}', this.value)" />
+                </td>
+                <td>${child.image ? `<img src="${child.image}" style="max-width:45px;max-height:45px;border-radius:6px;object-fit:cover;" />` : '-'}</td>
+                <td style="white-space:nowrap;">
+                    <button class="btn btn-primary btn-xs" onclick="editSubCategory('${child.id}')"><i class="fas fa-edit"></i> 编辑</button>
+                    <button class="btn btn-danger btn-xs" onclick="confirmDeleteSubCategory('${child.id}')"><i class="fas fa-trash"></i> 删除</button>
+                </td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('加载子分类管理失败', err);
+        toast(err.message, 'error');
+    }
+}
+
+async function updateSubCategorySort(categoryId, sortOrder) {
+    try {
+        await apiRequest('/admin/categories/' + categoryId + '/edit', {
+            method: 'PUT',
+            body: JSON.stringify({ sort_order: parseInt(sortOrder) || 0 })
+        });
+        toast('子分类排序已更新', 'success');
+        await renderCategories();
+        await renderSubCategories();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function editSubCategory(categoryId) {
+    try {
+        const categories = await apiRequest('/categories');
+        const cat = categories.find(c => c.id === categoryId);
+        if (!cat || !cat.parent_id) return toast('子分类不存在', 'error');
+        const parent = categories.find(c => c.id === cat.parent_id);
+
+        showCustomModal(`
+            <h3><i class="fas fa-layer-group"></i> 编辑子分类</h3>
+            <div class="form-group"><label>所属主分类</label>
+                <input class="admin-form-control" value="${parent ? parent.name : '未知主分类'}" disabled />
+            </div>
+            <div class="form-group"><label>子分类名称</label>
+                <input class="admin-form-control" id="editSubCategoryName" value="${cat.name}" />
+            </div>
+            <div class="form-group"><label>分类图片URL</label>
+                <input class="admin-form-control" id="editSubCategoryImage" value="${cat.image || ''}" />
+                ${cat.image ? `<img src="${cat.image}" style="max-width:80px;max-height:60px;border-radius:6px;margin-top:4px;" />` : ''}
+            </div>
+            <div class="form-group"><label>排序权重</label>
+                <input class="admin-form-control" id="editSubCategorySortOrder" type="number" value="${Number(cat.sort_order) || 0}" />
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doEditSubCategory('${categoryId}')">保存</button>
+            </div>
+        `);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function doEditSubCategory(categoryId) {
+    const name = document.getElementById('editSubCategoryName').value.trim();
+    const image = document.getElementById('editSubCategoryImage').value.trim();
+    const sort_order = parseInt(document.getElementById('editSubCategorySortOrder').value) || 0;
+    if (!name) return toast('请输入子分类名称', 'warning');
+
+    try {
+        await apiRequest('/admin/categories/' + categoryId + '/edit', {
+            method: 'PUT',
+            body: JSON.stringify({ name, image, sort_order })
+        });
+        closeCustomModal();
+        toast('子分类已更新', 'success');
+        await renderCategories();
+        await renderSubCategories();
+        loadCategoryNav();
+        loadCategoriesForSelectors();
+        loadCategoriesForDispatcher();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.confirmDeleteSubCategory = function(categoryId) {
+    confirmAction(
+        '确认删除子分类',
+        '删除后无法恢复。如果该子分类下还有商品，需要先修改商品分类。确定继续吗？',
+        '确认删除',
+        `doDeleteSubCategory('${categoryId}')`
+    );
+};
+
+async function doDeleteSubCategory(categoryId) {
+    try {
+        await apiRequest('/admin/categories/' + categoryId, { method: 'DELETE' });
+        toast('子分类已删除', 'success');
+        await renderCategories();
+        await renderSubCategories();
+        loadCategoryNav();
+        loadCategoriesForSelectors();
+        loadCategoriesForDispatcher();
     } catch (err) {
         toast(err.message, 'error');
     }
@@ -2283,9 +2473,10 @@ async function editCategory(categoryId) {
     const categories = await apiRequest('/categories');
     const cat = categories.find(c => c.id === categoryId);
     if (!cat) return toast('分类不存在', 'error');
-    
+    if (cat.parent_id) return editSubCategory(categoryId);
+
     showCustomModal(`
-        <h3><i class="fas fa-edit"></i> 编辑分类</h3>
+        <h3><i class="fas fa-edit"></i> 编辑主分类</h3>
         <div class="form-group"><label>分类名称</label>
             <input class="admin-form-control" id="editCategoryName" value="${cat.name}" />
         </div>
@@ -2308,32 +2499,16 @@ async function doEditCategory(categoryId) {
     const image = document.getElementById('editCategoryImage').value.trim();
     const sort_order = parseInt(document.getElementById('editCategorySortOrder').value) || 0;
     if (!name) return toast('请输入分类名称', 'error');
-    
+
     try {
         await apiRequest('/admin/categories/' + categoryId + '/edit', {
             method: 'PUT',
             body: JSON.stringify({ name, image, sort_order })
         });
         closeCustomModal();
-        toast('分类已更新', 'success');
-        renderCategories();
-        loadCategoryNav();
-        loadCategoriesForDispatcher();
-        loadCategoriesForSelectors();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.confirmDeleteCategory = function(categoryId) {
-    confirmAction('确认删除', '确认删除此分类？', '确认删除', `doDeleteCategory('${categoryId}')`);
-};
-
-async function doDeleteCategory(categoryId) {
-    try {
-        await apiRequest('/admin/categories/' + categoryId, { method: 'DELETE' });
-        toast('已删除', 'success');
-        renderCategories();
+        toast('主分类已更新', 'success');
+        await renderCategories();
+        await renderSubCategories();
         loadCategoryNav();
         loadCategoriesForDispatcher();
         loadCategoriesForSelectors();
