@@ -124,168 +124,50 @@ async function handleGetCategories(env) {
 }
 
 async function handleAdminCreateCategory(env, body) {
-  const { name, image, sort_order, parent_id } = body;
-  const categoryName = String(name || '').trim();
-  if (!categoryName) return errorResponse('请填写分类名称');
-
-  // 子分类必须挂在真实存在的主分类下面
-  if (parent_id) {
-    const parent = await queryDB(
-      env,
-      "SELECT id FROM categories WHERE id = ? AND (parent_id IS NULL OR parent_id = '')",
-      [parent_id]
-    );
-    if (!parent.results || parent.results.length === 0) {
-      return errorResponse('所属主分类不存在', 400);
-    }
-  }
-
+  const { name, image, sort_order } = body;
+  if (!name) return errorResponse('请填写分类名称');
   const id = generateId();
   await runDB(env,
-    `INSERT INTO categories
-      (id, name, image, sort_order, parent_id, created_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      categoryName,
-      image || '',
-      Number.isFinite(Number(sort_order)) ? Number(sort_order) : 0,
-      parent_id || null,
-      new Date().toISOString()
-    ]
+    'INSERT INTO categories (id, name, image, sort_order, created_at) VALUES (?, ?, ?, ?, ?)',
+    [id, name, image || '', sort_order || 0, new Date().toISOString()]
   );
-
-  return jsonResponse({
-    success: true,
-    id,
-    parent_id: parent_id || null,
-    message: parent_id ? '子分类创建成功' : '主分类创建成功'
-  });
+  return jsonResponse({ success: true, id, message: '分类创建成功' });
 }
 
 async function handleAdminUpdateCategory(env, categoryId, body) {
-  const { name, image, sort_order, parent_id } = body;
-
-  const currentResult = await queryDB(env, 'SELECT * FROM categories WHERE id = ?', [categoryId]);
-  const current = currentResult.results && currentResult.results[0];
-  if (!current) return errorResponse('分类不存在', 404);
-
-  if (name === undefined && image === undefined && sort_order === undefined && parent_id === undefined) {
-    return errorResponse('没有要更新的字段');
-  }
-
-  if (parent_id !== undefined) {
-    if (parent_id && parent_id === categoryId) {
-      return errorResponse('分类不能设置自己为父分类', 400);
-    }
-    if (parent_id) {
-      const parent = await queryDB(
-        env,
-        "SELECT id FROM categories WHERE id = ? AND (parent_id IS NULL OR parent_id = '')",
-        [parent_id]
-      );
-      if (!parent.results || parent.results.length === 0) {
-        return errorResponse('所属主分类不存在', 400);
-      }
-    }
-  }
-
-  const updates = [];
+  const { name, image, sort_order } = body;
+  if (!name && sort_order === undefined) return errorResponse('请填写分类名称或排序');
+  let sql = 'UPDATE categories SET ';
   const params = [];
-  if (name !== undefined) {
-    const categoryName = String(name || '').trim();
-    if (!categoryName) return errorResponse('分类名称不能为空');
-    updates.push('name = ?');
-    params.push(categoryName);
-  }
-  if (image !== undefined) {
-    updates.push('image = ?');
-    params.push(image || '');
-  }
-  if (sort_order !== undefined) {
-    updates.push('sort_order = ?');
-    params.push(Number.isFinite(Number(sort_order)) ? Number(sort_order) : 0);
-  }
-  if (parent_id !== undefined) {
-    updates.push('parent_id = ?');
-    params.push(parent_id || null);
-  }
-
+  const updates = [];
+  if (name !== undefined) { updates.push('name = ?'); params.push(name); }
+  if (image !== undefined) { updates.push('image = ?'); params.push(image || ''); }
+  if (sort_order !== undefined) { updates.push('sort_order = ?'); params.push(sort_order || 0); }
+  if (updates.length === 0) return errorResponse('没有要更新的字段');
+  sql += updates.join(', ') + ' WHERE id = ?';
   params.push(categoryId);
-  await runDB(env, `UPDATE categories SET ${updates.join(', ')} WHERE id = ?`, params);
+  await runDB(env, sql, params);
   return jsonResponse({ success: true, message: '分类已更新' });
 }
 
 async function handleAdminDeleteCategory(env, categoryId) {
-  const categoryResult = await queryDB(env, 'SELECT id, parent_id FROM categories WHERE id = ?', [categoryId]);
-  const category = categoryResult.results && categoryResult.results[0];
-  if (!category) return errorResponse('分类不存在', 404);
-
-  const productCheck = await queryDB(
-    env,
-    'SELECT COUNT(*) as count FROM products WHERE category_id = ?',
-    [categoryId]
-  );
-  if (productCheck.results && productCheck.results[0] && productCheck.results[0].count > 0) {
-    return errorResponse('该分类下还有商品，请先移除商品或修改商品分类', 400);
+  const check = await queryDB(env, 'SELECT COUNT(*) as count FROM products WHERE category_id = ?', [categoryId]);
+  if (check.results && check.results[0] && check.results[0].count > 0) {
+    return errorResponse('该分类下还有商品，请先移除商品', 400);
   }
-
-  // 主分类还有子分类时禁止删除，避免产生孤儿子分类
-  if (!category.parent_id) {
-    const childCheck = await queryDB(
-      env,
-      'SELECT COUNT(*) as count FROM categories WHERE parent_id = ?',
-      [categoryId]
-    );
-    if (childCheck.results && childCheck.results[0] && childCheck.results[0].count > 0) {
-      return errorResponse('该主分类下还有子分类，请先删除或迁移子分类', 400);
-    }
-  }
-
   await runDB(env, 'DELETE FROM categories WHERE id = ?', [categoryId]);
-  return jsonResponse({
-    success: true,
-    message: category.parent_id ? '子分类已删除' : '主分类已删除'
-  });
+  return jsonResponse({ success: true, message: '分类已删除' });
 }
 
 async function handleGetCategoryProducts(env, categoryId) {
-  // 主分类：同时返回直接挂在主分类下，以及挂在该主分类所有子分类下的商品。
-  // 子分类：只返回该子分类自己的商品。
-  const categoryResult = await queryDB(
-    env,
-    'SELECT id, parent_id FROM categories WHERE id = ?',
+  const result = await queryDB(env,
+    `SELECT p.*, c.name as category_name 
+     FROM products p 
+     LEFT JOIN categories c ON p.category_id = c.id 
+     WHERE p.category_id = ? AND p.hidden = 0 
+     ORDER BY p.created_at DESC`,
     [categoryId]
   );
-  const category = categoryResult.results && categoryResult.results[0];
-  if (!category) return jsonResponse([]);
-
-  let result;
-  if (!category.parent_id) {
-    result = await queryDB(
-      env,
-      `SELECT p.*, c.name as category_name
-       FROM products p
-       LEFT JOIN categories c ON p.category_id = c.id
-       WHERE p.hidden = 0
-         AND (p.category_id = ? OR p.category_id IN (
-           SELECT id FROM categories WHERE parent_id = ?
-         ))
-       ORDER BY p.created_at DESC`,
-      [categoryId, categoryId]
-    );
-  } else {
-    result = await queryDB(
-      env,
-      `SELECT p.*, c.name as category_name
-       FROM products p
-       LEFT JOIN categories c ON p.category_id = c.id
-       WHERE p.category_id = ? AND p.hidden = 0
-       ORDER BY p.created_at DESC`,
-      [categoryId]
-    );
-  }
-
   return jsonResponse(result.results || []);
 }
 
@@ -355,10 +237,29 @@ async function handleAdminCreateProduct(env, body) {
 async function handleAdminUpdateProduct(env, productId, body) {
   const { game, title, desc, price, quantity, image, category_id, detail_images, detail_desc } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
+
+  let finalGame = game || '';
+  let finalCategoryId = category_id || null;
+
+  // 新分类体系：商品必须绑定子分类；game 自动同步为子分类名称，避免前端写死游戏。
+  if (finalCategoryId) {
+    const categoryResult = await queryDB(
+      env,
+      'SELECT id, name, parent_id FROM categories WHERE id = ?',
+      [finalCategoryId]
+    );
+    const category = categoryResult.results && categoryResult.results[0];
+    if (!category) return errorResponse('所选子分类不存在', 400);
+    if (!category.parent_id) return errorResponse('商品必须选择子分类，不能直接选择主分类', 400);
+    finalGame = category.name;
+  } else {
+    return errorResponse('请选择子分类', 400);
+  }
+
   const detailImagesJson = Array.isArray(detail_images) ? JSON.stringify(detail_images) : (detail_images || '[]');
   await runDB(env,
     `UPDATE products SET game = ?, title = ?, description = ?, price = ?, quantity = ?, image = ?, category_id = ?, detail_images = ?, detail_desc = ? WHERE id = ?`,
-    [game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', category_id || null, detailImagesJson, detail_desc || '', productId]
+    [finalGame, title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', finalCategoryId, detailImagesJson, detail_desc || '', productId]
   );
   return jsonResponse({ success: true, message: '商品已更新' });
 }
@@ -770,9 +671,12 @@ async function handleSendMessage(env, authHeader, body) {
   const receiver = await getUserById(env, receiverId);
   if (!receiver) return errorResponse('接收者不存在', 404);
   
-  // 所有已登录角色均可互相私聊：
-  // 管理员 / 客服 / 老板 / 打手 / 派单均可发送和回复。
-  // 未登录用户仍会在上面的认证检查中被拦截。
+  // 普通用户只能发给客服或管理员
+  if (user.role !== 'admin' && user.role !== 'service') {
+    if (receiver.role !== 'admin' && receiver.role !== 'service') {
+      return errorResponse('只能联系客服或管理员', 403);
+    }
+  }
   
   const id = generateId();
   await runDB(env,
@@ -817,34 +721,33 @@ async function handleGetContacts(env, authHeader) {
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
   
-  // 所有角色统一查看自己已经建立的对话。
-  // 这样管理员 / 客服 / 老板 / 打手 / 派单之间都能正常进入聊天。
-  const sql = `SELECT DISTINCT 
-          u.id, u.username, u.role,
-          mc.last_message, mc.last_time, mc.unread_count
-          FROM message_contacts mc
-          JOIN users u ON mc.contact_id = u.id
-          WHERE mc.user_id = ?
-          ORDER BY COALESCE(mc.last_time, '') DESC`;
-  const params = [userId];
+  let sql = '';
+  let params = [];
+  
+  if (user.role === 'admin' || user.role === 'service') {
+    // 管理员/客服看全部联系人
+    sql = `SELECT DISTINCT 
+            u.id, u.username, u.role,
+            mc.last_message, mc.last_time, mc.unread_count
+            FROM message_contacts mc
+            JOIN users u ON mc.contact_id = u.id
+            WHERE mc.user_id = ?
+            ORDER BY mc.last_time DESC`;
+    params = [userId];
+  } else {
+    // 普通用户只看客服和管理员
+    sql = `SELECT DISTINCT 
+            u.id, u.username, u.role,
+            mc.last_message, mc.last_time, mc.unread_count
+            FROM message_contacts mc
+            JOIN users u ON mc.contact_id = u.id
+            WHERE mc.user_id = ? 
+            AND u.role IN ('admin', 'service')
+            ORDER BY mc.last_time DESC`;
+    params = [userId];
+  }
   
   const result = await queryDB(env, sql, params);
-  return jsonResponse(result.results || []);
-}
-
-async function handleGetMessageUsers(env, authHeader) {
-  const userId = verifyAndGetUserId(authHeader);
-  if (!userId) return errorResponse('请先登录', 401);
-  const user = await getUserById(env, userId);
-  if (!user) return errorResponse('用户不存在', 404);
-
-  const result = await queryDB(env,
-    `SELECT id, username, role, status
-     FROM users
-     WHERE id != ?
-     ORDER BY created_at DESC`,
-    [userId]
-  );
   return jsonResponse(result.results || []);
 }
 
@@ -858,8 +761,12 @@ async function handleGetMessages(env, authHeader, body) {
   const contact = await getUserById(env, contactId);
   if (!contact) return errorResponse('联系人不存在', 404);
   
-  // 所有已登录角色均可查看联系人之间的私聊记录。
-  // 角色权限不再限制消息历史，支持双向沟通。
+  // 权限检查
+  if (user.role !== 'admin' && user.role !== 'service') {
+    if (contact.role !== 'admin' && contact.role !== 'service') {
+      return errorResponse('只能查看与客服或管理员的聊天', 403);
+    }
+  }
   
   const result = await queryDB(env,
     `SELECT * FROM messages 
@@ -1256,7 +1163,6 @@ export async function onRequest(context) {
     // 消息
     if (path === '/api/messages/send' && method === 'POST') return await handleSendMessage(env, authHeader, body);
     if (path === '/api/messages/contacts' && method === 'GET') return await handleGetContacts(env, authHeader);
-    if (path === '/api/messages/users' && method === 'GET') return await handleGetMessageUsers(env, authHeader);
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
 
