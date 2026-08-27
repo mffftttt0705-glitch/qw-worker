@@ -102,7 +102,6 @@
         body{background:var(--bg-primary);background-image:radial-gradient(ellipse at 20% 50%,var(--gradient-start) 0%,var(--gradient-end) 100%);color:var(--text-primary);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:12px}
         .app-wrapper{max-width:480px;width:100%;background:var(--bg-secondary);backdrop-filter:blur(20px);border-radius:40px;box-shadow:var(--shadow);border:1px solid var(--border-light);overflow:hidden;position:relative;min-height:700px;padding-bottom:0}
         
-        /* ===== 底部导航固定 ===== */
         .app-wrapper .bottom-nav {
             position: sticky;
             bottom: 0;
@@ -135,7 +134,6 @@
             max-height: 95vh;
         }
         
-        /* ===== 分类导航 - 可左右滑动 ===== */
         .category-nav-wrapper {
             overflow-x: auto;
             overflow-y: hidden;
@@ -185,7 +183,6 @@
             transform: scale(0.95);
         }
         
-        /* ===== 子分类 ===== */
         .sub-category-wrapper {
             display: flex;
             gap: 6px;
@@ -224,7 +221,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ===== 头部 ===== */
         .app-header {
             display: flex;
             justify-content: space-between;
@@ -335,7 +331,6 @@
             background: var(--bg-card-hover);
         }
 
-        /* ===== 底部导航按钮 ===== */
         .nav-item {
             display: flex;
             flex-direction: column;
@@ -379,7 +374,6 @@
             line-height: 16px;
         }
 
-        /* ===== 其他样式 ===== */
         .admin-card {
             background: var(--admin-card-bg);
             border-radius: 20px;
@@ -1045,7 +1039,29 @@
             margin-top: 12px;
         }
         
-        /* ===== 响应式 ===== */
+        .support-contact-section {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: var(--bg-card-hover);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .support-contact-section .title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .support-contact-section .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .support-contact-section .btn-group .btn {
+            font-size: 12px;
+            padding: 6px 14px;
+        }
+        
         @media(max-width:420px) {
             .app-wrapper {
                 border-radius: 28px;
@@ -1311,31 +1327,6 @@
             gap: 4px;
             flex-wrap: wrap;
         }
-        .sub-category-wrapper {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            padding: 4px 0 8px;
-            margin-bottom: 4px;
-        }
-        .sub-category-wrapper .sub-btn {
-            padding: 4px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-input);
-            color: var(--text-muted);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .sub-category-wrapper .sub-btn.active {
-            background: #1a6aff;
-            color: #fff;
-            border-color: #1a6aff;
-        }
-        .sub-category-wrapper .sub-btn:active {
-            transform: scale(0.95);
-        }
         .withdraw-input-group {
             display: flex;
             gap: 8px;
@@ -1346,33 +1337,9 @@
             flex: 1;
             min-width: 100px;
         }
-        /* 客服/管理员联系按钮样式 */
-        .support-contact-section {
-            margin-bottom: 12px;
-            padding: 12px;
-            background: var(--bg-card-hover);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-        .support-contact-section .title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-        .support-contact-section .btn-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .support-contact-section .btn-group .btn {
-            font-size: 12px;
-            padding: 6px 14px;
-        }
     </style>
 </head>
 <body>
-
 <!-- ===== 登录/注册页面 ===== -->
 <div id="authPage">
     <div class="logo"><i class="fas fa-crosshairs"></i> QW电竞</div>
@@ -1430,13 +1397,11 @@
                 <div class="time" id="announceTime"></div>
             </div>
             
-            <!-- ===== 分类导航（可左右滑动） ===== -->
             <div class="category-nav-wrapper" id="categoryNavWrapper">
                 <button class="category-btn active" data-category="all" onclick="filterProducts('all')">🏷️ 全部</button>
                 <div id="categoryButtons" style="display:flex;gap:8px;flex-wrap:nowrap;"></div>
             </div>
             
-            <!-- ===== 子分类导航：根据当前主分类从 D1 动态加载 ===== -->
             <div class="sub-category-wrapper" id="subCategoryWrapper">
                 <button class="sub-btn active" data-sub="all" onclick="filterSubCategory('all')">全部</button>
             </div>
@@ -1828,7 +1793,6 @@
     </div>
 </div>
 <div id="toast" class="toast"></div>
-
 <script>
 // ============================================================
 //  配置
@@ -1841,7 +1805,8 @@ let userFilter = 'all';
 let currentCategoryFilter = 'all';
 let currentSubCategoryFilter = 'all';
 let currentContactId = null;
-let currentSubCategoryId = null;
+let currentChatType = 'contact'; // 'contact' 或 'order'
+let currentOrderId = null;
 
 // ============================================================
 //  工具函数
@@ -1980,6 +1945,7 @@ function updateHeaderDiamond() {
         document.getElementById('headerUnreadMail').textContent = unread;
     }).catch(() => {});
 }
+
 // ============================================================
 //  获取支持联系人（管理员/客服）
 // ============================================================
@@ -2182,9 +2148,6 @@ function renderSubCategoryNav(categories) {
     wrapper.style.display = subCats.length ? 'flex' : 'none';
 }
 
-// ============================================================
-//  动态加载子分类到下拉框
-// ============================================================
 async function loadSubCategoriesToSelect(selectId, parentId) {
     try {
         const categories = await apiRequest('/categories');
@@ -2200,16 +2163,11 @@ async function loadSubCategoriesToSelect(selectId, parentId) {
     }
 }
 
-// ============================================================
-//  加载分类到选择器（管理员/派单员）
-// ============================================================
 async function loadCategoriesForSelectors() {
     try {
         const categories = await apiRequest('/categories');
         const mainCats = categories.filter(c => !c.parent_id);
-        const subCats = categories.filter(c => c.parent_id);
         
-        // 主分类选择器
         const selectorIds = ['prodCategory', 'dispatcherProdCategory'];
         selectorIds.forEach(id => {
             const sel = document.getElementById(id);
@@ -2220,7 +2178,6 @@ async function loadCategoriesForSelectors() {
             });
         });
 
-        // 子分类选择器（商品上架 - 根据主分类动态加载）
         const prodCategorySel = document.getElementById('prodCategory');
         if (prodCategorySel) {
             prodCategorySel.onchange = function() {
@@ -2228,7 +2185,6 @@ async function loadCategoriesForSelectors() {
             };
         }
 
-        // 派单员商品上架
         const dispatcherCategorySel = document.getElementById('dispatcherProdCategory');
         if (dispatcherCategorySel) {
             dispatcherCategorySel.onchange = function() {
@@ -2236,16 +2192,10 @@ async function loadCategoriesForSelectors() {
             };
         }
 
-        // 派单员直接发布订单
-        loadSubCategoriesToSelect('dispatcherDirectGame', mainCats.length > 0 ? mainCats[0].id : null);
-        const directGameSel = document.getElementById('dispatcherDirectGame');
-        if (directGameSel && mainCats.length > 0) {
-            // 设置默认第一个主分类
-            const firstMain = mainCats[0];
-            loadSubCategoriesToSelect('dispatcherDirectGame', firstMain.id);
+        if (mainCats.length > 0) {
+            loadSubCategoriesToSelect('dispatcherDirectGame', mainCats[0].id);
         }
 
-        // 子分类父级选择器
         const parentSel = document.getElementById('subCategoryParent');
         if (parentSel) {
             parentSel.innerHTML = '<option value="">-- 请选择主分类 --</option>';
@@ -2536,6 +2486,7 @@ async function renderCategoryProducts() {
         console.error('加载分类商品失败', err);
     }
 }
+
 // ============================================================
 //  商品详情
 // ============================================================
@@ -2684,7 +2635,7 @@ async function renderBossView() {
             if (o.status === 'ongoing' || o.status === 'pending') {
                 actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
             }
-            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">聊天</button>`;
+            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}','${o.title}','order')">聊天</button>`;
             actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
             html += `<tr><td>${o.id}</td><td>${o.title}</td><td>${o.price} 红钻</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
         }
@@ -2767,7 +2718,7 @@ async function renderHandlerView() {
                 const statusCls = o.status === 'ongoing' ? 'status-ongoing' : 'status-review';
                 let actions = '';
                 if (o.status === 'ongoing') actions += `<button class="btn btn-warning btn-sm" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
-                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button>`;
+                actions += `<button class="btn btn-primary btn-sm" onclick="openChat('${o.id}','${o.title}','order')">聊天</button>`;
                 actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
                 html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game || '暗区突围'} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻 ｜ 状态：<span class="status-badge ${statusCls}">${statusText2}</span></span></div><div style="display:flex;gap:4px;flex-wrap:wrap;">${actions}</div></div></div>`;
             }
@@ -2782,7 +2733,7 @@ async function renderHandlerView() {
             for (const o of completed) {
                 const settledText = o.settled ? '已结算' : '待结算';
                 const settledCls = o.settled ? 'status-onsale' : 'status-pending';
-                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game || '暗区突围'} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻 ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.created_at}</span></div><button class="btn btn-primary btn-sm" onclick="openChat('${o.id}')">聊天</button><button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button></div></div>`;
+                html += `<div class="admin-card" style="padding:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;"><div><strong>${o.game || '暗区突围'} · ${o.title}</strong><br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻 ｜ 结算：<span class="status-badge ${settledCls}">${settledText}</span> ｜ ${o.end_time || o.created_at}</span></div><button class="btn btn-primary btn-sm" onclick="openChat('${o.id}','${o.title}','order')">聊天</button><button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button></div></div>`;
             }
             cContainer.innerHTML = html;
         }
@@ -3220,6 +3171,7 @@ async function shelfProduct() {
         renderCategoryProducts();
     } catch (err) { toast(err.message, 'error'); }
 }
+
 // ============================================================
 //  订单管理（管理员）
 // ============================================================
@@ -3807,7 +3759,7 @@ async function renderDispatcherOrders() {
             if (o.status === 'ongoing' || o.status === 'pending') {
                 actions += `<button class="btn btn-success btn-xs" onclick="dispatcherConfirmOrder('${o.id}')">✅ 确认</button>`;
             }
-            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}')">💬聊天</button>`;
+            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}','${o.title}','order')">💬聊天</button>`;
             html += `<tr>
                 <td>${o.id}</td>
                 <td>${o.title}</td>
@@ -3963,7 +3915,6 @@ async function dispatcherShelfProduct() {
         toast(err.message, 'error');
     }
 }
-
 // ============================================================
 //  客服功能
 // ============================================================
@@ -4101,7 +4052,7 @@ async function loadServiceContacts() {
         contacts.forEach(c => {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             html += `
-                <div class="contact-item" onclick="openChat('${c.id}','${c.username}')">
+                <div class="contact-item" onclick="openChat('${c.id}','${c.username}','contact')">
                     <div>
                         <strong>${c.username}</strong> ${unreadBadge}
                         <div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div>
@@ -4115,7 +4066,7 @@ async function loadServiceContacts() {
 }
 
 // ============================================================
-//  消息系统（修复版）
+//  消息系统（修复版 - 支持普通聊天和订单聊天）
 // ============================================================
 async function loadContacts() {
     try {
@@ -4147,7 +4098,7 @@ async function loadContacts() {
                         <div class="title">📞 联系客服 / 管理员</div>
                         <div class="btn-group">
                             ${availableSupport.map(s => `
-                                <button class="btn btn-primary btn-sm" onclick="openChat('${s.id}','${s.username}')">
+                                <button class="btn btn-primary btn-sm" onclick="openChat('${s.id}','${s.username}','contact')">
                                     <i class="fas fa-headset"></i> ${s.username}
                                 </button>
                             `).join('')}
@@ -4173,7 +4124,7 @@ async function loadContacts() {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
             html += `
-                <div class="contact-item" onclick="openChat('${c.id}','${c.username}')">
+                <div class="contact-item" onclick="openChat('${c.id}','${c.username}','contact')">
                     <div>
                         <strong>${c.username}</strong> ${roleIcon}
                         ${unreadBadge}
@@ -4238,25 +4189,46 @@ async function doAddContact() {
     }
 }
 
-async function openChat(contactId, username) {
-    currentContactId = contactId;
+// 核心修复：openChat 支持两种模式
+// type = 'contact' 普通聊天，type = 'order' 订单聊天
+async function openChat(id, username, type = 'contact') {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    
+    currentContactId = id;
+    currentChatType = type;
+    
+    // 如果是订单聊天，保存订单ID用于发送消息
+    if (type === 'order') {
+        currentOrderId = id;
+    } else {
+        currentOrderId = null;
+    }
+    
     document.getElementById('contactList').style.display = 'none';
     document.getElementById('chatView').style.display = 'block';
-    document.getElementById('chatContactName').textContent = username;
+    document.getElementById('chatContactName').textContent = username || id;
     
+    // 获取联系人角色
     try {
         const users = await apiRequest('/admin/users');
-        const user = users.find(u => u.id === contactId);
+        const user = users.find(u => u.id === id);
         if (user) {
             const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
             document.getElementById('chatContactRole').textContent = roleMap[user.role] || '';
+        } else if (type === 'order') {
+            document.getElementById('chatContactRole').textContent = '📋 订单聊天';
         }
-    } catch (e) {}
+    } catch (e) {
+        if (type === 'order') {
+            document.getElementById('chatContactRole').textContent = '📋 订单聊天';
+        }
+    }
     
+    // 加载消息历史 - 对于普通聊天和订单聊天都用同一个接口
     try {
         const messages = await apiRequest('/messages/history', {
             method: 'POST',
-            body: JSON.stringify({ contactId })
+            body: JSON.stringify({ contactId: id })
         });
         const container = document.getElementById('chatMessages');
         if (messages.length === 0) {
@@ -4287,6 +4259,8 @@ function backToContacts() {
     document.getElementById('contactList').style.display = 'block';
     document.getElementById('chatView').style.display = 'none';
     currentContactId = null;
+    currentOrderId = null;
+    currentChatType = 'contact';
     loadContacts();
     loadServiceContacts();
 }
@@ -4298,29 +4272,35 @@ async function sendMessage() {
     if (!currentContactId) return toast('请选择联系人', 'warning');
     
     try {
-        await apiRequest('/messages/send', {
-            method: 'POST',
-            body: JSON.stringify({ receiverId: currentContactId, content })
-        });
+        // 如果是订单聊天，使用订单聊天接口
+        if (currentChatType === 'order' && currentOrderId) {
+            await apiRequest('/orders/' + currentOrderId + '/chat', {
+                method: 'POST',
+                body: JSON.stringify({ content })
+            });
+        } else {
+            // 普通聊天
+            await apiRequest('/messages/send', {
+                method: 'POST',
+                body: JSON.stringify({ receiverId: currentContactId, content })
+            });
+        }
         input.value = '';
-        openChat(currentContactId, document.getElementById('chatContactName').textContent);
+        // 重新加载聊天
+        openChat(currentContactId, document.getElementById('chatContactName').textContent, currentChatType);
     } catch (err) {
         toast(err.message, 'error');
     }
 }
 
 // ============================================================
-//  订单聊天
+//  订单聊天（兼容旧版调用）
 // ============================================================
-window.openChat = function(orderId) {
-    if (!currentUser) { toast('请先登录', 'warning'); return; }
-    apiRequest('/orders/my').then(orders => {
-        const order = orders.find(o => o.id === orderId);
-        if (!order) return toast('订单不存在', 'error');
-        renderChatModal(order, false);
-    }).catch(err => toast(err.message, 'error'));
+window.openChat = function(id, username, type = 'contact') {
+    openChat(id, username, type);
 };
 
+// 订单聊天模态框（管理员/用户查看订单时打开）
 function renderChatModal(order, isAdmin = false) {
     let messages = [];
     try {
@@ -4383,48 +4363,6 @@ window.adminOpenChat = function(orderId) {
     }).catch(err => toast(err.message, 'error'));
 };
 
-// ============================================================
-//  充值功能
-// ============================================================
-window.openRecharge = function() {
-    if (!currentUser) { toast('请先登录', 'warning'); return; }
-    const html = `
-        <h3><i class="fas fa-plus-circle"></i> 充值红钻</h3>
-        <p style="color:var(--text-muted);font-size:14px;">1元 = 10红钻，提交后等待客服审核</p>
-        <div class="form-group">
-            <label>充值金额（元）</label>
-            <input class="admin-form-control" id="rechargeAmount" type="number" placeholder="输入金额" min="1" />
-        </div>
-        <div style="text-align:center;margin:8px 0;">
-            <span style="font-size:20px;font-weight:700;color:#f5c842;" id="rechargePreview">0 红钻</span>
-        </div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="submitCustomRecharge()">提交申请</button>
-        </div>
-    `;
-    showCustomModal(html);
-    document.getElementById('rechargeAmount').addEventListener('input', function() {
-        const amount = parseFloat(this.value) || 0;
-        document.getElementById('rechargePreview').textContent = Math.floor(amount * 10) + ' 红钻';
-    });
-};
-
-async function submitCustomRecharge() {
-    const amount = parseFloat(document.getElementById('rechargeAmount').value);
-    if (!amount || amount < 1) return toast('请输入有效金额', 'warning');
-    try {
-        await apiRequest('/recharge/custom', {
-            method: 'POST',
-            body: JSON.stringify({ amount })
-        });
-        closeCustomModal();
-        toast('充值申请已提交，请等待客服审核', 'success');
-        updateBadges();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
 // ============================================================
 //  邮件功能
 // ============================================================
@@ -4504,6 +4442,49 @@ window.viewOrderDetail = function(orderId) {
         `);
     }).catch(err => toast(err.message, 'error'));
 };
+
+// ============================================================
+//  充值功能
+// ============================================================
+window.openRecharge = function() {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    const html = `
+        <h3><i class="fas fa-plus-circle"></i> 充值红钻</h3>
+        <p style="color:var(--text-muted);font-size:14px;">1元 = 10红钻，提交后等待客服审核</p>
+        <div class="form-group">
+            <label>充值金额（元）</label>
+            <input class="admin-form-control" id="rechargeAmount" type="number" placeholder="输入金额" min="1" />
+        </div>
+        <div style="text-align:center;margin:8px 0;">
+            <span style="font-size:20px;font-weight:700;color:#f5c842;" id="rechargePreview">0 红钻</span>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="submitCustomRecharge()">提交申请</button>
+        </div>
+    `;
+    showCustomModal(html);
+    document.getElementById('rechargeAmount').addEventListener('input', function() {
+        const amount = parseFloat(this.value) || 0;
+        document.getElementById('rechargePreview').textContent = Math.floor(amount * 10) + ' 红钻';
+    });
+};
+
+async function submitCustomRecharge() {
+    const amount = parseFloat(document.getElementById('rechargeAmount').value);
+    if (!amount || amount < 1) return toast('请输入有效金额', 'warning');
+    try {
+        await apiRequest('/recharge/custom', {
+            method: 'POST',
+            body: JSON.stringify({ amount })
+        });
+        closeCustomModal();
+        toast('充值申请已提交，请等待客服审核', 'success');
+        updateBadges();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
 
 // ============================================================
 //  红点更新
