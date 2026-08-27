@@ -1340,6 +1340,7 @@
     </style>
 </head>
 <body>
+
 <!-- ===== 登录/注册页面 ===== -->
 <div id="authPage">
     <div class="logo"><i class="fas fa-crosshairs"></i> QW电竞</div>
@@ -1805,7 +1806,7 @@ let userFilter = 'all';
 let currentCategoryFilter = 'all';
 let currentSubCategoryFilter = 'all';
 let currentContactId = null;
-let currentChatType = 'contact'; // 'contact' 或 'order'
+let currentChatType = 'contact';
 let currentOrderId = null;
 
 // ============================================================
@@ -1833,13 +1834,28 @@ function statusClass(s) {
 }
 
 async function apiRequest(url, options = {}) {
-    const headers = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': token } : {}), ...options.headers };
-    const res = await fetch(API_URL + url, { ...options, headers });
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || '请求失败');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+        headers['Authorization'] = token;
     }
-    return res.json();
+    if (options.headers) {
+        Object.assign(headers, options.headers);
+    }
+    try {
+        const res = await fetch(API_URL + url, { ...options, headers });
+        if (!res.ok) {
+            let errMsg = `请求失败 (${res.status})`;
+            try {
+                const err = await res.json();
+                errMsg = err.error || errMsg;
+            } catch (e) {}
+            throw new Error(errMsg);
+        }
+        return await res.json();
+    } catch (err) {
+        console.error('API请求失败:', url, err);
+        throw err;
+    }
 }
 
 function showCustomModal(html) {
@@ -1954,7 +1970,7 @@ async function getSupportContacts() {
         const contacts = await apiRequest('/support-contacts');
         return contacts || [];
     } catch (err) {
-        console.error('获取支持联系人失败', err);
+        console.warn('获取支持联系人失败:', err);
         return [];
     }
 }
@@ -2888,6 +2904,7 @@ async function doRejectWithdraw(withdrawId, reason) {
         toast(err.message, 'error');
     }
 }
+
 // ============================================================
 //  管理员渲染
 // ============================================================
@@ -3915,6 +3932,7 @@ async function dispatcherShelfProduct() {
         toast(err.message, 'error');
     }
 }
+
 // ============================================================
 //  客服功能
 // ============================================================
@@ -4066,7 +4084,7 @@ async function loadServiceContacts() {
 }
 
 // ============================================================
-//  消息系统（修复版 - 支持普通聊天和订单聊天）
+//  消息系统（修复版 - 核心修复）
 // ============================================================
 async function loadContacts() {
     try {
@@ -4075,22 +4093,28 @@ async function loadContacts() {
         const container = document.getElementById('contactList');
         if (!container) return;
         
-        const supportContacts = await getSupportContacts();
+        let supportContacts = [];
+        try {
+            supportContacts = await getSupportContacts();
+        } catch (e) {
+            console.warn('获取支持联系人失败:', e);
+            supportContacts = [];
+        }
+        
         const isService = currentUser && (currentUser.role === 'service' || currentUser.role === 'admin');
         
-        let filtered = contacts;
+        let filtered = contacts || [];
         if (search) {
-            filtered = contacts.filter(c => c.username.toLowerCase().includes(search));
+            filtered = filtered.filter(c => c.username && c.username.toLowerCase().includes(search));
         }
         
         const totalUnread = filtered.reduce((sum, c) => sum + (c.unread_count || 0), 0);
         const totalEl = document.getElementById('msgUnreadTotal');
         if (totalEl) totalEl.textContent = totalUnread > 0 ? `(${totalUnread}条未读)` : '';
         
-        // 为普通用户生成联系客服区域
         let supportHtml = '';
-        if (!isService && supportContacts.length > 0) {
-            const existingContactIds = contacts.map(c => c.id);
+        if (!isService && supportContacts && supportContacts.length > 0) {
+            const existingContactIds = (contacts || []).map(c => c.id);
             const availableSupport = supportContacts.filter(s => !existingContactIds.includes(s.id));
             if (availableSupport.length > 0) {
                 supportHtml = `
@@ -4123,10 +4147,11 @@ async function loadContacts() {
         filtered.forEach(c => {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
+            const displayName = c.username || c.id || '未知用户';
             html += `
-                <div class="contact-item" onclick="openChat('${c.id}','${c.username}','contact')">
+                <div class="contact-item" onclick="openChat('${c.id}','${displayName}','contact')">
                     <div>
-                        <strong>${c.username}</strong> ${roleIcon}
+                        <strong>${displayName}</strong> ${roleIcon}
                         ${unreadBadge}
                         <div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div>
                     </div>
@@ -4136,7 +4161,91 @@ async function loadContacts() {
         });
         container.innerHTML = html;
     } catch (err) {
-        console.error('加载联系人失败', err);
+        console.error('加载联系人失败:', err);
+        const container = document.getElementById('contactList');
+        if (container) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>加载联系人失败: ${err.message}</p><button class="btn btn-primary btn-sm" onclick="loadContacts()">重试</button></div>`;
+        }
+    }
+}
+
+// ============================================================
+//  核心修复：openChat 支持两种模式
+// ============================================================
+async function openChat(id, username, type = 'contact') {
+    console.log('openChat called:', { id, username, type, currentUser });
+    
+    if (!currentUser) { 
+        toast('请先登录', 'warning'); 
+        return; 
+    }
+    
+    if (!id) {
+        toast('联系人ID无效', 'error');
+        return;
+    }
+    
+    currentContactId = id;
+    currentChatType = type;
+    
+    if (type === 'order') {
+        currentOrderId = id;
+    } else {
+        currentOrderId = null;
+    }
+    
+    document.getElementById('contactList').style.display = 'none';
+    document.getElementById('chatView').style.display = 'block';
+    document.getElementById('chatContactName').textContent = username || id;
+    
+    try {
+        const users = await apiRequest('/admin/users');
+        const user = users.find(u => u.id === id);
+        if (user) {
+            const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
+            document.getElementById('chatContactRole').textContent = roleMap[user.role] || '';
+        } else if (type === 'order') {
+            document.getElementById('chatContactRole').textContent = '📋 订单聊天';
+        }
+    } catch (e) {
+        console.warn('获取用户角色失败:', e);
+        if (type === 'order') {
+            document.getElementById('chatContactRole').textContent = '📋 订单聊天';
+        }
+    }
+    
+    try {
+        console.log('加载消息历史, contactId:', id);
+        const messages = await apiRequest('/messages/history', {
+            method: 'POST',
+            body: JSON.stringify({ contactId: id })
+        });
+        console.log('消息历史加载成功:', messages.length, '条');
+        const container = document.getElementById('chatMessages');
+        if (messages.length === 0) {
+            container.innerHTML = '<div class="empty-state"><p>暂无消息</p></div>';
+        } else {
+            let html = '';
+            messages.forEach(m => {
+                const isMe = m.sender_id === currentUser.id;
+                html += `
+                    <div style="display:flex;justify-content:${isMe ? 'flex-end' : 'flex-start'};">
+                        <div class="chat-bubble ${isMe ? 'me' : 'other'}">
+                            ${m.content}
+                            <div class="time">${new Date(m.created_at).toLocaleTimeString()}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+        updateBadges();
+    } catch (err) {
+        console.error('加载消息失败:', err);
+        toast('加载消息失败: ' + err.message, 'error');
+        const container = document.getElementById('chatMessages');
+        container.innerHTML = '<div class="empty-state"><p>加载消息失败，请重试</p></div>';
     }
 }
 
@@ -4189,72 +4298,6 @@ async function doAddContact() {
     }
 }
 
-// 核心修复：openChat 支持两种模式
-// type = 'contact' 普通聊天，type = 'order' 订单聊天
-async function openChat(id, username, type = 'contact') {
-    if (!currentUser) { toast('请先登录', 'warning'); return; }
-    
-    currentContactId = id;
-    currentChatType = type;
-    
-    // 如果是订单聊天，保存订单ID用于发送消息
-    if (type === 'order') {
-        currentOrderId = id;
-    } else {
-        currentOrderId = null;
-    }
-    
-    document.getElementById('contactList').style.display = 'none';
-    document.getElementById('chatView').style.display = 'block';
-    document.getElementById('chatContactName').textContent = username || id;
-    
-    // 获取联系人角色
-    try {
-        const users = await apiRequest('/admin/users');
-        const user = users.find(u => u.id === id);
-        if (user) {
-            const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
-            document.getElementById('chatContactRole').textContent = roleMap[user.role] || '';
-        } else if (type === 'order') {
-            document.getElementById('chatContactRole').textContent = '📋 订单聊天';
-        }
-    } catch (e) {
-        if (type === 'order') {
-            document.getElementById('chatContactRole').textContent = '📋 订单聊天';
-        }
-    }
-    
-    // 加载消息历史 - 对于普通聊天和订单聊天都用同一个接口
-    try {
-        const messages = await apiRequest('/messages/history', {
-            method: 'POST',
-            body: JSON.stringify({ contactId: id })
-        });
-        const container = document.getElementById('chatMessages');
-        if (messages.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>暂无消息</p></div>';
-        } else {
-            let html = '';
-            messages.forEach(m => {
-                const isMe = m.sender_id === currentUser.id;
-                html += `
-                    <div style="display:flex;justify-content:${isMe ? 'flex-end' : 'flex-start'};">
-                        <div class="chat-bubble ${isMe ? 'me' : 'other'}">
-                            ${m.content}
-                            <div class="time">${new Date(m.created_at).toLocaleTimeString()}</div>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
-        }
-        updateBadges();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
 function backToContacts() {
     document.getElementById('contactList').style.display = 'block';
     document.getElementById('chatView').style.display = 'none';
@@ -4272,21 +4315,18 @@ async function sendMessage() {
     if (!currentContactId) return toast('请选择联系人', 'warning');
     
     try {
-        // 如果是订单聊天，使用订单聊天接口
         if (currentChatType === 'order' && currentOrderId) {
             await apiRequest('/orders/' + currentOrderId + '/chat', {
                 method: 'POST',
                 body: JSON.stringify({ content })
             });
         } else {
-            // 普通聊天
             await apiRequest('/messages/send', {
                 method: 'POST',
                 body: JSON.stringify({ receiverId: currentContactId, content })
             });
         }
         input.value = '';
-        // 重新加载聊天
         openChat(currentContactId, document.getElementById('chatContactName').textContent, currentChatType);
     } catch (err) {
         toast(err.message, 'error');
@@ -4300,7 +4340,6 @@ window.openChat = function(id, username, type = 'contact') {
     openChat(id, username, type);
 };
 
-// 订单聊天模态框（管理员/用户查看订单时打开）
 function renderChatModal(order, isAdmin = false) {
     let messages = [];
     try {
