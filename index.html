@@ -1062,6 +1062,134 @@
             padding: 6px 14px;
         }
         
+        /* ===== 全屏聊天 ===== */
+        .chat-fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-secondary);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            padding: 16px 16px 20px;
+            animation: fadeUp 0.25s ease;
+            max-width: 480px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .chat-fullscreen.active {
+            display: flex;
+        }
+        .chat-fullscreen .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .chat-fullscreen .chat-header .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-primary);
+            padding: 4px 8px;
+        }
+        .chat-fullscreen .chat-header .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+        .chat-fullscreen .chat-header .chat-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .chat-fullscreen .chat-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: calc(100vh - 140px);
+        }
+        .chat-fullscreen .chat-body .chat-bubble {
+            max-width: 80%;
+            padding: 10px 16px;
+            border-radius: 16px;
+            word-break: break-word;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .chat-fullscreen .chat-body .chat-bubble.me {
+            background: #1a6aff;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-fullscreen .chat-body .chat-bubble.other {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        .chat-fullscreen .chat-body .chat-bubble .time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 4px;
+            display: block;
+        }
+        .chat-fullscreen .chat-body .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            width: 100%;
+        }
+        .chat-fullscreen .chat-footer {
+            display: flex;
+            gap: 10px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .chat-fullscreen .chat-footer input {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+        }
+        .chat-fullscreen .chat-footer input:focus {
+            border-color: #f5c842;
+        }
+        .chat-fullscreen .chat-footer button {
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: none;
+            background: #1a6aff;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .chat-fullscreen .chat-footer button:active {
+            transform: scale(0.95);
+        }
+        @media(max-width:480px) {
+            .chat-fullscreen {
+                padding: 12px 12px 16px;
+            }
+            .chat-fullscreen .chat-body {
+                max-height: calc(100vh - 120px);
+            }
+        }
+        
         @media(max-width:420px) {
             .app-wrapper {
                 border-radius: 28px;
@@ -1736,18 +1864,6 @@
                 <input class="admin-form-control" id="searchContact" placeholder="🔍 搜索联系人..." oninput="loadContacts()" />
             </div>
             <div id="contactList"></div>
-            <div id="chatView" style="display:none;">
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                    <button class="btn btn-outline btn-sm" onclick="backToContacts()"><i class="fas fa-arrow-left"></i> 返回</button>
-                    <span id="chatContactName" style="font-weight:600;"></span>
-                    <span id="chatContactRole" style="font-size:12px;color:var(--text-muted);"></span>
-                </div>
-                <div id="chatMessages" style="max-height:400px;overflow-y:auto;padding:12px;background:var(--bg-input);border-radius:12px;display:flex;flex-direction:column;"></div>
-                <div style="display:flex;gap:8px;margin-top:12px;">
-                    <input class="admin-form-control" id="chatInput" placeholder="输入消息..." />
-                    <button class="btn btn-success" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-                </div>
-            </div>
         </div>
 
         <!-- ===== 账号管理 ===== -->
@@ -1785,6 +1901,24 @@
     </div>
 </div>
 
+<!-- ===== 全屏聊天 ===== -->
+<div class="chat-fullscreen" id="chatFullscreen">
+    <div class="chat-header">
+        <button class="back-btn" onclick="closeChatFullscreen()"><i class="fas fa-arrow-left"></i></button>
+        <div style="flex:1;">
+            <div class="chat-title" id="fullscreenChatName">联系人</div>
+            <div class="chat-sub" id="fullscreenChatRole">在线</div>
+        </div>
+    </div>
+    <div class="chat-body" id="fullscreenChatBody">
+        <div class="empty-state"><i class="fas fa-comment-dots" style="font-size:30px;opacity:0.3;display:block;margin-bottom:10px;"></i><p>暂无消息</p></div>
+    </div>
+    <div class="chat-footer">
+        <input type="text" id="fullscreenChatInput" placeholder="输入消息..." />
+        <button onclick="sendFullscreenMessage()"><i class="fas fa-paper-plane"></i> 发送</button>
+    </div>
+</div>
+
 <!-- ===== 模态框 ===== -->
 <div class="modal-overlay" id="customModal"><div class="modal-box" id="customModalContent"></div></div>
 <div class="modal-overlay img-preview-modal" id="imgPreviewModal">
@@ -1794,6 +1928,7 @@
     </div>
 </div>
 <div id="toast" class="toast"></div>
+
 <script>
 // ============================================================
 //  配置
@@ -1808,6 +1943,13 @@ let currentSubCategoryFilter = 'all';
 let currentContactId = null;
 let currentChatType = 'contact';
 let currentOrderId = null;
+
+// ============================================================
+//  全屏聊天状态
+// ============================================================
+let fullscreenContactId = null;
+let fullscreenChatType = 'contact';
+let fullscreenOrderId = null;
 
 // ============================================================
 //  工具函数
@@ -4084,7 +4226,7 @@ async function loadServiceContacts() {
 }
 
 // ============================================================
-//  消息系统（修复版 - 核心修复）
+//  消息系统 - 加载联系人列表
 // ============================================================
 async function loadContacts() {
     try {
@@ -4170,7 +4312,7 @@ async function loadContacts() {
 }
 
 // ============================================================
-//  核心修复：openChat 支持两种模式
+//  全屏聊天 - 核心函数
 // ============================================================
 async function openChat(id, username, type = 'contact') {
     console.log('openChat called:', { id, username, type, currentUser });
@@ -4185,45 +4327,50 @@ async function openChat(id, username, type = 'contact') {
         return;
     }
     
-    currentContactId = id;
-    currentChatType = type;
+    fullscreenContactId = id;
+    fullscreenChatType = type;
+    fullscreenOrderId = type === 'order' ? id : null;
     
-    if (type === 'order') {
-        currentOrderId = id;
-    } else {
-        currentOrderId = null;
-    }
+    // 显示全屏聊天
+    const container = document.getElementById('chatFullscreen');
+    container.classList.add('active');
+    document.body.style.overflow = 'hidden';
     
-    document.getElementById('contactList').style.display = 'none';
-    document.getElementById('chatView').style.display = 'block';
-    document.getElementById('chatContactName').textContent = username || id;
+    // 设置标题
+    document.getElementById('fullscreenChatName').textContent = username || id;
     
+    // 获取角色信息
     try {
         const users = await apiRequest('/admin/users');
         const user = users.find(u => u.id === id);
         if (user) {
             const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
-            document.getElementById('chatContactRole').textContent = roleMap[user.role] || '';
+            document.getElementById('fullscreenChatRole').textContent = roleMap[user.role] || '用户';
         } else if (type === 'order') {
-            document.getElementById('chatContactRole').textContent = '📋 订单聊天';
+            document.getElementById('fullscreenChatRole').textContent = '📋 订单聊天';
         }
     } catch (e) {
-        console.warn('获取用户角色失败:', e);
         if (type === 'order') {
-            document.getElementById('chatContactRole').textContent = '📋 订单聊天';
+            document.getElementById('fullscreenChatRole').textContent = '📋 订单聊天';
         }
     }
     
+    // 加载消息
+    await loadFullscreenMessages();
+}
+
+async function loadFullscreenMessages() {
+    const body = document.getElementById('fullscreenChatBody');
+    body.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin" style="font-size:24px;"></i><p>加载中...</p></div>';
+    
     try {
-        console.log('加载消息历史, contactId:', id);
         const messages = await apiRequest('/messages/history', {
             method: 'POST',
-            body: JSON.stringify({ contactId: id })
+            body: JSON.stringify({ contactId: fullscreenContactId })
         });
-        console.log('消息历史加载成功:', messages.length, '条');
-        const container = document.getElementById('chatMessages');
+        
         if (messages.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>暂无消息</p></div>';
+            body.innerHTML = '<div class="empty-state"><i class="fas fa-comment-dots" style="font-size:30px;opacity:0.3;display:block;margin-bottom:10px;"></i><p>暂无消息，发送一条吧</p></div>';
         } else {
             let html = '';
             messages.forEach(m => {
@@ -4232,23 +4379,70 @@ async function openChat(id, username, type = 'contact') {
                     <div style="display:flex;justify-content:${isMe ? 'flex-end' : 'flex-start'};">
                         <div class="chat-bubble ${isMe ? 'me' : 'other'}">
                             ${m.content}
-                            <div class="time">${new Date(m.created_at).toLocaleTimeString()}</div>
+                            <span class="time">${new Date(m.created_at).toLocaleTimeString()}</span>
                         </div>
                     </div>
                 `;
             });
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
+            body.innerHTML = html;
+            body.scrollTop = body.scrollHeight;
         }
         updateBadges();
     } catch (err) {
         console.error('加载消息失败:', err);
-        toast('加载消息失败: ' + err.message, 'error');
-        const container = document.getElementById('chatMessages');
-        container.innerHTML = '<div class="empty-state"><p>加载消息失败，请重试</p></div>';
+        body.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle" style="font-size:30px;color:#ef4444;display:block;margin-bottom:10px;"></i><p>加载失败: ${err.message}</p><button class="btn btn-primary btn-sm" onclick="loadFullscreenMessages()" style="margin-top:10px;">重试</button></div>`;
     }
 }
 
+async function sendFullscreenMessage() {
+    const input = document.getElementById('fullscreenChatInput');
+    const content = input.value.trim();
+    if (!content) return toast('请输入消息', 'warning');
+    if (!fullscreenContactId) return toast('请选择联系人', 'warning');
+    
+    try {
+        if (fullscreenChatType === 'order' && fullscreenOrderId) {
+            await apiRequest('/orders/' + fullscreenOrderId + '/chat', {
+                method: 'POST',
+                body: JSON.stringify({ content })
+            });
+        } else {
+            await apiRequest('/messages/send', {
+                method: 'POST',
+                body: JSON.stringify({ receiverId: fullscreenContactId, content })
+            });
+        }
+        input.value = '';
+        await loadFullscreenMessages();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+function closeChatFullscreen() {
+    document.getElementById('chatFullscreen').classList.remove('active');
+    document.body.style.overflow = '';
+    fullscreenContactId = null;
+    fullscreenOrderId = null;
+    fullscreenChatType = 'contact';
+    // 刷新联系人列表
+    loadContacts();
+    loadServiceContacts();
+}
+
+// 回车发送消息
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('fullscreenChatInput')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendFullscreenMessage();
+        }
+    });
+});
+
+// ============================================================
+//  添加联系人（客服/管理员）
+// ============================================================
 function showAddContact() {
     apiRequest('/admin/users').then(users => {
         apiRequest('/messages/contacts').then(contacts => {
@@ -4298,48 +4492,9 @@ async function doAddContact() {
     }
 }
 
-function backToContacts() {
-    document.getElementById('contactList').style.display = 'block';
-    document.getElementById('chatView').style.display = 'none';
-    currentContactId = null;
-    currentOrderId = null;
-    currentChatType = 'contact';
-    loadContacts();
-    loadServiceContacts();
-}
-
-async function sendMessage() {
-    const input = document.getElementById('chatInput');
-    const content = input.value.trim();
-    if (!content) return toast('请输入消息', 'warning');
-    if (!currentContactId) return toast('请选择联系人', 'warning');
-    
-    try {
-        if (currentChatType === 'order' && currentOrderId) {
-            await apiRequest('/orders/' + currentOrderId + '/chat', {
-                method: 'POST',
-                body: JSON.stringify({ content })
-            });
-        } else {
-            await apiRequest('/messages/send', {
-                method: 'POST',
-                body: JSON.stringify({ receiverId: currentContactId, content })
-            });
-        }
-        input.value = '';
-        openChat(currentContactId, document.getElementById('chatContactName').textContent, currentChatType);
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
 // ============================================================
-//  订单聊天（兼容旧版调用）
+//  订单聊天模态框（兼容旧版）
 // ============================================================
-window.openChat = function(id, username, type = 'contact') {
-    openChat(id, username, type);
-};
-
 function renderChatModal(order, isAdmin = false) {
     let messages = [];
     try {
