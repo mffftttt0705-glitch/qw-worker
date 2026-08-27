@@ -153,7 +153,6 @@ async function handleAdminDeleteCategory(env, categoryId) {
   if (check.results && check.results[0] && check.results[0].count > 0) {
     return errorResponse('该分类下还有商品，请先移除商品', 400);
   }
-  // 检查是否有子分类
   const childCheck = await queryDB(env, 'SELECT COUNT(*) as count FROM categories WHERE parent_id = ?', [categoryId]);
   if (childCheck.results && childCheck.results[0] && childCheck.results[0].count > 0) {
     return errorResponse('该分类下还有子分类，请先删除子分类', 400);
@@ -685,7 +684,7 @@ async function handleServiceGift(env, authHeader, body) {
 }
 
 // ============================================================
-//  消息系统（修复版）
+//  消息系统（修复版 - 支持双向查询）
 // ============================================================
 async function handleSendMessage(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -697,7 +696,6 @@ async function handleSendMessage(env, authHeader, body) {
   const receiver = await getUserById(env, receiverId);
   if (!receiver) return errorResponse('接收者不存在', 404);
   
-  // 不能给自己发消息
   if (userId === receiverId) return errorResponse('不能给自己发消息', 403);
   
   const id = generateId();
@@ -706,7 +704,6 @@ async function handleSendMessage(env, authHeader, body) {
     [id, userId, receiverId, content.trim(), new Date().toISOString()]
   );
   
-  // 更新发送者联系人
   const c1 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [userId, receiverId]);
   if (!c1.results || c1.results.length === 0) {
     await runDB(env,
@@ -720,7 +717,6 @@ async function handleSendMessage(env, authHeader, body) {
     );
   }
   
-  // 更新接收者联系人（未读数+1）
   const c2 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [receiverId, userId]);
   if (!c2.results || c2.results.length === 0) {
     await runDB(env,
@@ -737,36 +733,32 @@ async function handleSendMessage(env, authHeader, body) {
   return jsonResponse({ success: true, message: '发送成功' });
 }
 
+// 修复：管理员/客服查看所有联系人（双向查询）
 async function handleGetContacts(env, authHeader) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
   
-  let sql = '';
-  let params = [];
+  // 双向查询：查询所有与当前用户有过消息往来的联系人
+  // 包括：当前用户作为发送方 和 当前用户作为接收方
+  const sql = `
+    WITH all_contacts AS (
+      SELECT DISTINCT sender_id as contact_id FROM messages WHERE receiver_id = ?
+      UNION
+      SELECT DISTINCT receiver_id as contact_id FROM messages WHERE sender_id = ?
+    )
+    SELECT 
+      u.id, u.username, u.role,
+      mc.last_message, mc.last_time, mc.unread_count
+    FROM all_contacts ac
+    JOIN users u ON u.id = ac.contact_id
+    LEFT JOIN message_contacts mc ON mc.user_id = ? AND mc.contact_id = ac.contact_id
+    WHERE u.id != ?
+    ORDER BY COALESCE(mc.last_time, '1970-01-01') DESC
+  `;
+  const result = await queryDB(env, sql, [userId, userId, userId, userId]);
   
-  if (user.role === 'admin' || user.role === 'service') {
-    sql = `SELECT DISTINCT 
-            u.id, u.username, u.role,
-            mc.last_message, mc.last_time, mc.unread_count
-            FROM message_contacts mc
-            JOIN users u ON mc.contact_id = u.id
-            WHERE mc.user_id = ?
-            ORDER BY mc.last_time DESC`;
-    params = [userId];
-  } else {
-    sql = `SELECT DISTINCT 
-            u.id, u.username, u.role,
-            mc.last_message, mc.last_time, mc.unread_count
-            FROM message_contacts mc
-            JOIN users u ON mc.contact_id = u.id
-            WHERE mc.user_id = ?
-            ORDER BY mc.last_time DESC`;
-    params = [userId];
-  }
-  
-  const result = await queryDB(env, sql, params);
   return jsonResponse(result.results || []);
 }
 
@@ -788,7 +780,6 @@ async function handleGetMessages(env, authHeader, body) {
     [userId, contactId, contactId, userId]
   );
   
-  // 标记为已读
   await runDB(env,
     'UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?',
     [contactId, userId]
@@ -812,7 +803,6 @@ async function handleGetUnreadCount(env, authHeader) {
   return jsonResponse({ unread: total });
 }
 
-// 获取可联系的管理员/客服
 async function handleGetSupportContacts(env) {
   const result = await queryDB(env, 
     'SELECT id, username, role FROM users WHERE role IN ("admin", "service") AND status = "active"'
