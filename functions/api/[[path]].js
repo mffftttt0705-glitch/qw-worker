@@ -1,6 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API
-//  包含：用户、商品、订单、分类、充值、客服、消息
+//  包含：用户、商品、订单、分类、充值、客服、消息、店铺
 // ============================================================
 
 function generateId() {
@@ -248,20 +248,20 @@ async function handleAdminGetProducts(env) {
 }
 
 async function handleAdminCreateProduct(env, body) {
-  const { game, title, desc, price, quantity, image, category_id, detail_images, detail_desc } = body;
+  const { game, title, desc, price, quantity, image, category_id, detail_images, detail_desc, shop_id } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
   const id = generateId();
   const detailImagesJson = Array.isArray(detail_images) ? JSON.stringify(detail_images) : (detail_images || '[]');
   await runDB(env,
-    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, detail_images, detail_desc, category_id) 
-     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?)`,
-    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', detailImagesJson, detail_desc || '', category_id || null]
+    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, detail_images, detail_desc, category_id, shop_id) 
+     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?)`,
+    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', detailImagesJson, detail_desc || '', category_id || null, shop_id || null]
   );
   return jsonResponse({ success: true, id });
 }
 
 async function handleAdminUpdateProduct(env, productId, body) {
-  const { game, title, desc, price, quantity, image, category_id, detail_images, detail_desc } = body;
+  const { game, title, desc, price, quantity, image, category_id, detail_images, detail_desc, shop_id } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
 
   let finalGame = game || '';
@@ -283,8 +283,8 @@ async function handleAdminUpdateProduct(env, productId, body) {
 
   const detailImagesJson = Array.isArray(detail_images) ? JSON.stringify(detail_images) : (detail_images || '[]');
   await runDB(env,
-    `UPDATE products SET game = ?, title = ?, description = ?, price = ?, quantity = ?, image = ?, category_id = ?, detail_images = ?, detail_desc = ? WHERE id = ?`,
-    [finalGame, title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', finalCategoryId, detailImagesJson, detail_desc || '', productId]
+    `UPDATE products SET game = ?, title = ?, description = ?, price = ?, quantity = ?, image = ?, category_id = ?, detail_images = ?, detail_desc = ?, shop_id = ? WHERE id = ?`,
+    [finalGame, title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', finalCategoryId, detailImagesJson, detail_desc || '', shop_id || null, productId]
   );
   return jsonResponse({ success: true, message: '商品已更新' });
 }
@@ -319,13 +319,13 @@ async function handleDispatcherCreateProduct(env, authHeader, body) {
   if (user.role !== 'dispatcher' && user.role !== 'admin') {
     return errorResponse('只有派单员或管理员可上架商品', 403);
   }
-  const { game, title, desc, price, quantity, image, category_id } = body;
+  const { game, title, desc, price, quantity, image, category_id, shop_id } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
   const id = generateId();
   await runDB(env,
-    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, category_id, created_by) 
-     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)`,
-    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', category_id || null, userId]
+    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, category_id, created_by, shop_id) 
+     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?)`,
+    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', category_id || null, userId, shop_id || null]
   );
   return jsonResponse({ success: true, id, message: '商品上架成功' });
 }
@@ -808,6 +808,104 @@ async function handleGetSupportContacts(env) {
 }
 
 // ============================================================
+//  店铺管理（新增）
+// ============================================================
+async function handleGetShops(env) {
+  const result = await queryDB(env, 'SELECT * FROM shops ORDER BY created_at DESC');
+  return jsonResponse(result.results || []);
+}
+
+async function handleCreateShop(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  if (user.role !== 'admin') {
+    return errorResponse('只有管理员可创建店铺', 403);
+  }
+  
+  const { name, description, logo } = body;
+  if (!name) return errorResponse('请输入店铺名称');
+  
+  const id = generateId();
+  await runDB(env,
+    `INSERT INTO shops (id, owner_id, name, description, logo, status, created_at) 
+     VALUES (?, ?, ?, ?, ?, "active", ?)`,
+    [id, userId, name, description || '', logo || '', new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, id, message: '店铺创建成功' });
+}
+
+async function handleUpdateShop(env, authHeader, shopId, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  if (user.role !== 'admin') {
+    return errorResponse('只有管理员可编辑店铺', 403);
+  }
+  
+  const { name, description, logo } = body;
+  if (!name) return errorResponse('请输入店铺名称');
+  
+  await runDB(env,
+    `UPDATE shops SET name = ?, description = ?, logo = ? WHERE id = ?`,
+    [name, description || '', logo || '', shopId]
+  );
+  return jsonResponse({ success: true, message: '店铺已更新' });
+}
+
+async function handleToggleShop(env, authHeader, shopId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  if (user.role !== 'admin') {
+    return errorResponse('只有管理员可操作', 403);
+  }
+  
+  const result = await queryDB(env, 'SELECT * FROM shops WHERE id = ?', [shopId]);
+  if (!result.results || result.results.length === 0) {
+    return errorResponse('店铺不存在', 404);
+  }
+  const shop = result.results[0];
+  const newStatus = shop.status === 'active' ? 'inactive' : 'active';
+  await runDB(env, 'UPDATE shops SET status = ? WHERE id = ?', [newStatus, shopId]);
+  return jsonResponse({ success: true, message: `店铺已${newStatus === 'active' ? '开启' : '关闭'}` });
+}
+
+async function handleDeleteShop(env, authHeader, shopId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  if (user.role !== 'admin') {
+    return errorResponse('只有管理员可删除店铺', 403);
+  }
+  
+  // 检查该店铺下是否有商品
+  const check = await queryDB(env, 'SELECT COUNT(*) as count FROM products WHERE shop_id = ?', [shopId]);
+  if (check.results && check.results[0] && check.results[0].count > 0) {
+    return errorResponse('该店铺下还有商品，请先移除商品', 400);
+  }
+  
+  await runDB(env, 'DELETE FROM shops WHERE id = ?', [shopId]);
+  return jsonResponse({ success: true, message: '店铺已删除' });
+}
+
+async function handleGetShopProducts(env, shopId) {
+  const result = await queryDB(env,
+    `SELECT p.*, c.name as category_name 
+     FROM products p 
+     LEFT JOIN categories c ON p.category_id = c.id 
+     WHERE p.shop_id = ? AND p.hidden = 0
+     ORDER BY p.created_at DESC`,
+    [shopId]
+  );
+  return jsonResponse(result.results || []);
+}
+
+// ============================================================
 //  管理员功能
 // ============================================================
 async function handleAdminGetOrders(env) {
@@ -1055,7 +1153,7 @@ async function handleGetHandlers(env) {
 }
 
 // ============================================================
-//  获取用户统计数据（新增 - 用于管理页面工作台）
+//  获取用户统计数据
 // ============================================================
 async function handleGetUserStats(env, authHeader) {
   const userId = verifyAndGetUserId(authHeader);
@@ -1063,20 +1161,17 @@ async function handleGetUserStats(env, authHeader) {
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
   
-  // 获取该用户的所有订单（作为老板）
   const ordersResult = await queryDB(env,
     'SELECT * FROM orders WHERE boss_id = ? ORDER BY created_at DESC',
     [userId]
   );
   const orders = ordersResult.results || [];
   
-  // 统计各状态订单数量
   const totalOrders = orders.length;
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
   const ongoingOrders = orders.filter(o => o.status === 'ongoing').length;
   const completedOrders = orders.filter(o => o.status === 'completed').length;
   
-  // 计算总收益（已完成订单的总金额）
   let totalIncome = 0;
   orders.forEach(o => {
     if (o.status === 'completed') {
@@ -1084,7 +1179,6 @@ async function handleGetUserStats(env, authHeader) {
     }
   });
   
-  // 获取用户充值记录
   const rechargesResult = await queryDB(env,
     'SELECT * FROM recharge_requests WHERE user_id = ? AND status = "approved"',
     [userId]
@@ -1092,7 +1186,6 @@ async function handleGetUserStats(env, authHeader) {
   const recharges = rechargesResult.results || [];
   const totalRecharge = recharges.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
   
-  // 获取打手身份接单统计（如果用户是打手）
   let handlerOrders = [];
   if (user.role === 'handler') {
     const handlerResult = await queryDB(env,
@@ -1102,7 +1195,6 @@ async function handleGetUserStats(env, authHeader) {
     handlerOrders = handlerResult.results || [];
   }
   
-  // 获取进行中的订单数量（用于工作台显示）
   const ongoingCount = orders.filter(o => o.status === 'ongoing' || o.status === 'pending').length;
   
   return jsonResponse({
@@ -1206,6 +1298,11 @@ export async function onRequest(context) {
     if (path === '/api/announce' && method === 'GET') return await handleGetAnnounce(env);
     if (path === '/api/handlers' && method === 'GET') return await handleGetHandlers(env);
     if (path === '/api/support-contacts' && method === 'GET') return await handleGetSupportContacts(env);
+    if (path === '/api/shops' && method === 'GET') return await handleGetShops(env);
+    if (path.startsWith('/api/shops/') && path.endsWith('/products') && method === 'GET') {
+      const shopId = path.replace('/api/shops/', '').replace('/products', '');
+      return await handleGetShopProducts(env, shopId);
+    }
     if (path.startsWith('/api/categories/') && path.endsWith('/products') && method === 'GET') {
       const categoryId = path.replace('/api/categories/', '').replace('/products', '');
       return await handleGetCategoryProducts(env, categoryId);
@@ -1225,6 +1322,7 @@ export async function onRequest(context) {
     if (path === '/api/dispatcher/orders' && method === 'GET') return await handleDispatcherOrders(env, authHeader);
     if (path === '/api/dispatcher/products' && method === 'POST') return await handleDispatcherCreateProduct(env, authHeader, body);
     if (path === '/api/dispatcher/publish' && method === 'POST') return await handleDispatcherPublish(env, authHeader, body);
+    if (path === '/api/user/stats' && method === 'GET') return await handleGetUserStats(env, authHeader);
     
     // 充值
     if (path === '/api/recharge/custom' && method === 'POST') return await handleCustomRecharge(env, authHeader, body);
@@ -1241,9 +1339,6 @@ export async function onRequest(context) {
     if (path === '/api/messages/contacts' && method === 'GET') return await handleGetContacts(env, authHeader);
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
-
-    // 用户统计（新增）
-    if (path === '/api/user/stats' && method === 'GET') return await handleGetUserStats(env, authHeader);
 
     // 带参数的订单接口
     if (path.startsWith('/api/orders/')) {
@@ -1264,11 +1359,24 @@ export async function onRequest(context) {
       return await handleClaimMail(env, authHeader, mailId);
     }
 
-    // 管理员接口
+    // 店铺管理（需要管理员权限）
     const userId = verifyAndGetUserId(authHeader);
     if (userId) {
       const user = await getUserById(env, userId);
       if (user && user.role === 'admin') {
+        // 店铺管理
+        if (path === '/api/shops' && method === 'POST') return await handleCreateShop(env, authHeader, body);
+        if (path.startsWith('/api/shops/')) {
+          const shopId = path.replace('/api/shops/', '');
+          if (shopId.endsWith('/toggle') && method === 'PUT') {
+            const id = shopId.replace('/toggle', '');
+            return await handleToggleShop(env, authHeader, id);
+          }
+          if (method === 'PUT') return await handleUpdateShop(env, authHeader, shopId, body);
+          if (method === 'DELETE') return await handleDeleteShop(env, authHeader, shopId);
+        }
+        
+        // 订单管理
         if (path === '/api/admin/orders' && method === 'GET') return await handleAdminGetOrders(env);
         if (path === '/api/admin/orders/direct' && method === 'POST') return await handleAdminDirectPublish(env, authHeader, body);
         if (path.startsWith('/api/admin/orders/')) {
@@ -1281,6 +1389,8 @@ export async function onRequest(context) {
           if (orderId.endsWith('/settle') && method === 'PUT') { const id = orderId.replace('/settle', ''); return await handleAdminSettle(env, id, body); }
           if (method === 'DELETE') return await handleAdminDeleteOrder(env, orderId);
         }
+        
+        // 商品管理
         if (path === '/api/admin/products' && method === 'GET') return await handleAdminGetProducts(env);
         if (path === '/api/admin/products' && method === 'POST') return await handleAdminCreateProduct(env, body);
         if (path.startsWith('/api/admin/products/')) {
@@ -1290,6 +1400,8 @@ export async function onRequest(context) {
           if (productId.endsWith('/edit') && method === 'PUT') { const id = productId.replace('/edit', ''); return await handleAdminUpdateProduct(env, id, body); }
           if (method === 'DELETE') return await handleAdminDeleteProduct(env, productId);
         }
+        
+        // 充值管理
         if (path === '/api/admin/recharges' && method === 'GET') return await handleAdminGetRecharges(env);
         if (path.startsWith('/api/admin/recharges/')) {
           const rechargeId = path.replace('/api/admin/recharges/', '');
@@ -1297,6 +1409,8 @@ export async function onRequest(context) {
           if (rechargeId.endsWith('/reject') && method === 'PUT') { const id = rechargeId.replace('/reject', ''); return await handleAdminRejectRecharge(env, id); }
           if (method === 'DELETE') return await handleAdminDeleteRecharge(env, rechargeId);
         }
+        
+        // 用户管理
         if (path === '/api/admin/users' && method === 'GET') return await handleAdminGetUsers(env);
         if (path === '/api/admin/gift' && method === 'POST') return await handleAdminGiftDiamond(env, body);
         if (path.startsWith('/api/admin/users/')) {
@@ -1306,12 +1420,16 @@ export async function onRequest(context) {
           if (targetUserId.endsWith('/approve') && method === 'PUT') { const id = targetUserId.replace('/approve', ''); return await handleApproveHandler(env, id); }
           if (targetUserId.endsWith('/username') && method === 'PUT') { const id = targetUserId.replace('/username', ''); return await handleChangeUsername(env, id, body); }
         }
+        
+        // 分类管理
         if (path === '/api/admin/categories' && method === 'POST') return await handleAdminCreateCategory(env, body);
         if (path.startsWith('/api/admin/categories/')) {
           const categoryId = path.replace('/api/admin/categories/', '');
           if (categoryId.endsWith('/edit') && method === 'PUT') { const id = categoryId.replace('/edit', ''); return await handleAdminUpdateCategory(env, id, body); }
           if (method === 'DELETE') return await handleAdminDeleteCategory(env, categoryId);
         }
+        
+        // 公告管理
         if (path === '/api/admin/announce' && method === 'PUT') return await handleAdminUpdateAnnounce(env, body);
       }
     }
