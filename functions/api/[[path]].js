@@ -581,8 +581,8 @@ async function handleCustomRecharge(env, authHeader, body) {
   const diamond = Math.floor(amount * 10);
   const id = generateId();
   await runDB(env,
-    'INSERT INTO recharge_requests (id, user_id, amount, diamond, status) VALUES (?, ?, ?, ?, "pending")',
-    [id, userId, amount, diamond]
+    'INSERT INTO recharge_requests (id, user_id, amount, diamond, status, created_at) VALUES (?, ?, ?, ?, "pending", ?)',
+    [id, userId, amount, diamond, new Date().toISOString()]
   );
   return jsonResponse({ success: true, message: `充值申请已提交，可获得 ${diamond} 红钻，请等待客服审核` });
 }
@@ -684,7 +684,7 @@ async function handleServiceGift(env, authHeader, body) {
 }
 
 // ============================================================
-//  消息系统（修复版 - 支持双向查询）
+//  消息系统
 // ============================================================
 async function handleSendMessage(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -733,15 +733,12 @@ async function handleSendMessage(env, authHeader, body) {
   return jsonResponse({ success: true, message: '发送成功' });
 }
 
-// 修复：管理员/客服查看所有联系人（双向查询）
 async function handleGetContacts(env, authHeader) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
   
-  // 双向查询：查询所有与当前用户有过消息往来的联系人
-  // 包括：当前用户作为发送方 和 当前用户作为接收方
   const sql = `
     WITH all_contacts AS (
       SELECT DISTINCT sender_id as contact_id FROM messages WHERE receiver_id = ?
@@ -896,7 +893,7 @@ async function handleAdminDeleteOrder(env, orderId) {
 }
 
 // ============================================================
-//  管理员充值管理（修复版）
+//  管理员充值管理
 // ============================================================
 async function handleAdminGetRecharges(env) {
   const result = await queryDB(env,
@@ -1058,6 +1055,74 @@ async function handleGetHandlers(env) {
 }
 
 // ============================================================
+//  获取用户统计数据（新增 - 用于管理页面工作台）
+// ============================================================
+async function handleGetUserStats(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  
+  // 获取该用户的所有订单（作为老板）
+  const ordersResult = await queryDB(env,
+    'SELECT * FROM orders WHERE boss_id = ? ORDER BY created_at DESC',
+    [userId]
+  );
+  const orders = ordersResult.results || [];
+  
+  // 统计各状态订单数量
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter(o => o.status === 'pending').length;
+  const ongoingOrders = orders.filter(o => o.status === 'ongoing').length;
+  const completedOrders = orders.filter(o => o.status === 'completed').length;
+  
+  // 计算总收益（已完成订单的总金额）
+  let totalIncome = 0;
+  orders.forEach(o => {
+    if (o.status === 'completed') {
+      totalIncome += parseFloat(o.price) || 0;
+    }
+  });
+  
+  // 获取用户充值记录
+  const rechargesResult = await queryDB(env,
+    'SELECT * FROM recharge_requests WHERE user_id = ? AND status = "approved"',
+    [userId]
+  );
+  const recharges = rechargesResult.results || [];
+  const totalRecharge = recharges.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+  
+  // 获取打手身份接单统计（如果用户是打手）
+  let handlerOrders = [];
+  if (user.role === 'handler') {
+    const handlerResult = await queryDB(env,
+      'SELECT * FROM orders WHERE handler_id = ?',
+      [userId]
+    );
+    handlerOrders = handlerResult.results || [];
+  }
+  
+  // 获取进行中的订单数量（用于工作台显示）
+  const ongoingCount = orders.filter(o => o.status === 'ongoing' || o.status === 'pending').length;
+  
+  return jsonResponse({
+    success: true,
+    stats: {
+      totalOrders,
+      pendingOrders,
+      ongoingOrders,
+      completedOrders,
+      totalIncome,
+      totalRecharge,
+      diamond: user.diamond || 0,
+      handlerOrders: handlerOrders.length,
+      energy: recharges.length + completedOrders + handlerOrders.length,
+      ongoingCount: ongoingCount
+    }
+  });
+}
+
+// ============================================================
 //  派单员统计
 // ============================================================
 async function handleDispatcherStats(env, authHeader) {
@@ -1176,6 +1241,9 @@ export async function onRequest(context) {
     if (path === '/api/messages/contacts' && method === 'GET') return await handleGetContacts(env, authHeader);
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
+
+    // 用户统计（新增）
+    if (path === '/api/user/stats' && method === 'GET') return await handleGetUserStats(env, authHeader);
 
     // 带参数的订单接口
     if (path.startsWith('/api/orders/')) {
