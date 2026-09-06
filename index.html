@@ -183,62 +183,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        /* ===== 页面切换动画 ===== */
-        .page-transition {
-            animation: slideIn 0.3s ease;
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        /* ===== 底部导航 ===== */
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            color: var(--text-nav);
-            font-size: 10px;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 30px;
-            background: transparent;
-            border: none;
-            font-family: inherit;
-            position: relative;
-            min-width: 44px;
-            -webkit-tap-highlight-color: transparent;
-            transition: all 0.15s;
-        }
-        .nav-item i {
-            font-size: 20px;
-        }
-        .nav-item.active {
-            color: var(--text-primary);
-        }
-        .nav-item.active i {
-            color: #3a7eff;
-            text-shadow: 0 0 20px rgba(0,80,255,0.3);
-        }
-        .nav-item .badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            background: #ef4444;
-            color: #fff;
-            border-radius: 50%;
-            font-size: 9px;
-            padding: 0 5px;
-            min-width: 16px;
-            text-align: center;
-            line-height: 16px;
-        }
-        .nav-item.hidden-nav {
-            display: none !important;
-        }
-        
-        /* ===== 广告轮播 ===== */
         .ad-carousel {
             position: relative;
             width: 100%;
@@ -291,7 +235,6 @@
             border-radius: 4px;
         }
         
-        /* ===== 分类导航 ===== */
         .category-nav-wrapper {
             overflow-x: auto;
             overflow-y: hidden;
@@ -342,7 +285,6 @@
             transform: scale(0.95);
         }
         
-        /* ===== 店铺列表 ===== */
         .shop-list-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -398,6 +340,23 @@
             background: #22c55e;
             color: #fff;
         }
+        .shop-list-card .follow-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            z-index: 2;
+        }
+        .shop-list-card .follow-btn.followed {
+            background: #22c55e;
+        }
         .shop-list-card .shop-info {
             padding: 10px 12px;
         }
@@ -442,25 +401,7 @@
             font-size: 11px;
             color: var(--text-muted);
         }
-        .shop-list-card .shop-info .follow-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: rgba(0,0,0,0.5);
-            color: #fff;
-            border: none;
-            border-radius: 20px;
-            padding: 2px 10px;
-            font-size: 11px;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            z-index: 2;
-        }
-        .shop-list-card .shop-info .follow-btn.followed {
-            background: #22c55e;
-        }
         
-        /* ===== 店铺详情页 ===== */
         .shop-detail-page {
             position: fixed;
             top: 0;
@@ -634,7 +575,6 @@
             border-color: #f5c842;
         }
         
-        /* ===== 商品卡片 ===== */
         .product-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -734,54 +674,6 @@
             color: var(--price-color);
         }
         
-        /* ===== 弹窗（全屏子页面风格） ===== */
-        .modal-page-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            max-width: 480px;
-            height: 100vh;
-            height: 100dvh;
-            background: var(--bg-secondary);
-            z-index: 4000;
-            overflow-y: auto;
-            padding: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            animation: slideIn 0.3s ease;
-        }
-        .modal-page-overlay.active {
-            display: block;
-        }
-        .modal-page-overlay .modal-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 16px;
-            position: sticky;
-            top: 0;
-            background: var(--bg-secondary);
-            z-index: 10;
-        }
-        .modal-page-overlay .modal-header .back-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: var(--text-primary);
-            padding: 4px 8px;
-        }
-        .modal-page-overlay .modal-header .title {
-            font-size: 18px;
-            font-weight: 600;
-            flex: 1;
-        }
-        
-        /* ===== 其余样式保留 ===== */
         .admin-card {
             background: var(--admin-card-bg);
             border-radius: 20px;
@@ -823,6 +715,7 @@
         .admin-form-control:focus {
             border-color: #f5c842;
         }
+        
         .btn-primary {
             background: var(--btn-primary-bg);
             border: none;
@@ -1211,6 +1104,51 @@
             -webkit-tap-highlight-color: transparent;
         }
         
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            color: var(--text-nav);
+            font-size: 10px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 30px;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            position: relative;
+            min-width: 44px;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.15s;
+        }
+        .nav-item i {
+            font-size: 20px;
+        }
+        .nav-item.active {
+            color: var(--text-primary);
+        }
+        .nav-item.active i {
+            color: #3a7eff;
+            text-shadow: 0 0 20px rgba(0,80,255,0.3);
+        }
+        .nav-item .badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ef4444;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 9px;
+            padding: 0 5px;
+            min-width: 16px;
+            text-align: center;
+            line-height: 16px;
+        }
+        .nav-item.hidden-nav {
+            display: none !important;
+        }
+        
         .workbench-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -1417,7 +1355,6 @@
             min-height: 20px;
         }
         
-        /* ===== 全屏聊天 ===== */
         .chat-fullscreen {
             position: fixed;
             top: 0;
@@ -1541,7 +1478,6 @@
             transform: scale(0.95);
         }
         
-        /* ===== 公告弹窗 ===== */
         .announce-modal-overlay {
             display: none;
             position: fixed;
@@ -1690,7 +1626,52 @@
             vertical-align: middle;
         }
         
-        /* ===== 响应式 ===== */
+        .modal-page-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            height: 100dvh;
+            background: var(--bg-secondary);
+            z-index: 4000;
+            overflow-y: auto;
+            padding: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: slideIn 0.3s ease;
+        }
+        .modal-page-overlay.active {
+            display: block;
+        }
+        .modal-page-overlay .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            position: sticky;
+            top: 0;
+            background: var(--bg-secondary);
+            z-index: 10;
+        }
+        .modal-page-overlay .modal-header .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-primary);
+            padding: 4px 8px;
+        }
+        .modal-page-overlay .modal-header .title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+        
         @media(max-width:420px) {
             .view-container {
                 padding: 10px 12px 4px;
@@ -1839,9 +1820,8 @@
             </div>
         </div>
 
-        <!-- ===== 商城页面（广告轮播 + 店铺列表） ===== -->
+        <!-- ===== 商城页面 ===== -->
         <div class="view active" id="view-home">
-            <!-- 广告轮播 -->
             <div class="ad-carousel" id="adCarousel">
                 <div class="ad-slides" id="adSlides"></div>
                 <div class="ad-dots" id="adDots"></div>
@@ -1852,22 +1832,19 @@
                 <span style="font-size:12px;color:var(--text-muted);" id="shopCount"></span>
             </div>
             
-            <!-- 分类导航 -->
             <div class="category-nav-wrapper" id="categoryNavWrapper">
                 <button class="category-btn active" data-category="all" onclick="filterShops('all')">🏷️ 全部</button>
                 <div id="categoryButtons" style="display:flex;gap:6px;flex-wrap:nowrap;"></div>
             </div>
             
-            <!-- 搜索框 -->
             <div style="margin-bottom:12px;">
                 <input class="admin-form-control" id="shopSearchInput" placeholder="🔍 搜索俱乐部..." oninput="renderShops()" style="border-radius:30px;padding:8px 16px;" />
             </div>
             
-            <!-- 店铺列表 -->
             <div id="shopListContainer"></div>
         </div>
 
-        <!-- ===== 店铺详情页（全屏） ===== -->
+        <!-- ===== 店铺详情页 ===== -->
         <div class="shop-detail-page" id="shopDetailPage">
             <div class="shop-detail-header" id="shopDetailHeader">
                 <button class="back-btn" onclick="closeShopDetail()"><i class="fas fa-arrow-left"></i></button>
@@ -2045,11 +2022,11 @@
         </div>
     </div>
 
-    <!-- ===== 底部导航（由 JavaScript 动态渲染） ===== -->
+    <!-- ===== 底部导航 ===== -->
     <div class="bottom-nav" id="bottomNav"></div>
 </div>
 
-<!-- ===== 弹窗页面容器（全屏模态） ===== -->
+<!-- ===== 弹窗页面容器 ===== -->
 <div class="modal-page-overlay" id="modalPage">
     <div class="modal-header">
         <button class="back-btn" onclick="closeModalPage()"><i class="fas fa-arrow-left"></i></button>
@@ -2367,7 +2344,6 @@ function navigateTo(target) {
         }
     }
 }
-
 // ============================================================
 //  弹窗页面（全屏模态）
 // ============================================================
@@ -2454,6 +2430,7 @@ function startAdAutoPlay() {
         goToAd(adIndex);
     }, 4000);
 }
+
 // ============================================================
 //  店铺列表（商城首页）
 // ============================================================
@@ -2473,7 +2450,7 @@ async function renderShops() {
         renderShopCategories();
         renderShopList();
     } catch (err) {
-        console.error(err);
+        console.error('加载店铺失败:', err);
         document.getElementById('shopListContainer').innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
     }
 }
@@ -2482,7 +2459,6 @@ function renderShopCategories() {
     const container = document.getElementById('categoryButtons');
     if (!container) return;
     container.innerHTML = '';
-    // 添加"全部"按钮
     const allBtn = document.createElement('button');
     allBtn.className = 'category-btn active';
     allBtn.dataset.category = 'all';
@@ -2517,7 +2493,6 @@ function renderShopList() {
         shops = shops.filter(s => s.category_id === currentCategoryFilter);
     }
     
-    // 排序：自营优先，推荐次之
     shops.sort((a, b) => {
         if (a.is_self_operated && !b.is_self_operated) return -1;
         if (!a.is_self_operated && b.is_self_operated) return 1;
@@ -2535,7 +2510,6 @@ function renderShopList() {
     shops.forEach(s => {
         const rating = s.rating || '4.9';
         const sales = s.sales || 0;
-        const statusText = s.status === 'active' ? '营业中' : '已关闭';
         const isSelf = s.is_self_operated ? true : false;
         const isRecommend = s.is_recommended ? true : false;
         const desc = s.description || '电竞行业深耕者，用心服务每一位客户';
@@ -2580,12 +2554,12 @@ async function toggleFollowShop(shopId) {
     try {
         const result = await apiRequest('/follow/shop', {
             method: 'POST',
-            body: JSON.stringify({ shopId })
+            body: JSON.stringify({ shopId: shopId || currentShopId })
         });
         toast(result.message, 'success');
         renderShops();
-        if (currentShopId === shopId) {
-            await loadShopDetail(shopId);
+        if (currentShopId) {
+            await loadShopDetail(currentShopId);
         }
     } catch (err) {
         toast(err.message, 'error');
@@ -2624,7 +2598,6 @@ async function loadShopDetail(shopId) {
             followBtn.className = 'follow-btn-header';
         }
         
-        // 加载商品
         const products = await apiRequest('/shops/' + shopId + '/products');
         currentShopProducts = products;
         renderShopProducts('all');
@@ -2701,6 +2674,7 @@ function renderShopProducts(filter) {
     html += '</div>';
     container.innerHTML = html;
 }
+
 // ============================================================
 //  商品详情 & 购买
 // ============================================================
@@ -2833,7 +2807,6 @@ async function renderOrders() {
             }
             if (!shouldShow) continue;
             
-            // 显示打手ID
             const handlerDisplay = o.handler_id || '未指派';
             
             if (o.status === 'pending' && role === 'handler') {
@@ -2935,7 +2908,6 @@ async function submitRating(orderId) {
         document.getElementById('rateError').textContent = err.message;
     }
 }
-
 // ============================================================
 //  订单操作
 // ============================================================
@@ -3066,30 +3038,6 @@ window.viewOrderDetail = function(orderId) {
 };
 
 // ============================================================
-//  管理页面
-// ============================================================
-function renderAdminPage() {
-    const role = currentUser?.role;
-    document.getElementById('adminName').textContent = currentUser.display_name || currentUser.username + '的俱乐部';
-    document.getElementById('adminAvatar').textContent = (currentUser.display_name || currentUser.username).substring(0, 2).toUpperCase();
-    const roleMap = { 'admin': '管理员', 'service': '客服', 'dispatcher': '派单员' };
-    document.getElementById('adminRoleBadge').textContent = roleMap[role] || role;
-    document.getElementById('adminSub').textContent = '2026-07-24加入';
-    updateStats();
-    updateBadges();
-}
-
-async function updateStats() {
-    try {
-        const stats = await apiRequest('/user/stats');
-        document.getElementById('statOrders').textContent = stats.stats.totalOrders || 0;
-        document.getElementById('statIncome').textContent = stats.stats.totalIncome || 0;
-        document.getElementById('statDiamond').textContent = stats.stats.diamond || 0;
-        document.getElementById('statEnergy').textContent = stats.stats.energy || 0;
-    } catch (err) { console.error('加载统计数据失败', err); }
-}
-
-// ============================================================
 //  充值功能
 // ============================================================
 window.openRecharge = function() {
@@ -3185,6 +3133,30 @@ async function doClaimMail(mailId) {
         renderShops();
         updateHeaderDiamond();
     } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  管理页面
+// ============================================================
+function renderAdminPage() {
+    const role = currentUser?.role;
+    document.getElementById('adminName').textContent = currentUser.display_name || currentUser.username + '的俱乐部';
+    document.getElementById('adminAvatar').textContent = (currentUser.display_name || currentUser.username).substring(0, 2).toUpperCase();
+    const roleMap = { 'admin': '管理员', 'service': '客服', 'dispatcher': '派单员' };
+    document.getElementById('adminRoleBadge').textContent = roleMap[role] || role;
+    document.getElementById('adminSub').textContent = '2026-07-24加入';
+    updateStats();
+    updateBadges();
+}
+
+async function updateStats() {
+    try {
+        const stats = await apiRequest('/user/stats');
+        document.getElementById('statOrders').textContent = stats.stats.totalOrders || 0;
+        document.getElementById('statIncome').textContent = stats.stats.totalIncome || 0;
+        document.getElementById('statDiamond').textContent = stats.stats.diamond || 0;
+        document.getElementById('statEnergy').textContent = stats.stats.energy || 0;
+    } catch (err) { console.error('加载统计数据失败', err); }
 }
 // ============================================================
 //  消息系统
@@ -3502,7 +3474,6 @@ async function saveUserProfile() {
             body: JSON.stringify({ display_name, avatar, bg_image, shop_prefix })
         });
         toast('✅ 资料已更新', 'success');
-        // 刷新当前用户信息
         const user = await apiRequest('/me');
         currentUser = user;
         loadAccountPage();
@@ -3548,6 +3519,113 @@ async function updateBadges() {
     } catch (err) {
         console.error('更新红点失败', err);
     }
+}
+
+// ============================================================
+//  弹窗页面渲染函数
+// ============================================================
+// 订单管理弹窗
+function renderModalOrders() {
+    const container = document.getElementById('modalPageContent');
+    container.innerHTML = `
+        <div class="admin-card">
+            <div class="admin-card-title">📋 所有订单</div>
+            <div id="modalOrdersList"></div>
+        </div>
+        <div class="admin-card" style="border-left:4px solid #f59e0b;">
+            <div class="admin-card-title"><i class="fas fa-paper-plane" style="color:#f59e0b;"></i> 直接发布订单</div>
+            <div class="admin-form-group"><label>游戏</label><input class="admin-form-control" id="modalDirectGame" placeholder="游戏名称" value="暗区突围" /></div>
+            <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="modalDirectTitle" placeholder="标题" /></div>
+            <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="modalDirectDesc" rows="2" placeholder="服务详情"></textarea></div>
+            <div class="admin-form-group"><label>价格（红钻）</label><input class="admin-form-control" id="modalDirectPrice" type="number" placeholder="288" /></div>
+            <button class="btn btn-warning btn-block" onclick="modalDirectPublish()"><i class="fas fa-paper-plane"></i> 发布订单</button>
+        </div>
+    `;
+    renderModalOrdersList();
+}
+
+async function renderModalOrdersList() {
+    try {
+        const orders = await apiRequest('/admin/orders');
+        const container = document.getElementById('modalOrdersList');
+        if (orders.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无订单</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>订单号</th><th>标题</th><th>金额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const o of orders) {
+            let actions = '';
+            if (o.status === 'pending') actions += `<button class="btn btn-success btn-xs" onclick="adminAssignHandler('${o.id}')">指派</button>`;
+            if (o.status === 'completed' && !o.settled) actions += `<button class="btn btn-primary btn-xs" onclick="adminSettleOrder('${o.id}')">结算</button>`;
+            actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteOrder('${o.id}')">删除</button>`;
+            html += `<tr><td>${o.id}</td><td>${o.title}</td><td>${o.price} 红钻</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+window.adminAssignHandler = function(orderId) {
+    apiRequest('/admin/users').then(users => {
+        const handlers = users.filter(u => u.role === 'handler' && u.status === 'active');
+        if (handlers.length === 0) { toast('暂无可用打手', 'warning'); return; }
+        let options = handlers.map(u => `<option value="${u.id}">${u.username}</option>`).join('');
+        showCustomModal(`
+            <h3><i class="fas fa-user-check"></i> 指派打手</h3>
+            <div class="form-group"><label>打手</label><select class="admin-form-control" id="assignHandlerSelect">${options}</select></div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doAdminAssign('${orderId}')">确认指派</button>
+            </div>
+        `);
+    }).catch(err => toast(err.message, 'error'));
+};
+
+window.doAdminAssign = function(orderId) {
+    const handlerId = document.getElementById('assignHandlerSelect').value;
+    if (!handlerId) return toast('请选择打手', 'warning');
+    apiRequest('/admin/orders/' + orderId + '/assign', { method: 'PUT', body: JSON.stringify({ handlerId }) })
+        .then(() => { closeCustomModal(); toast('✅ 指派成功', 'success'); renderModalOrdersList(); })
+        .catch(err => toast(err.message, 'error'));
+};
+
+window.adminSettleOrder = function(orderId) {
+    const earning = prompt('请输入打手收入金额（红钻）：');
+    if (!earning) return;
+    apiRequest('/admin/orders/' + orderId + '/settle', { method: 'PUT', body: JSON.stringify({ earning: parseFloat(earning) }) })
+        .then(() => { toast('✅ 结算成功', 'success'); renderModalOrdersList(); })
+        .catch(err => toast(err.message, 'error'));
+};
+
+window.confirmDeleteOrder = function(orderId) {
+    confirmAction('确认删除', '确认永久删除此订单？', '确认删除', `doDeleteOrder('${orderId}')`);
+};
+
+async function doDeleteOrder(orderId) {
+    try {
+        await apiRequest('/admin/orders/' + orderId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderModalOrdersList();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function modalDirectPublish() {
+    const game = document.getElementById('modalDirectGame').value.trim() || '暗区突围';
+    const title = document.getElementById('modalDirectTitle').value.trim();
+    const desc = document.getElementById('modalDirectDesc').value.trim();
+    const price = parseFloat(document.getElementById('modalDirectPrice').value);
+    if (!title || !price) return toast('请填写完整信息', 'error');
+    try {
+        await apiRequest('/admin/orders/direct', {
+            method: 'POST',
+            body: JSON.stringify({ game, title, desc, price })
+        });
+        toast('✅ 订单已发布', 'success');
+        document.getElementById('modalDirectTitle').value = '';
+        document.getElementById('modalDirectDesc').value = '';
+        document.getElementById('modalDirectPrice').value = '';
+        renderModalOrdersList();
+    } catch (err) { toast(err.message, 'error'); }
 }
 
 // ============================================================
@@ -3769,15 +3847,42 @@ async function doAuthRegister() {
 //  初始化
 // ============================================================
 async function init() {
+    console.log('🚀 初始化开始...');
+    
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
-
+    
     document.getElementById('authStatusText').textContent = '未登录';
     document.getElementById('headerDiamond').textContent = '0';
     document.getElementById('headerUnreadMail').textContent = '0';
 
-    renderShops();
-    loadAds();
+    // 先渲染空导航
+    const nav = document.getElementById('bottomNav');
+    if (nav) {
+        nav.innerHTML = `
+            <button class="nav-item active" data-target="home"><i class="fas fa-store"></i><span>商城</span></button>
+            <button class="nav-item" data-target="messages"><i class="fas fa-comment-dots"></i><span>消息</span></button>
+            <button class="nav-item" data-target="account"><i class="fas fa-user"></i><span>我的</span></button>
+        `;
+        nav.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!currentUser) {
+                    toast('请先登录', 'warning');
+                    return;
+                }
+                navigateTo(this.dataset.target);
+            });
+        });
+    }
+    
+    try {
+        await renderShops();
+        await loadAds();
+        await loadAnnounceData();
+        showAnnounceModal();
+    } catch (err) {
+        console.error('初始化加载失败:', err);
+    }
 
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
@@ -3788,20 +3893,12 @@ async function init() {
             document.getElementById('authStatusText').textContent = user.display_name || user.username;
             afterLogin();
         } catch (err) {
+            console.warn('登录验证失败:', err);
             localStorage.removeItem('token');
             token = null;
             currentUser = null;
             document.getElementById('authStatusText').textContent = '未登录';
-            renderShops();
-            renderBottomNav();
         }
-    } else {
-        renderBottomNav();
-        setTimeout(() => {
-            loadAnnounceData().then(() => {
-                showAnnounceModal();
-            });
-        }, 500);
     }
 
     if ('serviceWorker' in navigator) {
@@ -3815,6 +3912,8 @@ async function init() {
                 });
         });
     }
+    
+    console.log('✅ 初始化完成');
 }
 
 init();
