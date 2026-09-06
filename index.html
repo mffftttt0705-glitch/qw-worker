@@ -234,6 +234,186 @@
             text-align: center;
             line-height: 16px;
         }
+        .nav-item.hidden-nav {
+            display: none !important;
+        }
+        
+        /* ===== 分类导航（缩小版） ===== */
+        .category-nav-wrapper {
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            padding: 4px 0 10px;
+            margin-bottom: 6px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .category-nav-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+        .category-nav-wrapper .category-btn {
+            flex: 0 0 auto;
+            padding: 6px 14px;
+            font-size: 13px;
+            min-width: 50px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-muted);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .category-nav-wrapper .category-btn img {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+        .category-nav-wrapper .category-btn.active {
+            background: #f5c842;
+            color: #0b0d10;
+            border-color: #f5c842;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(245,200,66,0.25);
+        }
+        .category-nav-wrapper .category-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* ===== 子分类 ===== */
+        .sub-category-wrapper {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 2px 0 6px;
+            margin-bottom: 4px;
+        }
+        .sub-category-wrapper .sub-btn {
+            padding: 3px 12px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-muted);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .sub-category-wrapper .sub-btn.active {
+            background: #1a6aff;
+            color: #fff;
+            border-color: #1a6aff;
+        }
+        .sub-category-wrapper .sub-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* ===== 商品卡片 1:1 比例 ===== */
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .product-card {
+            display: flex;
+            flex-direction: column;
+            background: var(--product-card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--product-card-border);
+            overflow: hidden;
+            position: relative;
+            transition: all 0.2s;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .product-card:active {
+            transform: scale(0.97);
+        }
+        .product-card .product-img {
+            width: 100%;
+            flex: 0 0 auto;
+            aspect-ratio: 1 / 1;
+            background: var(--product-img-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: var(--product-img-icon);
+            overflow: hidden;
+            position: relative;
+        }
+        .product-card .product-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .product-card .product-img .tag {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: #f5c842;
+            color: #0b0d10;
+            padding: 1px 8px;
+            border-radius: 20px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+        .product-card .product-body {
+            flex: 1;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 70px;
+        }
+        .product-card .product-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--product-title);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .product-card .product-desc {
+            font-size: 11px;
+            color: var(--product-desc);
+            margin-top: 2px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .product-card .product-stock {
+            font-size: 10px;
+            color: var(--product-stock);
+            margin-top: 2px;
+        }
+        .product-card .product-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid var(--product-bottom-border);
+        }
+        .product-card .product-price {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--price-color);
+        }
         
         /* ===== 工作台 ===== */
         .workbench-grid {
@@ -663,7 +843,118 @@
             justify-content: center;
         }
         
-        /* ===== Toast & Modal ===== */
+        .status-badge {
+            font-size: 11px;
+            padding: 2px 12px;
+            border-radius: 30px;
+            display: inline-block;
+            font-weight: 500;
+        }
+        .status-pending {
+            background: var(--status-pending-bg);
+            color: #f59e0b;
+            border: 1px solid #f59e0b44;
+        }
+        .status-ongoing {
+            background: var(--status-ongoing-bg);
+            color: #3b82f6;
+            border: 1px solid #3b82f644;
+        }
+        .status-review {
+            background: var(--status-review-bg);
+            color: #a855f7;
+            border: 1px solid #a855f744;
+        }
+        .status-completed {
+            background: var(--status-completed-bg);
+            color: #22c55e;
+            border: 1px solid #22c55e44;
+        }
+        .status-canceled {
+            background: #6b728022;
+            color: #9ca3af;
+            border: 1px solid #6b728044;
+        }
+        .status-rejected {
+            background: #ef444422;
+            color: #ef4444;
+            border: 1px solid #ef444444;
+        }
+        .status-onsale {
+            background: #22c55e22;
+            color: #22c55e;
+            border: 1px solid #22c55e44;
+        }
+        .status-soldout {
+            background: #6b728022;
+            color: #9ca3af;
+            border: 1px solid #6b728044;
+        }
+        .status-hidden {
+            background: #6b728022;
+            color: #6b7280;
+            border: 1px solid #6b728044;
+        }
+        .status-refund_pending {
+            background: #f59e0b22;
+            color: #f59e0b;
+            border: 1px solid #f59e0b44;
+        }
+        .status-refunded {
+            background: #a855f722;
+            color: #a855f7;
+            border: 1px solid #a855f744;
+        }
+        .status-settled {
+            background: #22c55e22;
+            color: #22c55e;
+            border: 1px solid #22c55e44;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--empty-text);
+        }
+        .empty-state i {
+            font-size: 36px;
+            opacity: 0.4;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .empty-state p {
+            font-size: 14px;
+        }
+        
+        .table-wrap {
+            overflow-x: auto;
+            margin-top: 6px;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        thead {
+            border-bottom: 2px solid var(--border-color);
+        }
+        th {
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--table-header);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        td {
+            padding: 8px 6px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        
         .toast {
             position: fixed;
             top: 24px;
@@ -773,69 +1064,20 @@
         .modal-box .form-group textarea:focus {
             border-color: #f5c842;
         }
-        
-        /* ===== 响应式 ===== */
-        @media(max-width:420px) {
-            .view-container {
-                padding: 10px 12px 4px;
-            }
-            .bottom-nav {
-                padding: 4px 0 max(8px, env(safe-area-inset-bottom));
-                min-height: 48px;
-            }
-            .nav-item {
-                padding: 2px 4px;
-                min-width: 36px;
-                font-size: 9px;
-            }
-            .nav-item i {
-                font-size: 18px;
-            }
-            .workbench-grid {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 6px;
-            }
-            .workbench-item {
-                padding: 10px 2px;
-                min-height: 60px;
-            }
-            .workbench-item .icon {
-                font-size: 18px;
-            }
-            .workbench-item .label {
-                font-size: 10px;
-            }
-            .stat-row {
-                grid-template-columns: 1fr 1fr 1fr 1fr;
-                gap: 6px;
-            }
-            .stat-card .stat-value {
-                font-size: 15px;
-            }
-            .profile-header .avatar {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-            }
-            .shop-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-            }
-            .sub-page {
-                padding: 12px;
-            }
+        .modal-box .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-box .detail-row .label {
+            color: var(--detail-label);
+        }
+        .modal-box .detail-row .value {
+            color: var(--detail-value);
+            font-weight: 500;
         }
         
-        @supports (padding-top: env(safe-area-inset-top)) {
-            .app-wrapper {
-                padding-top: env(safe-area-inset-top);
-            }
-            .sub-page {
-                padding-top: env(safe-area-inset-top);
-            }
-        }
-        
-        /* ===== 其他 ===== */
         .app-header {
             display: flex;
             justify-content: space-between;
@@ -1032,49 +1274,6 @@
             min-height: 20px;
         }
         
-        .empty-state {
-            text-align: center;
-            padding: 30px 20px;
-            color: var(--empty-text);
-        }
-        .empty-state i {
-            font-size: 36px;
-            opacity: 0.4;
-            display: block;
-            margin-bottom: 10px;
-        }
-        .empty-state p {
-            font-size: 14px;
-        }
-        .table-wrap {
-            overflow-x: auto;
-            margin-top: 6px;
-            -webkit-overflow-scrolling: touch;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        thead {
-            border-bottom: 2px solid var(--border-color);
-        }
-        th {
-            padding: 8px 6px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--table-header);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-        }
-        td {
-            padding: 8px 6px;
-            border-bottom: 1px solid var(--border-color);
-            vertical-align: middle;
-        }
-        
         /* ===== 全屏聊天 ===== */
         .chat-fullscreen {
             position: fixed;
@@ -1199,138 +1398,98 @@
             transform: scale(0.95);
         }
         
-        /* 商品相关样式 */
-        .product-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 6px;
-        }
-        .product-card {
-            background: var(--product-card-bg);
+        /* ===== 客服/管理员联系 ===== */
+        .support-contact-section {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: var(--bg-card-hover);
             border-radius: 12px;
-            border: 1px solid var(--product-card-border);
-            overflow: hidden;
-            position: relative;
-            transition: all 0.2s;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
+            border: 1px solid var(--border-color);
         }
-        .product-card:active {
-            transform: scale(0.97);
-        }
-        .product-card .product-img {
-            width: 100%;
-            height: 100px;
-            background: var(--product-img-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            color: var(--product-img-icon);
-            overflow: hidden;
-        }
-        .product-card .product-img img {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-        }
-        .product-card .product-img .tag {
-            position: absolute;
-            top: 6px;
-            left: 6px;
-            background: #f5c842;
-            color: #0b0d10;
-            padding: 1px 8px;
-            border-radius: 20px;
-            font-size: 9px;
-            font-weight: 600;
-        }
-        .product-card .product-body {
-            padding: 8px 10px;
-        }
-        .product-card .product-title {
+        .support-contact-section .title {
             font-size: 13px;
             font-weight: 600;
-            color: var(--product-title);
-            line-height: 1.3;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .product-card .product-price {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--price-color);
-        }
-        
-        .category-nav-wrapper {
-            overflow-x: auto;
-            overflow-y: hidden;
-            white-space: nowrap;
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-            padding: 4px 0 12px;
+            color: var(--text-secondary);
             margin-bottom: 8px;
+        }
+        .support-contact-section .btn-group {
             display: flex;
             gap: 8px;
-            flex-wrap: nowrap;
-        }
-        .category-nav-wrapper::-webkit-scrollbar {
-            display: none;
-        }
-        .category-nav-wrapper .category-btn {
-            flex: 0 0 auto;
-            padding: 10px 20px;
-            border-radius: 30px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-input);
-            color: var(--text-muted);
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            min-width: 60px;
-            justify-content: center;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .category-nav-wrapper .category-btn.active {
-            background: #f5c842;
-            color: #0b0d10;
-            border-color: #f5c842;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(245,200,66,0.3);
-        }
-        .category-nav-wrapper .category-btn:active {
-            transform: scale(0.95);
+            flex-wrap: wrap;
         }
         
-        .sub-category-wrapper {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            padding: 4px 0 8px;
-            margin-bottom: 4px;
+        /* ===== 响应式 ===== */
+        @media(max-width:420px) {
+            .view-container {
+                padding: 10px 12px 4px;
+            }
+            .bottom-nav {
+                padding: 4px 0 max(8px, env(safe-area-inset-bottom));
+                min-height: 48px;
+            }
+            .nav-item {
+                padding: 2px 4px;
+                min-width: 36px;
+                font-size: 9px;
+            }
+            .nav-item i {
+                font-size: 18px;
+            }
+            .product-grid {
+                gap: 8px;
+            }
+            .category-nav-wrapper .category-btn {
+                padding: 5px 12px;
+                font-size: 12px;
+            }
+            .workbench-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+            .workbench-item {
+                padding: 10px 2px;
+                min-height: 60px;
+            }
+            .workbench-item .icon {
+                font-size: 18px;
+            }
+            .workbench-item .label {
+                font-size: 10px;
+            }
+            .stat-row {
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+                gap: 6px;
+            }
+            .stat-card .stat-value {
+                font-size: 15px;
+            }
+            .profile-header .avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            .shop-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .sub-page {
+                padding: 12px;
+            }
+            .admin-card {
+                padding: 12px 10px;
+            }
+            .modal-box {
+                padding: 20px 16px;
+            }
         }
-        .sub-category-wrapper .sub-btn {
-            padding: 4px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-input);
-            color: var(--text-muted);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .sub-category-wrapper .sub-btn.active {
-            background: #1a6aff;
-            color: #fff;
-            border-color: #1a6aff;
+        
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .app-wrapper {
+                padding-top: env(safe-area-inset-top);
+            }
+            .sub-page {
+                padding-top: env(safe-area-inset-top);
+            }
         }
     </style>
 </head>
@@ -1389,7 +1548,7 @@
         <div class="view active" id="view-home">
             <div class="category-nav-wrapper" id="categoryNavWrapper">
                 <button class="category-btn active" data-category="all" onclick="filterProducts('all')">🏷️ 全部</button>
-                <div id="categoryButtons" style="display:flex;gap:8px;flex-wrap:nowrap;"></div>
+                <div id="categoryButtons" style="display:flex;gap:6px;flex-wrap:nowrap;"></div>
             </div>
             <div class="sub-category-wrapper" id="subCategoryWrapper">
                 <button class="sub-btn active" data-sub="all" onclick="filterSubCategory('all')">全部</button>
@@ -1402,7 +1561,31 @@
             </div>
         </div>
 
-        <!-- ===== 管理页面 ===== -->
+        <!-- ===== 订单/打手页面（根据角色显示不同内容） ===== -->
+        <div class="view" id="view-orders">
+            <div class="app-header" style="margin-bottom:12px;">
+                <span style="font-size:18px;font-weight:600;" id="orderPageTitle">📋 我的订单</span>
+                <span style="font-size:12px;color:var(--text-muted);" id="orderCount">0</span>
+            </div>
+            <!-- 打手专属：红钻余额和提现 -->
+            <div id="handlerInfo" style="display:none;">
+                <div class="admin-card" style="padding:14px;border-left:4px solid #22c55e;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                        <div>
+                            <div style="font-size:14px;font-weight:600;">💎 我的红钻</div>
+                            <div style="font-size:22px;font-weight:700;color:#f5c842;" id="handlerBalance">0</div>
+                            <div style="font-size:11px;color:var(--text-muted);">冻结：<span id="handlerFrozen">0</span></div>
+                        </div>
+                        <div>
+                            <button class="btn btn-success btn-sm" onclick="requestWithdraw()"><i class="fas fa-money-bill-wave"></i> 提现</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="orderList"></div>
+        </div>
+
+        <!-- ===== 管理页面（管理员/客服/派单） ===== -->
         <div class="view" id="view-admin">
             <!-- 个人资料卡片 -->
             <div class="admin-card" style="padding:16px;">
@@ -1416,47 +1599,13 @@
                 </div>
             </div>
 
-            <!-- 工作台网格（精简版） -->
+            <!-- 工作台网格（根据角色动态显示） -->
             <div class="admin-card" style="padding:12px 10px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                     <span style="font-size:14px;font-weight:600;">📋 工作台</span>
                 </div>
                 <div class="workbench-grid" id="workbenchGrid">
-                    <div class="workbench-item" onclick="openSubPage('orders')">
-                        <span class="icon">📋</span>
-                        <span class="label">我的订单</span>
-                        <span class="badge-count" id="badgeOrders">0</span>
-                    </div>
-                    <div class="workbench-item" onclick="openSubPage('products')">
-                        <span class="icon">📦</span>
-                        <span class="label">商品管理</span>
-                    </div>
-                    <div class="workbench-item" onclick="openSubPage('users')">
-                        <span class="icon">👥</span>
-                        <span class="label">用户管理</span>
-                        <span class="badge-count" id="badgeUsers">0</span>
-                    </div>
-                    <div class="workbench-item" onclick="openSubPage('recharges')">
-                        <span class="icon">💰</span>
-                        <span class="label">充值管理</span>
-                        <span class="badge-count" id="badgeRecharges">0</span>
-                    </div>
-                    <div class="workbench-item" onclick="openSubPage('shops')">
-                        <span class="icon">🏪</span>
-                        <span class="label">店铺管理</span>
-                    </div>
-                    <div class="workbench-item" onclick="openSubPage('announce')">
-                        <span class="icon">📢</span>
-                        <span class="label">公告管理</span>
-                    </div>
-                    <div class="workbench-item" onclick="openSubPage('withdrawals')">
-                        <span class="icon">💳</span>
-                        <span class="label">提现管理</span>
-                    </div>
-                    <div class="workbench-item" onclick="openSubPage('account')">
-                        <span class="icon">⚙️</span>
-                        <span class="label">账户设置</span>
-                    </div>
+                    <!-- 由 JavaScript 动态渲染 -->
                 </div>
             </div>
 
@@ -1484,6 +1633,9 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 子页面内容占位 -->
+            <div id="adminSubContent"></div>
         </div>
 
         <!-- ===== 消息页面 ===== -->
@@ -1520,20 +1672,15 @@
         </div>
     </div>
 
-    <!-- ===== 底部导航 ===== -->
-    <div class="bottom-nav">
-        <button class="nav-item active" data-target="home"><i class="fas fa-store"></i><span>商城</span></button>
-        <button class="nav-item" data-target="admin" id="navAdmin"><i class="fas fa-user-cog"></i><span>管理</span></button>
-        <button class="nav-item" data-target="messages" id="navMessages"><i class="fas fa-comment-dots"></i><span>消息</span><span class="badge" id="msgBadge" style="display:none;">0</span></button>
-        <button class="nav-item" data-target="account"><i class="fas fa-user"></i><span>我的</span></button>
-    </div>
+    <!-- ===== 底部导航（由 JavaScript 动态渲染） ===== -->
+    <div class="bottom-nav" id="bottomNav"></div>
 </div>
 
 <!-- ===== 子页面容器 ===== -->
 <div class="sub-page" id="subPageOrders">
     <div class="sub-header">
         <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
-        <span class="title">📋 我的订单</span>
+        <span class="title">📋 订单管理</span>
     </div>
     <div id="subOrdersContent"></div>
 </div>
@@ -1594,6 +1741,22 @@
     <div id="subAccountContent"></div>
 </div>
 
+<div class="sub-page" id="subPageService">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">🎧 客服系统</span>
+    </div>
+    <div id="subServiceContent"></div>
+</div>
+
+<div class="sub-page" id="subPageDispatcher">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">📋 派单系统</span>
+    </div>
+    <div id="subDispatcherContent"></div>
+</div>
+
 <!-- ===== 全屏聊天 ===== -->
 <div class="chat-fullscreen" id="chatFullscreen">
     <div class="chat-header">
@@ -1646,6 +1809,7 @@ let currentSubCategoryFilter = 'all';
 let currentContactId = null;
 let currentChatType = 'contact';
 let currentOrderId = null;
+let currentSubPage = null;
 
 // ============================================================
 //  全屏聊天状态
@@ -1653,7 +1817,6 @@ let currentOrderId = null;
 let fullscreenContactId = null;
 let fullscreenChatType = 'contact';
 let fullscreenOrderId = null;
-let currentSubPage = null;
 
 // ============================================================
 //  工具函数
@@ -1716,7 +1879,6 @@ function closeCustomModal() {
 function showImgPreview(src) {
     const modal = document.getElementById('imgPreviewModal');
     if (!modal) {
-        // 如果不存在则创建简单预览
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay active';
         overlay.id = 'imgPreviewModal';
@@ -1750,30 +1912,6 @@ function confirmAction(title, message, confirmText, callback) {
     `);
 }
 
-function updateRoleBasedUI() {
-    if (!currentUser) return;
-    const role = currentUser.role;
-    const isAdmin = role === 'admin';
-    const isDispatcher = role === 'dispatcher';
-    const isHandler = role === 'handler';
-    const isBoss = role === 'boss';
-    const isService = role === 'service';
-
-    let roleName = isBoss ? '老板' : isHandler ? '打手' : isDispatcher ? '派单员' : isService ? '客服' : '管理员';
-    document.getElementById('authStatusText').textContent = currentUser.username + ' (' + roleName + ')';
-    
-    document.getElementById('adminName').textContent = currentUser.username + '的俱乐部';
-    document.getElementById('adminAvatar').textContent = currentUser.username.substring(0, 2).toUpperCase();
-    document.getElementById('adminRoleBadge').textContent = roleName;
-    
-    // 更新子页面标题中的角色信息
-    document.querySelectorAll('.sub-page .sub-header .title').forEach(el => {
-        if (el.textContent.includes('订单')) {
-            el.textContent = isHandler ? '🎮 打手订单' : isBoss ? '📋 我的订单' : '📋 订单管理';
-        }
-    });
-}
-
 function updateHeaderDiamond() {
     if (!currentUser) {
         document.getElementById('headerDiamond').textContent = '0';
@@ -1804,7 +1942,6 @@ async function getSupportContacts() {
 //  弹窗公告系统
 // ============================================================
 let announceData = null;
-let announceShown = false;
 
 async function loadAnnounceData() {
     try {
@@ -1819,12 +1956,8 @@ async function loadAnnounceData() {
 
 function showAnnounceModal() {
     if (!announceData) return;
-    
-    // 检查是否勾选了"不再显示"
     const dontShow = localStorage.getItem('announce_dont_show');
     if (dontShow === 'true') return;
-    
-    // 检查公告内容是否为空
     const content = announceData.content || '欢迎使用 QW电竞护航平台！';
     if (content.trim() === '' || content === '欢迎使用 QW电竞护航平台！') return;
     
@@ -1841,9 +1974,7 @@ function showAnnounceModal() {
             imagesContainer.appendChild(imgEl);
         });
     }
-    
     document.getElementById('announceModal').classList.add('active');
-    announceShown = true;
 }
 
 function closeAnnounceModal() {
@@ -1852,6 +1983,91 @@ function closeAnnounceModal() {
         localStorage.setItem('announce_dont_show', 'true');
     }
     document.getElementById('announceModal').classList.remove('active');
+}
+
+// ============================================================
+//  底部导航动态渲染（根据角色）
+// ============================================================
+function renderBottomNav() {
+    if (!currentUser) return;
+    const role = currentUser.role;
+    const nav = document.getElementById('bottomNav');
+    if (!nav) return;
+    
+    let items = [];
+    
+    // 商城 - 所有人都有
+    items.push({ id: 'home', icon: 'fa-store', label: '商城' });
+    
+    // 根据角色显示第二个Tab
+    if (role === 'admin' || role === 'service' || role === 'dispatcher') {
+        items.push({ id: 'admin', icon: 'fa-user-cog', label: '管理' });
+    } else if (role === 'handler') {
+        items.push({ id: 'orders', icon: 'fa-gamepad', label: '打手' });
+    } else if (role === 'boss') {
+        items.push({ id: 'orders', icon: 'fa-receipt', label: '订单' });
+    } else {
+        items.push({ id: 'admin', icon: 'fa-user-cog', label: '管理' });
+    }
+    
+    // 消息 - 所有人都有
+    items.push({ id: 'messages', icon: 'fa-comment-dots', label: '消息', badge: 'msgBadge' });
+    
+    // 我的 - 所有人都有
+    items.push({ id: 'account', icon: 'fa-user', label: '我的' });
+    
+    nav.innerHTML = items.map(item => `
+        <button class="nav-item" data-target="${item.id}" id="nav${item.id.charAt(0).toUpperCase() + item.id.slice(1)}">
+            <i class="fas ${item.icon}"></i>
+            <span>${item.label}</span>
+            ${item.badge ? `<span class="badge" id="${item.badge}" style="display:none;">0</span>` : ''}
+        </button>
+    `).join('');
+    
+    // 绑定点击事件
+    nav.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const target = this.dataset.target;
+            navigateTo(target);
+        });
+    });
+}
+
+// ============================================================
+//  导航切换
+// ============================================================
+function navigateTo(target) {
+    // 关闭子页面
+    closeSubPage();
+    
+    // 更新导航高亮
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
+    const targetBtn = document.querySelector(`.bottom-nav .nav-item[data-target="${target}"]`);
+    if (targetBtn) targetBtn.classList.add('active');
+    
+    // 隐藏所有视图
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    
+    const viewMap = {
+        'home': 'view-home',
+        'orders': 'view-orders',
+        'admin': 'view-admin',
+        'messages': 'view-messages',
+        'account': 'view-account'
+    };
+    
+    const viewId = viewMap[target];
+    if (viewId) {
+        document.getElementById(viewId).classList.add('active');
+        // 加载对应内容
+        switch(target) {
+            case 'home': renderCategoryProducts(); break;
+            case 'orders': renderOrdersPage(); break;
+            case 'admin': renderAdminPage(); break;
+            case 'messages': loadContacts(); break;
+            case 'account': updateAccountInfo(); break;
+        }
+    }
 }
 
 // ============================================================
@@ -1866,7 +2082,9 @@ function openSubPage(page) {
         'shops': 'subPageShops',
         'announce': 'subPageAnnounce',
         'withdrawals': 'subPageWithdrawals',
-        'account': 'subPageAccount'
+        'account': 'subPageAccount',
+        'service': 'subPageService',
+        'dispatcher': 'subPageDispatcher'
     };
     
     const containerId = pageMap[page];
@@ -1876,7 +2094,6 @@ function openSubPage(page) {
     document.getElementById(containerId).classList.add('active');
     document.body.style.overflow = 'hidden';
     
-    // 加载对应内容
     switch(page) {
         case 'orders': renderSubOrders(); break;
         case 'products': renderSubProducts(); break;
@@ -1886,6 +2103,8 @@ function openSubPage(page) {
         case 'announce': renderSubAnnounce(); break;
         case 'withdrawals': renderSubWithdrawals(); break;
         case 'account': renderSubAccount(); break;
+        case 'service': renderSubService(); break;
+        case 'dispatcher': renderSubDispatcher(); break;
     }
 }
 
@@ -1896,490 +2115,209 @@ function closeSubPage() {
 }
 
 // ============================================================
-//  子页面渲染函数
+//  ===== 订单/打手页面 =====
 // ============================================================
-async function renderSubOrders() {
-    const container = document.getElementById('subOrdersContent');
-    if (!container) return;
+async function renderOrdersPage() {
+    const role = currentUser?.role;
+    const title = document.getElementById('orderPageTitle');
+    const handlerInfo = document.getElementById('handlerInfo');
     
+    if (role === 'handler') {
+        title.textContent = '🎮 打手工作台';
+        handlerInfo.style.display = 'block';
+        await updateHandlerInfo();
+    } else {
+        title.textContent = '📋 我的订单';
+        handlerInfo.style.display = 'none';
+    }
+    
+    await renderOrders();
+}
+
+async function updateHandlerInfo() {
+    try {
+        const user = await apiRequest('/me');
+        const balance = user.diamond || 0;
+        const frozen = Math.min(100, balance);
+        document.getElementById('handlerBalance').textContent = balance;
+        document.getElementById('handlerFrozen').textContent = frozen;
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function renderOrders() {
     try {
         const orders = await apiRequest('/orders/my');
+        const container = document.getElementById('orderList');
+        if (!container) return;
+        
+        document.getElementById('orderCount').textContent = orders.length + '个';
+        
         if (orders.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><p>暂无订单</p></div>';
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无订单</p></div>';
             return;
         }
+        
         let html = '';
+        const role = currentUser?.role;
+        
         for (const o of orders) {
             let actions = '';
-            if (o.status === 'review' && (currentUser.role === 'boss' || currentUser.role === 'service')) {
-                actions += `<button class="btn btn-success btn-xs" onclick="confirmBossComplete('${o.id}')">确认完成</button>`;
+            let shouldShow = false;
+            
+            // 判断是否显示该订单
+            if (role === 'admin' || role === 'service') {
+                shouldShow = true;
+            } else if (role === 'handler') {
+                shouldShow = (o.status === 'pending' || o.handler_id === currentUser.id);
+            } else if (role === 'boss') {
+                shouldShow = (o.boss_id === currentUser.id);
+            } else {
+                shouldShow = (o.boss_id === currentUser.id || o.handler_id === currentUser.id);
             }
-            if ((o.status === 'ongoing' || o.status === 'pending') && (currentUser.role === 'boss' || currentUser.role === 'service')) {
-                actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
-            }
-            if (o.status === 'pending' && currentUser.role === 'handler') {
+            
+            if (!shouldShow) continue;
+            
+            // 打手接单
+            if (o.status === 'pending' && role === 'handler') {
                 actions += `<button class="btn btn-primary btn-xs" onclick="confirmTake('${o.id}')">接单</button>`;
             }
-            if (o.status === 'ongoing' && currentUser.role === 'handler') {
+            // 打手提交完成
+            if (o.status === 'ongoing' && role === 'handler' && o.handler_id === currentUser.id) {
                 actions += `<button class="btn btn-warning btn-xs" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
             }
-            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}','${o.title}','order')">聊天</button>`;
+            // 老板/客服确认完成
+            if (o.status === 'review' && (role === 'boss' || role === 'service')) {
+                actions += `<button class="btn btn-success btn-xs" onclick="confirmBossComplete('${o.id}')">确认完成</button>`;
+            }
+            // 老板/客服申请退款
+            if ((o.status === 'ongoing' || o.status === 'pending') && (role === 'boss' || role === 'service')) {
+                actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
+            }
+            
+            actions += `<button class="btn btn-outline btn-xs" onclick="openChat('${o.id}','${o.title}','order')">💬</button>`;
             actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
+            
             html += `
                 <div class="admin-card" style="padding:12px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
                         <div>
                             <strong>${o.game || '暗区突围'} · ${o.title}</strong>
-                            <br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻 ｜ <span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></span>
+                            <div style="font-size:12px;color:var(--text-muted);">
+                                ${o.price} 红钻 ｜ <span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span>
+                            </div>
                         </div>
                         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${actions}</div>
                     </div>
                 </div>
             `;
         }
-        container.innerHTML = html;
+        container.innerHTML = html || '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无相关订单</p></div>';
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        document.getElementById('orderList').innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
     }
 }
 
-async function renderSubProducts() {
-    const container = document.getElementById('subProductsContent');
-    if (!container) return;
-    
-    try {
-        const products = await apiRequest('/admin/products');
-        await loadCategoriesForSelectors();
-        
-        let html = `
-            <div class="admin-card" style="border-left:4px solid #22c55e;">
-                <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#22c55e;"></i> 上架新商品</div>
-                <div class="admin-form-group"><label>主分类</label>
-                    <select class="admin-form-control" id="prodCategory"></select>
-                </div>
-                <div class="admin-form-group"><label>子分类</label>
-                    <select class="admin-form-control" id="prodGame"><option value="">-- 请选择子分类 --</option></select>
-                </div>
-                <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="prodTitle" placeholder="标题"></div>
-                <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="prodDesc" rows="2" placeholder="服务详情"></textarea></div>
-                <div class="admin-form-group"><label>价格（红钻）</label><input class="admin-form-control" id="prodPrice" type="number" placeholder="288"></div>
-                <div class="admin-form-group"><label>库存</label><input class="admin-form-control" id="prodQuantity" type="number" placeholder="1" value="1"></div>
-                <div class="admin-form-group"><label>商品图片URL</label>
-                    <input class="admin-form-control" id="prodImageUrl" placeholder="输入图片URL" />
-                    <img id="prodImagePreview" class="upload-preview" style="display:none;margin-top:4px;" onerror="this.style.display='none'" />
-                </div>
-                <div class="admin-form-group"><label>详情图片（多个URL用逗号分隔）</label>
-                    <input class="admin-form-control" id="prodDetailImages" placeholder="https://img1.jpg, https://img2.jpg" />
-                </div>
-                <div class="admin-form-group"><label>详情描述</label>
-                    <textarea class="admin-form-control" id="prodDetailDesc" rows="3" placeholder="详细描述内容"></textarea>
-                </div>
-                <button class="btn btn-success" onclick="shelfProduct()"><i class="fas fa-upload"></i> 上架商品</button>
-            </div>
-            <div class="admin-card">
-                <div class="admin-card-title">📦 商品列表</div>
-                <div id="productsList"></div>
-            </div>
-        `;
-        container.innerHTML = html;
-        
-        // 加载商品列表
-        await renderProductsList();
-        
-        const prodCategorySel = document.getElementById('prodCategory');
-        if (prodCategorySel) {
-            prodCategorySel.onchange = function() {
-                loadSubCategoriesToSelect('prodGame', this.value);
-            };
-        }
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
-    }
-}
+// ============================================================
+//  订单操作（打手、老板、客服）
+// ============================================================
+window.confirmTake = function(orderId) {
+    confirmAction('确认接单', '确认接取此订单？（需保留100红钻冻结）', '确认接单', `doTake('${orderId}')`);
+};
 
-async function renderProductsList() {
+async function doTake(orderId) {
     try {
-        const products = await apiRequest('/admin/products');
-        const container = document.getElementById('productsList');
-        if (!container) return;
-        if (products.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>暂无商品</p></div>';
-            return;
-        }
-        let html = '<div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead><tbody>';
-        for (const p of products) {
-            const remaining = p.quantity - p.sold;
-            const isHidden = p.hidden == 1 || p.hidden === true;
-            let statusText2 = isHidden ? '已下架' : (remaining > 0 ? '在售' : '已售罄');
-            let statusCls = isHidden ? 'status-hidden' : (remaining > 0 ? 'status-onsale' : 'status-soldout');
-            const productId = p.id;
-            let actions = '';
-            if (isHidden) {
-                actions += `<button class="btn btn-success btn-xs" onclick="confirmReshelf('${productId}')">重新上架</button>`;
-                actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteProduct('${productId}')">删除</button>`;
-            } else {
-                actions += `<button class="btn btn-danger btn-xs" onclick="confirmUnshelf('${productId}')">下架</button>`;
-            }
-            actions += `<button class="btn btn-primary btn-xs" onclick="openEditProduct('${productId}')">编辑</button>`;
-            html += `<tr>
-                <td>${p.title}</td>
-                <td>${p.price} 红钻</td>
-                <td>${p.sold}/${p.quantity}</td>
-                <td><span class="status-badge ${statusCls}">${statusText2}</span></td>
-                <td><div class="action-group">${actions}</div></td>
-            </tr>`;
-        }
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
-    } catch (err) { console.error(err); }
-}
-
-async function renderSubUsers() {
-    const container = document.getElementById('subUsersContent');
-    if (!container) return;
-    
-    let html = `
-        <div class="admin-card">
-            <div class="admin-form-group" style="margin-bottom:8px;">
-                <input class="admin-form-control" id="searchUser" placeholder="🔍 搜索用户名..." oninput="renderUsersList()" />
-            </div>
-            <div class="user-filter">
-                <button class="active" data-filter="all" onclick="setUserFilter('all')">全部</button>
-                <button data-filter="boss" onclick="setUserFilter('boss')">老板</button>
-                <button data-filter="handler" onclick="setUserFilter('handler')">打手</button>
-                <button data-filter="dispatcher" onclick="setUserFilter('dispatcher')">派单</button>
-                <button data-filter="service" onclick="setUserFilter('service')">客服</button>
-                <button data-filter="pending" onclick="setUserFilter('pending')">待审核</button>
-            </div>
-            <div id="usersList"></div>
-        </div>
-        <div class="admin-card"><div class="admin-card-title"><i class="fas fa-gift"></i> 赠送红钻</div>
-            <div class="admin-form-group"><label>选择用户</label><select class="admin-form-control" id="giftUser"></select></div>
-            <div class="admin-form-group"><label>红钻数量</label><input class="admin-form-control" id="giftAmount" type="number" placeholder="数量"></div>
-            <button class="btn btn-primary" onclick="sendGift()"><i class="fas fa-gift"></i> 赠送</button>
-        </div>
-    `;
-    container.innerHTML = html;
-    await renderUsersList();
-    await populateGiftUsers();
-}
-
-async function renderUsersList() {
-    try {
-        const search = document.getElementById('searchUser')?.value.toLowerCase() || '';
-        const users = await apiRequest('/admin/users');
-        
-        let filtered = users;
-        if (userFilter === 'boss') {
-            filtered = users.filter(u => u.role === 'boss');
-        } else if (userFilter === 'handler') {
-            filtered = users.filter(u => u.role === 'handler');
-        } else if (userFilter === 'dispatcher') {
-            filtered = users.filter(u => u.role === 'dispatcher');
-        } else if (userFilter === 'service') {
-            filtered = users.filter(u => u.role === 'service');
-        } else if (userFilter === 'pending') {
-            filtered = users.filter(u => u.status === 'pending' && (u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service'));
-        }
-        
-        if (search) {
-            filtered = filtered.filter(u => u.username.toLowerCase().includes(search));
-        }
-        
-        const container = document.getElementById('usersList');
-        if (!container) return;
-        if (filtered.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>暂无用户</p></div>';
-            return;
-        }
-        let html = '<div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
-        for (const u of filtered) {
-            let roleText = u.role === 'boss' ? '老板' : u.role === 'handler' ? (u.status === 'pending' ? '待审核打手' : '打手') : u.role === 'dispatcher' ? (u.status === 'pending' ? '待审核派单' : '派单员') : u.role === 'service' ? (u.status === 'pending' ? '待审核客服' : '客服') : '管理员';
-            let statusText2 = u.status === 'active' ? '正常' : u.status === 'pending' ? '待审核' : '封禁';
-            let statusCls = u.status === 'active' ? 'status-onsale' : u.status === 'pending' ? 'status-pending' : 'status-canceled';
-            let actions = '';
-            if (u.role !== 'admin') {
-                if ((u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service') && u.status === 'pending') {
-                    actions += `<button class="btn btn-success btn-xs" onclick="approveHandler('${u.id}')">审核通过</button>`;
-                }
-                actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>`;
-                actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
-                actions += `<button class="btn btn-primary btn-xs" onclick="changeUsername('${u.id}','${u.username}')">改用户名</button>`;
-            }
-            html += `<tr><td>${u.username}</td><td>${roleText}</td><td>${u.diamond||0}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
-        }
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
+        await apiRequest('/orders/' + orderId + '/take', { method: 'PUT' });
+        toast('接单成功', 'success');
+        renderOrders();
+        renderCategoryProducts();
+        updateHeaderDiamond();
         updateBadges();
-    } catch (err) { console.error(err); }
-}
-
-function setUserFilter(filter) {
-    userFilter = filter;
-    document.querySelectorAll('.user-filter button').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.user-filter button[data-filter="${filter}"]`)?.classList.add('active');
-    renderUsersList();
-}
-// ============================================================
-//  店铺管理
-// ============================================================
-async function renderSubShops() {
-    const container = document.getElementById('subShopsContent');
-    if (!container) return;
-    
-    try {
-        const shops = await apiRequest('/shops') || [];
-        
-        let html = `
-            <div class="admin-card" style="border-left:4px solid #22c55e;">
-                <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#22c55e;"></i> 创建店铺</div>
-                <div class="admin-form-group"><label>店铺名称</label><input class="admin-form-control" id="shopName" placeholder="输入店铺名称" /></div>
-                <div class="admin-form-group"><label>店铺简介</label><textarea class="admin-form-control" id="shopDesc" rows="2" placeholder="店铺简介"></textarea></div>
-                <div class="admin-form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="shopLogo" placeholder="输入Logo图片URL" /></div>
-                <button class="btn btn-success" onclick="createShop()"><i class="fas fa-plus"></i> 创建店铺</button>
-            </div>
-            <div class="admin-card">
-                <div class="admin-card-title">🏪 我的店铺</div>
-                <div id="shopList"></div>
-            </div>
-        `;
-        container.innerHTML = html;
-        
-        // 渲染店铺列表
-        const shopList = document.getElementById('shopList');
-        if (shops.length === 0) {
-            shopList.innerHTML = '<div class="empty-state"><i class="fas fa-store"></i><p>暂无店铺</p></div>';
-        } else {
-            let shopHtml = '<div class="shop-grid">';
-            shops.forEach(s => {
-                const statusText = s.status === 'active' ? '营业中' : '已关闭';
-                const statusCls = s.status === 'active' ? 'active' : 'inactive';
-                shopHtml += `
-                    <div class="shop-card">
-                        <div class="shop-name">${s.name}</div>
-                        <div class="shop-desc">${s.description || '暂无简介'}</div>
-                        <span class="shop-status ${statusCls}">${statusText}</span>
-                        <div style="margin-top:8px;display:flex;gap:4px;">
-                            <button class="btn btn-primary btn-xs" onclick="editShop('${s.id}')">编辑</button>
-                            <button class="btn btn-${s.status === 'active' ? 'danger' : 'success'} btn-xs" onclick="toggleShop('${s.id}')">${s.status === 'active' ? '关闭' : '开启'}</button>
-                            <button class="btn btn-danger btn-xs" onclick="confirmDeleteShop('${s.id}')">删除</button>
-                        </div>
-                    </div>
-                `;
-            });
-            shopHtml += '</div>';
-            shopList.innerHTML = shopHtml;
-        }
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
-    }
-}
-
-async function createShop() {
-    const name = document.getElementById('shopName').value.trim();
-    const description = document.getElementById('shopDesc').value.trim();
-    const logo = document.getElementById('shopLogo').value.trim();
-    if (!name) return toast('请输入店铺名称', 'warning');
-    
-    try {
-        await apiRequest('/shops', {
-            method: 'POST',
-            body: JSON.stringify({ name, description, logo })
-        });
-        toast('店铺创建成功', 'success');
-        document.getElementById('shopName').value = '';
-        document.getElementById('shopDesc').value = '';
-        document.getElementById('shopLogo').value = '';
-        renderSubShops();
     } catch (err) {
         toast(err.message, 'error');
     }
 }
 
-async function editShop(shopId) {
-    const shops = await apiRequest('/shops');
-    const shop = shops.find(s => s.id === shopId);
-    if (!shop) return toast('店铺不存在', 'error');
-    
+window.confirmSubmitComplete = function(orderId) {
+    confirmAction('提交完成', '确认已完成此订单服务？', '确认提交', `doSubmitComplete('${orderId}')`);
+};
+
+async function doSubmitComplete(orderId) {
+    try {
+        await apiRequest('/orders/' + orderId + '/submit-complete', { method: 'PUT' });
+        toast('已提交验收', 'success');
+        renderOrders();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.confirmBossComplete = function(orderId) {
+    confirmAction('确认完成', '确认已完成此订单服务？', '确认完成', `doBossComplete('${orderId}')`);
+};
+
+async function doBossComplete(orderId) {
+    try {
+        await apiRequest('/orders/' + orderId + '/boss-confirm', { method: 'PUT' });
+        toast('已确认完成，等待管理员结算', 'success');
+        renderOrders();
+        renderCategoryProducts();
+        updateBadges();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.requestRefund = function(orderId) {
     showCustomModal(`
-        <h3>✏️ 编辑店铺</h3>
-        <div class="form-group"><label>店铺名称</label><input class="admin-form-control" id="editShopName" value="${shop.name}" /></div>
-        <div class="form-group"><label>店铺简介</label><textarea class="admin-form-control" id="editShopDesc" rows="2">${shop.description || ''}</textarea></div>
-        <div class="form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="editShopLogo" value="${shop.logo || ''}" /></div>
+        <h3><i class="fas fa-undo"></i> 申请退款</h3>
+        <p style="color:var(--text-muted);font-size:14px;">请填写退款原因：</p>
+        <div class="form-group"><label>退款原因</label><textarea class="admin-form-control" id="refundReasonInput" rows="3" placeholder="请详细说明退款原因..."></textarea></div>
         <div class="btn-row">
             <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="doEditShop('${shopId}')">保存</button>
+            <button class="btn btn-warning" onclick="doRequestRefund('${orderId}')">提交退款</button>
         </div>
     `);
-}
-
-async function doEditShop(shopId) {
-    const name = document.getElementById('editShopName').value.trim();
-    const description = document.getElementById('editShopDesc').value.trim();
-    const logo = document.getElementById('editShopLogo').value.trim();
-    if (!name) return toast('请输入店铺名称', 'warning');
-    
-    try {
-        await apiRequest('/shops/' + shopId, {
-            method: 'PUT',
-            body: JSON.stringify({ name, description, logo })
-        });
-        closeCustomModal();
-        toast('店铺已更新', 'success');
-        renderSubShops();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-async function toggleShop(shopId) {
-    try {
-        await apiRequest('/shops/' + shopId + '/toggle', { method: 'PUT' });
-        toast('店铺状态已更新', 'success');
-        renderSubShops();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.confirmDeleteShop = function(shopId) {
-    confirmAction('确认删除', '确认删除此店铺？', '确认删除', `doDeleteShop('${shopId}')`);
 };
 
-async function doDeleteShop(shopId) {
+async function doRequestRefund(orderId) {
+    const reason = document.getElementById('refundReasonInput').value.trim();
+    if (!reason) return toast('请填写退款原因', 'warning');
+    closeCustomModal();
     try {
-        await apiRequest('/shops/' + shopId, { method: 'DELETE' });
-        toast('已删除', 'success');
-        renderSubShops();
+        await apiRequest('/orders/' + orderId + '/refund-request', { method: 'PUT', body: JSON.stringify({ reason }) });
+        toast('退款申请已提交', 'success');
+        renderOrders();
+        renderCategoryProducts();
     } catch (err) {
         toast(err.message, 'error');
     }
 }
 
 // ============================================================
-//  公告管理（子页面）
+//  打手提现
 // ============================================================
-async function renderSubAnnounce() {
-    const container = document.getElementById('subAnnounceContent');
-    if (!container) return;
+window.requestWithdraw = function() {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    const amount = parseInt(prompt('请输入要提现的红钻数量（需保留100冻结）：'));
+    if (!amount || amount < 1) return toast('请输入有效数量', 'warning');
+    if (currentUser.role !== 'handler') return toast('只有打手可提现', 'warning');
+    const available = Math.max(0, (currentUser.diamond || 0) - 100);
+    if (amount > available) return toast(`可提现红钻不足，可用：${available} 红钻（需保留100冻结）`, 'error');
     
-    try {
-        const data = await fetch(API_URL + '/announce').then(r => r.json());
-        
-        let html = `
-            <div class="admin-card">
-                <div class="admin-card-title"><i class="fas fa-edit"></i> 编辑公告</div>
-                <div class="admin-form-group"><label>公告内容</label>
-                    <textarea class="admin-form-control" id="announceEditContent" rows="4" placeholder="输入公告内容...">${data.content || ''}</textarea>
-                </div>
-                <div class="admin-form-group"><label>上传图片</label>
-                    <div class="image-upload"><input type="file" id="announceImageInput" accept="image/*" multiple onchange="previewAnnounceImages(event)" /></div>
-                    <div class="preview-images" id="announceImagePreview"></div>
-                </div>
-                <button class="btn btn-primary" onclick="saveAnnounceFromSub()"><i class="fas fa-save"></i> 保存公告</button>
-            </div>
-            <div class="admin-card">
-                <div class="admin-card-title"><i class="fas fa-eye"></i> 预览</div>
-                <div id="announcePreviewSub" style="color:var(--text-secondary);font-size:14px;line-height:1.6;"></div>
-            </div>
-        `;
-        container.innerHTML = html;
-        
-        announceImages = data.images || [];
-        renderAnnounceImagePreview();
-        document.getElementById('announcePreviewSub').innerHTML = (data.content || '') + (data.images && data.images.length > 0 ? '<br><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' + data.images.map(img => '<img src="'+img+'" style="max-width:80px;max-height:80px;border-radius:8px;cursor:pointer;" onclick="showImgPreview(\''+img+'\')">').join('') + '</div>' : '');
-        
-        document.getElementById('announceEditContent').addEventListener('input', function() {
-            const preview = document.getElementById('announcePreviewSub');
-            preview.innerHTML = this.value + (announceImages.length > 0 ? '<br><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' + announceImages.map(img => '<img src="'+img+'" style="max-width:80px;max-height:80px;border-radius:8px;cursor:pointer;" onclick="showImgPreview(\''+img+'\')">').join('') + '</div>' : '');
-        });
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
-    }
-}
-
-async function saveAnnounceFromSub() {
-    const content = document.getElementById('announceEditContent').value.trim();
-    if (!content) return toast('请输入公告内容', 'warning');
-    try {
-        await apiRequest('/admin/announce', { method: 'PUT', body: JSON.stringify({ content, images: announceImages }) });
-        toast('公告已保存', 'success');
-        renderSubAnnounce();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-// ============================================================
-//  提现管理（子页面）
-// ============================================================
-async function renderSubWithdrawals() {
-    const container = document.getElementById('subWithdrawalsContent');
-    if (!container) return;
-    
-    try {
-        const withdrawals = await apiRequest('/admin/withdrawals');
-        if (withdrawals.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-money-bill-wave"></i><p>暂无提现申请</p></div>';
-            return;
-        }
-        let html = '<div class="table-wrap"><table><thead><tr><th>用户</th><th>金额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
-        for (const w of withdrawals) {
-            const statusMap = { 'pending': '待处理', 'approved': '已通过', 'rejected': '已拒绝' };
-            const statusCls = w.status === 'pending' ? 'status-pending' : w.status === 'approved' ? 'status-onsale' : 'status-canceled';
-            let actions = '';
-            if (w.status === 'pending') {
-                actions += `<button class="btn btn-success btn-xs" onclick="approveWithdraw('${w.id}')">通过</button>`;
-                actions += `<button class="btn btn-danger btn-xs" onclick="rejectWithdraw('${w.id}')">拒绝</button>`;
-            }
-            html += `<tr>
-                <td>${w.username || w.user_id}</td>
-                <td>${w.amount} 红钻</td>
-                <td><span class="status-badge ${statusCls}">${statusMap[w.status] || w.status}</span></td>
-                <td><div class="action-group">${actions}</div></td>
-            </tr>`;
-        }
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
-    }
-}
-
-window.approveWithdraw = function(withdrawId) {
-    confirmAction('确认通过', '确认通过此提现申请？红钻将扣除。', '确认通过', `doApproveWithdraw('${withdrawId}')`);
+    confirmAction('确认提现', `确认申请提现 ${amount} 红钻？`, '确认申请', `doRequestWithdraw(${amount})`);
 };
 
-async function doApproveWithdraw(withdrawId) {
+async function doRequestWithdraw(amount) {
     try {
-        await apiRequest('/admin/withdrawals/' + withdrawId + '/approve', { method: 'PUT' });
-        toast('提现已通过', 'success');
-        renderSubWithdrawals();
-        updateHeaderDiamond();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.rejectWithdraw = function(withdrawId) {
-    const reason = prompt('请输入拒绝原因：');
-    if (reason === null) return;
-    confirmAction('确认拒绝', '确认拒绝此提现申请？', '确认拒绝', `doRejectWithdraw('${withdrawId}', '${reason || '无原因'}')`);
-};
-
-async function doRejectWithdraw(withdrawId, reason) {
-    try {
-        await apiRequest('/admin/withdrawals/' + withdrawId + '/reject', {
-            method: 'PUT',
-            body: JSON.stringify({ reason })
+        const result = await apiRequest('/withdraw/request', {
+            method: 'POST',
+            body: JSON.stringify({ amount })
         });
-        toast('已拒绝', 'warning');
-        renderSubWithdrawals();
+        toast(result.message || '提现申请已提交', 'success');
+        renderOrders();
         updateHeaderDiamond();
     } catch (err) {
         toast(err.message, 'error');
@@ -2387,33 +2325,43 @@ async function doRejectWithdraw(withdrawId, reason) {
 }
 
 // ============================================================
-//  账户设置（子页面）
+//  订单详情
 // ============================================================
-function renderSubAccount() {
-    const container = document.getElementById('subAccountContent');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div class="admin-card">
-            <div class="admin-card-title"><i class="fas fa-user"></i> 个人信息</div>
-            <div class="account-info">
-                <div class="info-row"><span class="label">用户名</span><span class="value">${currentUser?.username || '-'}</span></div>
-                <div class="info-row"><span class="label">角色</span><span class="value">${currentUser?.role || '-'}</span></div>
-                <div class="info-row"><span class="label">状态</span><span class="value">${currentUser?.status || '-'}</span></div>
-                <div class="info-row"><span class="label">红钻余额</span><span class="value">${currentUser?.diamond || 0}</span></div>
+window.viewOrderDetail = function(orderId) {
+    apiRequest('/orders/' + orderId).then(order => {
+        let messages = [];
+        try {
+            if (typeof order.messages === 'string') messages = JSON.parse(order.messages);
+            else if (Array.isArray(order.messages)) messages = order.messages;
+        } catch (e) { messages = []; }
+        const messagesHtml = messages.length > 0 ?
+            messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:var(--text-muted);">${msg.time}</span></div>`).join('') :
+            '暂无消息';
+        showCustomModal(`
+            <h3><i class="fas fa-info-circle"></i> 订单详情</h3>
+            <div style="margin:12px 0;text-align:left;">
+                <div class="detail-row"><span class="label">订单号</span><span class="value">${order.id}</span></div>
+                <div class="detail-row"><span class="label">游戏</span><span class="value">${order.game}</span></div>
+                <div class="detail-row"><span class="label">标题</span><span class="value">${order.title}</span></div>
+                <div class="detail-row"><span class="label">价格</span><span class="value">${order.price} 红钻</span></div>
+                <div class="detail-row"><span class="label">状态</span><span class="value"><span class="status-badge ${statusClass(order.status)}">${statusText(order.status)}</span></span></div>
+                <div class="detail-row"><span class="label">打手</span><span class="value">${order.handler_id || '未指派'}</span></div>
+                <div class="detail-row"><span class="label">创建时间</span><span class="value">${order.created_at}</span></div>
+                ${order.start_time ? `<div class="detail-row"><span class="label">开始时间</span><span class="value">${order.start_time}</span></div>` : ''}
+                ${order.end_time ? `<div class="detail-row"><span class="label">结束时间</span><span class="value">${order.end_time}</span></div>` : ''}
+                ${order.settled ? `<div class="detail-row"><span class="label">结算金额</span><span class="value">${order.settled_amount||order.price} 红钻</span></div>` : ''}
+                ${order.refund_reason ? `<div class="detail-row"><span class="label">退款原因</span><span class="value">${order.refund_reason}</span></div>` : ''}
             </div>
-        </div>
-        <div class="admin-card" style="border-left:4px solid #22c55e;">
-            <div class="admin-card-title"><i class="fas fa-sign-in-alt" style="color:#22c55e;"></i> 账号管理</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
+            <div style="border-top:1px solid var(--border-color);padding-top:12px;text-align:left;">
+                <div style="font-weight:600;margin-bottom:8px;">聊天记录</div>
+                <div style="max-height:200px;overflow-y:auto;font-size:13px;background:var(--bg-input);padding:8px;border-radius:8px;">${messagesHtml}</div>
             </div>
-        </div>
-    `;
-}
-
+            <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
+        `);
+    }).catch(err => toast(err.message, 'error'));
+};
 // ============================================================
-//  分类管理
+//  ===== 分类管理 =====
 // ============================================================
 async function loadCategoryNav() {
     try {
@@ -2524,7 +2472,7 @@ async function loadCategoriesForSelectors() {
 }
 
 // ============================================================
-//  商品筛选
+//  ===== 商品筛选 =====
 // ============================================================
 async function filterProducts(categoryId) {
     currentCategoryFilter = categoryId;
@@ -2582,15 +2530,15 @@ async function renderCategoryProducts() {
             html += `
                 <div class="product-card" onclick="openProductDetail('${p.id}')">
                     <div style="position:relative;">
-                        ${p.image ? `<img src="${p.image}" style="width:100%;height:100px;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);\\'>🏷️</div>'" />` : 
-                        `<div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);color:var(--product-img-icon);">🏷️</div>`}
+                        ${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);\\'>🏷️</div>'" />` : 
+                        `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--product-img-bg);color:var(--product-img-icon);">🏷️</div>`}
                         <div class="tag">${p.category_name || p.game || '未分类'}</div>
                     </div>
                     <div class="product-body">
                         <div class="product-title">${p.title}</div>
                         <div class="product-desc">${p.description || ''}</div>
                         <div class="product-stock" style="font-size:10px;color:var(--text-muted);">剩余 ${remaining}</div>
-                        <div class="product-bottom" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid var(--product-bottom-border);">
+                        <div class="product-bottom">
                             <span class="product-price">${p.price} 红钻</span>
                             ${remaining > 0 ? (currentUser ? `
                                 <button class="btn btn-success btn-sm" onclick="event.stopPropagation();showBuyWithHandler('${p.id}')">购买</button>
@@ -2608,7 +2556,7 @@ async function renderCategoryProducts() {
 }
 
 // ============================================================
-//  商品详情
+//  ===== 商品详情 =====
 // ============================================================
 let currentDetailProductId = null;
 
@@ -2637,8 +2585,9 @@ async function openProductDetail(productId) {
         toast(err.message, 'error');
     }
 }
+
 // ============================================================
-//  购买功能
+//  ===== 购买功能 =====
 // ============================================================
 async function showBuyWithHandler(productId) {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
@@ -2673,92 +2622,579 @@ async function doBuyWithHandler(productId) {
         });
         toast('购买成功！订单号：' + data.orderId, 'success');
         renderCategoryProducts();
+        renderOrders();
         updateHeaderDiamond();
         updateBadges();
-        if (currentSubPage === 'orders') renderSubOrders();
     } catch (err) {
         toast(err.message, 'error');
     }
 }
 
 // ============================================================
-//  订单操作（打手、老板、客服）
+//  ===== 充值功能 =====
 // ============================================================
-window.confirmTake = function(orderId) {
-    confirmAction('确认接单', '确认接取此订单？（需保留100红钻冻结）', '确认接单', `doTake('${orderId}')`);
-};
-
-async function doTake(orderId) {
-    try {
-        const result = await apiRequest('/orders/' + orderId + '/take', { method: 'PUT' });
-        toast(result.message || '接单成功', 'success');
-        renderCategoryProducts();
-        updateHeaderDiamond();
-        if (currentSubPage === 'orders') renderSubOrders();
-        updateBadges();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.confirmSubmitComplete = function(orderId) {
-    confirmAction('提交完成', '确认已完成此订单服务？', '确认提交', `doSubmitComplete('${orderId}')`);
-};
-
-async function doSubmitComplete(orderId) {
-    try {
-        await apiRequest('/orders/' + orderId + '/submit-complete', { method: 'PUT' });
-        toast('已提交验收', 'success');
-        if (currentSubPage === 'orders') renderSubOrders();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.confirmBossComplete = function(orderId) {
-    confirmAction('确认完成', '确认已完成此订单服务？', '确认完成', `doBossComplete('${orderId}')`);
-};
-
-async function doBossComplete(orderId) {
-    try {
-        await apiRequest('/orders/' + orderId + '/boss-confirm', { method: 'PUT' });
-        toast('已确认完成，等待管理员结算', 'success');
-        renderCategoryProducts();
-        if (currentSubPage === 'orders') renderSubOrders();
-        updateBadges();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-window.requestRefund = function(orderId) {
-    showCustomModal(`
-        <h3><i class="fas fa-undo"></i> 申请退款</h3>
-        <p style="color:var(--text-muted);font-size:14px;">请填写退款原因：</p>
-        <div class="form-group"><label>退款原因</label><textarea class="admin-form-control" id="refundReasonInput" rows="3" placeholder="请详细说明退款原因..."></textarea></div>
+window.openRecharge = function() {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    const html = `
+        <h3><i class="fas fa-plus-circle"></i> 充值红钻</h3>
+        <p style="color:var(--text-muted);font-size:14px;">1元 = 10红钻</p>
+        <div class="form-group">
+            <label>充值金额（元）</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(10)">10元</button>
+                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(30)">30元</button>
+                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(50)">50元</button>
+                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(100)">100元</button>
+                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(200)">200元</button>
+            </div>
+            <input class="admin-form-control" id="rechargeAmount" type="number" placeholder="自定义金额" min="1" />
+        </div>
+        <div style="text-align:center;margin:8px 0;">
+            <span style="font-size:20px;font-weight:700;color:#f5c842;" id="rechargePreview">0 红钻</span>
+        </div>
         <div class="btn-row">
             <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-warning" onclick="doRequestRefund('${orderId}')">提交退款</button>
+            <button class="btn btn-success" onclick="submitCustomRecharge()">提交申请</button>
         </div>
-    `);
+    `;
+    showCustomModal(html);
+    document.getElementById('customModal').classList.add('active');
+    document.getElementById('rechargeAmount').addEventListener('input', function() {
+        const amount = parseFloat(this.value) || 0;
+        document.getElementById('rechargePreview').textContent = Math.floor(amount * 10) + ' 红钻';
+    });
 };
 
-async function doRequestRefund(orderId) {
-    const reason = document.getElementById('refundReasonInput').value.trim();
-    if (!reason) return toast('请填写退款原因', 'warning');
-    closeCustomModal();
+function setRechargeAmount(amount) {
+    document.getElementById('rechargeAmount').value = amount;
+    document.getElementById('rechargePreview').textContent = Math.floor(amount * 10) + ' 红钻';
+}
+
+async function submitCustomRecharge() {
+    const amount = parseFloat(document.getElementById('rechargeAmount').value);
+    if (!amount || amount < 1) return toast('请输入有效金额', 'warning');
     try {
-        await apiRequest('/orders/' + orderId + '/refund-request', { method: 'PUT', body: JSON.stringify({ reason }) });
-        toast('退款申请已提交', 'success');
-        renderCategoryProducts();
-        if (currentSubPage === 'orders') renderSubOrders();
+        await apiRequest('/recharge/custom', {
+            method: 'POST',
+            body: JSON.stringify({ amount })
+        });
+        closeCustomModal();
+        toast('充值申请已提交，请等待客服审核', 'success');
+        updateBadges();
     } catch (err) {
         toast(err.message, 'error');
     }
 }
 
 // ============================================================
-//  商品管理操作（上架、下架、编辑、删除）
+//  ===== 消息系统 =====
+// ============================================================
+async function loadContacts() {
+    try {
+        const search = document.getElementById('searchContact')?.value.toLowerCase() || '';
+        const contacts = await apiRequest('/messages/contacts');
+        const container = document.getElementById('contactList');
+        if (!container) return;
+        
+        let supportContacts = [];
+        try {
+            supportContacts = await getSupportContacts();
+        } catch (e) {
+            console.warn('获取支持联系人失败:', e);
+            supportContacts = [];
+        }
+        
+        const isService = currentUser && (currentUser.role === 'service' || currentUser.role === 'admin');
+        
+        let filtered = contacts || [];
+        if (search) {
+            filtered = filtered.filter(c => c.username && c.username.toLowerCase().includes(search));
+        }
+        
+        const totalUnread = filtered.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+        const totalEl = document.getElementById('msgUnreadTotal');
+        if (totalEl) totalEl.textContent = totalUnread > 0 ? `(${totalUnread}条未读)` : '';
+        
+        let supportHtml = '';
+        if (!isService && supportContacts && supportContacts.length > 0) {
+            const existingContactIds = (contacts || []).map(c => c.id);
+            const availableSupport = supportContacts.filter(s => !existingContactIds.includes(s.id));
+            if (availableSupport.length > 0) {
+                supportHtml = `
+                    <div class="support-contact-section">
+                        <div class="title">📞 联系客服 / 管理员</div>
+                        <div class="btn-group">
+                            ${availableSupport.map(s => `
+                                <button class="btn btn-primary btn-sm" onclick="openChat('${s.id}','${s.username}','contact')">
+                                    <i class="fas fa-headset"></i> ${s.username}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        if (filtered.length === 0 && !supportHtml) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无联系人</p>
+                ${isService ? `<button class="btn btn-primary btn-sm" onclick="showAddContact()"><i class="fas fa-user-plus"></i> 添加用户对话</button>` : ''}
+            </div>`;
+            return;
+        }
+        
+        let html = supportHtml;
+        if (isService) {
+            html += `<button class="btn btn-primary btn-sm" onclick="showAddContact()" style="margin-bottom:12px;"><i class="fas fa-user-plus"></i> 添加用户对话</button>`;
+        }
+        
+        filtered.forEach(c => {
+            const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
+            const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
+            const displayName = c.username || c.id || '未知用户';
+            html += `
+                <div class="contact-item" onclick="openChat('${c.id}','${displayName}','contact')">
+                    <div>
+                        <strong>${displayName}</strong> ${roleIcon}
+                        ${unreadBadge}
+                        <div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-muted);">${c.last_time ? new Date(c.last_time).toLocaleTimeString() : ''}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('加载联系人失败:', err);
+        const container = document.getElementById('contactList');
+        if (container) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>加载联系人失败: ${err.message}</p><button class="btn btn-primary btn-sm" onclick="loadContacts()">重试</button></div>`;
+        }
+    }
+}
+
+// ============================================================
+//  ===== 全屏聊天 =====
+// ============================================================
+async function openChat(id, username, type = 'contact') {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    if (!id) { toast('联系人ID无效', 'error'); return; }
+    
+    fullscreenContactId = id;
+    fullscreenChatType = type;
+    fullscreenOrderId = type === 'order' ? id : null;
+    
+    const container = document.getElementById('chatFullscreen');
+    container.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('fullscreenChatName').textContent = username || id;
+    
+    try {
+        const users = await apiRequest('/admin/users');
+        const user = users.find(u => u.id === id);
+        if (user) {
+            const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
+            document.getElementById('fullscreenChatRole').textContent = roleMap[user.role] || '用户';
+        } else if (type === 'order') {
+            document.getElementById('fullscreenChatRole').textContent = '📋 订单聊天';
+        }
+    } catch (e) {
+        if (type === 'order') document.getElementById('fullscreenChatRole').textContent = '📋 订单聊天';
+    }
+    
+    await loadFullscreenMessages();
+}
+
+async function loadFullscreenMessages() {
+    const body = document.getElementById('fullscreenChatBody');
+    body.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin" style="font-size:24px;"></i><p>加载中...</p></div>';
+    
+    try {
+        const messages = await apiRequest('/messages/history', {
+            method: 'POST',
+            body: JSON.stringify({ contactId: fullscreenContactId })
+        });
+        
+        if (messages.length === 0) {
+            body.innerHTML = '<div class="empty-state"><i class="fas fa-comment-dots" style="font-size:30px;opacity:0.3;display:block;margin-bottom:10px;"></i><p>暂无消息</p></div>';
+        } else {
+            let html = '';
+            messages.forEach(m => {
+                const isMe = m.sender_id === currentUser.id;
+                html += `
+                    <div style="display:flex;justify-content:${isMe ? 'flex-end' : 'flex-start'};">
+                        <div class="chat-bubble ${isMe ? 'me' : 'other'}">
+                            ${m.content}
+                            <span class="time">${new Date(m.created_at).toLocaleTimeString()}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            body.innerHTML = html;
+            body.scrollTop = body.scrollHeight;
+        }
+        updateBadges();
+    } catch (err) {
+        console.error('加载消息失败:', err);
+        body.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle" style="font-size:30px;color:#ef4444;display:block;margin-bottom:10px;"></i><p>加载失败: ${err.message}</p><button class="btn btn-primary btn-sm" onclick="loadFullscreenMessages()" style="margin-top:10px;">重试</button></div>`;
+    }
+}
+
+async function sendFullscreenMessage() {
+    const input = document.getElementById('fullscreenChatInput');
+    const content = input.value.trim();
+    if (!content) return toast('请输入消息', 'warning');
+    if (!fullscreenContactId) return toast('请选择联系人', 'warning');
+    
+    try {
+        if (fullscreenChatType === 'order' && fullscreenOrderId) {
+            await apiRequest('/orders/' + fullscreenOrderId + '/chat', {
+                method: 'POST',
+                body: JSON.stringify({ content })
+            });
+        } else {
+            await apiRequest('/messages/send', {
+                method: 'POST',
+                body: JSON.stringify({ receiverId: fullscreenContactId, content })
+            });
+        }
+        input.value = '';
+        await loadFullscreenMessages();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+function closeChatFullscreen() {
+    document.getElementById('chatFullscreen').classList.remove('active');
+    document.body.style.overflow = '';
+    fullscreenContactId = null;
+    fullscreenOrderId = null;
+    fullscreenChatType = 'contact';
+    loadContacts();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('fullscreenChatInput')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendFullscreenMessage();
+        }
+    });
+});
+
+function showAddContact() {
+    apiRequest('/admin/users').then(users => {
+        apiRequest('/messages/contacts').then(contacts => {
+            const contactIds = contacts.map(c => c.id);
+            const available = users.filter(u => 
+                u.id !== currentUser.id && 
+                !contactIds.includes(u.id) &&
+                (u.role === 'boss' || u.role === 'handler' || u.role === 'dispatcher')
+            );
+            if (available.length === 0) {
+                toast('没有可添加的用户', 'warning');
+                return;
+            }
+            let options = available.map(u => `<option value="${u.id}">${u.username} (${u.role})</option>`).join('');
+            showCustomModal(`
+                <h3><i class="fas fa-user-plus"></i> 添加对话</h3>
+                <p style="color:var(--text-muted);font-size:14px;">选择要添加的用户：</p>
+                <div class="form-group"><label>用户</label><select class="admin-form-control" id="addContactSelect">${options}</select></div>
+                <div class="form-group"><label>发送消息</label><input class="admin-form-control" id="addContactMessage" placeholder="输入消息..." /></div>
+                <div class="btn-row">
+                    <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                    <button class="btn btn-success" onclick="doAddContact()">添加</button>
+                </div>
+            `);
+            document.getElementById('customModal').classList.add('active');
+        });
+    }).catch(err => toast(err.message, 'error'));
+}
+
+async function doAddContact() {
+    const userId = document.getElementById('addContactSelect').value;
+    const message = document.getElementById('addContactMessage').value.trim();
+    if (!userId) return toast('请选择用户', 'warning');
+    if (!message) return toast('请输入消息', 'warning');
+    closeCustomModal();
+    try {
+        await apiRequest('/messages/send', {
+            method: 'POST',
+            body: JSON.stringify({ receiverId: userId, content: message })
+        });
+        toast('✅ 已添加对话', 'success');
+        loadContacts();
+        updateBadges();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  ===== 邮件功能 =====
+// ============================================================
+window.openMail = function() {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    apiRequest('/mails').then(mails => {
+        let listHtml = mails.length === 0 ? '<div class="empty-state"><i class="fas fa-envelope"></i><p>暂无邮件</p></div>' :
+            mails.map(m => `
+                <div class="mail-item">
+                    <div style="display:flex;justify-content:space-between;">
+                        <span class="mail-title">${m.title}</span>
+                        <span class="mail-status"><span class="status-badge ${m.status==='unread'?'status-pending':'status-claimed'}">${m.status==='unread'?'未领取':'已领取'}</span></span>
+                    </div>
+                    <div style="font-size:14px;color:var(--text-secondary);padding:4px 0;">${m.content}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);">
+                        <span>${m.create_time}</span>
+                        ${m.status === 'unread' && m.diamond > 0 ? `<button class="btn btn-success btn-xs" onclick="confirmClaimMail('${m.id}')">领取 ${m.diamond} 红钻</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        showCustomModal(`
+            <h3><i class="fas fa-envelope"></i> 我的邮件</h3>
+            <div style="margin-top:12px;max-height:400px;overflow-y:auto;">${listHtml}</div>
+            <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
+        `);
+    }).catch(err => toast(err.message, 'error'));
+};
+
+window.confirmClaimMail = function(mailId) {
+    confirmAction('领取红钻', '确认领取此邮件中的红钻？', '确认领取', `doClaimMail('${mailId}')`);
+};
+
+async function doClaimMail(mailId) {
+    try {
+        await apiRequest('/mails/' + mailId + '/claim', { method: 'PUT' });
+        toast('领取成功', 'success');
+        openMail();
+        renderCategoryProducts();
+        updateHeaderDiamond();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  ===== 管理页面 =====
+// ============================================================
+function renderAdminPage() {
+    const role = currentUser?.role;
+    const isAdmin = role === 'admin';
+    const isService = role === 'service';
+    const isDispatcher = role === 'dispatcher';
+    
+    // 更新头像和名称
+    document.getElementById('adminName').textContent = currentUser.username + '的俱乐部';
+    document.getElementById('adminAvatar').textContent = currentUser.username.substring(0, 2).toUpperCase();
+    const roleMap = { 'admin': '管理员', 'service': '客服', 'dispatcher': '派单员' };
+    document.getElementById('adminRoleBadge').textContent = roleMap[role] || role;
+    document.getElementById('adminSub').textContent = new Date().toLocaleDateString() + '加入';
+    
+    // 渲染工作台
+    renderWorkbench();
+    updateStats();
+    updateBadges();
+}
+
+function renderWorkbench() {
+    const role = currentUser?.role;
+    const grid = document.getElementById('workbenchGrid');
+    if (!grid) return;
+    
+    let items = [];
+    
+    if (role === 'admin') {
+        // 管理员：全部功能
+        items = [
+            { icon: '📋', label: '订单管理', action: "openSubPage('orders')", badge: 'badgeOrders' },
+            { icon: '📦', label: '商品管理', action: "openSubPage('products')" },
+            { icon: '👥', label: '用户管理', action: "openSubPage('users')", badge: 'badgeUsers' },
+            { icon: '💰', label: '充值管理', action: "openSubPage('recharges')", badge: 'badgeRecharges' },
+            { icon: '🏪', label: '店铺管理', action: "openSubPage('shops')" },
+            { icon: '📢', label: '公告管理', action: "openSubPage('announce')" },
+            { icon: '💳', label: '提现管理', action: "openSubPage('withdrawals')" },
+            { icon: '⚙️', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    } else if (role === 'service') {
+        // 客服：只有客服系统
+        items = [
+            { icon: '🎧', label: '客服系统', action: "openSubPage('service')", badge: 'badgeRecharges' },
+            { icon: '💰', label: '充值审核', action: "openSubPage('recharges')", badge: 'badgeRecharges' },
+            { icon: '👥', label: '用户管理', action: "openSubPage('users')" },
+            { icon: '⚙️', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    } else if (role === 'dispatcher') {
+        // 派单员：只有派单系统
+        items = [
+            { icon: '📋', label: '派单系统', action: "openSubPage('dispatcher')" },
+            { icon: '📦', label: '商品管理', action: "openSubPage('products')" },
+            { icon: '📊', label: '数据统计', action: "openSubPage('orders')" },
+            { icon: '⚙️', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    } else {
+        items = [
+            { icon: '⚙️', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    }
+    
+    grid.innerHTML = items.map(item => `
+        <div class="workbench-item" onclick="${item.action}">
+            <span class="icon">${item.icon}</span>
+            <span class="label">${item.label}</span>
+            ${item.badge ? `<span class="badge-count" id="${item.badge}">0</span>` : ''}
+        </div>
+    `).join('');
+}
+
+// ============================================================
+//  ===== 更新统计数据 =====
+// ============================================================
+async function updateStats() {
+    try {
+        const stats = await apiRequest('/user/stats');
+        document.getElementById('statOrders').textContent = stats.stats.totalOrders || 0;
+        document.getElementById('statIncome').textContent = stats.stats.totalIncome || 0;
+        document.getElementById('statDiamond').textContent = stats.stats.diamond || 0;
+        document.getElementById('statEnergy').textContent = stats.stats.energy || 0;
+    } catch (err) {
+        console.error('加载统计数据失败', err);
+    }
+}
+// ============================================================
+//  ===== 子页面渲染 =====
+// ============================================================
+async function renderSubOrders() {
+    const container = document.getElementById('subOrdersContent');
+    if (!container) return;
+    try {
+        const orders = await apiRequest('/orders/my');
+        if (orders.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><p>暂无订单</p></div>';
+            return;
+        }
+        let html = '';
+        for (const o of orders) {
+            let actions = '';
+            if (o.status === 'review' && (currentUser.role === 'boss' || currentUser.role === 'service')) {
+                actions += `<button class="btn btn-success btn-xs" onclick="confirmBossComplete('${o.id}')">确认完成</button>`;
+            }
+            if ((o.status === 'ongoing' || o.status === 'pending') && (currentUser.role === 'boss' || currentUser.role === 'service')) {
+                actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
+            }
+            if (o.status === 'pending' && currentUser.role === 'handler') {
+                actions += `<button class="btn btn-primary btn-xs" onclick="confirmTake('${o.id}')">接单</button>`;
+            }
+            if (o.status === 'ongoing' && currentUser.role === 'handler') {
+                actions += `<button class="btn btn-warning btn-xs" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
+            }
+            actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}','${o.title}','order')">💬</button>`;
+            actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
+            html += `
+                <div class="admin-card" style="padding:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                        <div>
+                            <strong>${o.game || '暗区突围'} · ${o.title}</strong>
+                            <br><span style="font-size:13px;color:var(--text-muted);">${o.price} 红钻 ｜ <span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></span>
+                        </div>
+                        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${actions}</div>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+async function renderSubProducts() {
+    const container = document.getElementById('subProductsContent');
+    if (!container) return;
+    try {
+        const products = await apiRequest('/admin/products');
+        await loadCategoriesForSelectors();
+        let html = `
+            <div class="admin-card" style="border-left:4px solid #22c55e;">
+                <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#22c55e;"></i> 上架新商品</div>
+                <div class="admin-form-group"><label>主分类</label>
+                    <select class="admin-form-control" id="prodCategory"></select>
+                </div>
+                <div class="admin-form-group"><label>子分类</label>
+                    <select class="admin-form-control" id="prodGame"><option value="">-- 请选择子分类 --</option></select>
+                </div>
+                <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="prodTitle" placeholder="标题"></div>
+                <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="prodDesc" rows="2" placeholder="服务详情"></textarea></div>
+                <div class="admin-form-group"><label>价格（红钻）</label><input class="admin-form-control" id="prodPrice" type="number" placeholder="288"></div>
+                <div class="admin-form-group"><label>库存</label><input class="admin-form-control" id="prodQuantity" type="number" placeholder="1" value="1"></div>
+                <div class="admin-form-group"><label>商品图片URL</label>
+                    <input class="admin-form-control" id="prodImageUrl" placeholder="输入图片URL" />
+                    <img id="prodImagePreview" class="upload-preview" style="display:none;margin-top:4px;" onerror="this.style.display='none'" />
+                </div>
+                <div class="admin-form-group"><label>详情图片（多个URL用逗号分隔）</label>
+                    <input class="admin-form-control" id="prodDetailImages" placeholder="https://img1.jpg, https://img2.jpg" />
+                </div>
+                <div class="admin-form-group"><label>详情描述</label>
+                    <textarea class="admin-form-control" id="prodDetailDesc" rows="3" placeholder="详细描述内容"></textarea>
+                </div>
+                <button class="btn btn-success" onclick="shelfProduct()"><i class="fas fa-upload"></i> 上架商品</button>
+            </div>
+            <div class="admin-card">
+                <div class="admin-card-title">📦 商品列表</div>
+                <div id="productsList"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        await renderProductsList();
+        const prodCategorySel = document.getElementById('prodCategory');
+        if (prodCategorySel) {
+            prodCategorySel.onchange = function() {
+                loadSubCategoriesToSelect('prodGame', this.value);
+            };
+        }
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+async function renderProductsList() {
+    try {
+        const products = await apiRequest('/admin/products');
+        const container = document.getElementById('productsList');
+        if (!container) return;
+        if (products.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>暂无商品</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const p of products) {
+            const remaining = p.quantity - p.sold;
+            const isHidden = p.hidden == 1 || p.hidden === true;
+            let statusText2 = isHidden ? '已下架' : (remaining > 0 ? '在售' : '已售罄');
+            let statusCls = isHidden ? 'status-hidden' : (remaining > 0 ? 'status-onsale' : 'status-soldout');
+            const productId = p.id;
+            let actions = '';
+            if (isHidden) {
+                actions += `<button class="btn btn-success btn-xs" onclick="confirmReshelf('${productId}')">重新上架</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteProduct('${productId}')">删除</button>`;
+            } else {
+                actions += `<button class="btn btn-danger btn-xs" onclick="confirmUnshelf('${productId}')">下架</button>`;
+            }
+            actions += `<button class="btn btn-primary btn-xs" onclick="openEditProduct('${productId}')">编辑</button>`;
+            html += `<tr>
+                <td>${p.title}</td>
+                <td>${p.price} 红钻</td>
+                <td>${p.sold}/${p.quantity}</td>
+                <td><span class="status-badge ${statusCls}">${statusText2}</span></td>
+                <td><div class="action-group">${actions}</div></td>
+            </tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+// ============================================================
+//  ===== 商品管理操作 =====
 // ============================================================
 let editProductId = null;
 
@@ -2767,16 +3203,13 @@ window.openEditProduct = function(productId) {
     apiRequest('/admin/products').then(products => {
         const p = products.find(x => x.id === productId);
         if (!p) return toast('商品不存在', 'error');
-        
         apiRequest('/categories').then(categories => {
             const mainCats = categories.filter(c => !c.parent_id);
             const subCats = categories.filter(c => c.parent_id);
-
             let selectedMainId = '';
             let selectedSubId = '';
             const categoryById = Object.fromEntries(categories.map(c => [c.id, c]));
             const currentCategory = categoryById[p.category_id];
-
             if (currentCategory?.parent_id) {
                 selectedSubId = currentCategory.id;
                 selectedMainId = currentCategory.parent_id;
@@ -2792,12 +3225,10 @@ window.openEditProduct = function(productId) {
                     selectedMainId = legacySub.parent_id;
                 }
             }
-
             let categoryOptions = '<option value="">请选择主分类</option>';
             mainCats.forEach(c => {
                 categoryOptions += `<option value="${c.id}" ${selectedMainId === c.id ? 'selected' : ''}>${c.name}</option>`;
             });
-
             const buildSubOptions = (mainId, selectedId = '') => {
                 const list = subCats.filter(c => c.parent_id === mainId);
                 let html = '<option value="">请选择子分类</option>';
@@ -2806,7 +3237,6 @@ window.openEditProduct = function(productId) {
                 });
                 return html;
             };
-
             showCustomModal(`
                 <h3><i class="fas fa-edit"></i> 编辑商品</h3>
                 <div class="admin-form-group"><label>主分类</label><select class="admin-form-control" id="editProdCategory">${categoryOptions}</select></div>
@@ -2830,7 +3260,6 @@ window.openEditProduct = function(productId) {
                     <button class="btn btn-success" onclick="doEditProduct()">保存修改</button>
                 </div>
             `);
-
             const mainSelect = document.getElementById('editProdCategory');
             const subSelect = document.getElementById('editProdSubCategory');
             if (mainSelect && subSelect) {
@@ -2948,16 +3377,100 @@ async function shelfProduct() {
 }
 
 // ============================================================
-//  充值管理
+//  ===== 用户管理（子页面） =====
+// ============================================================
+async function renderSubUsers() {
+    const container = document.getElementById('subUsersContent');
+    if (!container) return;
+    let html = `
+        <div class="admin-card">
+            <div class="admin-form-group" style="margin-bottom:8px;">
+                <input class="admin-form-control" id="searchUser" placeholder="🔍 搜索用户名..." oninput="renderUsersList()" />
+            </div>
+            <div class="user-filter">
+                <button class="active" data-filter="all" onclick="setUserFilter('all')">全部</button>
+                <button data-filter="boss" onclick="setUserFilter('boss')">老板</button>
+                <button data-filter="handler" onclick="setUserFilter('handler')">打手</button>
+                <button data-filter="dispatcher" onclick="setUserFilter('dispatcher')">派单</button>
+                <button data-filter="service" onclick="setUserFilter('service')">客服</button>
+                <button data-filter="pending" onclick="setUserFilter('pending')">待审核</button>
+            </div>
+            <div id="usersList"></div>
+        </div>
+        <div class="admin-card"><div class="admin-card-title"><i class="fas fa-gift"></i> 赠送红钻</div>
+            <div class="admin-form-group"><label>选择用户</label><select class="admin-form-control" id="giftUser"></select></div>
+            <div class="admin-form-group"><label>红钻数量</label><input class="admin-form-control" id="giftAmount" type="number" placeholder="数量"></div>
+            <button class="btn btn-primary" onclick="sendGift()"><i class="fas fa-gift"></i> 赠送</button>
+        </div>
+    `;
+    container.innerHTML = html;
+    await renderUsersList();
+    await populateGiftUsers();
+}
+
+async function renderUsersList() {
+    try {
+        const search = document.getElementById('searchUser')?.value.toLowerCase() || '';
+        const users = await apiRequest('/admin/users');
+        let filtered = users;
+        if (userFilter === 'boss') {
+            filtered = users.filter(u => u.role === 'boss');
+        } else if (userFilter === 'handler') {
+            filtered = users.filter(u => u.role === 'handler');
+        } else if (userFilter === 'dispatcher') {
+            filtered = users.filter(u => u.role === 'dispatcher');
+        } else if (userFilter === 'service') {
+            filtered = users.filter(u => u.role === 'service');
+        } else if (userFilter === 'pending') {
+            filtered = users.filter(u => u.status === 'pending' && (u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service'));
+        }
+        if (search) {
+            filtered = filtered.filter(u => u.username.toLowerCase().includes(search));
+        }
+        const container = document.getElementById('usersList');
+        if (!container) return;
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>暂无用户</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const u of filtered) {
+            let roleText = u.role === 'boss' ? '老板' : u.role === 'handler' ? (u.status === 'pending' ? '待审核打手' : '打手') : u.role === 'dispatcher' ? (u.status === 'pending' ? '待审核派单' : '派单员') : u.role === 'service' ? (u.status === 'pending' ? '待审核客服' : '客服') : '管理员';
+            let statusText2 = u.status === 'active' ? '正常' : u.status === 'pending' ? '待审核' : '封禁';
+            let statusCls = u.status === 'active' ? 'status-onsale' : u.status === 'pending' ? 'status-pending' : 'status-canceled';
+            let actions = '';
+            if (u.role !== 'admin') {
+                if ((u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service') && u.status === 'pending') {
+                    actions += `<button class="btn btn-success btn-xs" onclick="approveHandler('${u.id}')">审核通过</button>`;
+                }
+                actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>`;
+                actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
+                actions += `<button class="btn btn-primary btn-xs" onclick="changeUsername('${u.id}','${u.username}')">改用户名</button>`;
+            }
+            html += `<tr><td>${u.username}</td><td>${roleText}</td><td>${u.diamond||0}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+        updateBadges();
+    } catch (err) { console.error(err); }
+}
+
+function setUserFilter(filter) {
+    userFilter = filter;
+    document.querySelectorAll('.user-filter button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.user-filter button[data-filter="${filter}"]`)?.classList.add('active');
+    renderUsersList();
+}
+
+// ============================================================
+//  ===== 充值管理（子页面） =====
 // ============================================================
 async function renderSubRecharges() {
     const container = document.getElementById('subRechargesContent');
     if (!container) return;
-    
     try {
         const recharges = await apiRequest('/admin/recharges');
         await populateGiftUsers();
-        
         let html = `
             <div class="admin-card">
                 <div class="admin-card-title">💰 充值申请</div>
@@ -3078,75 +3591,453 @@ window.sendGift = function() {
 };
 
 // ============================================================
-//  消息系统
+//  ===== 店铺管理（子页面） =====
 // ============================================================
-async function loadContacts() {
+async function renderSubShops() {
+    const container = document.getElementById('subShopsContent');
+    if (!container) return;
     try {
-        const search = document.getElementById('searchContact')?.value.toLowerCase() || '';
-        const contacts = await apiRequest('/messages/contacts');
-        const container = document.getElementById('contactList');
-        if (!container) return;
-        
-        let supportContacts = [];
-        try {
-            supportContacts = await getSupportContacts();
-        } catch (e) {
-            console.warn('获取支持联系人失败:', e);
-            supportContacts = [];
-        }
-        
-        const isService = currentUser && (currentUser.role === 'service' || currentUser.role === 'admin');
-        
-        let filtered = contacts || [];
-        if (search) {
-            filtered = filtered.filter(c => c.username && c.username.toLowerCase().includes(search));
-        }
-        
-        const totalUnread = filtered.reduce((sum, c) => sum + (c.unread_count || 0), 0);
-        const totalEl = document.getElementById('msgUnreadTotal');
-        if (totalEl) totalEl.textContent = totalUnread > 0 ? `(${totalUnread}条未读)` : '';
-        
-        let supportHtml = '';
-        if (!isService && supportContacts && supportContacts.length > 0) {
-            const existingContactIds = (contacts || []).map(c => c.id);
-            const availableSupport = supportContacts.filter(s => !existingContactIds.includes(s.id));
-            if (availableSupport.length > 0) {
-                supportHtml = `
-                    <div class="support-contact-section">
-                        <div class="title">📞 联系客服 / 管理员</div>
-                        <div class="btn-group">
-                            ${availableSupport.map(s => `
-                                <button class="btn btn-primary btn-sm" onclick="openChat('${s.id}','${s.username}','contact')">
-                                    <i class="fas fa-headset"></i> ${s.username}
-                                </button>
-                            `).join('')}
+        const shops = await apiRequest('/shops') || [];
+        let html = `
+            <div class="admin-card" style="border-left:4px solid #22c55e;">
+                <div class="admin-card-title"><i class="fas fa-plus-circle" style="color:#22c55e;"></i> 创建店铺</div>
+                <div class="admin-form-group"><label>店铺名称</label><input class="admin-form-control" id="shopName" placeholder="输入店铺名称" /></div>
+                <div class="admin-form-group"><label>店铺简介</label><textarea class="admin-form-control" id="shopDesc" rows="2" placeholder="店铺简介"></textarea></div>
+                <div class="admin-form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="shopLogo" placeholder="输入Logo图片URL" /></div>
+                <button class="btn btn-success" onclick="createShop()"><i class="fas fa-plus"></i> 创建店铺</button>
+            </div>
+            <div class="admin-card">
+                <div class="admin-card-title">🏪 我的店铺</div>
+                <div id="shopList"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        const shopList = document.getElementById('shopList');
+        if (shops.length === 0) {
+            shopList.innerHTML = '<div class="empty-state"><i class="fas fa-store"></i><p>暂无店铺</p></div>';
+        } else {
+            let shopHtml = '<div class="shop-grid">';
+            shops.forEach(s => {
+                const statusText = s.status === 'active' ? '营业中' : '已关闭';
+                const statusCls = s.status === 'active' ? 'active' : 'inactive';
+                shopHtml += `
+                    <div class="shop-card">
+                        <div class="shop-name">${s.name}</div>
+                        <div class="shop-desc">${s.description || '暂无简介'}</div>
+                        <span class="shop-status ${statusCls}">${statusText}</span>
+                        <div style="margin-top:8px;display:flex;gap:4px;">
+                            <button class="btn btn-primary btn-xs" onclick="editShop('${s.id}')">编辑</button>
+                            <button class="btn btn-${s.status === 'active' ? 'danger' : 'success'} btn-xs" onclick="toggleShop('${s.id}')">${s.status === 'active' ? '关闭' : '开启'}</button>
+                            <button class="btn btn-danger btn-xs" onclick="confirmDeleteShop('${s.id}')">删除</button>
                         </div>
                     </div>
                 `;
-            }
+            });
+            shopHtml += '</div>';
+            shopList.innerHTML = shopHtml;
         }
-        
-        if (filtered.length === 0 && !supportHtml) {
-            container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无联系人</p>
-                ${isService ? `<button class="btn btn-primary btn-sm" onclick="showAddContact()"><i class="fas fa-user-plus"></i> 添加用户对话</button>` : ''}
-            </div>`;
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+async function createShop() {
+    const name = document.getElementById('shopName').value.trim();
+    const description = document.getElementById('shopDesc').value.trim();
+    const logo = document.getElementById('shopLogo').value.trim();
+    if (!name) return toast('请输入店铺名称', 'warning');
+    try {
+        await apiRequest('/shops', {
+            method: 'POST',
+            body: JSON.stringify({ name, description, logo })
+        });
+        toast('店铺创建成功', 'success');
+        document.getElementById('shopName').value = '';
+        document.getElementById('shopDesc').value = '';
+        document.getElementById('shopLogo').value = '';
+        renderSubShops();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function editShop(shopId) {
+    const shops = await apiRequest('/shops');
+    const shop = shops.find(s => s.id === shopId);
+    if (!shop) return toast('店铺不存在', 'error');
+    showCustomModal(`
+        <h3>✏️ 编辑店铺</h3>
+        <div class="form-group"><label>店铺名称</label><input class="admin-form-control" id="editShopName" value="${shop.name}" /></div>
+        <div class="form-group"><label>店铺简介</label><textarea class="admin-form-control" id="editShopDesc" rows="2">${shop.description || ''}</textarea></div>
+        <div class="form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="editShopLogo" value="${shop.logo || ''}" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doEditShop('${shopId}')">保存</button>
+        </div>
+    `);
+}
+
+async function doEditShop(shopId) {
+    const name = document.getElementById('editShopName').value.trim();
+    const description = document.getElementById('editShopDesc').value.trim();
+    const logo = document.getElementById('editShopLogo').value.trim();
+    if (!name) return toast('请输入店铺名称', 'warning');
+    try {
+        await apiRequest('/shops/' + shopId, {
+            method: 'PUT',
+            body: JSON.stringify({ name, description, logo })
+        });
+        closeCustomModal();
+        toast('店铺已更新', 'success');
+        renderSubShops();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function toggleShop(shopId) {
+    try {
+        await apiRequest('/shops/' + shopId + '/toggle', { method: 'PUT' });
+        toast('店铺状态已更新', 'success');
+        renderSubShops();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.confirmDeleteShop = function(shopId) {
+    confirmAction('确认删除', '确认删除此店铺？', '确认删除', `doDeleteShop('${shopId}')`);
+};
+
+async function doDeleteShop(shopId) {
+    try {
+        await apiRequest('/shops/' + shopId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderSubShops();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  ===== 公告管理（子页面） =====
+// ============================================================
+async function renderSubAnnounce() {
+    const container = document.getElementById('subAnnounceContent');
+    if (!container) return;
+    try {
+        const data = await fetch(API_URL + '/announce').then(r => r.json());
+        let html = `
+            <div class="admin-card">
+                <div class="admin-card-title"><i class="fas fa-edit"></i> 编辑公告</div>
+                <div class="admin-form-group"><label>公告内容</label>
+                    <textarea class="admin-form-control" id="announceEditContent" rows="4" placeholder="输入公告内容...">${data.content || ''}</textarea>
+                </div>
+                <div class="admin-form-group"><label>上传图片</label>
+                    <div class="image-upload"><input type="file" id="announceImageInput" accept="image/*" multiple onchange="previewAnnounceImages(event)" /></div>
+                    <div class="preview-images" id="announceImagePreview"></div>
+                </div>
+                <button class="btn btn-primary" onclick="saveAnnounceFromSub()"><i class="fas fa-save"></i> 保存公告</button>
+            </div>
+            <div class="admin-card">
+                <div class="admin-card-title"><i class="fas fa-eye"></i> 预览</div>
+                <div id="announcePreviewSub" style="color:var(--text-secondary);font-size:14px;line-height:1.6;"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        announceImages = data.images || [];
+        renderAnnounceImagePreview();
+        document.getElementById('announcePreviewSub').innerHTML = (data.content || '') + (data.images && data.images.length > 0 ? '<br><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' + data.images.map(img => '<img src="'+img+'" style="max-width:80px;max-height:80px;border-radius:8px;cursor:pointer;" onclick="showImgPreview(\''+img+'\')">').join('') + '</div>' : '');
+        document.getElementById('announceEditContent').addEventListener('input', function() {
+            const preview = document.getElementById('announcePreviewSub');
+            preview.innerHTML = this.value + (announceImages.length > 0 ? '<br><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' + announceImages.map(img => '<img src="'+img+'" style="max-width:80px;max-height:80px;border-radius:8px;cursor:pointer;" onclick="showImgPreview(\''+img+'\')">').join('') + '</div>' : '');
+        });
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+async function saveAnnounceFromSub() {
+    const content = document.getElementById('announceEditContent').value.trim();
+    if (!content) return toast('请输入公告内容', 'warning');
+    try {
+        await apiRequest('/admin/announce', { method: 'PUT', body: JSON.stringify({ content, images: announceImages }) });
+        toast('公告已保存', 'success');
+        renderSubAnnounce();
+        // 重新加载公告数据用于弹窗
+        await loadAnnounceData();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+function previewAnnounceImages(event) {
+    const files = event.target.files;
+    for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            announceImages.push(e.target.result);
+            renderAnnounceImagePreview();
+        };
+        reader.readAsDataURL(file);
+    }
+    event.target.value = '';
+}
+
+function renderAnnounceImagePreview() {
+    const container = document.getElementById('announceImagePreview');
+    if (!container) return;
+    container.innerHTML = announceImages.map((img, i) =>
+        `<div style="position:relative;display:inline-block;">
+            <img src="${img}" style="max-width:60px;max-height:60px;border-radius:8px;border:1px solid var(--border-color);cursor:pointer;" onclick="showImgPreview('${img}')">
+            <button onclick="removeAnnounceImage(${i})" style="position:absolute;top:-6px;right:-6px;background:#ef4444;border:none;color:#fff;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;line-height:18px;text-align:center;">×</button>
+        </div>`
+    ).join('');
+}
+
+function removeAnnounceImage(index) {
+    announceImages.splice(index, 1);
+    renderAnnounceImagePreview();
+}
+
+// ============================================================
+//  ===== 提现管理（子页面） =====
+// ============================================================
+async function renderSubWithdrawals() {
+    const container = document.getElementById('subWithdrawalsContent');
+    if (!container) return;
+    try {
+        const withdrawals = await apiRequest('/admin/withdrawals');
+        if (withdrawals.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-money-bill-wave"></i><p>暂无提现申请</p></div>';
             return;
         }
-        
-        let html = supportHtml;
-        if (isService) {
-            html += `<button class="btn btn-primary btn-sm" onclick="showAddContact()" style="margin-bottom:12px;"><i class="fas fa-user-plus"></i> 添加用户对话</button>`;
+        let html = '<div class="table-wrap"><table><thead><tr><th>用户</th><th>金额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const w of withdrawals) {
+            const statusMap = { 'pending': '待处理', 'approved': '已通过', 'rejected': '已拒绝' };
+            const statusCls = w.status === 'pending' ? 'status-pending' : w.status === 'approved' ? 'status-onsale' : 'status-canceled';
+            let actions = '';
+            if (w.status === 'pending') {
+                actions += `<button class="btn btn-success btn-xs" onclick="approveWithdraw('${w.id}')">通过</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="rejectWithdraw('${w.id}')">拒绝</button>`;
+            }
+            html += `<tr>
+                <td>${w.username || w.user_id}</td>
+                <td>${w.amount} 红钻</td>
+                <td><span class="status-badge ${statusCls}">${statusMap[w.status] || w.status}</span></td>
+                <td><div class="action-group">${actions}</div></td>
+            </tr>`;
         }
-        
-        filtered.forEach(c => {
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+window.approveWithdraw = function(withdrawId) {
+    confirmAction('确认通过', '确认通过此提现申请？红钻将扣除。', '确认通过', `doApproveWithdraw('${withdrawId}')`);
+};
+
+async function doApproveWithdraw(withdrawId) {
+    try {
+        await apiRequest('/admin/withdrawals/' + withdrawId + '/approve', { method: 'PUT' });
+        toast('提现已通过', 'success');
+        renderSubWithdrawals();
+        updateHeaderDiamond();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.rejectWithdraw = function(withdrawId) {
+    const reason = prompt('请输入拒绝原因：');
+    if (reason === null) return;
+    confirmAction('确认拒绝', '确认拒绝此提现申请？', '确认拒绝', `doRejectWithdraw('${withdrawId}', '${reason || '无原因'}')`);
+};
+
+async function doRejectWithdraw(withdrawId, reason) {
+    try {
+        await apiRequest('/admin/withdrawals/' + withdrawId + '/reject', {
+            method: 'PUT',
+            body: JSON.stringify({ reason })
+        });
+        toast('已拒绝', 'warning');
+        renderSubWithdrawals();
+        updateHeaderDiamond();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  ===== 客服系统（子页面） =====
+// ============================================================
+async function renderSubService() {
+    const container = document.getElementById('subServiceContent');
+    if (!container) return;
+    try {
+        const recharges = await apiRequest('/service/recharges');
+        const user = await apiRequest('/me');
+        let html = `
+            <div class="admin-card service-card">
+                <div class="admin-card-title"><i class="fas fa-headset" style="color:#22c55e;"></i> 客服面板</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                    <div class="stat-card" style="text-align:center;padding:12px;">
+                        <div class="stat-value">${recharges.filter(r => r.status === 'pending').length}</div>
+                        <div class="stat-label">待审核充值</div>
+                    </div>
+                    <div class="stat-card" style="text-align:center;padding:12px;">
+                        <div class="stat-value">${user.diamond || 0}</div>
+                        <div class="stat-label">我的红钻</div>
+                    </div>
+                    <div class="stat-card" style="text-align:center;padding:12px;">
+                        <div class="stat-value">${recharges.filter(r => r.status === 'approved').length}</div>
+                        <div class="stat-label">已处理</div>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-card service-card">
+                <div class="admin-card-title"><i class="fas fa-coins" style="color:#22c55e;"></i> 充值审核</div>
+                <div id="serviceRechargeList"></div>
+            </div>
+            <div class="admin-card service-card">
+                <div class="admin-card-title"><i class="fas fa-gift" style="color:#22c55e;"></i> 赠送红钻</div>
+                <div class="admin-form-group"><label>选择用户</label><select class="admin-form-control" id="serviceGiftUser"></select></div>
+                <div class="admin-form-group"><label>红钻数量</label><input class="admin-form-control" id="serviceGiftAmount" type="number" placeholder="数量" /></div>
+                <button class="btn btn-success" onclick="serviceSendGift()"><i class="fas fa-gift"></i> 赠送（扣除自己红钻）</button>
+            </div>
+            <div class="admin-card service-card">
+                <div class="admin-card-title"><i class="fas fa-comment-dots" style="color:#22c55e;"></i> 用户对话</div>
+                <div id="serviceContacts" style="max-height:300px;overflow-y:auto;"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        await renderServiceRecharges();
+        await loadServiceUsers();
+        await loadServiceContacts();
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+async function renderServiceRecharges() {
+    try {
+        const recharges = await apiRequest('/service/recharges');
+        const container = document.getElementById('serviceRechargeList');
+        if (!container) return;
+        if (recharges.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>暂无待审核充值申请</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>用户</th><th>金额</th><th>红钻</th><th>操作</th></tr></thead><tbody>';
+        for (const r of recharges) {
+            html += `<tr>
+                <td>${r.username || r.user_id}</td>
+                <td>¥${r.amount}</td>
+                <td>${r.diamond}</td>
+                <td>
+                    <button class="btn btn-success btn-xs" onclick="serviceApproveRecharge('${r.id}')">通过</button>
+                    <button class="btn btn-danger btn-xs" onclick="serviceRejectRecharge('${r.id}')">拒绝</button>
+                </td>
+            </tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+
+async function serviceApproveRecharge(requestId) {
+    confirmAction('确认通过', '确认通过此充值申请？将扣除您的红钻。', '确认通过', `doServiceApproveRecharge('${requestId}')`);
+}
+
+async function doServiceApproveRecharge(requestId) {
+    try {
+        const result = await apiRequest('/service/process', {
+            method: 'POST',
+            body: JSON.stringify({ requestId, action: 'approve' })
+        });
+        toast(result.message || '✅ 充值已处理', 'success');
+        renderSubService();
+        renderCategoryProducts();
+        updateHeaderDiamond();
+        updateBadges();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function serviceRejectRecharge(requestId) {
+    const reason = prompt('请输入拒绝原因：');
+    if (reason === null) return;
+    try {
+        const result = await apiRequest('/service/process', {
+            method: 'POST',
+            body: JSON.stringify({ requestId, action: 'reject', rejectReason: reason })
+        });
+        toast('已拒绝', 'warning');
+        renderSubService();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function loadServiceUsers() {
+    try {
+        const users = await apiRequest('/service/users');
+        const sel = document.getElementById('serviceGiftUser');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">-- 请选择 --</option>';
+        users.forEach(u => {
+            sel.innerHTML += `<option value="${u.id}">${u.username} (${u.role})</option>`;
+        });
+    } catch (err) { console.error(err); }
+}
+
+async function serviceSendGift() {
+    const targetUserId = document.getElementById('serviceGiftUser').value;
+    const amount = parseInt(document.getElementById('serviceGiftAmount').value);
+    if (!targetUserId) return toast('请选择用户', 'warning');
+    if (!amount || amount < 1) return toast('请输入有效数量', 'warning');
+    confirmAction('确认赠送', `确认赠送 ${amount} 红钻？将扣除您的红钻。`, '确认赠送', `doServiceSendGift('${targetUserId}', ${amount})`);
+}
+
+async function doServiceSendGift(targetUserId, amount) {
+    try {
+        const result = await apiRequest('/service/gift', {
+            method: 'POST',
+            body: JSON.stringify({ targetUserId, amount })
+        });
+        toast(result.message || '✅ 赠送成功', 'success');
+        document.getElementById('serviceGiftAmount').value = '';
+        renderSubService();
+        renderCategoryProducts();
+        updateHeaderDiamond();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function loadServiceContacts() {
+    try {
+        const contacts = await apiRequest('/messages/contacts');
+        const container = document.getElementById('serviceContacts');
+        if (!container) return;
+        if (contacts.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无对话</p></div>';
+            return;
+        }
+        let html = '';
+        contacts.forEach(c => {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
-            const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
-            const displayName = c.username || c.id || '未知用户';
             html += `
-                <div class="contact-item" onclick="openChat('${c.id}','${displayName}','contact')">
+                <div class="contact-item" onclick="openChat('${c.id}','${c.username}','contact')">
                     <div>
-                        <strong>${displayName}</strong> ${roleIcon}
-                        ${unreadBadge}
+                        <strong>${c.username}</strong> ${unreadBadge}
                         <div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div>
                     </div>
                     <div style="font-size:11px;color:var(--text-muted);">${c.last_time ? new Date(c.last_time).toLocaleTimeString() : ''}</div>
@@ -3154,311 +4045,200 @@ async function loadContacts() {
             `;
         });
         container.innerHTML = html;
-    } catch (err) {
-        console.error('加载联系人失败:', err);
-        const container = document.getElementById('contactList');
-        if (container) {
-            container.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>加载联系人失败: ${err.message}</p><button class="btn btn-primary btn-sm" onclick="loadContacts()">重试</button></div>`;
-        }
-    }
+    } catch (err) { console.error(err); }
 }
 
 // ============================================================
-//  全屏聊天
+//  ===== 派单系统（子页面） =====
 // ============================================================
-async function openChat(id, username, type = 'contact') {
-    if (!currentUser) { toast('请先登录', 'warning'); return; }
-    if (!id) { toast('联系人ID无效', 'error'); return; }
-    
-    fullscreenContactId = id;
-    fullscreenChatType = type;
-    fullscreenOrderId = type === 'order' ? id : null;
-    
-    const container = document.getElementById('chatFullscreen');
-    container.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    document.getElementById('fullscreenChatName').textContent = username || id;
-    
+async function renderSubDispatcher() {
+    const container = document.getElementById('subDispatcherContent');
+    if (!container) return;
     try {
-        const users = await apiRequest('/admin/users');
-        const user = users.find(u => u.id === id);
-        if (user) {
-            const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
-            document.getElementById('fullscreenChatRole').textContent = roleMap[user.role] || '用户';
-        } else if (type === 'order') {
-            document.getElementById('fullscreenChatRole').textContent = '📋 订单聊天';
-        }
-    } catch (e) {
-        if (type === 'order') document.getElementById('fullscreenChatRole').textContent = '📋 订单聊天';
-    }
-    
-    await loadFullscreenMessages();
-}
-
-async function loadFullscreenMessages() {
-    const body = document.getElementById('fullscreenChatBody');
-    body.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin" style="font-size:24px;"></i><p>加载中...</p></div>';
-    
-    try {
-        const messages = await apiRequest('/messages/history', {
-            method: 'POST',
-            body: JSON.stringify({ contactId: fullscreenContactId })
-        });
-        
-        if (messages.length === 0) {
-            body.innerHTML = '<div class="empty-state"><i class="fas fa-comment-dots" style="font-size:30px;opacity:0.3;display:block;margin-bottom:10px;"></i><p>暂无消息，发送一条吧</p></div>';
-        } else {
-            let html = '';
-            messages.forEach(m => {
-                const isMe = m.sender_id === currentUser.id;
-                html += `
-                    <div style="display:flex;justify-content:${isMe ? 'flex-end' : 'flex-start'};">
-                        <div class="chat-bubble ${isMe ? 'me' : 'other'}">
-                            ${m.content}
-                            <span class="time">${new Date(m.created_at).toLocaleTimeString()}</span>
-                        </div>
+        const stats = await apiRequest('/dispatcher/stats');
+        const orders = await apiRequest('/dispatcher/orders');
+        let html = `
+            <div class="admin-card dispatcher-card">
+                <div class="admin-card-title"><i class="fas fa-chart-simple" style="color:#a855f7;"></i> 派单仪表盘</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;">
+                    <div class="stat-card" style="text-align:center;padding:12px;">
+                        <div class="stat-value">${stats.total || 0}</div>
+                        <div class="stat-label">总订单</div>
                     </div>
-                `;
-            });
-            body.innerHTML = html;
-            body.scrollTop = body.scrollHeight;
+                    <div class="stat-card" style="text-align:center;padding:12px;">
+                        <div class="stat-value" style="color:#f59e0b;">${stats.pending || 0}</div>
+                        <div class="stat-label">待接单</div>
+                    </div>
+                    <div class="stat-card" style="text-align:center;padding:12px;">
+                        <div class="stat-value" style="color:#3b82f6;">${stats.ongoing || 0}</div>
+                        <div class="stat-label">进行中</div>
+                    </div>
+                    <div class="stat-card" style="text-align:center;padding:12px;">
+                        <div class="stat-value" style="color:#22c55e;">${stats.completed || 0}</div>
+                        <div class="stat-label">已完成</div>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-card" style="border-left:4px solid #f59e0b;">
+                <div class="admin-card-title"><i class="fas fa-paper-plane" style="color:#f59e0b;"></i> 直接发布订单</div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">无需老板购买，直接创建订单，打手可接单。</p>
+                <div class="admin-form-group"><label>游戏</label>
+                    <input class="admin-form-control" id="dispatcherDirectGame" placeholder="游戏名称" value="暗区突围" />
+                </div>
+                <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="dispatcherDirectTitle" placeholder="标题"></div>
+                <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="dispatcherDirectDesc" rows="2" placeholder="服务详情"></textarea></div>
+                <div class="admin-form-group"><label>价格（红钻）</label><input class="admin-form-control" id="dispatcherDirectPrice" type="number" placeholder="288"></div>
+                <button class="btn btn-warning btn-block" onclick="dispatcherDirectPublish()"><i class="fas fa-paper-plane"></i> 发布订单</button>
+            </div>
+            <div class="admin-card dispatcher-card">
+                <div class="admin-card-title"><i class="fas fa-list-ul" style="color:#a855f7;"></i> 我发布的订单 <span id="dispatcherOrderCount" style="font-size:12px;color:var(--text-muted);"></span></div>
+                <div id="dispatcherOrdersList"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        document.getElementById('dispatcherOrderCount').textContent = `(${orders.length})`;
+        if (orders.length === 0) {
+            document.getElementById('dispatcherOrdersList').innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无订单</p></div>';
+        } else {
+            let listHtml = '<div class="table-wrap"><table><thead><tr><th>订单号</th><th>标题</th><th>金额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+            for (const o of orders) {
+                let actions = '';
+                if (o.status === 'pending' || o.status === 'ongoing') {
+                    actions += `<button class="btn btn-danger btn-xs" onclick="dispatcherCancelOrder('${o.id}')">撤销</button>`;
+                }
+                if (o.status === 'ongoing' || o.status === 'pending') {
+                    actions += `<button class="btn btn-success btn-xs" onclick="dispatcherConfirmOrder('${o.id}')">✅ 确认</button>`;
+                }
+                actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}','${o.title}','order')">💬</button>`;
+                listHtml += `<tr>
+                    <td>${o.id}</td>
+                    <td>${o.title}</td>
+                    <td>${o.price} 红钻</td>
+                    <td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td>
+                    <td><div class="action-group">${actions}</div></td>
+                </tr>`;
+            }
+            listHtml += '</tbody></table></div>';
+            document.getElementById('dispatcherOrdersList').innerHTML = listHtml;
         }
-        updateBadges();
     } catch (err) {
-        console.error('加载消息失败:', err);
-        body.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle" style="font-size:30px;color:#ef4444;display:block;margin-bottom:10px;"></i><p>加载失败: ${err.message}</p><button class="btn btn-primary btn-sm" onclick="loadFullscreenMessages()" style="margin-top:10px;">重试</button></div>`;
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
     }
 }
 
-async function sendFullscreenMessage() {
-    const input = document.getElementById('fullscreenChatInput');
-    const content = input.value.trim();
-    if (!content) return toast('请输入消息', 'warning');
-    if (!fullscreenContactId) return toast('请选择联系人', 'warning');
-    
+window.dispatcherConfirmOrder = function(orderId) {
+    confirmAction('确认结算', '确认此订单已完成？将消耗您的红钻进行结算。', '确认结算', `doDispatcherConfirmOrder('${orderId}')`);
+};
+
+async function doDispatcherConfirmOrder(orderId) {
     try {
-        if (fullscreenChatType === 'order' && fullscreenOrderId) {
-            await apiRequest('/orders/' + fullscreenOrderId + '/chat', {
-                method: 'POST',
-                body: JSON.stringify({ content })
-            });
-        } else {
-            await apiRequest('/messages/send', {
-                method: 'POST',
-                body: JSON.stringify({ receiverId: fullscreenContactId, content })
-            });
-        }
-        input.value = '';
-        await loadFullscreenMessages();
+        const result = await apiRequest('/orders/' + orderId + '/dispatcher-confirm', { method: 'PUT' });
+        toast(result.message || '✅ 确认完成', 'success');
+        renderSubDispatcher();
+        renderOrders();
+        updateHeaderDiamond();
     } catch (err) {
         toast(err.message, 'error');
     }
 }
 
-function closeChatFullscreen() {
-    document.getElementById('chatFullscreen').classList.remove('active');
-    document.body.style.overflow = '';
-    fullscreenContactId = null;
-    fullscreenOrderId = null;
-    fullscreenChatType = 'contact';
-    loadContacts();
+async function dispatcherCancelOrder(orderId) {
+    const reason = prompt('请输入撤销原因（可选）：');
+    if (reason === null) return;
+    confirmAction('确认撤销', '确认撤销此订单？', '确认撤销', `doDispatcherCancelOrder('${orderId}', '${reason || '派单员撤销'}')`);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('fullscreenChatInput')?.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            sendFullscreenMessage();
-        }
-    });
-});
-
-function showAddContact() {
-    apiRequest('/admin/users').then(users => {
-        apiRequest('/messages/contacts').then(contacts => {
-            const contactIds = contacts.map(c => c.id);
-            const available = users.filter(u => 
-                u.id !== currentUser.id && 
-                !contactIds.includes(u.id) &&
-                (u.role === 'boss' || u.role === 'handler' || u.role === 'dispatcher')
-            );
-            if (available.length === 0) {
-                toast('没有可添加的用户', 'warning');
-                return;
-            }
-            let options = available.map(u => `<option value="${u.id}">${u.username} (${u.role})</option>`).join('');
-            showCustomModal(`
-                <h3><i class="fas fa-user-plus"></i> 添加对话</h3>
-                <p style="color:var(--text-muted);font-size:14px;">选择要添加的用户：</p>
-                <div class="form-group"><label>用户</label><select class="admin-form-control" id="addContactSelect">${options}</select></div>
-                <div class="form-group"><label>发送消息</label><input class="admin-form-control" id="addContactMessage" placeholder="输入消息..." /></div>
-                <div class="btn-row">
-                    <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-                    <button class="btn btn-success" onclick="doAddContact()">添加</button>
-                </div>
-            `);
-            document.getElementById('customModal').classList.add('active');
+async function doDispatcherCancelOrder(orderId, reason) {
+    try {
+        await apiRequest('/orders/' + orderId + '/cancel', {
+            method: 'PUT',
+            body: JSON.stringify({ reason: reason || '派单员撤销' })
         });
-    }).catch(err => toast(err.message, 'error'));
+        toast('✅ 订单已撤销', 'success');
+        renderSubDispatcher();
+        renderOrders();
+        updateHeaderDiamond();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
 }
 
-async function doAddContact() {
-    const userId = document.getElementById('addContactSelect').value;
-    const message = document.getElementById('addContactMessage').value.trim();
-    if (!userId) return toast('请选择用户', 'warning');
-    if (!message) return toast('请输入消息', 'warning');
+async function dispatcherDirectPublish() {
+    const game = document.getElementById('dispatcherDirectGame').value.trim() || '暗区突围';
+    const title = document.getElementById('dispatcherDirectTitle').value.trim();
+    const desc = document.getElementById('dispatcherDirectDesc').value.trim();
+    const price = parseFloat(document.getElementById('dispatcherDirectPrice').value);
+    if (!title || !price) return toast('请填写完整信息', 'error');
+    if (price < 1) return toast('价格至少为1红钻', 'error');
+    try {
+        const handlers = await apiRequest('/handlers');
+        let options = '<option value="">不指定打手（打手自行接单）</option>';
+        handlers.forEach(h => {
+            options += `<option value="${h.id}">${h.username}</option>`;
+        });
+        showCustomModal(`
+            <h3><i class="fas fa-paper-plane"></i> 确认发布订单</h3>
+            <p style="color:var(--text-muted);font-size:14px;">确认发布订单「${title}」？将消耗 ${price} 红钻</p>
+            <div class="form-group"><label>选择打手（可选）</label><select class="admin-form-control" id="dispatcherDirectHandlerSelect">${options}</select></div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doDispatcherDirectPublish('${game}', '${title}', '${desc}', ${price})">确认发布</button>
+            </div>
+        `);
+        document.getElementById('customModal').classList.add('active');
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function doDispatcherDirectPublish(game, title, desc, price) {
+    const handlerId = document.getElementById('dispatcherDirectHandlerSelect').value;
     closeCustomModal();
     try {
-        await apiRequest('/messages/send', {
+        const result = await apiRequest('/dispatcher/publish', {
             method: 'POST',
-            body: JSON.stringify({ receiverId: userId, content: message })
+            body: JSON.stringify({ game, title, desc, price, assignedHandlerId: handlerId || null })
         });
-        toast('✅ 已添加对话', 'success');
-        loadContacts();
-        updateBadges();
+        toast(result.message || '✅ 订单已发布', 'success');
+        document.getElementById('dispatcherDirectTitle').value = '';
+        document.getElementById('dispatcherDirectDesc').value = '';
+        document.getElementById('dispatcherDirectPrice').value = '';
+        renderSubDispatcher();
+        renderOrders();
+        updateHeaderDiamond();
     } catch (err) {
         toast(err.message, 'error');
     }
 }
 
 // ============================================================
-//  订单详情
+//  ===== 账户设置（子页面） =====
 // ============================================================
-window.viewOrderDetail = function(orderId) {
-    apiRequest('/orders/' + orderId).then(order => {
-        const handlerName = order.handler_id ? order.handler_id : '未指派';
-        let messages = [];
-        try {
-            if (typeof order.messages === 'string') messages = JSON.parse(order.messages);
-            else if (Array.isArray(order.messages)) messages = order.messages;
-        } catch (e) { messages = []; }
-        const messagesHtml = messages.length > 0 ?
-            messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:var(--text-muted);">${msg.time}</span></div>`).join('') :
-            '暂无消息';
-        showCustomModal(`
-            <h3><i class="fas fa-info-circle"></i> 订单详情</h3>
-            <div style="margin:12px 0;text-align:left;">
-                <div class="detail-row"><span class="label">订单号</span><span class="value">${order.id}</span></div>
-                <div class="detail-row"><span class="label">游戏</span><span class="value">${order.game}</span></div>
-                <div class="detail-row"><span class="label">标题</span><span class="value">${order.title}</span></div>
-                <div class="detail-row"><span class="label">价格</span><span class="value">${order.price} 红钻</span></div>
-                <div class="detail-row"><span class="label">状态</span><span class="value"><span class="status-badge ${statusClass(order.status)}">${statusText(order.status)}</span></span></div>
-                <div class="detail-row"><span class="label">打手</span><span class="value">${handlerName}</span></div>
-                <div class="detail-row"><span class="label">创建时间</span><span class="value">${order.created_at}</span></div>
-                ${order.start_time ? `<div class="detail-row"><span class="label">开始时间</span><span class="value">${order.start_time}</span></div>` : ''}
-                ${order.end_time ? `<div class="detail-row"><span class="label">结束时间</span><span class="value">${order.end_time}</span></div>` : ''}
-                ${order.settled ? `<div class="detail-row"><span class="label">结算金额</span><span class="value">${order.settled_amount||order.price} 红钻</span></div>` : ''}
-                ${order.refund_reason ? `<div class="detail-row"><span class="label">退款原因</span><span class="value">${order.refund_reason}</span></div>` : ''}
+function renderSubAccount() {
+    const container = document.getElementById('subAccountContent');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="admin-card">
+            <div class="admin-card-title"><i class="fas fa-user"></i> 个人信息</div>
+            <div class="account-info">
+                <div class="info-row"><span class="label">用户名</span><span class="value">${currentUser?.username || '-'}</span></div>
+                <div class="info-row"><span class="label">角色</span><span class="value">${currentUser?.role || '-'}</span></div>
+                <div class="info-row"><span class="label">状态</span><span class="value">${currentUser?.status || '-'}</span></div>
+                <div class="info-row"><span class="label">红钻余额</span><span class="value">${currentUser?.diamond || 0}</span></div>
             </div>
-            <div style="border-top:1px solid var(--border-color);padding-top:12px;text-align:left;">
-                <div style="font-weight:600;margin-bottom:8px;">聊天记录</div>
-                <div style="max-height:200px;overflow-y:auto;font-size:13px;background:var(--bg-input);padding:8px;border-radius:8px;">${messagesHtml}</div>
-            </div>
-            <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
-        `);
-    }).catch(err => toast(err.message, 'error'));
-};
-
-// ============================================================
-//  充值功能
-// ============================================================
-window.openRecharge = function() {
-    if (!currentUser) { toast('请先登录', 'warning'); return; }
-    const html = `
-        <h3><i class="fas fa-plus-circle"></i> 充值红钻</h3>
-        <p style="color:var(--text-muted);font-size:14px;">1元 = 10红钻</p>
-        <div class="form-group">
-            <label>充值金额（元）</label>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(10)">10元</button>
-                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(30)">30元</button>
-                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(50)">50元</button>
-                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(100)">100元</button>
-                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(200)">200元</button>
-            </div>
-            <input class="admin-form-control" id="rechargeAmount" type="number" placeholder="自定义金额" min="1" />
         </div>
-        <div style="text-align:center;margin:8px 0;">
-            <span style="font-size:20px;font-weight:700;color:#f5c842;" id="rechargePreview">0 红钻</span>
-        </div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="submitCustomRecharge()">提交申请</button>
+        <div class="admin-card" style="border-left:4px solid #22c55e;">
+            <div class="admin-card-title"><i class="fas fa-sign-in-alt" style="color:#22c55e;"></i> 账号管理</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
+            </div>
         </div>
     `;
-    showCustomModal(html);
-    document.getElementById('customModal').classList.add('active');
-    document.getElementById('rechargeAmount').addEventListener('input', function() {
-        const amount = parseFloat(this.value) || 0;
-        document.getElementById('rechargePreview').textContent = Math.floor(amount * 10) + ' 红钻';
-    });
-};
-
-function setRechargeAmount(amount) {
-    document.getElementById('rechargeAmount').value = amount;
-    document.getElementById('rechargePreview').textContent = Math.floor(amount * 10) + ' 红钻';
-}
-
-async function submitCustomRecharge() {
-    const amount = parseFloat(document.getElementById('rechargeAmount').value);
-    if (!amount || amount < 1) return toast('请输入有效金额', 'warning');
-    try {
-        await apiRequest('/recharge/custom', {
-            method: 'POST',
-            body: JSON.stringify({ amount })
-        });
-        closeCustomModal();
-        toast('充值申请已提交，请等待客服审核', 'success');
-        updateBadges();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
 }
 
 // ============================================================
-//  邮件功能
-// ============================================================
-window.openMail = function() {
-    if (!currentUser) { toast('请先登录', 'warning'); return; }
-    apiRequest('/mails').then(mails => {
-        let listHtml = mails.length === 0 ? '<div class="empty-state"><i class="fas fa-envelope"></i><p>暂无邮件</p></div>' :
-            mails.map(m => `
-                <div class="mail-item">
-                    <div style="display:flex;justify-content:space-between;">
-                        <span class="mail-title">${m.title}</span>
-                        <span class="mail-status"><span class="status-badge ${m.status==='unread'?'status-pending':'status-claimed'}">${m.status==='unread'?'未领取':'已领取'}</span></span>
-                    </div>
-                    <div style="font-size:14px;color:var(--text-secondary);padding:4px 0;">${m.content}</div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);">
-                        <span>${m.create_time}</span>
-                        ${m.status === 'unread' && m.diamond > 0 ? `<button class="btn btn-success btn-xs" onclick="confirmClaimMail('${m.id}')">领取 ${m.diamond} 红钻</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        showCustomModal(`
-            <h3><i class="fas fa-envelope"></i> 我的邮件</h3>
-            <div style="margin-top:12px;max-height:400px;overflow-y:auto;">${listHtml}</div>
-            <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
-        `);
-    }).catch(err => toast(err.message, 'error'));
-};
-
-window.confirmClaimMail = function(mailId) {
-    confirmAction('领取红钻', '确认领取此邮件中的红钻？', '确认领取', `doClaimMail('${mailId}')`);
-};
-
-async function doClaimMail(mailId) {
-    try {
-        await apiRequest('/mails/' + mailId + '/claim', { method: 'PUT' });
-        toast('领取成功', 'success');
-        openMail();
-        renderCategoryProducts();
-        updateHeaderDiamond();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-// ============================================================
-//  用户管理操作
+//  ===== 用户管理操作 =====
 // ============================================================
 window.approveHandler = function(userId) {
     confirmAction('审核通过', '确认通过此账号审核？', '确认通过', `doApproveHandler('${userId}')`);
@@ -3524,43 +4304,45 @@ async function doResetPassword(userId) {
 }
 
 // ============================================================
-//  红点更新
+//  ===== 红点更新 =====
 // ============================================================
 async function updateBadges() {
     if (!currentUser) return;
-    
     try {
         const result = await apiRequest('/messages/unread');
         const unread = result.unread || 0;
         const badge = document.getElementById('msgBadge');
-        if (unread > 0) {
-            badge.style.display = 'inline-block';
-            badge.textContent = unread > 99 ? '99+' : unread;
-        } else {
-            badge.style.display = 'none';
+        if (badge) {
+            if (unread > 0) {
+                badge.style.display = 'inline-block';
+                badge.textContent = unread > 99 ? '99+' : unread;
+            } else {
+                badge.style.display = 'none';
+            }
         }
-        document.getElementById('badgeMessages').textContent = unread;
-    } catch (e) {}
-    
-    try {
-        const recharges = await apiRequest('/service/recharges');
-        const pendingRecharges = recharges.filter(r => r.status === 'pending');
-        document.getElementById('badgeRecharges').textContent = pendingRecharges.length;
-
-        const users = await apiRequest('/admin/users');
-        const pendingUsers = users.filter(u => u.status === 'pending' && (u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service'));
-        document.getElementById('badgeUsers').textContent = pendingUsers.length;
-        
-        // 订单数量
-        const orders = await apiRequest('/orders/my') || [];
-        document.getElementById('badgeOrders').textContent = orders.filter(o => o.status === 'pending' || o.status === 'ongoing').length;
+        // 更新工作台小红点
+        const badgeOrders = document.getElementById('badgeOrders');
+        const badgeRecharges = document.getElementById('badgeRecharges');
+        const badgeUsers = document.getElementById('badgeUsers');
+        if (badgeOrders) {
+            const orders = await apiRequest('/orders/my') || [];
+            badgeOrders.textContent = orders.filter(o => o.status === 'pending' || o.status === 'ongoing').length;
+        }
+        if (badgeRecharges) {
+            const recharges = await apiRequest('/service/recharges');
+            badgeRecharges.textContent = recharges.filter(r => r.status === 'pending').length;
+        }
+        if (badgeUsers) {
+            const users = await apiRequest('/admin/users');
+            badgeUsers.textContent = users.filter(u => u.status === 'pending' && (u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service')).length;
+        }
     } catch (err) {
         console.error('更新红点失败', err);
     }
 }
 
 // ============================================================
-//  认证相关
+//  ===== 认证相关 =====
 // ============================================================
 function toggleAuthModal() {
     if (currentUser) {
@@ -3672,9 +4454,8 @@ function doLogout() {
         window._badgeTimer = null;
     }
     renderCategoryProducts();
-    toast('已退出', 'warning');
-    // 关闭所有子页面
     closeSubPage();
+    toast('已退出', 'warning');
 }
 
 function logout() {
@@ -3697,78 +4478,30 @@ function updateAccountInfo() {
 }
 
 // ============================================================
-//  导航切换
-// ============================================================
-document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
-    item.addEventListener('click', function() {
-        if (!currentUser && this.dataset.target !== 'home') {
-            toast('请先登录', 'warning');
-            return;
-        }
-        const target = this.dataset.target;
-        if (this.style.display === 'none') return;
-        document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-        this.classList.add('active');
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        
-        // 关闭子页面
-        closeSubPage();
-        
-        if (target === 'home') {
-            document.getElementById('view-home').classList.add('active');
-            renderCategoryProducts();
-            return;
-        }
-        const viewMap = { 'admin': 'view-admin', 'messages': 'view-messages', 'account': 'view-account' };
-        const viewId = viewMap[target];
-        if (viewId) {
-            document.getElementById(viewId).classList.add('active');
-            if (target === 'admin') {
-                updateStats();
-                updateBadges();
-            } else if (target === 'messages') loadContacts();
-            else if (target === 'account') updateAccountInfo();
-        }
-    });
-});
-
-// ============================================================
-//  更新统计数据
-// ============================================================
-async function updateStats() {
-    try {
-        const stats = await apiRequest('/user/stats');
-        document.getElementById('statOrders').textContent = stats.stats.totalOrders || 0;
-        document.getElementById('statIncome').textContent = stats.stats.totalIncome || 0;
-        document.getElementById('statDiamond').textContent = stats.stats.diamond || 0;
-        document.getElementById('statEnergy').textContent = stats.stats.energy || 0;
-    } catch (err) {
-        console.error('加载统计数据失败', err);
-    }
-}
-
-// ============================================================
-//  认证模块（登录后）
+//  ===== 认证模块（登录后） =====
 // ============================================================
 function afterLogin() {
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
     document.getElementById('authStatusText').textContent = currentUser.username;
+    
+    // 渲染底部导航
+    renderBottomNav();
+    
+    // 默认显示商城
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('view-home').classList.add('active');
-    document.querySelector('.bottom-nav .nav-item[data-target="home"]').classList.add('active');
-    updateRoleBasedUI();
+    document.querySelector('.bottom-nav .nav-item[data-target="home"]')?.classList.add('active');
+    
     updateAccountInfo();
     renderCategoryProducts();
     loadCategoryNav();
     loadCategoriesForSelectors();
     updateHeaderDiamond();
     updateBadges();
-    updateStats();
+    renderAdminPage();
     loadContacts();
     
-    // 显示公告弹窗
     setTimeout(() => {
         loadAnnounceData().then(() => {
             showAnnounceModal();
@@ -3780,7 +4513,7 @@ function afterLogin() {
 }
 
 // ============================================================
-//  登录/注册页面按钮
+//  ===== 登录/注册页面按钮 =====
 // ============================================================
 async function doAuthLogin() {
     const username = document.getElementById('authUsername').value.trim();
@@ -3828,7 +4561,7 @@ async function doAuthRegister() {
 }
 
 // ============================================================
-//  初始化
+//  ===== 初始化 =====
 // ============================================================
 async function init() {
     document.getElementById('authPage').style.display = 'none';
@@ -3848,37 +4581,19 @@ async function init() {
             const user = await apiRequest('/me');
             currentUser = user;
             document.getElementById('authStatusText').textContent = user.username;
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('view-home').classList.add('active');
-            document.querySelector('.bottom-nav .nav-item[data-target="home"]').classList.add('active');
-            updateRoleBasedUI();
-            updateAccountInfo();
-            renderCategoryProducts();
-            loadCategoryNav();
-            loadCategoriesForSelectors();
-            updateHeaderDiamond();
-            updateBadges();
-            updateStats();
-            loadContacts();
-            
-            setTimeout(() => {
-                loadAnnounceData().then(() => {
-                    showAnnounceModal();
-                });
-            }, 500);
-            
-            if (window._badgeTimer) clearInterval(window._badgeTimer);
-            window._badgeTimer = setInterval(updateBadges, 30000);
+            afterLogin();
         } catch (err) {
             localStorage.removeItem('token');
             token = null;
             currentUser = null;
             document.getElementById('authStatusText').textContent = '未登录';
             renderCategoryProducts();
+            // 即使未登录也渲染导航
+            renderBottomNav();
         }
     } else {
-        // 未登录也显示公告（默认公告）
+        // 未登录渲染导航
+        renderBottomNav();
         setTimeout(() => {
             loadAnnounceData().then(() => {
                 showAnnounceModal();
