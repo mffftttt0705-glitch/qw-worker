@@ -818,8 +818,15 @@ async function handleGetSupportContacts(env) {
 // ============================================================
 //  店铺管理
 // ============================================================
-async function handleGetShops(env) {
-  const result = await queryDB(env, 'SELECT * FROM shops ORDER BY created_at DESC');
+async function handleGetShops(env, url) {
+  const category = url?.searchParams?.get('category');
+  let sql = 'SELECT * FROM shops ORDER BY created_at DESC';
+  const params = [];
+  if (category) {
+    sql = 'SELECT * FROM shops WHERE category_id = ? ORDER BY created_at DESC';
+    params.push(category);
+  }
+  const result = await queryDB(env, sql, params);
   return jsonResponse(result.results || []);
 }
 
@@ -832,14 +839,14 @@ async function handleCreateShop(env, authHeader, body) {
     return errorResponse('只有管理员可创建店铺', 403);
   }
   
-  const { name, description, logo } = body;
+  const { name, description, logo, category_id } = body;
   if (!name) return errorResponse('请输入店铺名称');
   
   const id = generateId();
   await runDB(env,
-    `INSERT INTO shops (id, owner_id, name, description, logo, status, created_at) 
-     VALUES (?, ?, ?, ?, ?, "active", ?)`,
-    [id, userId, name, description || '', logo || '', new Date().toISOString()]
+    `INSERT INTO shops (id, owner_id, name, description, logo, category_id, status, rating, sales, created_at) 
+     VALUES (?, ?, ?, ?, ?, ?, 'active', '4.9', 0, ?)`,
+    [id, userId, name, description || '', logo || '', category_id || null, new Date().toISOString()]
   );
   return jsonResponse({ success: true, id, message: '店铺创建成功' });
 }
@@ -853,12 +860,12 @@ async function handleUpdateShop(env, authHeader, shopId, body) {
     return errorResponse('只有管理员可编辑店铺', 403);
   }
   
-  const { name, description, logo } = body;
+  const { name, description, logo, category_id } = body;
   if (!name) return errorResponse('请输入店铺名称');
   
   await runDB(env,
-    `UPDATE shops SET name = ?, description = ?, logo = ? WHERE id = ?`,
-    [name, description || '', logo || '', shopId]
+    `UPDATE shops SET name = ?, description = ?, logo = ?, category_id = ? WHERE id = ?`,
+    [name, description || '', logo || '', category_id || null, shopId]
   );
   return jsonResponse({ success: true, message: '店铺已更新' });
 }
@@ -900,6 +907,17 @@ async function handleDeleteShop(env, authHeader, shopId) {
   return jsonResponse({ success: true, message: '店铺已删除' });
 }
 
+async function handleGetShopDetail(env, shopId) {
+  const result = await queryDB(env, 'SELECT * FROM shops WHERE id = ?', [shopId]);
+  if (!result.results || result.results.length === 0) {
+    return errorResponse('店铺不存在', 404);
+  }
+  const shop = result.results[0];
+  const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM products WHERE shop_id = ? AND hidden = 0', [shopId]);
+  shop.productCount = countResult.results?.[0]?.count || 0;
+  return jsonResponse(shop);
+}
+
 async function handleGetShopProducts(env, shopId) {
   const result = await queryDB(env,
     `SELECT p.*, c.name as category_name 
@@ -927,7 +945,6 @@ async function handleRequestWithdraw(env, authHeader, body) {
   const { amount } = body;
   if (!amount || amount < 1) return errorResponse('请输入有效数量');
   
-  // 检查冻结金额（需保留100）
   const available = Math.max(0, (user.diamond || 0) - 100);
   if (amount > available) {
     return errorResponse(`可提现红钻不足，可用：${available} 红钻（需保留100冻结）`, 400);
@@ -977,7 +994,6 @@ async function handleAdminApproveWithdraw(env, authHeader, withdrawId) {
     return errorResponse('已处理', 400);
   }
   
-  // 扣除用户红钻
   await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [withdraw.amount, withdraw.user_id]);
   await runDB(env,
     'UPDATE withdraw_requests SET status = "approved", handled_at = ? WHERE id = ?',
@@ -1396,20 +1412,28 @@ export async function onRequest(context) {
   try {
     const authHeader = request.headers.get('Authorization');
 
-    // 公开接口
+    // ============================================================
+    //  公开接口
+    // ============================================================
     if (path === '/api/test' && method === 'GET') return jsonResponse({ message: 'OK' });
     if (path === '/api/health' && method === 'GET') return await handleHealthCheck(env);
     if (path === '/api/register' && method === 'POST') return await handleRegister(env, body);
     if (path === '/api/login' && method === 'POST') return await handleLogin(env, body);
+    
     if (path === '/api/products' && method === 'GET') return await handleGetProducts(env, url);
     if (path === '/api/categories' && method === 'GET') return await handleGetCategories(env);
     if (path === '/api/announce' && method === 'GET') return await handleGetAnnounce(env);
     if (path === '/api/handlers' && method === 'GET') return await handleGetHandlers(env);
     if (path === '/api/support-contacts' && method === 'GET') return await handleGetSupportContacts(env);
-    if (path === '/api/shops' && method === 'GET') return await handleGetShops(env);
+    if (path === '/api/shops' && method === 'GET') return await handleGetShops(env, url);
+    
     if (path.startsWith('/api/shops/') && path.endsWith('/products') && method === 'GET') {
       const shopId = path.replace('/api/shops/', '').replace('/products', '');
       return await handleGetShopProducts(env, shopId);
+    }
+    if (path.startsWith('/api/shops/') && method === 'GET' && !path.endsWith('/products')) {
+      const shopId = path.replace('/api/shops/', '');
+      return await handleGetShopDetail(env, shopId);
     }
     if (path.startsWith('/api/categories/') && path.endsWith('/products') && method === 'GET') {
       const categoryId = path.replace('/api/categories/', '').replace('/products', '');
@@ -1420,7 +1444,9 @@ export async function onRequest(context) {
       return await handleGetProductDetail(env, productId);
     }
 
-    // 需要登录
+    // ============================================================
+    //  需要登录
+    // ============================================================
     if (path === '/api/me' && method === 'GET') return await handleGetMe(env, authHeader);
     if (path === '/api/orders/my' && method === 'GET') return await handleGetMyOrders(env, authHeader);
     if (path === '/api/orders/buy' && method === 'POST') return await handleBuyProduct(env, authHeader, body);
@@ -1468,7 +1494,9 @@ export async function onRequest(context) {
       return await handleClaimMail(env, authHeader, mailId);
     }
 
-    // 店铺管理（需要管理员权限）
+    // ============================================================
+    //  管理员接口
+    // ============================================================
     const userId = verifyAndGetUserId(authHeader);
     if (userId) {
       const user = await getUserById(env, userId);
