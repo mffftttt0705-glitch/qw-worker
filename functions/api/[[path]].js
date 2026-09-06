@@ -1,10 +1,18 @@
 // ============================================================
 //  QW电竞 - 完整后端 API
-//  包含：用户、商品、订单、分类、充值、客服、消息、店铺、提现
+//  包含：用户、商品、订单、分类、充值、客服、消息、店铺、提现、关注、评分、广告
 // ============================================================
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+}
+
+function generateUserId() {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+}
+
+function generateShopId() {
+  return 'a' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
 }
 
 function jsonResponse(data, status = 200) {
@@ -43,7 +51,7 @@ async function runDB(env, sql, params = []) {
 //  用户认证
 // ============================================================
 async function handleRegister(env, body) {
-  const { username, password, role, status } = body;
+  const { username, password, role, status, displayName } = body;
   if (!username || !password) return errorResponse('请填写用户名和密码');
 
   const existing = await queryDB(env, 'SELECT * FROM users WHERE username = ?', [username]);
@@ -53,9 +61,12 @@ async function handleRegister(env, body) {
 
   const id = generateId();
   const userStatus = (role === 'handler' || role === 'dispatcher' || role === 'service') ? 'pending' : (status || 'active');
+  const display_name = displayName || username;
+  
   await runDB(env,
-    'INSERT INTO users (id, username, password, role, diamond, balance, status) VALUES (?, ?, ?, ?, 0, 0, ?)',
-    [id, username, password, role || 'boss', userStatus]
+    `INSERT INTO users (id, username, password, role, diamond, balance, status, display_name) 
+     VALUES (?, ?, ?, ?, 0, 0, ?, ?)`,
+    [id, username, password, role || 'boss', userStatus, display_name]
   );
 
   return jsonResponse({ 
@@ -84,10 +95,14 @@ async function handleLogin(env, body) {
     user: {
       id: user.id,
       username: user.username,
+      display_name: user.display_name || user.username,
       role: user.role || 'boss',
       diamond: user.diamond || 0,
       balance: user.balance || 0,
-      status: user.status || 'active'
+      status: user.status || 'active',
+      avatar: user.avatar || '',
+      bg_image: user.bg_image || '',
+      shop_prefix: user.shop_prefix || ''
     }
   });
 }
@@ -111,6 +126,32 @@ function verifyAndGetUserId(authHeader) {
   const parts = authHeader.split('.');
   if (parts.length !== 2) return null;
   return parts[1];
+}
+
+// ============================================================
+//  用户信息更新
+// ============================================================
+async function handleUpdateUser(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  
+  const { display_name, avatar, bg_image, shop_prefix } = body;
+  const updates = [];
+  const params = [];
+  
+  if (display_name !== undefined) { updates.push('display_name = ?'); params.push(display_name); }
+  if (avatar !== undefined) { updates.push('avatar = ?'); params.push(avatar); }
+  if (bg_image !== undefined) { updates.push('bg_image = ?'); params.push(bg_image); }
+  if (shop_prefix !== undefined) { updates.push('shop_prefix = ?'); params.push(shop_prefix); }
+  
+  if (updates.length === 0) return errorResponse('没有要更新的字段');
+  
+  params.push(userId);
+  await runDB(env, `UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params);
+  
+  const user = await getUserById(env, userId);
+  const { password, ...rest } = user;
+  return jsonResponse({ success: true, user: rest });
 }
 
 // ============================================================
@@ -203,6 +244,7 @@ async function handleGetCategoryProducts(env, categoryId) {
 async function handleGetProducts(env, url) {
   const category = url?.searchParams?.get('category');
   const shop = url?.searchParams?.get('shop');
+  const search = url?.searchParams?.get('search');
   let sql = `SELECT p.*, c.name as category_name, s.name as shop_name
              FROM products p 
              LEFT JOIN categories c ON p.category_id = c.id 
@@ -216,6 +258,10 @@ async function handleGetProducts(env, url) {
   if (shop) {
     sql += ' AND p.shop_id = ?';
     params.push(shop);
+  }
+  if (search) {
+    sql += ' AND p.title LIKE ?';
+    params.push('%' + search + '%');
   }
   sql += ' ORDER BY p.created_at DESC';
   const result = await queryDB(env, sql, params);
@@ -497,6 +543,48 @@ async function handleBossConfirm(env, authHeader, orderId) {
   return jsonResponse({ message: '已确认完成，等待管理员结算' });
 }
 
+// ============================================================
+//  订单评分
+// ============================================================
+async function handleRateOrder(env, authHeader, orderId, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  
+  const { rating, comment } = body;
+  if (!rating || rating < 1 || rating > 5) return errorResponse('请选择1-5星的评分');
+  
+  const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
+  if (!result.results || result.results.length === 0) return errorResponse('订单不存在', 404);
+  const order = result.results[0];
+  
+  if (order.boss_id !== userId && user.role !== 'admin') {
+    return errorResponse('无权评价此订单', 403);
+  }
+  if (order.status !== 'completed') return errorResponse('只有已完成订单可评价', 400);
+  if (order.rating && order.rating > 0) return errorResponse('已评价', 400);
+  
+  await runDB(env,
+    'UPDATE orders SET rating = ?, rating_comment = ?, rated_at = ? WHERE id = ?',
+    [rating, comment || '', new Date().toISOString(), orderId]
+  );
+  
+  // 更新店铺评分
+  const shopResult = await queryDB(env, 'SELECT shop_id FROM products WHERE id = ?', [order.product_id]);
+  if (shopResult.results && shopResult.results[0] && shopResult.results[0].shop_id) {
+    const shopId = shopResult.results[0].shop_id;
+    const ratings = await queryDB(env, 'SELECT AVG(rating) as avg_rating FROM orders WHERE product_id IN (SELECT id FROM products WHERE shop_id = ?) AND rating > 0', [shopId]);
+    const avgRating = ratings.results && ratings.results[0] ? parseFloat(ratings.results[0].avg_rating).toFixed(1) : '4.9';
+    await runDB(env, 'UPDATE shops SET rating = ? WHERE id = ?', [avgRating, shopId]);
+  }
+  
+  return jsonResponse({ success: true, message: '评价成功' });
+}
+
+// ============================================================
+//  退款申请
+// ============================================================
 async function handleRefundRequest(env, authHeader, orderId, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -520,7 +608,7 @@ async function handleRefundRequest(env, authHeader, orderId, body) {
 }
 
 // ============================================================
-//  派单员确认完成（扣除自己红钻）
+//  派单员确认完成
 // ============================================================
 async function handleDispatcherConfirmComplete(env, authHeader, orderId) {
   const userId = verifyAndGetUserId(authHeader);
@@ -576,7 +664,7 @@ async function handleSendTip(env, authHeader, body) {
 }
 
 // ============================================================
-//  自定义充值（用户提交）
+//  充值功能
 // ============================================================
 async function handleCustomRecharge(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -692,142 +780,41 @@ async function handleServiceGift(env, authHeader, body) {
 }
 
 // ============================================================
-//  消息系统
-// ============================================================
-async function handleSendMessage(env, authHeader, body) {
-  const userId = verifyAndGetUserId(authHeader);
-  if (!userId) return errorResponse('请先登录', 401);
-  const user = await getUserById(env, userId);
-  if (!user) return errorResponse('用户不存在', 404);
-  const { receiverId, content } = body;
-  if (!receiverId || !content || !content.trim()) return errorResponse('请完整填写');
-  const receiver = await getUserById(env, receiverId);
-  if (!receiver) return errorResponse('接收者不存在', 404);
-  
-  if (userId === receiverId) return errorResponse('不能给自己发消息', 403);
-  
-  const id = generateId();
-  await runDB(env,
-    'INSERT INTO messages (id, sender_id, receiver_id, content, is_read, created_at) VALUES (?, ?, ?, ?, 0, ?)',
-    [id, userId, receiverId, content.trim(), new Date().toISOString()]
-  );
-  
-  const c1 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [userId, receiverId]);
-  if (!c1.results || c1.results.length === 0) {
-    await runDB(env,
-      'INSERT INTO message_contacts (id, user_id, contact_id, last_message, last_time, unread_count) VALUES (?, ?, ?, ?, ?, 0)',
-      [generateId(), userId, receiverId, content.trim(), new Date().toISOString()]
-    );
-  } else {
-    await runDB(env,
-      'UPDATE message_contacts SET last_message = ?, last_time = ? WHERE user_id = ? AND contact_id = ?',
-      [content.trim(), new Date().toISOString(), userId, receiverId]
-    );
-  }
-  
-  const c2 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [receiverId, userId]);
-  if (!c2.results || c2.results.length === 0) {
-    await runDB(env,
-      'INSERT INTO message_contacts (id, user_id, contact_id, last_message, last_time, unread_count) VALUES (?, ?, ?, ?, ?, 1)',
-      [generateId(), receiverId, userId, content.trim(), new Date().toISOString()]
-    );
-  } else {
-    await runDB(env,
-      'UPDATE message_contacts SET last_message = ?, last_time = ?, unread_count = unread_count + 1 WHERE user_id = ? AND contact_id = ?',
-      [content.trim(), new Date().toISOString(), receiverId, userId]
-    );
-  }
-  
-  return jsonResponse({ success: true, message: '发送成功' });
-}
-
-async function handleGetContacts(env, authHeader) {
-  const userId = verifyAndGetUserId(authHeader);
-  if (!userId) return errorResponse('请先登录', 401);
-  const user = await getUserById(env, userId);
-  if (!user) return errorResponse('用户不存在', 404);
-  
-  const sql = `
-    WITH all_contacts AS (
-      SELECT DISTINCT sender_id as contact_id FROM messages WHERE receiver_id = ?
-      UNION
-      SELECT DISTINCT receiver_id as contact_id FROM messages WHERE sender_id = ?
-    )
-    SELECT 
-      u.id, u.username, u.role,
-      mc.last_message, mc.last_time, mc.unread_count
-    FROM all_contacts ac
-    JOIN users u ON u.id = ac.contact_id
-    LEFT JOIN message_contacts mc ON mc.user_id = ? AND mc.contact_id = ac.contact_id
-    WHERE u.id != ?
-    ORDER BY COALESCE(mc.last_time, '1970-01-01') DESC
-  `;
-  const result = await queryDB(env, sql, [userId, userId, userId, userId]);
-  
-  return jsonResponse(result.results || []);
-}
-
-async function handleGetMessages(env, authHeader, body) {
-  const userId = verifyAndGetUserId(authHeader);
-  if (!userId) return errorResponse('请先登录', 401);
-  const user = await getUserById(env, userId);
-  if (!user) return errorResponse('用户不存在', 404);
-  const { contactId } = body;
-  if (!contactId) return errorResponse('请选择联系人');
-  const contact = await getUserById(env, contactId);
-  if (!contact) return errorResponse('联系人不存在', 404);
-  
-  const result = await queryDB(env,
-    `SELECT * FROM messages 
-     WHERE (sender_id = ? AND receiver_id = ?) 
-     OR (sender_id = ? AND receiver_id = ?)
-     ORDER BY created_at ASC`,
-    [userId, contactId, contactId, userId]
-  );
-  
-  await runDB(env,
-    'UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?',
-    [contactId, userId]
-  );
-  await runDB(env,
-    'UPDATE message_contacts SET unread_count = 0 WHERE user_id = ? AND contact_id = ?',
-    [userId, contactId]
-  );
-  
-  return jsonResponse(result.results || []);
-}
-
-async function handleGetUnreadCount(env, authHeader) {
-  const userId = verifyAndGetUserId(authHeader);
-  if (!userId) return errorResponse('请先登录', 401);
-  const result = await queryDB(env,
-    'SELECT SUM(unread_count) as total FROM message_contacts WHERE user_id = ?',
-    [userId]
-  );
-  const total = (result.results && result.results[0] && result.results[0].total) || 0;
-  return jsonResponse({ unread: total });
-}
-
-async function handleGetSupportContacts(env) {
-  const result = await queryDB(env, 
-    'SELECT id, username, role FROM users WHERE role IN ("admin", "service") AND status = "active"'
-  );
-  return jsonResponse(result.results || []);
-}
-
-// ============================================================
-//  店铺管理
+//  店铺管理（完整版）
 // ============================================================
 async function handleGetShops(env, url) {
   const category = url?.searchParams?.get('category');
-  let sql = 'SELECT * FROM shops ORDER BY created_at DESC';
+  const search = url?.searchParams?.get('search');
+  const userId = verifyAndGetUserId(url?.headers?.get('Authorization') || '');
+  
+  let sql = 'SELECT s.*, (SELECT COUNT(*) FROM user_follows WHERE shop_id = s.id) as follow_count, ';
+  sql += '(SELECT AVG(rating) FROM orders o JOIN products p ON o.product_id = p.id WHERE p.shop_id = s.id AND o.rating > 0) as avg_rating ';
+  sql += 'FROM shops s WHERE 1=1';
   const params = [];
+  
   if (category) {
-    sql = 'SELECT * FROM shops WHERE category_id = ? ORDER BY created_at DESC';
+    sql += ' AND s.category_id = ?';
     params.push(category);
   }
+  if (search) {
+    sql += ' AND s.name LIKE ?';
+    params.push('%' + search + '%');
+  }
+  
+  sql += ' ORDER BY s.is_self_operated DESC, s.is_recommended DESC, s.created_at DESC';
+  
   const result = await queryDB(env, sql, params);
-  return jsonResponse(result.results || []);
+  const shops = result.results || [];
+  
+  // 检查是否关注
+  if (userId) {
+    for (const shop of shops) {
+      const followResult = await queryDB(env, 'SELECT * FROM user_follows WHERE user_id = ? AND shop_id = ?', [userId, shop.id]);
+      shop.is_followed = (followResult.results && followResult.results.length > 0);
+    }
+  }
+  
+  return jsonResponse(shops);
 }
 
 async function handleCreateShop(env, authHeader, body) {
@@ -839,14 +826,16 @@ async function handleCreateShop(env, authHeader, body) {
     return errorResponse('只有管理员可创建店铺', 403);
   }
   
-  const { name, description, logo, category_id } = body;
+  const { name, description, logo, category_id, banner_images, avatar, is_self_operated, is_recommended } = body;
   if (!name) return errorResponse('请输入店铺名称');
   
-  const id = generateId();
+  const id = generateShopId();
+  const bannerJson = Array.isArray(banner_images) ? JSON.stringify(banner_images) : '[]';
+  
   await runDB(env,
-    `INSERT INTO shops (id, owner_id, name, description, logo, category_id, status, rating, sales, created_at) 
-     VALUES (?, ?, ?, ?, ?, ?, 'active', '4.9', 0, ?)`,
-    [id, userId, name, description || '', logo || '', category_id || null, new Date().toISOString()]
+    `INSERT INTO shops (id, owner_id, name, description, logo, avatar, category_id, banner_images, status, rating, sales, is_self_operated, is_recommended, created_at) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', '4.9', 0, ?, ?, ?)`,
+    [id, userId, name, description || '', logo || '', avatar || '', category_id || null, bannerJson, is_self_operated ? 1 : 0, is_recommended ? 1 : 0, new Date().toISOString()]
   );
   return jsonResponse({ success: true, id, message: '店铺创建成功' });
 }
@@ -860,13 +849,29 @@ async function handleUpdateShop(env, authHeader, shopId, body) {
     return errorResponse('只有管理员可编辑店铺', 403);
   }
   
-  const { name, description, logo, category_id } = body;
+  const { name, description, logo, avatar, category_id, banner_images, is_self_operated, is_recommended, is_featured } = body;
   if (!name) return errorResponse('请输入店铺名称');
   
-  await runDB(env,
-    `UPDATE shops SET name = ?, description = ?, logo = ?, category_id = ? WHERE id = ?`,
-    [name, description || '', logo || '', category_id || null, shopId]
-  );
+  const updates = [];
+  const params = [];
+  if (name !== undefined) { updates.push('name = ?'); params.push(name); }
+  if (description !== undefined) { updates.push('description = ?'); params.push(description || ''); }
+  if (logo !== undefined) { updates.push('logo = ?'); params.push(logo || ''); }
+  if (avatar !== undefined) { updates.push('avatar = ?'); params.push(avatar || ''); }
+  if (category_id !== undefined) { updates.push('category_id = ?'); params.push(category_id || null); }
+  if (banner_images !== undefined) { 
+    const bannerJson = Array.isArray(banner_images) ? JSON.stringify(banner_images) : '[]';
+    updates.push('banner_images = ?'); 
+    params.push(bannerJson); 
+  }
+  if (is_self_operated !== undefined) { updates.push('is_self_operated = ?'); params.push(is_self_operated ? 1 : 0); }
+  if (is_recommended !== undefined) { updates.push('is_recommended = ?'); params.push(is_recommended ? 1 : 0); }
+  if (is_featured !== undefined) { updates.push('is_featured = ?'); params.push(is_featured ? 1 : 0); }
+  
+  if (updates.length === 0) return errorResponse('没有要更新的字段');
+  
+  params.push(shopId);
+  await runDB(env, `UPDATE shops SET ${updates.join(', ')} WHERE id = ?`, params);
   return jsonResponse({ success: true, message: '店铺已更新' });
 }
 
@@ -907,27 +912,168 @@ async function handleDeleteShop(env, authHeader, shopId) {
   return jsonResponse({ success: true, message: '店铺已删除' });
 }
 
-async function handleGetShopDetail(env, shopId) {
+async function handleGetShopDetail(env, shopId, authHeader) {
+  const userId = authHeader ? verifyAndGetUserId(authHeader) : null;
+  
   const result = await queryDB(env, 'SELECT * FROM shops WHERE id = ?', [shopId]);
   if (!result.results || result.results.length === 0) {
     return errorResponse('店铺不存在', 404);
   }
   const shop = result.results[0];
+  
+  // 获取评分
+  const ratingResult = await queryDB(env, 
+    'SELECT AVG(rating) as avg_rating, COUNT(*) as rating_count FROM orders o JOIN products p ON o.product_id = p.id WHERE p.shop_id = ? AND o.rating > 0', 
+    [shopId]
+  );
+  shop.avg_rating = ratingResult.results?.[0]?.avg_rating ? parseFloat(ratingResult.results[0].avg_rating).toFixed(1) : '4.9';
+  shop.rating_count = ratingResult.results?.[0]?.rating_count || 0;
+  
+  // 获取商品数量
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM products WHERE shop_id = ? AND hidden = 0', [shopId]);
   shop.productCount = countResult.results?.[0]?.count || 0;
+  
+  // 获取关注数量
+  const followResult = await queryDB(env, 'SELECT COUNT(*) as count FROM user_follows WHERE shop_id = ?', [shopId]);
+  shop.followCount = followResult.results?.[0]?.count || 0;
+  
+  // 是否已关注
+  if (userId) {
+    const userFollow = await queryDB(env, 'SELECT * FROM user_follows WHERE user_id = ? AND shop_id = ?', [userId, shopId]);
+    shop.is_followed = (userFollow.results && userFollow.results.length > 0);
+  } else {
+    shop.is_followed = false;
+  }
+  
   return jsonResponse(shop);
 }
 
-async function handleGetShopProducts(env, shopId) {
+async function handleGetShopProducts(env, shopId, url) {
+  const search = url?.searchParams?.get('search');
+  const category = url?.searchParams?.get('category');
+  
+  let sql = `SELECT p.*, c.name as category_name 
+             FROM products p 
+             LEFT JOIN categories c ON p.category_id = c.id 
+             WHERE p.shop_id = ? AND p.hidden = 0`;
+  const params = [shopId];
+  
+  if (search) {
+    sql += ' AND p.title LIKE ?';
+    params.push('%' + search + '%');
+  }
+  if (category) {
+    sql += ' AND p.category_id = ?';
+    params.push(category);
+  }
+  
+  sql += ' ORDER BY p.created_at DESC';
+  const result = await queryDB(env, sql, params);
+  return jsonResponse(result.results || []);
+}
+
+// ============================================================
+//  关注店铺
+// ============================================================
+async function handleFollowShop(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  
+  const { shopId } = body;
+  if (!shopId) return errorResponse('请选择店铺');
+  
+  const shopResult = await queryDB(env, 'SELECT * FROM shops WHERE id = ?', [shopId]);
+  if (!shopResult.results || shopResult.results.length === 0) {
+    return errorResponse('店铺不存在', 404);
+  }
+  
+  const existing = await queryDB(env, 'SELECT * FROM user_follows WHERE user_id = ? AND shop_id = ?', [userId, shopId]);
+  if (existing.results && existing.results.length > 0) {
+    await runDB(env, 'DELETE FROM user_follows WHERE user_id = ? AND shop_id = ?', [userId, shopId]);
+    return jsonResponse({ success: true, followed: false, message: '已取消关注' });
+  } else {
+    const id = generateId();
+    await runDB(env, 'INSERT INTO user_follows (id, user_id, shop_id, created_at) VALUES (?, ?, ?, ?)',
+      [id, userId, shopId, new Date().toISOString()]
+    );
+    // 增加店铺销量统计
+    await runDB(env, 'UPDATE shops SET sales = sales + 1 WHERE id = ?', [shopId]);
+    return jsonResponse({ success: true, followed: true, message: '关注成功' });
+  }
+}
+
+async function handleGetFollowedShops(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  
   const result = await queryDB(env,
-    `SELECT p.*, c.name as category_name 
-     FROM products p 
-     LEFT JOIN categories c ON p.category_id = c.id 
-     WHERE p.shop_id = ? AND p.hidden = 0
-     ORDER BY p.created_at DESC`,
-    [shopId]
+    `SELECT s.* FROM shops s 
+     JOIN user_follows f ON s.id = f.shop_id 
+     WHERE f.user_id = ? 
+     ORDER BY f.created_at DESC`,
+    [userId]
   );
   return jsonResponse(result.results || []);
+}
+
+// ============================================================
+//  广告管理
+// ============================================================
+async function handleGetAds(env) {
+  const result = await queryDB(env, 'SELECT * FROM ads WHERE status = "active" ORDER BY sort_order ASC, created_at DESC');
+  return jsonResponse(result.results || []);
+}
+
+async function handleAdminCreateAd(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (user.role !== 'admin') return errorResponse('权限不足', 403);
+  
+  const { title, image_url, link_url, sort_order } = body;
+  if (!image_url) return errorResponse('请上传图片');
+  
+  const id = generateId();
+  await runDB(env,
+    'INSERT INTO ads (id, title, image_url, link_url, sort_order, status, created_at) VALUES (?, ?, ?, ?, ?, "active", ?)',
+    [id, title || '', image_url, link_url || '', sort_order || 0, new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, id, message: '广告创建成功' });
+}
+
+async function handleAdminUpdateAd(env, authHeader, adId, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (user.role !== 'admin') return errorResponse('权限不足', 403);
+  
+  const { title, image_url, link_url, sort_order, status } = body;
+  const updates = [];
+  const params = [];
+  
+  if (title !== undefined) { updates.push('title = ?'); params.push(title); }
+  if (image_url !== undefined) { updates.push('image_url = ?'); params.push(image_url); }
+  if (link_url !== undefined) { updates.push('link_url = ?'); params.push(link_url || ''); }
+  if (sort_order !== undefined) { updates.push('sort_order = ?'); params.push(sort_order || 0); }
+  if (status !== undefined) { updates.push('status = ?'); params.push(status); }
+  
+  if (updates.length === 0) return errorResponse('没有要更新的字段');
+  
+  params.push(adId);
+  await runDB(env, `UPDATE ads SET ${updates.join(', ')} WHERE id = ?`, params);
+  return jsonResponse({ success: true, message: '广告已更新' });
+}
+
+async function handleAdminDeleteAd(env, authHeader, adId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (user.role !== 'admin') return errorResponse('权限不足', 403);
+  
+  await runDB(env, 'DELETE FROM ads WHERE id = ?', [adId]);
+  return jsonResponse({ success: true, message: '广告已删除' });
 }
 
 // ============================================================
@@ -1038,7 +1184,9 @@ async function handleAdminGetOrders(env) {
 }
 
 async function handleAdminGetUsers(env) {
-  const result = await queryDB(env, 'SELECT id, username, role, diamond, balance, status, created_at FROM users');
+  const result = await queryDB(env, 
+    'SELECT id, username, display_name, role, diamond, balance, status, created_at FROM users ORDER BY created_at DESC'
+  );
   return jsonResponse(result.results || []);
 }
 
@@ -1229,50 +1377,142 @@ async function handleSendChat(env, authHeader, orderId, body) {
 }
 
 // ============================================================
-//  管理员：用户管理
+//  消息系统
 // ============================================================
-async function handleAdminToggleBan(env, targetUserId) {
-  const result = await queryDB(env, 'SELECT * FROM users WHERE id = ?', [targetUserId]);
-  const user = (result.results && result.results[0]) || null;
+async function handleSendMessage(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
-  const newStatus = user.status === 'active' ? 'banned' : 'active';
-  await runDB(env, 'UPDATE users SET status = ? WHERE id = ?', [newStatus, targetUserId]);
-  return jsonResponse({ success: true, message: '用户状态已更新' });
+  const { receiverId, content } = body;
+  if (!receiverId || !content || !content.trim()) return errorResponse('请完整填写');
+  const receiver = await getUserById(env, receiverId);
+  if (!receiver) return errorResponse('接收者不存在', 404);
+  
+  if (userId === receiverId) return errorResponse('不能给自己发消息', 403);
+  
+  const id = generateId();
+  await runDB(env,
+    'INSERT INTO messages (id, sender_id, receiver_id, content, is_read, created_at) VALUES (?, ?, ?, ?, 0, ?)',
+    [id, userId, receiverId, content.trim(), new Date().toISOString()]
+  );
+  
+  const c1 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [userId, receiverId]);
+  if (!c1.results || c1.results.length === 0) {
+    await runDB(env,
+      'INSERT INTO message_contacts (id, user_id, contact_id, last_message, last_time, unread_count) VALUES (?, ?, ?, ?, ?, 0)',
+      [generateId(), userId, receiverId, content.trim(), new Date().toISOString()]
+    );
+  } else {
+    await runDB(env,
+      'UPDATE message_contacts SET last_message = ?, last_time = ? WHERE user_id = ? AND contact_id = ?',
+      [content.trim(), new Date().toISOString(), userId, receiverId]
+    );
+  }
+  
+  const c2 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [receiverId, userId]);
+  if (!c2.results || c2.results.length === 0) {
+    await runDB(env,
+      'INSERT INTO message_contacts (id, user_id, contact_id, last_message, last_time, unread_count) VALUES (?, ?, ?, ?, ?, 1)',
+      [generateId(), receiverId, userId, content.trim(), new Date().toISOString()]
+    );
+  } else {
+    await runDB(env,
+      'UPDATE message_contacts SET last_message = ?, last_time = ?, unread_count = unread_count + 1 WHERE user_id = ? AND contact_id = ?',
+      [content.trim(), new Date().toISOString(), receiverId, userId]
+    );
+  }
+  
+  return jsonResponse({ success: true, message: '发送成功' });
 }
 
-async function handleAdminResetPassword(env, targetUserId) {
-  await runDB(env, 'UPDATE users SET password = "123456" WHERE id = ?', [targetUserId]);
-  return jsonResponse({ success: true, message: '密码已重置为 123456' });
-}
-
-async function handleApproveHandler(env, targetUserId) {
-  const result = await queryDB(env, 'SELECT * FROM users WHERE id = ?', [targetUserId]);
-  const user = (result.results && result.results[0]) || null;
+async function handleGetContacts(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
-  if (user.role !== 'handler' && user.role !== 'dispatcher' && user.role !== 'service') {
-    return errorResponse('该用户不是打手、派单员或客服', 403);
-  }
-  if (user.status !== 'pending') return errorResponse('该用户不需要审核');
-  await runDB(env, 'UPDATE users SET status = "active" WHERE id = ?', [targetUserId]);
-  return jsonResponse({ success: true, message: '审核通过' });
+  
+  const sql = `
+    WITH all_contacts AS (
+      SELECT DISTINCT sender_id as contact_id FROM messages WHERE receiver_id = ?
+      UNION
+      SELECT DISTINCT receiver_id as contact_id FROM messages WHERE sender_id = ?
+    )
+    SELECT 
+      u.id, u.username, u.display_name, u.role,
+      mc.last_message, mc.last_time, mc.unread_count
+    FROM all_contacts ac
+    JOIN users u ON u.id = ac.contact_id
+    LEFT JOIN message_contacts mc ON mc.user_id = ? AND mc.contact_id = ac.contact_id
+    WHERE u.id != ?
+    ORDER BY COALESCE(mc.last_time, '1970-01-01') DESC
+  `;
+  const result = await queryDB(env, sql, [userId, userId, userId, userId]);
+  
+  return jsonResponse(result.results || []);
 }
 
-async function handleChangeUsername(env, targetUserId, body) {
-  const { username } = body;
-  if (!username) return errorResponse('请输入新用户名');
-  const existing = await queryDB(env, 'SELECT * FROM users WHERE username = ? AND id != ?', [username, targetUserId]);
-  if (existing.results && existing.results.length > 0) {
-    return errorResponse('用户名已被使用');
-  }
-  await runDB(env, 'UPDATE users SET username = ? WHERE id = ?', [username, targetUserId]);
-  return jsonResponse({ success: true, message: '用户名已修改' });
+async function handleGetMessages(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  const { contactId } = body;
+  if (!contactId) return errorResponse('请选择联系人');
+  const contact = await getUserById(env, contactId);
+  if (!contact) return errorResponse('联系人不存在', 404);
+  
+  const result = await queryDB(env,
+    `SELECT * FROM messages 
+     WHERE (sender_id = ? AND receiver_id = ?) 
+     OR (sender_id = ? AND receiver_id = ?)
+     ORDER BY created_at ASC`,
+    [userId, contactId, contactId, userId]
+  );
+  
+  await runDB(env,
+    'UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?',
+    [contactId, userId]
+  );
+  await runDB(env,
+    'UPDATE message_contacts SET unread_count = 0 WHERE user_id = ? AND contact_id = ?',
+    [userId, contactId]
+  );
+  
+  return jsonResponse(result.results || []);
+}
+
+async function handleGetUnreadCount(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const result = await queryDB(env,
+    'SELECT SUM(unread_count) as total FROM message_contacts WHERE user_id = ?',
+    [userId]
+  );
+  const total = (result.results && result.results[0] && result.results[0].total) || 0;
+  return jsonResponse({ unread: total });
+}
+
+async function handleGetSupportContacts(env) {
+  const result = await queryDB(env, 
+    'SELECT id, username, display_name, role FROM users WHERE role IN ("admin", "service") AND status = "active"'
+  );
+  return jsonResponse(result.results || []);
 }
 
 // ============================================================
-//  获取打手列表
+//  搜索用户
 // ============================================================
-async function handleGetHandlers(env) {
-  const result = await queryDB(env, 'SELECT id, username FROM users WHERE role = "handler" AND status = "active"');
+async function handleSearchUsers(env, url) {
+  const query = url?.searchParams?.get('q');
+  if (!query || query.length < 1) return jsonResponse([]);
+  
+  const result = await queryDB(env,
+    `SELECT id, username, display_name, role, avatar FROM users 
+     WHERE username LIKE ? OR display_name LIKE ? OR id LIKE ?
+     LIMIT 20`,
+    ['%' + query + '%', '%' + query + '%', '%' + query + '%']
+  );
   return jsonResponse(result.results || []);
 }
 
@@ -1426,14 +1666,15 @@ export async function onRequest(context) {
     if (path === '/api/handlers' && method === 'GET') return await handleGetHandlers(env);
     if (path === '/api/support-contacts' && method === 'GET') return await handleGetSupportContacts(env);
     if (path === '/api/shops' && method === 'GET') return await handleGetShops(env, url);
+    if (path === '/api/ads' && method === 'GET') return await handleGetAds(env);
     
     if (path.startsWith('/api/shops/') && path.endsWith('/products') && method === 'GET') {
       const shopId = path.replace('/api/shops/', '').replace('/products', '');
-      return await handleGetShopProducts(env, shopId);
+      return await handleGetShopProducts(env, shopId, url);
     }
     if (path.startsWith('/api/shops/') && method === 'GET' && !path.endsWith('/products')) {
       const shopId = path.replace('/api/shops/', '');
-      return await handleGetShopDetail(env, shopId);
+      return await handleGetShopDetail(env, shopId, authHeader);
     }
     if (path.startsWith('/api/categories/') && path.endsWith('/products') && method === 'GET') {
       const categoryId = path.replace('/api/categories/', '').replace('/products', '');
@@ -1443,11 +1684,15 @@ export async function onRequest(context) {
       const productId = path.replace('/api/products/', '');
       return await handleGetProductDetail(env, productId);
     }
+    if (path === '/api/search/users' && method === 'GET') {
+      return await handleSearchUsers(env, url);
+    }
 
     // ============================================================
     //  需要登录
     // ============================================================
     if (path === '/api/me' && method === 'GET') return await handleGetMe(env, authHeader);
+    if (path === '/api/me' && method === 'PUT') return await handleUpdateUser(env, authHeader, body);
     if (path === '/api/orders/my' && method === 'GET') return await handleGetMyOrders(env, authHeader);
     if (path === '/api/orders/buy' && method === 'POST') return await handleBuyProduct(env, authHeader, body);
     if (path === '/api/mails' && method === 'GET') return await handleGetMails(env, authHeader);
@@ -1458,6 +1703,8 @@ export async function onRequest(context) {
     if (path === '/api/dispatcher/publish' && method === 'POST') return await handleDispatcherPublish(env, authHeader, body);
     if (path === '/api/user/stats' && method === 'GET') return await handleGetUserStats(env, authHeader);
     if (path === '/api/withdraw/request' && method === 'POST') return await handleRequestWithdraw(env, authHeader, body);
+    if (path === '/api/follow/shop' && method === 'POST') return await handleFollowShop(env, authHeader, body);
+    if (path === '/api/followed/shops' && method === 'GET') return await handleGetFollowedShops(env, authHeader);
     
     // 充值
     if (path === '/api/recharge/custom' && method === 'POST') return await handleCustomRecharge(env, authHeader, body);
@@ -1483,6 +1730,7 @@ export async function onRequest(context) {
       if (orderId.endsWith('/submit-complete')) { const id = orderId.replace('/submit-complete', ''); return await handleSubmitComplete(env, authHeader, id); }
       if (orderId.endsWith('/boss-confirm')) { const id = orderId.replace('/boss-confirm', ''); return await handleBossConfirm(env, authHeader, id); }
       if (orderId.endsWith('/refund-request')) { const id = orderId.replace('/refund-request', ''); return await handleRefundRequest(env, authHeader, id, body); }
+      if (orderId.endsWith('/rate')) { const id = orderId.replace('/rate', ''); return await handleRateOrder(env, authHeader, id, body); }
       if (orderId.endsWith('/chat') && method === 'POST') { const id = orderId.replace('/chat', ''); return await handleSendChat(env, authHeader, id, body); }
       if (orderId.endsWith('/dispatcher-confirm') && method === 'PUT') { const id = orderId.replace('/dispatcher-confirm', ''); return await handleDispatcherConfirmComplete(env, authHeader, id); }
       if (orderId.endsWith('/cancel') && method === 'PUT') { const id = orderId.replace('/cancel', ''); return await handleAdminCancelOrder(env, id); }
@@ -1511,6 +1759,14 @@ export async function onRequest(context) {
           }
           if (method === 'PUT') return await handleUpdateShop(env, authHeader, shopId, body);
           if (method === 'DELETE') return await handleDeleteShop(env, authHeader, shopId);
+        }
+        
+        // 广告管理
+        if (path === '/api/admin/ads' && method === 'POST') return await handleAdminCreateAd(env, authHeader, body);
+        if (path.startsWith('/api/admin/ads/')) {
+          const adId = path.replace('/api/admin/ads/', '');
+          if (method === 'PUT') return await handleAdminUpdateAd(env, authHeader, adId, body);
+          if (method === 'DELETE') return await handleAdminDeleteAd(env, authHeader, adId);
         }
         
         // 提现管理
