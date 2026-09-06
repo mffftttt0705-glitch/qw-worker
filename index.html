@@ -99,7 +99,8 @@
             --badge-red: #ef4444;
             --shop-card-bg: #ffffff;
             --shop-card-border: rgba(0,0,0,0.06);
-            --ad-bg: rgba(0,0,0,0.3);
+            --primary-color: #1a6aff;
+            --gold-color: #f5c842;
         }
         * {
             margin: 0;
@@ -168,6 +169,7 @@
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             padding-bottom: 4px;
+            position: relative;
         }
         
         .view {
@@ -183,36 +185,92 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .ad-carousel {
+        /* ===== 页面切换动画 ===== */
+        .page-transition {
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* ===== 底部导航 ===== */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            color: var(--text-nav);
+            font-size: 10px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 30px;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            position: relative;
+            min-width: 44px;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.15s;
+        }
+        .nav-item i {
+            font-size: 20px;
+        }
+        .nav-item.active {
+            color: var(--text-primary);
+        }
+        .nav-item.active i {
+            color: #3a7eff;
+            text-shadow: 0 0 20px rgba(0,80,255,0.3);
+        }
+        .nav-item .badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ef4444;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 9px;
+            padding: 0 5px;
+            min-width: 16px;
+            text-align: center;
+            line-height: 16px;
+        }
+        .nav-item.hidden-nav {
+            display: none !important;
+        }
+        
+        /* ===== 广告轮播 ===== */
+        .banner-carousel {
             position: relative;
             width: 100%;
             border-radius: 16px;
             overflow: hidden;
             margin-bottom: 12px;
-            background: var(--ad-bg);
-            aspect-ratio: 16 / 7;
+            background: var(--product-img-bg);
+            aspect-ratio: 16 / 6;
         }
-        .ad-carousel .ad-slides {
+        .banner-carousel .banner-track {
             display: flex;
             transition: transform 0.5s ease;
             height: 100%;
-            width: 100%;
         }
-        .ad-carousel .ad-slide {
+        .banner-carousel .banner-slide {
             min-width: 100%;
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--ad-bg);
-            position: relative;
+            font-size: 14px;
+            color: var(--text-muted);
+            background: var(--product-img-bg);
         }
-        .ad-carousel .ad-slide img {
+        .banner-carousel .banner-slide img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .ad-carousel .ad-dots {
+        .banner-carousel .banner-dots {
             position: absolute;
             bottom: 8px;
             left: 50%;
@@ -221,20 +279,40 @@
             gap: 6px;
             z-index: 5;
         }
-        .ad-carousel .ad-dots .dot {
+        .banner-carousel .banner-dots .dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
             background: rgba(255,255,255,0.5);
-            transition: all 0.3s;
             cursor: pointer;
+            transition: all 0.3s;
         }
-        .ad-carousel .ad-dots .dot.active {
+        .banner-carousel .banner-dots .dot.active {
             background: #fff;
             width: 16px;
             border-radius: 4px;
         }
+        .banner-carousel .banner-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.3);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .banner-carousel .banner-arrow.left { left: 8px; }
+        .banner-carousel .banner-arrow.right { right: 8px; }
         
+        /* ===== 分类导航（商城首页） ===== */
         .category-nav-wrapper {
             overflow-x: auto;
             overflow-y: hidden;
@@ -247,9 +325,7 @@
             gap: 6px;
             flex-wrap: nowrap;
         }
-        .category-nav-wrapper::-webkit-scrollbar {
-            display: none;
-        }
+        .category-nav-wrapper::-webkit-scrollbar { display: none; }
         .category-nav-wrapper .category-btn {
             flex: 0 0 auto;
             padding: 6px 14px;
@@ -268,12 +344,7 @@
             justify-content: center;
             -webkit-tap-highlight-color: transparent;
         }
-        .category-nav-wrapper .category-btn img {
-            width: 18px;
-            height: 18px;
-            border-radius: 4px;
-            object-fit: cover;
-        }
+        .category-nav-wrapper .category-btn img { width: 18px; height: 18px; border-radius: 4px; object-fit: cover; }
         .category-nav-wrapper .category-btn.active {
             background: #f5c842;
             color: #0b0d10;
@@ -281,10 +352,35 @@
             font-weight: 600;
             box-shadow: 0 2px 8px rgba(245,200,66,0.25);
         }
-        .category-nav-wrapper .category-btn:active {
-            transform: scale(0.95);
-        }
+        .category-nav-wrapper .category-btn:active { transform: scale(0.95); }
         
+        /* ===== 子分类 ===== */
+        .sub-category-wrapper {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 2px 0 6px;
+            margin-bottom: 4px;
+        }
+        .sub-category-wrapper .sub-btn {
+            padding: 3px 12px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-muted);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .sub-category-wrapper .sub-btn.active {
+            background: #1a6aff;
+            color: #fff;
+            border-color: #1a6aff;
+        }
+        .sub-category-wrapper .sub-btn:active { transform: scale(0.95); }
+        
+        /* ===== 商城首页 - 店铺列表 ===== */
         .shop-list-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -299,11 +395,8 @@
             cursor: pointer;
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
-            position: relative;
         }
-        .shop-list-card:active {
-            transform: scale(0.96);
-        }
+        .shop-list-card:active { transform: scale(0.96); }
         .shop-list-card .shop-cover {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -316,63 +409,24 @@
             overflow: hidden;
             position: relative;
         }
-        .shop-list-card .shop-cover img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .shop-list-card .shop-cover img { width: 100%; height: 100%; object-fit: cover; }
         .shop-list-card .shop-cover .shop-badge {
             position: absolute;
             top: 8px;
             left: 8px;
-            background: #f5c842;
-            color: #0b0d10;
             padding: 2px 10px;
             border-radius: 20px;
             font-size: 10px;
             font-weight: 600;
         }
-        .shop-list-card .shop-cover .shop-badge.self {
-            background: #ef4444;
-            color: #fff;
-        }
-        .shop-list-card .shop-cover .shop-badge.recommend {
-            background: #22c55e;
-            color: #fff;
-        }
-        .shop-list-card .follow-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: rgba(0,0,0,0.5);
-            color: #fff;
-            border: none;
-            border-radius: 20px;
-            padding: 2px 10px;
-            font-size: 11px;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            z-index: 2;
-        }
-        .shop-list-card .follow-btn.followed {
-            background: #22c55e;
-        }
-        .shop-list-card .shop-info {
-            padding: 10px 12px;
-        }
-        .shop-list-card .shop-info .shop-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .shop-list-card .shop-info .shop-rating {
-            font-size: 12px;
-            color: #f59e0b;
-            margin: 2px 0;
-        }
-        .shop-list-card .shop-info .shop-rating span {
-            color: var(--text-muted);
-        }
+        .shop-list-card .shop-cover .shop-badge.recommend { background: #f5c842; color: #0b0d10; }
+        .shop-list-card .shop-cover .shop-badge.follow { background: #1a6aff; color: #fff; }
+        .shop-list-card .shop-cover .shop-badge.self { background: #ef4444; color: #fff; }
+        .shop-list-card .shop-cover .shop-badge .self-logo { font-size: 12px; margin-right: 2px; }
+        .shop-list-card .shop-info { padding: 10px 12px; }
+        .shop-list-card .shop-info .shop-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+        .shop-list-card .shop-info .shop-rating { font-size: 12px; color: #f59e0b; margin: 2px 0; }
+        .shop-list-card .shop-info .shop-rating span { color: var(--text-muted); }
         .shop-list-card .shop-info .shop-desc {
             font-size: 12px;
             color: var(--text-muted);
@@ -393,15 +447,18 @@
             padding-top: 6px;
             border-top: 1px solid var(--border-light);
         }
-        .shop-list-card .shop-info .shop-meta .shop-id {
+        .shop-list-card .shop-info .shop-meta .follow-btn {
+            background: #1a6aff;
+            color: #fff;
+            border: none;
+            padding: 2px 12px;
+            border-radius: 30px;
             font-size: 11px;
-            color: var(--text-muted);
+            cursor: pointer;
         }
-        .shop-list-card .shop-info .shop-meta .shop-sales {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
+        .shop-list-card .shop-info .shop-meta .follow-btn.followed { background: #6b7280; }
         
+        /* ===== 店铺详情页 ===== */
         .shop-detail-page {
             position: fixed;
             top: 0;
@@ -419,9 +476,7 @@
             transform: translateX(-50%);
             animation: slideIn 0.3s ease;
         }
-        .shop-detail-page.active {
-            display: flex;
-        }
+        .shop-detail-page.active { display: flex; }
         .shop-detail-header {
             background: linear-gradient(135deg, #1a1a2e, #2d2d44);
             color: #fff;
@@ -442,11 +497,8 @@
             align-items: center;
             justify-content: center;
             margin-bottom: 10px;
-            -webkit-tap-highlight-color: transparent;
         }
-        .shop-detail-header .back-btn:active {
-            transform: scale(0.9);
-        }
+        .shop-detail-header .back-btn:active { transform: scale(0.9); }
         .shop-detail-header .shop-title-row {
             display: flex;
             align-items: center;
@@ -464,32 +516,12 @@
             flex-shrink: 0;
             overflow: hidden;
         }
-        .shop-detail-header .shop-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .shop-detail-header .shop-name-area {
-            flex: 1;
-        }
-        .shop-detail-header .shop-name-area .name {
-            font-size: 18px;
-            font-weight: 700;
-        }
-        .shop-detail-header .shop-name-area .rating {
-            font-size: 13px;
-            color: #f5c842;
-            margin-top: 2px;
-        }
-        .shop-detail-header .shop-name-area .rating span {
-            color: rgba(255,255,255,0.6);
-        }
-        .shop-detail-header .shop-desc-area {
-            font-size: 13px;
-            color: rgba(255,255,255,0.7);
-            margin-top: 8px;
-            line-height: 1.5;
-        }
+        .shop-detail-header .shop-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .shop-detail-header .shop-name-area { flex: 1; }
+        .shop-detail-header .shop-name-area .name { font-size: 18px; font-weight: 700; }
+        .shop-detail-header .shop-name-area .rating { font-size: 13px; color: #f5c842; margin-top: 2px; }
+        .shop-detail-header .shop-name-area .rating span { color: rgba(255,255,255,0.6); }
+        .shop-detail-header .shop-desc-area { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 8px; line-height: 1.5; }
         .shop-detail-header .shop-stats {
             display: flex;
             gap: 20px;
@@ -497,26 +529,7 @@
             font-size: 12px;
             color: rgba(255,255,255,0.6);
         }
-        .shop-detail-header .shop-stats strong {
-            color: #fff;
-            font-weight: 600;
-        }
-        .shop-detail-header .follow-btn-header {
-            background: rgba(255,255,255,0.15);
-            border: none;
-            color: #fff;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .shop-detail-header .follow-btn-header.followed {
-            background: #22c55e;
-        }
-        .shop-detail-header .follow-btn-header:active {
-            transform: scale(0.95);
-        }
+        .shop-detail-header .shop-stats strong { color: #fff; font-weight: 600; }
         
         .shop-detail-tabs {
             display: flex;
@@ -528,9 +541,7 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
-        .shop-detail-tabs::-webkit-scrollbar {
-            display: none;
-        }
+        .shop-detail-tabs::-webkit-scrollbar { display: none; }
         .shop-detail-tabs .tab-btn {
             padding: 6px 16px;
             border-radius: 20px;
@@ -541,15 +552,9 @@
             font-weight: 500;
             cursor: pointer;
             white-space: nowrap;
-            -webkit-tap-highlight-color: transparent;
         }
-        .shop-detail-tabs .tab-btn.active {
-            background: #f5c842;
-            color: #0b0d10;
-        }
-        .shop-detail-tabs .tab-btn:active {
-            transform: scale(0.95);
-        }
+        .shop-detail-tabs .tab-btn.active { background: #f5c842; color: #0b0d10; }
+        .shop-detail-tabs .tab-btn:active { transform: scale(0.95); }
         
         .shop-detail-products {
             flex: 1;
@@ -557,24 +562,25 @@
             padding: 12px 16px;
             -webkit-overflow-scrolling: touch;
         }
-        .shop-detail-products .product-grid {
-            grid-template-columns: 1fr 1fr;
+        
+        .shop-detail-search {
+            padding: 0 16px 10px;
+            display: flex;
+            gap: 8px;
         }
-        .shop-detail-products .search-input {
-            width: 100%;
+        .shop-detail-search input {
+            flex: 1;
             padding: 8px 14px;
             border-radius: 30px;
             border: 1px solid var(--border-color);
             background: var(--bg-input);
             color: var(--text-primary);
-            font-size: 14px;
+            font-size: 13px;
             outline: none;
-            margin-bottom: 12px;
         }
-        .shop-detail-products .search-input:focus {
-            border-color: #f5c842;
-        }
+        .shop-detail-search input:focus { border-color: #f5c842; }
         
+        /* ===== 商品卡片 ===== */
         .product-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -593,9 +599,7 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
-        .product-card:active {
-            transform: scale(0.97);
-        }
+        .product-card:active { transform: scale(0.97); }
         .product-card .product-img {
             width: 100%;
             flex: 0 0 auto;
@@ -609,11 +613,7 @@
             overflow: hidden;
             position: relative;
         }
-        .product-card .product-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .product-card .product-img img { width: 100%; height: 100%; object-fit: cover; }
         .product-card .product-img .tag {
             position: absolute;
             top: 6px;
@@ -655,11 +655,7 @@
             overflow: hidden;
             min-height: 16px;
         }
-        .product-card .product-stock {
-            font-size: 10px;
-            color: var(--product-stock);
-            margin-top: 2px;
-        }
+        .product-card .product-stock { font-size: 10px; color: var(--product-stock); margin-top: 2px; }
         .product-card .product-bottom {
             display: flex;
             justify-content: space-between;
@@ -668,12 +664,36 @@
             padding-top: 6px;
             border-top: 1px solid var(--product-bottom-border);
         }
-        .product-card .product-price {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--price-color);
+        .product-card .product-price { font-size: 15px; font-weight: 700; color: var(--price-color); }
+        
+        /* ===== 弹窗（子页面内嵌） ===== */
+        .inline-modal {
+            display: none;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 12px 0;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--admin-card-shadow);
+        }
+        .inline-modal.active { display: block; }
+        .inline-modal .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .inline-modal .modal-title .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
         }
         
+        /* ===== 其他通用样式 ===== */
         .admin-card {
             background: var(--admin-card-bg);
             border-radius: 20px;
@@ -691,9 +711,7 @@
             align-items: center;
             gap: 8px;
         }
-        .admin-form-group {
-            margin-bottom: 12px;
-        }
+        .admin-form-group { margin-bottom: 12px; }
         .admin-form-group label {
             display: block;
             font-size: 13px;
@@ -712,9 +730,7 @@
             -webkit-appearance: none;
             appearance: none;
         }
-        .admin-form-control:focus {
-            border-color: #f5c842;
-        }
+        .admin-form-control:focus { border-color: #f5c842; }
         
         .btn-primary {
             background: var(--btn-primary-bg);
@@ -728,9 +744,7 @@
             box-shadow: 0 4px 12px rgba(0,80,255,0.2);
             -webkit-tap-highlight-color: transparent;
         }
-        .btn-primary:active {
-            transform: scale(0.96);
-        }
+        .btn-primary:active { transform: scale(0.96); }
         .btn-outline {
             background: transparent;
             border: 1px solid var(--border-color);
@@ -741,9 +755,7 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
-        .btn-outline:active {
-            transform: scale(0.96);
-        }
+        .btn-outline:active { transform: scale(0.96); }
         .btn-success {
             background: #22c55e;
             color: #fff;
@@ -754,9 +766,7 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
-        .btn-success:active {
-            transform: scale(0.95);
-        }
+        .btn-success:active { transform: scale(0.95); }
         .btn-danger {
             background: #ef4444;
             color: #fff;
@@ -767,9 +777,7 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
-        .btn-danger:active {
-            transform: scale(0.95);
-        }
+        .btn-danger:active { transform: scale(0.95); }
         .btn-warning {
             background: #f59e0b;
             color: #0b0d10;
@@ -780,21 +788,10 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
-        .btn-warning:active {
-            transform: scale(0.95);
-        }
-        .btn-sm {
-            padding: 4px 14px;
-            font-size: 12px;
-        }
-        .btn-xs {
-            padding: 2px 10px;
-            font-size: 11px;
-        }
-        .btn-block {
-            width: 100%;
-            justify-content: center;
-        }
+        .btn-warning:active { transform: scale(0.95); }
+        .btn-sm { padding: 4px 14px; font-size: 12px; }
+        .btn-xs { padding: 2px 10px; font-size: 11px; }
+        .btn-block { width: 100%; justify-content: center; }
         
         .status-badge {
             font-size: 11px;
@@ -803,81 +800,25 @@
             display: inline-block;
             font-weight: 500;
         }
-        .status-pending {
-            background: var(--status-pending-bg);
-            color: #f59e0b;
-            border: 1px solid #f59e0b44;
-        }
-        .status-ongoing {
-            background: var(--status-ongoing-bg);
-            color: #3b82f6;
-            border: 1px solid #3b82f644;
-        }
-        .status-review {
-            background: var(--status-review-bg);
-            color: #a855f7;
-            border: 1px solid #a855f744;
-        }
-        .status-completed {
-            background: var(--status-completed-bg);
-            color: #22c55e;
-            border: 1px solid #22c55e44;
-        }
-        .status-canceled {
-            background: #6b728022;
-            color: #9ca3af;
-            border: 1px solid #6b728044;
-        }
-        .status-rejected {
-            background: #ef444422;
-            color: #ef4444;
-            border: 1px solid #ef444444;
-        }
-        .status-onsale {
-            background: #22c55e22;
-            color: #22c55e;
-            border: 1px solid #22c55e44;
-        }
-        .status-soldout {
-            background: #6b728022;
-            color: #9ca3af;
-            border: 1px solid #6b728044;
-        }
-        .status-hidden {
-            background: #6b728022;
-            color: #6b7280;
-            border: 1px solid #6b728044;
-        }
-        .status-refund_pending {
-            background: #f59e0b22;
-            color: #f59e0b;
-            border: 1px solid #f59e0b44;
-        }
-        .status-refunded {
-            background: #a855f722;
-            color: #a855f7;
-            border: 1px solid #a855f744;
-        }
-        .status-settled {
-            background: #22c55e22;
-            color: #22c55e;
-            border: 1px solid #22c55e44;
-        }
+        .status-pending { background: var(--status-pending-bg); color: #f59e0b; border: 1px solid #f59e0b44; }
+        .status-ongoing { background: var(--status-ongoing-bg); color: #3b82f6; border: 1px solid #3b82f644; }
+        .status-review { background: var(--status-review-bg); color: #a855f7; border: 1px solid #a855f744; }
+        .status-completed { background: var(--status-completed-bg); color: #22c55e; border: 1px solid #22c55e44; }
+        .status-canceled { background: #6b728022; color: #9ca3af; border: 1px solid #6b728044; }
+        .status-rejected { background: #ef444422; color: #ef4444; border: 1px solid #ef444444; }
+        .status-onsale { background: #22c55e22; color: #22c55e; border: 1px solid #22c55e44; }
+        .status-soldout { background: #6b728022; color: #9ca3af; border: 1px solid #6b728044; }
+        .status-hidden { background: #6b728022; color: #6b7280; border: 1px solid #6b728044; }
         
-        .empty-state {
-            text-align: center;
-            padding: 30px 20px;
-            color: var(--empty-text);
-        }
-        .empty-state i {
-            font-size: 36px;
-            opacity: 0.4;
-            display: block;
-            margin-bottom: 10px;
-        }
-        .empty-state p {
-            font-size: 14px;
-        }
+        .empty-state { text-align: center; padding: 30px 20px; color: var(--empty-text); }
+        .empty-state i { font-size: 36px; opacity: 0.4; display: block; margin-bottom: 10px; }
+        .empty-state p { font-size: 14px; }
+        
+        .table-wrap { overflow-x: auto; margin-top: 6px; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { border-bottom: 2px solid var(--border-color); }
+        th { padding: 8px 6px; text-align: left; font-weight: 600; color: var(--table-header); font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+        td { padding: 8px 6px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
         
         .toast {
             position: fixed;
@@ -897,16 +838,9 @@
             text-align: center;
             max-width: 420px;
         }
-        .toast.show {
-            display: block;
-            animation: fadeUp 0.3s ease;
-        }
-        .toast.error {
-            border-left-color: #ef4444;
-        }
-        .toast.warning {
-            border-left-color: #f59e0b;
-        }
+        .toast.show { display: block; animation: fadeUp 0.3s ease; }
+        .toast.error { border-left-color: #ef4444; }
+        .toast.warning { border-left-color: #f59e0b; }
         
         .modal-overlay {
             display: none;
@@ -920,11 +854,9 @@
             -webkit-backdrop-filter: blur(10px);
             justify-content: center;
             align-items: center;
-            z-index: 5000;
+            z-index: 999;
         }
-        .modal-overlay.active {
-            display: flex;
-        }
+        .modal-overlay.active { display: flex; }
         .modal-box {
             background: var(--modal-bg);
             border: 1px solid var(--border-color);
@@ -937,38 +869,12 @@
             max-height: 90vh;
             overflow-y: auto;
         }
-        .modal-box h3 {
-            font-size: 20px;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-        .modal-box p {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin: 6px 0 16px;
-        }
-        .modal-box .btn-row {
-            display: flex;
-            gap: 10px;
-        }
-        .modal-box .btn-row button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 60px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .modal-box .form-group {
-            margin-bottom: 14px;
-            text-align: left;
-        }
-        .modal-box .form-group label {
-            display: block;
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-        }
+        .modal-box h3 { font-size: 20px; color: var(--text-primary); margin-bottom: 8px; }
+        .modal-box p { color: var(--text-muted); font-size: 14px; margin: 6px 0 16px; }
+        .modal-box .btn-row { display: flex; gap: 10px; }
+        .modal-box .btn-row button { flex: 1; padding: 12px; border-radius: 60px; border: none; font-weight: 600; cursor: pointer; }
+        .modal-box .form-group { margin-bottom: 14px; text-align: left; }
+        .modal-box .form-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
         .modal-box .form-group input,
         .modal-box .form-group select,
         .modal-box .form-group textarea {
@@ -985,22 +891,15 @@
         }
         .modal-box .form-group input:focus,
         .modal-box .form-group select:focus,
-        .modal-box .form-group textarea:focus {
-            border-color: #f5c842;
-        }
+        .modal-box .form-group textarea:focus { border-color: #f5c842; }
         .modal-box .detail-row {
             display: flex;
             justify-content: space-between;
             padding: 6px 0;
             border-bottom: 1px solid var(--border-color);
         }
-        .modal-box .detail-row .label {
-            color: var(--detail-label);
-        }
-        .modal-box .detail-row .value {
-            color: var(--detail-value);
-            font-weight: 500;
-        }
+        .modal-box .detail-row .label { color: var(--detail-label); }
+        .modal-box .detail-row .value { color: var(--detail-value); font-weight: 500; }
         
         .app-header {
             display: flex;
@@ -1013,14 +912,9 @@
             flex-wrap: wrap;
             gap: 6px;
         }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .brand { display: flex; align-items: center; gap: 10px; }
         .brand-icon {
-            width: 36px;
-            height: 36px;
+            width: 36px; height: 36px;
             background: linear-gradient(145deg,#00c8ff,#0055ff);
             border-radius: 10px;
             display: flex;
@@ -1040,11 +934,7 @@
             background-clip: text;
             color: var(--text-primary);
         }
-        .brand-name small {
-            font-weight: 300;
-            font-size: 11px;
-            color: var(--text-muted);
-        }
+        .brand-name small { font-weight: 300; font-size: 11px; color: var(--text-muted); }
         .header-right {
             display: flex;
             align-items: center;
@@ -1104,51 +994,6 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            color: var(--text-nav);
-            font-size: 10px;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 30px;
-            background: transparent;
-            border: none;
-            font-family: inherit;
-            position: relative;
-            min-width: 44px;
-            -webkit-tap-highlight-color: transparent;
-            transition: all 0.15s;
-        }
-        .nav-item i {
-            font-size: 20px;
-        }
-        .nav-item.active {
-            color: var(--text-primary);
-        }
-        .nav-item.active i {
-            color: #3a7eff;
-            text-shadow: 0 0 20px rgba(0,80,255,0.3);
-        }
-        .nav-item .badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            background: #ef4444;
-            color: #fff;
-            border-radius: 50%;
-            font-size: 9px;
-            padding: 0 5px;
-            min-width: 16px;
-            text-align: center;
-            line-height: 16px;
-        }
-        .nav-item.hidden-nav {
-            display: none !important;
-        }
-        
         .workbench-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -1170,21 +1015,9 @@
             min-height: 70px;
             position: relative;
         }
-        .workbench-item:active {
-            transform: scale(0.92);
-            background: var(--bg-card-hover);
-        }
-        .workbench-item .icon {
-            font-size: 22px;
-            margin-bottom: 4px;
-            color: #3a7eff;
-        }
-        .workbench-item .label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            text-align: center;
-            font-weight: 500;
-        }
+        .workbench-item:active { transform: scale(0.92); background: var(--bg-card-hover); }
+        .workbench-item .icon { font-size: 22px; margin-bottom: 4px; color: #3a7eff; }
+        .workbench-item .label { font-size: 11px; color: var(--text-secondary); text-align: center; font-weight: 500; }
         .workbench-item .badge-count {
             font-size: 10px;
             background: #ef4444;
@@ -1210,16 +1043,8 @@
             border: 1px solid var(--border-light);
             text-align: center;
         }
-        .stat-card .stat-value {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        .stat-card .stat-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
+        .stat-card .stat-value { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .stat-card .stat-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
         
         .profile-header {
             display: flex;
@@ -1228,9 +1053,7 @@
             padding: 8px 0 12px;
         }
         .profile-header .avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
+            width: 48px; height: 48px; border-radius: 50%;
             background: linear-gradient(145deg,#00c8ff,#0055ff);
             display: flex;
             align-items: center;
@@ -1240,18 +1063,9 @@
             color: #fff;
             flex-shrink: 0;
         }
-        .profile-header .info {
-            flex: 1;
-        }
-        .profile-header .info .name {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .profile-header .info .sub {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+        .profile-header .info { flex: 1; }
+        .profile-header .info .name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        .profile-header .info .sub { font-size: 12px; color: var(--text-muted); }
         .profile-header .badge {
             background: #f5c842;
             color: #0b0d10;
@@ -1284,17 +1098,8 @@
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
         }
-        #authPage .logo i {
-            font-size: 40px;
-            color: #f5c842;
-            -webkit-text-fill-color: #f5c842;
-            margin-right: 10px;
-        }
-        #authPage .sub {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
+        #authPage .logo i { font-size: 40px; color: #f5c842; -webkit-text-fill-color: #f5c842; margin-right: 10px; }
+        #authPage .sub { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
         #authPage .auth-box {
             width: 100%;
             max-width: 320px;
@@ -1320,21 +1125,9 @@
             -webkit-appearance: none;
             appearance: none;
         }
-        #authPage .auth-box input:focus {
-            border-color: #f5c842;
-        }
-        #authPage .auth-box .btn-row {
-            display: flex;
-            gap: 10px;
-        }
-        #authPage .auth-box .btn-row button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 60px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
+        #authPage .auth-box input:focus { border-color: #f5c842; }
+        #authPage .auth-box .btn-row { display: flex; gap: 10px; }
+        #authPage .auth-box .btn-row button { flex: 1; padding: 12px; border-radius: 60px; border: none; font-weight: 600; cursor: pointer; }
         #authPage .auth-box .role-row {
             display: flex;
             gap: 8px;
@@ -1343,18 +1136,10 @@
             font-size: 13px;
             color: var(--text-muted);
         }
-        #authPage .auth-box .role-row label {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-        }
-        #authPage .auth-box .auth-error {
-            color: #ef4444;
-            font-size: 13px;
-            min-height: 20px;
-        }
+        #authPage .auth-box .role-row label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+        #authPage .auth-box .auth-error { color: #ef4444; font-size: 13px; min-height: 20px; }
         
+        /* ===== 全屏聊天 ===== */
         .chat-fullscreen {
             position: fixed;
             top: 0;
@@ -1372,9 +1157,7 @@
             left: 50%;
             transform: translateX(-50%);
         }
-        .chat-fullscreen.active {
-            display: flex;
-        }
+        .chat-fullscreen.active { display: flex; }
         .chat-fullscreen .chat-header {
             display: flex;
             align-items: center;
@@ -1391,15 +1174,8 @@
             color: var(--text-primary);
             padding: 4px 8px;
         }
-        .chat-fullscreen .chat-header .chat-title {
-            font-size: 18px;
-            font-weight: 600;
-            flex: 1;
-        }
-        .chat-fullscreen .chat-header .chat-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+        .chat-fullscreen .chat-header .chat-title { font-size: 18px; font-weight: 600; flex: 1; }
+        .chat-fullscreen .chat-header .chat-sub { font-size: 12px; color: var(--text-muted); }
         .chat-fullscreen .chat-body {
             flex: 1;
             overflow-y: auto;
@@ -1430,18 +1206,8 @@
             border-bottom-left-radius: 4px;
             border: 1px solid var(--border-color);
         }
-        .chat-fullscreen .chat-body .chat-bubble .time {
-            font-size: 10px;
-            opacity: 0.7;
-            margin-top: 4px;
-            display: block;
-        }
-        .chat-fullscreen .chat-body .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-muted);
-            width: 100%;
-        }
+        .chat-fullscreen .chat-body .chat-bubble .time { font-size: 10px; opacity: 0.7; margin-top: 4px; display: block; }
+        .chat-fullscreen .chat-body .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); width: 100%; }
         .chat-fullscreen .chat-footer {
             display: flex;
             gap: 10px;
@@ -1460,9 +1226,7 @@
             outline: none;
             min-height: 44px;
         }
-        .chat-fullscreen .chat-footer input:focus {
-            border-color: #f5c842;
-        }
+        .chat-fullscreen .chat-footer input:focus { border-color: #f5c842; }
         .chat-fullscreen .chat-footer button {
             padding: 10px 20px;
             border-radius: 30px;
@@ -1474,9 +1238,50 @@
             min-height: 44px;
             white-space: nowrap;
         }
-        .chat-fullscreen .chat-footer button:active {
-            transform: scale(0.95);
+        .chat-fullscreen .chat-footer button:active { transform: scale(0.95); }
+        
+        .support-contact-section {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: var(--bg-card-hover);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
         }
+        .support-contact-section .title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+        .support-contact-section .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        .sub-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            height: 100dvh;
+            background: var(--bg-secondary);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 16px;
+            animation: slideIn 0.3s ease;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .sub-page.active { display: block; }
+        .sub-page .sub-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            position: sticky;
+            top: 0;
+            background: var(--bg-secondary);
+            z-index: 10;
+        }
+        .sub-page .sub-header .back-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-primary); padding: 4px 8px; }
+        .sub-page .sub-header .title { font-size: 18px; font-weight: 600; flex: 1; }
         
         .announce-modal-overlay {
             display: none;
@@ -1493,9 +1298,7 @@
             z-index: 10000;
             padding: 20px;
         }
-        .announce-modal-overlay.active {
-            display: flex;
-        }
+        .announce-modal-overlay.active { display: flex; }
         .announce-modal-box {
             background: var(--bg-secondary);
             border-radius: 24px;
@@ -1507,40 +1310,11 @@
             animation: fadeUp 0.3s ease;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        .announce-modal-box .close-btn {
-            float: right;
-            background: none;
-            border: none;
-            font-size: 22px;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 0 4px;
-        }
-        .announce-modal-box .title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: var(--text-primary);
-        }
-        .announce-modal-box .content {
-            font-size: 14px;
-            line-height: 1.8;
-            color: var(--text-secondary);
-            white-space: pre-wrap;
-        }
-        .announce-modal-box .images {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin: 12px 0;
-        }
-        .announce-modal-box .images img {
-            max-width: 80px;
-            max-height: 80px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-        }
+        .announce-modal-box .close-btn { float: right; background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer; padding: 0 4px; }
+        .announce-modal-box .title { font-size: 20px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+        .announce-modal-box .content { font-size: 14px; line-height: 1.8; color: var(--text-secondary); white-space: pre-wrap; }
+        .announce-modal-box .images { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+        .announce-modal-box .images img { max-width: 80px; max-height: 80px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer; }
         .announce-modal-box .footer {
             margin-top: 16px;
             padding-top: 12px;
@@ -1551,19 +1325,8 @@
             flex-wrap: wrap;
             gap: 8px;
         }
-        .announce-modal-box .footer label {
-            font-size: 13px;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-        }
-        .announce-modal-box .footer label input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #1a6aff;
-        }
+        .announce-modal-box .footer label { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .announce-modal-box .footer label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #1a6aff; }
         .announce-modal-box .footer .close-modal-btn {
             padding: 8px 24px;
             border-radius: 30px;
@@ -1574,198 +1337,51 @@
             cursor: pointer;
             font-size: 14px;
         }
-        .announce-modal-box .footer .close-modal-btn:active {
-            transform: scale(0.95);
-        }
+        .announce-modal-box .footer .close-modal-btn:active { transform: scale(0.95); }
         
-        .support-contact-section {
-            margin-bottom: 12px;
-            padding: 12px;
-            background: var(--bg-card-hover);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-        .support-contact-section .title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-        .support-contact-section .btn-group {
+        /* ===== 评分星星 ===== */
+        .star-rating {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .table-wrap {
-            overflow-x: auto;
-            margin-top: 6px;
-            -webkit-overflow-scrolling: touch;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        thead {
-            border-bottom: 2px solid var(--border-color);
-        }
-        th {
-            padding: 8px 6px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--table-header);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-        }
-        td {
-            padding: 8px 6px;
-            border-bottom: 1px solid var(--border-color);
-            vertical-align: middle;
-        }
-        
-        .modal-page-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            max-width: 480px;
-            height: 100vh;
-            height: 100dvh;
-            background: var(--bg-secondary);
-            z-index: 4000;
-            overflow-y: auto;
-            padding: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            animation: slideIn 0.3s ease;
-        }
-        .modal-page-overlay.active {
-            display: block;
-        }
-        .modal-page-overlay .modal-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 16px;
-            position: sticky;
-            top: 0;
-            background: var(--bg-secondary);
-            z-index: 10;
-        }
-        .modal-page-overlay .modal-header .back-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
+            gap: 4px;
+            font-size: 22px;
+            color: #d1d5db;
             cursor: pointer;
-            color: var(--text-primary);
-            padding: 4px 8px;
+            justify-content: center;
         }
-        .modal-page-overlay .modal-header .title {
-            font-size: 18px;
-            font-weight: 600;
-            flex: 1;
-        }
+        .star-rating .star.active { color: #f5c842; }
+        .star-rating .star:hover { transform: scale(1.1); }
         
+        /* ===== 响应式 ===== */
         @media(max-width:420px) {
-            .view-container {
-                padding: 10px 12px 4px;
-            }
-            .bottom-nav {
-                padding: 4px 0 max(8px, env(safe-area-inset-bottom));
-                min-height: 48px;
-            }
-            .nav-item {
-                padding: 2px 4px;
-                min-width: 36px;
-                font-size: 9px;
-            }
-            .nav-item i {
-                font-size: 18px;
-            }
-            .product-grid {
-                gap: 8px;
-            }
-            .category-nav-wrapper .category-btn {
-                padding: 5px 12px;
-                font-size: 12px;
-            }
-            .shop-list-grid {
-                gap: 10px;
-            }
-            .shop-list-card .shop-cover {
-                aspect-ratio: 16 / 9;
-            }
-            .shop-detail-header {
-                padding: 12px 14px 16px;
-            }
-            .shop-detail-header .shop-avatar {
-                width: 44px;
-                height: 44px;
-                font-size: 22px;
-            }
-            .shop-detail-header .shop-name-area .name {
-                font-size: 16px;
-            }
-            .workbench-grid {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 6px;
-            }
-            .workbench-item {
-                padding: 10px 2px;
-                min-height: 60px;
-            }
-            .workbench-item .icon {
-                font-size: 18px;
-            }
-            .workbench-item .label {
-                font-size: 10px;
-            }
-            .stat-row {
-                grid-template-columns: 1fr 1fr 1fr 1fr;
-                gap: 6px;
-            }
-            .stat-card .stat-value {
-                font-size: 15px;
-            }
-            .profile-header .avatar {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-            }
-            .modal-page-overlay {
-                padding: 12px;
-            }
-            .admin-card {
-                padding: 12px 10px;
-            }
-            .modal-box {
-                padding: 20px 16px;
-            }
-            .shop-detail-tabs .tab-btn {
-                padding: 4px 12px;
-                font-size: 12px;
-            }
-            .ad-carousel {
-                aspect-ratio: 16 / 6;
-            }
+            .view-container { padding: 10px 12px 4px; }
+            .bottom-nav { padding: 4px 0 max(8px, env(safe-area-inset-bottom)); min-height: 48px; }
+            .nav-item { padding: 2px 4px; min-width: 36px; font-size: 9px; }
+            .nav-item i { font-size: 18px; }
+            .product-grid { gap: 8px; }
+            .category-nav-wrapper .category-btn { padding: 5px 12px; font-size: 12px; }
+            .shop-list-grid { gap: 10px; }
+            .shop-list-card .shop-cover { aspect-ratio: 16 / 9; }
+            .shop-detail-header { padding: 12px 14px 16px; }
+            .shop-detail-header .shop-avatar { width: 44px; height: 44px; font-size: 22px; }
+            .shop-detail-header .shop-name-area .name { font-size: 16px; }
+            .workbench-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+            .workbench-item { padding: 10px 2px; min-height: 60px; }
+            .workbench-item .icon { font-size: 18px; }
+            .workbench-item .label { font-size: 10px; }
+            .stat-row { grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; }
+            .stat-card .stat-value { font-size: 15px; }
+            .profile-header .avatar { width: 40px; height: 40px; font-size: 16px; }
+            .sub-page { padding: 12px; }
+            .admin-card { padding: 12px 10px; }
+            .modal-box { padding: 20px 16px; }
+            .shop-detail-tabs .tab-btn { padding: 4px 12px; font-size: 12px; }
+            .banner-carousel { aspect-ratio: 16 / 7; }
         }
         
         @supports (padding-top: env(safe-area-inset-top)) {
-            .app-wrapper {
-                padding-top: env(safe-area-inset-top);
-            }
-            .modal-page-overlay {
-                padding-top: env(safe-area-inset-top);
-            }
-            .shop-detail-page {
-                padding-top: env(safe-area-inset-top);
-            }
+            .app-wrapper { padding-top: env(safe-area-inset-top); }
+            .sub-page { padding-top: env(safe-area-inset-top); }
+            .shop-detail-page { padding-top: env(safe-area-inset-top); }
         }
     </style>
 </head>
@@ -1820,31 +1436,32 @@
             </div>
         </div>
 
-        <!-- ===== 商城页面 ===== -->
+        <!-- ===== 商城页面（店铺列表 + 广告轮播） ===== -->
         <div class="view active" id="view-home">
-            <div class="ad-carousel" id="adCarousel">
-                <div class="ad-slides" id="adSlides"></div>
-                <div class="ad-dots" id="adDots"></div>
+            <!-- 广告轮播 -->
+            <div class="banner-carousel" id="bannerCarousel">
+                <div class="banner-track" id="bannerTrack"></div>
+                <div class="banner-dots" id="bannerDots"></div>
+                <button class="banner-arrow left" onclick="prevBanner()">‹</button>
+                <button class="banner-arrow right" onclick="nextBanner()">›</button>
             </div>
             
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                <span style="font-size:18px;font-weight:700;">🏪 推荐俱乐部</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="font-size:16px;font-weight:700;">🏪 推荐俱乐部</span>
                 <span style="font-size:12px;color:var(--text-muted);" id="shopCount"></span>
             </div>
             
+            <!-- 分类导航 -->
             <div class="category-nav-wrapper" id="categoryNavWrapper">
                 <button class="category-btn active" data-category="all" onclick="filterShops('all')">🏷️ 全部</button>
                 <div id="categoryButtons" style="display:flex;gap:6px;flex-wrap:nowrap;"></div>
             </div>
             
-            <div style="margin-bottom:12px;">
-                <input class="admin-form-control" id="shopSearchInput" placeholder="🔍 搜索俱乐部..." oninput="renderShops()" style="border-radius:30px;padding:8px 16px;" />
-            </div>
-            
+            <!-- 店铺列表 -->
             <div id="shopListContainer"></div>
         </div>
 
-        <!-- ===== 店铺详情页 ===== -->
+        <!-- ===== 店铺详情页（全屏） ===== -->
         <div class="shop-detail-page" id="shopDetailPage">
             <div class="shop-detail-header" id="shopDetailHeader">
                 <button class="back-btn" onclick="closeShopDetail()"><i class="fas fa-arrow-left"></i></button>
@@ -1854,22 +1471,24 @@
                         <div class="name" id="shopDetailName">店铺名称</div>
                         <div class="rating" id="shopDetailRating">★ 4.9 <span>· 好评率98%</span></div>
                     </div>
-                    <button class="follow-btn-header" id="shopDetailFollowBtn" onclick="toggleFollowShop()">关注</button>
                 </div>
                 <div class="shop-desc-area" id="shopDetailDesc">店铺简介</div>
                 <div class="shop-stats" id="shopDetailStats">
                     <span>ID: <strong id="shopDetailId">--</strong></span>
                     <span>销量: <strong id="shopDetailSales">0</strong></span>
-                    <span>关注: <strong id="shopDetailFollowCount">0</strong></span>
+                    <span>关注: <strong id="shopDetailFollows">0</strong></span>
                 </div>
+                <button class="btn btn-sm" id="shopDetailFollowBtn" style="background:#1a6aff;color:#fff;border:none;padding:4px 16px;border-radius:30px;margin-top:8px;cursor:pointer;" onclick="toggleFollowShop()">+ 关注</button>
             </div>
             <div class="shop-detail-tabs" id="shopDetailTabs">
                 <button class="tab-btn active" data-tab="all" onclick="filterShopProducts('all')">全部</button>
                 <button class="tab-btn" data-tab="popular" onclick="filterShopProducts('popular')">人气</button>
                 <button class="tab-btn" data-tab="new" onclick="filterShopProducts('new')">最新</button>
             </div>
+            <div class="shop-detail-search">
+                <input type="text" id="shopSearchInput" placeholder="🔍 搜索商品..." oninput="searchShopProducts()" />
+            </div>
             <div class="shop-detail-products" id="shopDetailProducts">
-                <input class="search-input" id="shopProductSearch" placeholder="🔍 搜索商品..." oninput="searchShopProducts()" />
                 <div id="shopProductList"></div>
             </div>
         </div>
@@ -1897,7 +1516,7 @@
             <div id="orderList"></div>
         </div>
 
-        <!-- ===== 管理页面 ===== -->
+        <!-- ===== 管理页面（工作台 + 内嵌弹窗） ===== -->
         <div class="view" id="view-admin">
             <div class="admin-card" style="padding:16px;">
                 <div class="profile-header">
@@ -1909,48 +1528,16 @@
                     <span class="badge" id="adminRoleBadge">管理员</span>
                 </div>
             </div>
+            
+            <!-- 工作台 -->
             <div class="admin-card" style="padding:12px 10px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                     <span style="font-size:14px;font-weight:600;">📋 工作台</span>
                 </div>
-                <div class="workbench-grid" id="workbenchGrid">
-                    <div class="workbench-item" onclick="openModalPage('orders')">
-                        <span class="icon">📋</span>
-                        <span class="label">订单管理</span>
-                        <span class="badge-count" id="badgeOrders">0</span>
-                    </div>
-                    <div class="workbench-item" onclick="openModalPage('products')">
-                        <span class="icon">📦</span>
-                        <span class="label">商品管理</span>
-                    </div>
-                    <div class="workbench-item" onclick="openModalPage('users')">
-                        <span class="icon">👥</span>
-                        <span class="label">用户管理</span>
-                        <span class="badge-count" id="badgeUsers">0</span>
-                    </div>
-                    <div class="workbench-item" onclick="openModalPage('recharges')">
-                        <span class="icon">💰</span>
-                        <span class="label">充值管理</span>
-                        <span class="badge-count" id="badgeRecharges">0</span>
-                    </div>
-                    <div class="workbench-item" onclick="openModalPage('shops')">
-                        <span class="icon">🏪</span>
-                        <span class="label">店铺管理</span>
-                    </div>
-                    <div class="workbench-item" onclick="openModalPage('ads')">
-                        <span class="icon">📢</span>
-                        <span class="label">广告管理</span>
-                    </div>
-                    <div class="workbench-item" onclick="openModalPage('withdrawals')">
-                        <span class="icon">💳</span>
-                        <span class="label">提现管理</span>
-                    </div>
-                    <div class="workbench-item" onclick="openModalPage('account')">
-                        <span class="icon">⚙️</span>
-                        <span class="label">账户设置</span>
-                    </div>
-                </div>
+                <div class="workbench-grid" id="workbenchGrid"></div>
             </div>
+            
+            <!-- 数据统计 -->
             <div class="admin-card" style="padding:12px 14px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                     <span style="font-size:14px;font-weight:600;">📊 数据统计</span>
@@ -1974,6 +1561,8 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- 内嵌内容区域 -->
             <div id="adminSubContent"></div>
         </div>
 
@@ -1983,56 +1572,124 @@
                 <span style="font-size:18px;font-weight:600;">💬 消息</span>
                 <span style="font-size:12px;color:var(--text-muted);" id="msgUnreadTotal"></span>
             </div>
-            <div style="display:flex;gap:8px;margin-bottom:8px;">
-                <input class="admin-form-control" id="searchContact" placeholder="🔍 搜索联系人 (ID/用户名)..." oninput="loadContacts()" style="flex:1;border-radius:30px;padding:8px 16px;" />
-                <button class="btn btn-primary btn-sm" onclick="showAddContact()"><i class="fas fa-user-plus"></i></button>
+            <div class="admin-form-group" style="margin-bottom:8px;">
+                <input class="admin-form-control" id="searchContact" placeholder="🔍 搜索联系人(ID/用户名)..." oninput="loadContacts()" />
             </div>
             <div id="contactList"></div>
         </div>
 
-        <!-- ===== 账号管理 ===== -->
+        <!-- ===== 账号管理（含改名、背景墙） ===== -->
         <div class="view" id="view-account">
-            <div class="admin-card" style="background:var(--bg-card);border-radius:20px;padding:16px;margin-bottom:12px;border:1px solid var(--admin-card-border);">
-                <div style="text-align:center;position:relative;">
-                    <div id="accountBgPreview" style="width:100%;height:120px;background:var(--product-img-bg);border-radius:12px;overflow:hidden;margin-bottom:12px;">
-                        <img id="accountBgImage" src="" style="width:100%;height:100%;object-fit:cover;display:none;" />
-                    </div>
-                    <div style="display:flex;flex-direction:column;align-items:center;margin-top:-30px;">
-                        <div id="accountAvatar" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(145deg,#00c8ff,#0055ff);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.15);">QW</div>
-                        <div style="font-size:18px;font-weight:600;margin-top:8px;" id="accountDisplayName">用户名</div>
-                        <div style="font-size:12px;color:var(--text-muted);">ID: <span id="accountId">--</span></div>
-                        <div style="font-size:12px;color:var(--text-muted);">角色: <span id="accountRole">--</span></div>
-                    </div>
+            <!-- 背景墙 -->
+            <div id="profileBanner" style="width:100%;height:120px;border-radius:16px;overflow:hidden;margin-bottom:12px;background:linear-gradient(135deg,#1a1a2e,#2d2d44);">
+                <img id="profileBannerImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;" />
+                <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fff;font-size:14px;opacity:0.5;" id="bannerPlaceholder">设置背景墙</div>
+            </div>
+            
+            <div class="admin-card">
+                <div class="admin-card-title"><i class="fas fa-user"></i> 账号信息</div>
+                <div id="accountInfo" class="account-info">
+                    <div class="info-row"><span class="label">用户名</span><span class="value" id="accUsername">-</span></div>
+                    <div class="info-row"><span class="label">用户ID</span><span class="value" id="accUserId">-</span></div>
+                    <div class="info-row"><span class="label">角色</span><span class="value" id="accRole">-</span></div>
+                    <div class="info-row"><span class="label">状态</span><span class="value" id="accStatus">-</span></div>
+                    <div class="info-row" id="accDiamondRow"><span class="label">红钻余额</span><span class="value" id="accDiamond">0</span></div>
                 </div>
             </div>
             <div class="admin-card" style="border-left:4px solid #22c55e;">
-                <div class="admin-card-title"><i class="fas fa-edit"></i> 编辑资料</div>
-                <div class="admin-form-group"><label>显示名称</label><input class="admin-form-control" id="editDisplayName" placeholder="显示名称" /></div>
-                <div class="admin-form-group"><label>头像 URL</label><input class="admin-form-control" id="editAvatar" placeholder="头像图片URL" oninput="previewAvatar(this.value)" /></div>
-                <div class="admin-form-group"><label>主页背景 URL</label><input class="admin-form-control" id="editBgImage" placeholder="背景图片URL" oninput="previewBgImage(this.value)" /></div>
-                <div class="admin-form-group"><label>俱乐部前缀</label><input class="admin-form-control" id="editShopPrefix" placeholder="如: QW-" /></div>
-                <button class="btn btn-success" onclick="saveUserProfile()"><i class="fas fa-save"></i> 保存资料</button>
-            </div>
-            <div class="admin-card" style="border-left:4px solid #ef4444;">
-                <div class="admin-card-title"><i class="fas fa-sign-in-alt" style="color:#ef4444;"></i> 账号管理</div>
+                <div class="admin-card-title"><i class="fas fa-edit" style="color:#22c55e;"></i> 设置</div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
+                    <button class="btn btn-primary btn-sm" onclick="showChangeName()"><i class="fas fa-user-edit"></i> 修改昵称</button>
+                    <button class="btn btn-outline btn-sm" onclick="showChangeBanner()"><i class="fas fa-image"></i> 设置背景墙</button>
+                    <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===== 底部导航 ===== -->
+    <!-- ===== 底部导航（由 JavaScript 动态渲染） ===== -->
     <div class="bottom-nav" id="bottomNav"></div>
 </div>
 
-<!-- ===== 弹窗页面容器 ===== -->
-<div class="modal-page-overlay" id="modalPage">
-    <div class="modal-header">
-        <button class="back-btn" onclick="closeModalPage()"><i class="fas fa-arrow-left"></i></button>
-        <span class="title" id="modalPageTitle">功能</span>
+<!-- ===== 子页面容器 ===== -->
+<div class="sub-page" id="subPageOrders">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">📋 订单管理</span>
     </div>
-    <div id="modalPageContent"></div>
+    <div id="subOrdersContent"></div>
+</div>
+
+<div class="sub-page" id="subPageProducts">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">📦 商品管理</span>
+    </div>
+    <div id="subProductsContent"></div>
+</div>
+
+<div class="sub-page" id="subPageUsers">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">👥 用户管理</span>
+    </div>
+    <div id="subUsersContent"></div>
+</div>
+
+<div class="sub-page" id="subPageRecharges">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">💰 充值管理</span>
+    </div>
+    <div id="subRechargesContent"></div>
+</div>
+
+<div class="sub-page" id="subPageShops">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">🏪 店铺管理</span>
+    </div>
+    <div id="subShopsContent"></div>
+</div>
+
+<div class="sub-page" id="subPageAnnounce">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">📢 公告管理</span>
+    </div>
+    <div id="subAnnounceContent"></div>
+</div>
+
+<div class="sub-page" id="subPageWithdrawals">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">💳 提现管理</span>
+    </div>
+    <div id="subWithdrawalsContent"></div>
+</div>
+
+<div class="sub-page" id="subPageAccount">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">⚙️ 账户设置</span>
+    </div>
+    <div id="subAccountContent"></div>
+</div>
+
+<div class="sub-page" id="subPageService">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">🎧 客服系统</span>
+    </div>
+    <div id="subServiceContent"></div>
+</div>
+
+<div class="sub-page" id="subPageDispatcher">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">📋 派单系统</span>
+    </div>
+    <div id="subDispatcherContent"></div>
 </div>
 
 <!-- ===== 全屏聊天 ===== -->
@@ -2091,10 +1748,12 @@ let currentSubPage = null;
 let currentShopId = null;
 let currentShopProducts = [];
 let currentShopFilter = 'all';
-let currentShopSearch = '';
-let adTimer = null;
-let adIndex = 0;
-let ads = [];
+let bannerImages = [];
+let bannerIndex = 0;
+let bannerTimer = null;
+let allShops = [];
+let shopCategories = [];
+let followedShops = [];
 
 // ============================================================
 //  全屏聊天状态
@@ -2271,7 +1930,7 @@ function closeAnnounceModal() {
 }
 
 // ============================================================
-//  底部导航动态渲染
+//  底部导航动态渲染（根据角色）
 // ============================================================
 function renderBottomNav() {
     if (!currentUser) return;
@@ -2315,7 +1974,7 @@ function renderBottomNav() {
 //  导航切换
 // ============================================================
 function navigateTo(target) {
-    closeModalPage();
+    closeSubPage();
     closeShopDetail();
     
     document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
@@ -2336,121 +1995,156 @@ function navigateTo(target) {
     if (viewId) {
         document.getElementById(viewId).classList.add('active');
         switch(target) {
-            case 'home': renderShops(); break;
+            case 'home': renderShops(); startBannerAuto(); break;
             case 'orders': renderOrdersPage(); break;
             case 'admin': renderAdminPage(); break;
             case 'messages': loadContacts(); break;
-            case 'account': loadAccountPage(); break;
+            case 'account': updateAccountInfo(); break;
         }
     }
 }
+
 // ============================================================
-//  弹窗页面（全屏模态）
+//  子页面管理
 // ============================================================
-function openModalPage(page) {
+function openSubPage(page) {
     const pageMap = {
-        'orders': { title: '📋 订单管理', render: renderModalOrders },
-        'products': { title: '📦 商品管理', render: renderModalProducts },
-        'users': { title: '👥 用户管理', render: renderModalUsers },
-        'recharges': { title: '💰 充值管理', render: renderModalRecharges },
-        'shops': { title: '🏪 店铺管理', render: renderModalShops },
-        'ads': { title: '📢 广告管理', render: renderModalAds },
-        'withdrawals': { title: '💳 提现管理', render: renderModalWithdrawals },
-        'account': { title: '⚙️ 账户设置', render: renderModalAccount }
+        'orders': 'subPageOrders',
+        'products': 'subPageProducts',
+        'users': 'subPageUsers',
+        'recharges': 'subPageRecharges',
+        'shops': 'subPageShops',
+        'announce': 'subPageAnnounce',
+        'withdrawals': 'subPageWithdrawals',
+        'account': 'subPageAccount',
+        'service': 'subPageService',
+        'dispatcher': 'subPageDispatcher'
     };
     
-    const info = pageMap[page];
-    if (!info) return;
+    const containerId = pageMap[page];
+    if (!containerId) return;
     
-    document.getElementById('modalPageTitle').textContent = info.title;
-    document.getElementById('modalPage').classList.add('active');
+    currentSubPage = page;
+    document.getElementById(containerId).classList.add('active');
     document.body.style.overflow = 'hidden';
-    info.render();
-}
-
-function closeModalPage() {
-    document.getElementById('modalPage').classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-// ============================================================
-//  广告轮播
-// ============================================================
-async function loadAds() {
-    try {
-        const result = await apiRequest('/ads');
-        ads = result || [];
-        renderAds();
-    } catch (err) {
-        console.error('加载广告失败', err);
+    
+    switch(page) {
+        case 'orders': renderSubOrders(); break;
+        case 'products': renderSubProducts(); break;
+        case 'users': renderSubUsers(); break;
+        case 'recharges': renderSubRecharges(); break;
+        case 'shops': renderSubShops(); break;
+        case 'announce': renderSubAnnounce(); break;
+        case 'withdrawals': renderSubWithdrawals(); break;
+        case 'account': renderSubAccount(); break;
+        case 'service': renderSubService(); break;
+        case 'dispatcher': renderSubDispatcher(); break;
     }
 }
 
-function renderAds() {
-    const container = document.getElementById('adSlides');
-    const dotsContainer = document.getElementById('adDots');
-    if (!container) return;
+function closeSubPage() {
+    document.querySelectorAll('.sub-page').forEach(el => el.classList.remove('active'));
+    document.body.style.overflow = '';
+    currentSubPage = null;
+}
+
+// ============================================================
+//  ===== 广告轮播 =====
+// ============================================================
+function initBanner() {
+    loadBannerFromStorage();
+    renderBanner();
+    startBannerAuto();
+}
+
+function loadBannerFromStorage() {
+    try {
+        const saved = localStorage.getItem('banner_images');
+        if (saved) {
+            bannerImages = JSON.parse(saved);
+        }
+    } catch (e) { bannerImages = []; }
+}
+
+function saveBannerToStorage() {
+    try {
+        localStorage.setItem('banner_images', JSON.stringify(bannerImages));
+    } catch (e) {}
+}
+
+function renderBanner() {
+    const track = document.getElementById('bannerTrack');
+    const dots = document.getElementById('bannerDots');
+    if (!track || !dots) return;
     
-    if (ads.length === 0) {
-        container.innerHTML = `<div class="ad-slide"><div style="color:rgba(255,255,255,0.5);font-size:14px;">暂无广告</div></div>`;
-        dotsContainer.innerHTML = '';
+    if (bannerImages.length === 0) {
+        track.innerHTML = `<div class="banner-slide"><span style="opacity:0.5;">📢 暂无广告，请管理员添加</span></div>`;
+        dots.innerHTML = '';
         return;
     }
     
-    container.innerHTML = ads.map(ad => `
-        <div class="ad-slide">
-            <img src="${ad.image_url}" alt="${ad.title || '广告'}" onclick="window.open('${ad.link_url || '#}','_blank')" />
+    track.innerHTML = bannerImages.map(img => `
+        <div class="banner-slide">
+            <img src="${img}" alt="banner" />
         </div>
     `).join('');
     
-    dotsContainer.innerHTML = ads.map((_, i) => `
-        <span class="dot ${i === 0 ? 'active' : ''}" onclick="goToAd(${i})"></span>
+    dots.innerHTML = bannerImages.map((_, i) => `
+        <span class="dot ${i === bannerIndex ? 'active' : ''}" onclick="goToBanner(${i})"></span>
     `).join('');
     
-    adIndex = 0;
-    startAdAutoPlay();
+    track.style.transform = `translateX(-${bannerIndex * 100}%)`;
 }
 
-function goToAd(index) {
-    adIndex = index;
-    const container = document.getElementById('adSlides');
-    if (container) {
-        container.style.transform = `translateX(-${index * 100}%)`;
+function goToBanner(index) {
+    if (index < 0) index = bannerImages.length - 1;
+    if (index >= bannerImages.length) index = 0;
+    bannerIndex = index;
+    renderBanner();
+}
+
+function nextBanner() {
+    if (bannerImages.length === 0) return;
+    goToBanner(bannerIndex + 1);
+}
+
+function prevBanner() {
+    if (bannerImages.length === 0) return;
+    goToBanner(bannerIndex - 1);
+}
+
+function startBannerAuto() {
+    if (bannerTimer) clearInterval(bannerTimer);
+    if (bannerImages.length > 1) {
+        bannerTimer = setInterval(nextBanner, 4000);
     }
-    document.querySelectorAll('#adDots .dot').forEach((dot, i) => {
-        dot.classList.toggle('active', i === index);
-    });
 }
 
-function startAdAutoPlay() {
-    if (adTimer) clearInterval(adTimer);
-    if (ads.length < 2) return;
-    adTimer = setInterval(() => {
-        adIndex = (adIndex + 1) % ads.length;
-        goToAd(adIndex);
-    }, 4000);
+function stopBannerAuto() {
+    if (bannerTimer) {
+        clearInterval(bannerTimer);
+        bannerTimer = null;
+    }
 }
 
 // ============================================================
-//  店铺列表（商城首页）
+//  ===== 店铺列表（商城首页） =====
 // ============================================================
-let allShops = [];
-let shopCategories = [];
-
 async function renderShops() {
     try {
-        const search = document.getElementById('shopSearchInput')?.value || '';
-        const url = search ? '/shops?search=' + encodeURIComponent(search) : '/shops';
-        const shops = await apiRequest(url) || [];
+        const shops = await apiRequest('/shops') || [];
         allShops = shops;
         document.getElementById('shopCount').textContent = shops.length + '家';
         
+        // 加载分类
         const categories = await apiRequest('/categories') || [];
         shopCategories = categories.filter(c => !c.parent_id);
         renderShopCategories();
-        renderShopList();
+        
+        renderShopList('all');
+        initBanner();
     } catch (err) {
-        console.error('加载店铺失败:', err);
+        console.error(err);
         document.getElementById('shopListContainer').innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
     }
 }
@@ -2459,13 +2153,6 @@ function renderShopCategories() {
     const container = document.getElementById('categoryButtons');
     if (!container) return;
     container.innerHTML = '';
-    const allBtn = document.createElement('button');
-    allBtn.className = 'category-btn active';
-    allBtn.dataset.category = 'all';
-    allBtn.textContent = '🏷️ 全部';
-    allBtn.onclick = function() { filterShops('all'); };
-    container.appendChild(allBtn);
-    
     shopCategories.forEach(c => {
         const btn = document.createElement('button');
         btn.className = 'category-btn';
@@ -2481,24 +2168,30 @@ function filterShops(categoryId) {
     document.querySelectorAll('#categoryNavWrapper .category-btn').forEach(b => b.classList.remove('active'));
     const targetBtn = document.querySelector(`#categoryNavWrapper .category-btn[data-category="${categoryId}"]`);
     if (targetBtn) targetBtn.classList.add('active');
-    renderShopList();
+    if (categoryId === 'all') {
+        document.querySelector('#categoryNavWrapper .category-btn[data-category="all"]')?.classList.add('active');
+    }
+    renderShopList(categoryId);
 }
 
-function renderShopList() {
+function renderShopList(categoryId) {
     const container = document.getElementById('shopListContainer');
     if (!container) return;
     
     let shops = allShops;
-    if (currentCategoryFilter !== 'all') {
-        shops = shops.filter(s => s.category_id === currentCategoryFilter);
+    if (categoryId !== 'all') {
+        shops = shops.filter(s => s.category_id === categoryId);
     }
     
+    // 排序：自营 > 关注 > 推荐 > 其他
     shops.sort((a, b) => {
-        if (a.is_self_operated && !b.is_self_operated) return -1;
-        if (!a.is_self_operated && b.is_self_operated) return 1;
-        if (a.is_recommended && !b.is_recommended) return -1;
-        if (!a.is_recommended && b.is_recommended) return 1;
-        return 0;
+        const getWeight = (s) => {
+            if (s.is_self) return 0;
+            if (s.is_followed) return 1;
+            if (s.is_recommend) return 2;
+            return 3;
+        };
+        return getWeight(a) - getWeight(b);
     });
     
     if (shops.length === 0) {
@@ -2509,34 +2202,33 @@ function renderShopList() {
     let html = '<div class="shop-list-grid">';
     shops.forEach(s => {
         const rating = s.rating || '4.9';
-        const sales = s.sales || 0;
-        const isSelf = s.is_self_operated ? true : false;
-        const isRecommend = s.is_recommended ? true : false;
+        const sales = s.sales || Math.floor(Math.random() * 5000) + 100;
         const desc = s.description || '电竞行业深耕者，用心服务每一位客户';
-        const idDisplay = s.id || '--';
-        const followCount = s.follow_count || 0;
-        const isFollowed = s.is_followed || false;
-        
-        let badges = '';
-        if (isSelf) badges += '<span class="shop-badge self">自营</span>';
-        else if (isRecommend) badges += '<span class="shop-badge recommend">推荐</span>';
-        
+        const idDisplay = s.id || '50000';
+        let badgeHtml = '';
+        if (s.is_self) {
+            badgeHtml = '<span class="shop-badge self">🏆 自营</span>';
+        } else if (s.is_followed) {
+            badgeHtml = '<span class="shop-badge follow">⭐ 已关注</span>';
+        } else if (s.is_recommend) {
+            badgeHtml = '<span class="shop-badge recommend">🔥 推荐</span>';
+        }
+        const followText = s.is_followed ? '已关注' : '关注';
+        const followClass = s.is_followed ? 'followed' : '';
         html += `
             <div class="shop-list-card" onclick="openShopDetail('${s.id}')">
                 <div class="shop-cover">
                     ${s.logo ? `<img src="${s.logo}" alt="${s.name}" />` : '🏪'}
-                    ${badges}
-                    <button class="follow-btn ${isFollowed ? 'followed' : ''}" onclick="event.stopPropagation();toggleFollowShop('${s.id}')">
-                        ${isFollowed ? '✓ 已关注' : '关注'}
-                    </button>
+                    ${badgeHtml}
                 </div>
                 <div class="shop-info">
                     <div class="shop-name">${s.name}</div>
-                    <div class="shop-rating">★ ${rating} <span>· ${followCount}人关注</span></div>
+                    <div class="shop-rating">★ ${rating} <span>· 好评率${Math.round(parseFloat(rating)/5*100)}%</span></div>
                     <div class="shop-desc">${desc}</div>
                     <div class="shop-meta">
                         <span class="shop-id">ID: ${idDisplay}</span>
                         <span class="shop-sales">${sales}人付款</span>
+                        <button class="follow-btn ${followClass}" onclick="event.stopPropagation();toggleFollow('${s.id}')">${followText}</button>
                     </div>
                 </div>
             </div>
@@ -2547,59 +2239,73 @@ function renderShopList() {
 }
 
 // ============================================================
-//  关注店铺
+//  ===== 关注功能 =====
 // ============================================================
-async function toggleFollowShop(shopId) {
+async function toggleFollow(shopId) {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
     try {
-        const result = await apiRequest('/follow/shop', {
-            method: 'POST',
-            body: JSON.stringify({ shopId: shopId || currentShopId })
-        });
-        toast(result.message, 'success');
+        const result = await apiRequest('/shops/' + shopId + '/follow', { method: 'POST' });
+        toast(result.message || '操作成功', 'success');
         renderShops();
-        if (currentShopId) {
-            await loadShopDetail(currentShopId);
+        // 如果店铺详情页打开，更新关注按钮
+        if (currentShopId === shopId) {
+            updateShopDetailFollowBtn();
         }
     } catch (err) {
         toast(err.message, 'error');
     }
 }
 
+async function toggleFollowShop() {
+    if (!currentShopId) return;
+    await toggleFollow(currentShopId);
+}
+
+function updateShopDetailFollowBtn() {
+    const shop = allShops.find(s => s.id === currentShopId);
+    if (!shop) return;
+    const btn = document.getElementById('shopDetailFollowBtn');
+    if (shop.is_followed) {
+        btn.textContent = '已关注';
+        btn.style.background = '#6b7280';
+    } else {
+        btn.textContent = '+ 关注';
+        btn.style.background = '#1a6aff';
+    }
+}
 // ============================================================
-//  店铺详情页
+//  ===== 店铺详情页 =====
 // ============================================================
 async function openShopDetail(shopId) {
     currentShopId = shopId;
-    document.getElementById('shopDetailPage').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    await loadShopDetail(shopId);
-}
-
-async function loadShopDetail(shopId) {
     try {
-        const shop = await apiRequest('/shops/' + shopId);
-        
-        document.getElementById('shopDetailName').textContent = shop.name || '店铺名称';
-        document.getElementById('shopDetailAvatar').innerHTML = shop.avatar ? `<img src="${shop.avatar}" />` : '🏪';
-        const rating = shop.rating || '4.9';
-        document.getElementById('shopDetailRating').innerHTML = `★ ${rating} <span>· ${shop.rating_count || 0}人评价</span>`;
-        document.getElementById('shopDetailDesc').textContent = shop.description || '电竞行业深耕者，用心服务每一位客户';
-        document.getElementById('shopDetailId').textContent = shop.id || '--';
-        document.getElementById('shopDetailSales').textContent = shop.sales || 0;
-        document.getElementById('shopDetailFollowCount').textContent = shop.followCount || 0;
-        
-        const followBtn = document.getElementById('shopDetailFollowBtn');
-        if (shop.is_followed) {
-            followBtn.textContent = '✓ 已关注';
-            followBtn.className = 'follow-btn-header followed';
-        } else {
-            followBtn.textContent = '关注';
-            followBtn.className = 'follow-btn-header';
-        }
+        const shops = await apiRequest('/shops');
+        const shop = shops.find(s => s.id === shopId);
+        if (!shop) return toast('店铺不存在', 'error');
         
         const products = await apiRequest('/shops/' + shopId + '/products');
         currentShopProducts = products;
+        
+        document.getElementById('shopDetailName').textContent = shop.name || '店铺名称';
+        document.getElementById('shopDetailAvatar').textContent = shop.logo ? '' : '🏪';
+        if (shop.logo) {
+            document.getElementById('shopDetailAvatar').innerHTML = `<img src="${shop.logo}" style="width:100%;height:100%;object-fit:cover;" />`;
+        }
+        const rating = shop.rating || '4.9';
+        document.getElementById('shopDetailRating').innerHTML = `★ ${rating} <span>· 好评率${Math.round(parseFloat(rating)/5*100)}%</span>`;
+        document.getElementById('shopDetailDesc').textContent = shop.description || '电竞行业深耕者，用心服务每一位客户';
+        document.getElementById('shopDetailId').textContent = shop.id || '--';
+        const sales = shop.sales || Math.floor(Math.random() * 5000) + 100;
+        document.getElementById('shopDetailSales').textContent = sales;
+        const follows = shop.follow_count || Math.floor(Math.random() * 500) + 10;
+        document.getElementById('shopDetailFollows').textContent = follows;
+        
+        // 更新关注按钮
+        updateShopDetailFollowBtn();
+        
+        document.getElementById('shopDetailPage').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
         renderShopProducts('all');
     } catch (err) {
         console.error(err);
@@ -2612,7 +2318,6 @@ function closeShopDetail() {
     document.body.style.overflow = '';
     currentShopId = null;
     currentShopProducts = [];
-    currentShopSearch = '';
 }
 
 function filterShopProducts(filter) {
@@ -2624,7 +2329,6 @@ function filterShopProducts(filter) {
 }
 
 function searchShopProducts() {
-    currentShopSearch = document.getElementById('shopProductSearch').value || '';
     renderShopProducts(currentShopFilter);
 }
 
@@ -2632,15 +2336,17 @@ function renderShopProducts(filter) {
     const container = document.getElementById('shopProductList');
     if (!container) return;
     
+    const search = document.getElementById('shopSearchInput')?.value.toLowerCase() || '';
     let products = currentShopProducts;
+    
+    if (search) {
+        products = products.filter(p => p.title.toLowerCase().includes(search) || (p.description || '').toLowerCase().includes(search));
+    }
+    
     if (filter === 'popular') {
         products = products.sort((a, b) => (b.sold || 0) - (a.sold || 0));
     } else if (filter === 'new') {
         products = products.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    }
-    
-    if (currentShopSearch) {
-        products = products.filter(p => p.title.toLowerCase().includes(currentShopSearch.toLowerCase()));
     }
     
     if (products.length === 0) {
@@ -2676,7 +2382,7 @@ function renderShopProducts(filter) {
 }
 
 // ============================================================
-//  商品详情 & 购买
+//  ===== 商品详情 =====
 // ============================================================
 let currentDetailProductId = null;
 
@@ -2707,6 +2413,9 @@ async function openProductDetail(productId) {
     }
 }
 
+// ============================================================
+//  ===== 购买功能 =====
+// ============================================================
 async function showBuyWithHandler(productId) {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
     try {
@@ -2753,7 +2462,7 @@ async function doBuyWithHandler(productId) {
 }
 
 // ============================================================
-//  订单页面
+//  ===== 订单/打手页面 =====
 // ============================================================
 async function renderOrdersPage() {
     const role = currentUser?.role;
@@ -2806,9 +2515,6 @@ async function renderOrders() {
                 shouldShow = (o.boss_id === currentUser.id || o.handler_id === currentUser.id);
             }
             if (!shouldShow) continue;
-            
-            const handlerDisplay = o.handler_id || '未指派';
-            
             if (o.status === 'pending' && role === 'handler') {
                 actions += `<button class="btn btn-primary btn-xs" onclick="confirmTake('${o.id}')">接单</button>`;
             }
@@ -2821,22 +2527,15 @@ async function renderOrders() {
             if ((o.status === 'ongoing' || o.status === 'pending') && (role === 'boss' || role === 'service')) {
                 actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
             }
-            if (o.status === 'completed' && role === 'boss' && !o.rating) {
-                actions += `<button class="btn btn-primary btn-xs" onclick="showRateOrder('${o.id}')">评价</button>`;
-            }
             actions += `<button class="btn btn-outline btn-xs" onclick="openChat('${o.id}','${o.title}','order')">💬</button>`;
             actions += `<button class="btn btn-outline btn-xs" onclick="viewOrderDetail('${o.id}')">详情</button>`;
-            
-            const ratingDisplay = o.rating ? `⭐ ${o.rating}星` : '未评价';
-            
             html += `
                 <div class="admin-card" style="padding:12px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
                         <div>
                             <strong>${o.game || '暗区突围'} · ${o.title}</strong>
                             <div style="font-size:12px;color:var(--text-muted);">
-                                ${o.price} 红钻 ｜ 打手: ${handlerDisplay} ｜ <span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span>
-                                ${o.rating ? `｜ ${ratingDisplay}` : ''}
+                                ${o.price} 红钻 ｜ <span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span>
                             </div>
                         </div>
                         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${actions}</div>
@@ -2852,64 +2551,7 @@ async function renderOrders() {
 }
 
 // ============================================================
-//  订单评分
-// ============================================================
-function showRateOrder(orderId) {
-    showCustomModal(`
-        <h3>⭐ 评价订单</h3>
-        <p style="color:var(--text-muted);font-size:14px;">请为本次服务评分</p>
-        <div style="display:flex;gap:12px;justify-content:center;margin:16px 0;">
-            ${[1,2,3,4,5].map(i => `
-                <button class="btn btn-outline btn-sm" onclick="selectRating(${i})" id="rateBtn${i}" style="font-size:20px;width:44px;height:44px;border-radius:50%;">${i}⭐</button>
-            `).join('')}
-        </div>
-        <div class="form-group"><label>评价内容（可选）</label>
-            <textarea class="admin-form-control" id="rateComment" rows="3" placeholder="说说你的体验..."></textarea>
-        </div>
-        <div id="rateError" style="color:#ef4444;font-size:13px;min-height:20px;"></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="submitRating('${orderId}')">提交评价</button>
-        </div>
-    `);
-    window._selectedRating = 0;
-}
-
-function selectRating(val) {
-    window._selectedRating = val;
-    for (let i = 1; i <= 5; i++) {
-        const btn = document.getElementById('rateBtn' + i);
-        if (btn) {
-            btn.className = 'btn btn-' + (i <= val ? 'success' : 'outline') + ' btn-sm';
-            btn.style.fontSize = '20px';
-            btn.style.width = '44px';
-            btn.style.height = '44px';
-            btn.style.borderRadius = '50%';
-        }
-    }
-}
-
-async function submitRating(orderId) {
-    const rating = window._selectedRating || 0;
-    if (rating < 1 || rating > 5) {
-        document.getElementById('rateError').textContent = '请选择1-5星评分';
-        return;
-    }
-    const comment = document.getElementById('rateComment').value.trim();
-    try {
-        await apiRequest('/orders/' + orderId + '/rate', {
-            method: 'PUT',
-            body: JSON.stringify({ rating, comment })
-        });
-        closeCustomModal();
-        toast('✅ 评价成功！', 'success');
-        renderOrders();
-    } catch (err) {
-        document.getElementById('rateError').textContent = err.message;
-    }
-}
-// ============================================================
-//  订单操作
+//  订单操作（打手、老板、客服）
 // ============================================================
 window.confirmTake = function(orderId) {
     confirmAction('确认接单', '确认接取此订单？（需保留100红钻冻结）', '确认接单', `doTake('${orderId}')`);
@@ -2974,7 +2616,7 @@ async function doRequestRefund(orderId) {
 }
 
 // ============================================================
-//  提现功能
+//  打手提现
 // ============================================================
 window.requestWithdraw = function() {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
@@ -3020,13 +2662,11 @@ window.viewOrderDetail = function(orderId) {
                 <div class="detail-row"><span class="label">价格</span><span class="value">${order.price} 红钻</span></div>
                 <div class="detail-row"><span class="label">状态</span><span class="value"><span class="status-badge ${statusClass(order.status)}">${statusText(order.status)}</span></span></div>
                 <div class="detail-row"><span class="label">打手</span><span class="value">${order.handler_id || '未指派'}</span></div>
-                <div class="detail-row"><span class="label">评分</span><span class="value">${order.rating ? '⭐' + order.rating + '星' : '未评价'}</span></div>
                 <div class="detail-row"><span class="label">创建时间</span><span class="value">${order.created_at}</span></div>
                 ${order.start_time ? `<div class="detail-row"><span class="label">开始时间</span><span class="value">${order.start_time}</span></div>` : ''}
                 ${order.end_time ? `<div class="detail-row"><span class="label">结束时间</span><span class="value">${order.end_time}</span></div>` : ''}
                 ${order.settled ? `<div class="detail-row"><span class="label">结算金额</span><span class="value">${order.settled_amount||order.price} 红钻</span></div>` : ''}
                 ${order.refund_reason ? `<div class="detail-row"><span class="label">退款原因</span><span class="value">${order.refund_reason}</span></div>` : ''}
-                ${order.rating_comment ? `<div class="detail-row"><span class="label">评价内容</span><span class="value">${order.rating_comment}</span></div>` : ''}
             </div>
             <div style="border-top:1px solid var(--border-color);padding-top:12px;text-align:left;">
                 <div style="font-weight:600;margin-bottom:8px;">聊天记录</div>
@@ -3038,115 +2678,62 @@ window.viewOrderDetail = function(orderId) {
 };
 
 // ============================================================
-//  充值功能
-// ============================================================
-window.openRecharge = function() {
-    if (!currentUser) { toast('请先登录', 'warning'); return; }
-    const html = `
-        <h3><i class="fas fa-plus-circle"></i> 充值红钻</h3>
-        <p style="color:var(--text-muted);font-size:14px;">1元 = 10红钻</p>
-        <div class="form-group">
-            <label>充值金额（元）</label>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(10)">10元</button>
-                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(30)">30元</button>
-                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(50)">50元</button>
-                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(100)">100元</button>
-                <button class="btn btn-outline btn-sm" onclick="setRechargeAmount(200)">200元</button>
-            </div>
-            <input class="admin-form-control" id="rechargeAmount" type="number" placeholder="自定义金额" min="1" />
-        </div>
-        <div style="text-align:center;margin:8px 0;">
-            <span style="font-size:20px;font-weight:700;color:#f5c842;" id="rechargePreview">0 红钻</span>
-        </div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="submitCustomRecharge()">提交申请</button>
-        </div>
-    `;
-    showCustomModal(html);
-    document.getElementById('customModal').classList.add('active');
-    document.getElementById('rechargeAmount').addEventListener('input', function() {
-        const amount = parseFloat(this.value) || 0;
-        document.getElementById('rechargePreview').textContent = Math.floor(amount * 10) + ' 红钻';
-    });
-};
-
-function setRechargeAmount(amount) {
-    document.getElementById('rechargeAmount').value = amount;
-    document.getElementById('rechargePreview').textContent = Math.floor(amount * 10) + ' 红钻';
-}
-
-async function submitCustomRecharge() {
-    const amount = parseFloat(document.getElementById('rechargeAmount').value);
-    if (!amount || amount < 1) return toast('请输入有效金额', 'warning');
-    try {
-        await apiRequest('/recharge/custom', {
-            method: 'POST',
-            body: JSON.stringify({ amount })
-        });
-        closeCustomModal();
-        toast('充值申请已提交，请等待客服审核', 'success');
-        updateBadges();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-// ============================================================
-//  邮件功能
-// ============================================================
-window.openMail = function() {
-    if (!currentUser) { toast('请先登录', 'warning'); return; }
-    apiRequest('/mails').then(mails => {
-        let listHtml = mails.length === 0 ? '<div class="empty-state"><i class="fas fa-envelope"></i><p>暂无邮件</p></div>' :
-            mails.map(m => `
-                <div class="mail-item">
-                    <div style="display:flex;justify-content:space-between;">
-                        <span class="mail-title">${m.title}</span>
-                        <span class="mail-status"><span class="status-badge ${m.status==='unread'?'status-pending':'status-claimed'}">${m.status==='unread'?'未领取':'已领取'}</span></span>
-                    </div>
-                    <div style="font-size:14px;color:var(--text-secondary);padding:4px 0;">${m.content}</div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);">
-                        <span>${m.create_time}</span>
-                        ${m.status === 'unread' && m.diamond > 0 ? `<button class="btn btn-success btn-xs" onclick="confirmClaimMail('${m.id}')">领取 ${m.diamond} 红钻</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        showCustomModal(`
-            <h3><i class="fas fa-envelope"></i> 我的邮件</h3>
-            <div style="margin-top:12px;max-height:400px;overflow-y:auto;">${listHtml}</div>
-            <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
-        `);
-    }).catch(err => toast(err.message, 'error'));
-};
-
-window.confirmClaimMail = function(mailId) {
-    confirmAction('领取红钻', '确认领取此邮件中的红钻？', '确认领取', `doClaimMail('${mailId}')`);
-};
-
-async function doClaimMail(mailId) {
-    try {
-        await apiRequest('/mails/' + mailId + '/claim', { method: 'PUT' });
-        toast('领取成功', 'success');
-        openMail();
-        renderShops();
-        updateHeaderDiamond();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-// ============================================================
-//  管理页面
+//  ===== 管理页面 =====
 // ============================================================
 function renderAdminPage() {
     const role = currentUser?.role;
-    document.getElementById('adminName').textContent = currentUser.display_name || currentUser.username + '的俱乐部';
-    document.getElementById('adminAvatar').textContent = (currentUser.display_name || currentUser.username).substring(0, 2).toUpperCase();
+    document.getElementById('adminName').textContent = currentUser.username + '的俱乐部';
+    document.getElementById('adminAvatar').textContent = currentUser.username.substring(0, 2).toUpperCase();
     const roleMap = { 'admin': '管理员', 'service': '客服', 'dispatcher': '派单员' };
     document.getElementById('adminRoleBadge').textContent = roleMap[role] || role;
-    document.getElementById('adminSub').textContent = '2026-07-24加入';
+    document.getElementById('adminSub').textContent = new Date().toLocaleDateString() + '加入';
+    renderWorkbench();
     updateStats();
     updateBadges();
+}
+
+function renderWorkbench() {
+    const role = currentUser?.role;
+    const grid = document.getElementById('workbenchGrid');
+    if (!grid) return;
+    let items = [];
+    if (role === 'admin') {
+        items = [
+            { icon: '📋', label: '订单管理', action: "openSubPage('orders')", badge: 'badgeOrders' },
+            { icon: '📦', label: '商品管理', action: "openSubPage('products')" },
+            { icon: '👥', label: '用户管理', action: "openSubPage('users')", badge: 'badgeUsers' },
+            { icon: '💰', label: '充值管理', action: "openSubPage('recharges')", badge: 'badgeRecharges' },
+            { icon: '🏪', label: '店铺管理', action: "openSubPage('shops')" },
+            { icon: '📢', label: '公告管理', action: "openSubPage('announce')" },
+            { icon: '💳', label: '提现管理', action: "openSubPage('withdrawals')" },
+            { icon: '📊', label: '分类管理', action: "openSubPage('categories')" },
+            { icon: '📤', label: '发布订单', action: "openSubPage('dispatcher')" },
+            { icon: '⚙️', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    } else if (role === 'service') {
+        items = [
+            { icon: '🎧', label: '客服系统', action: "openSubPage('service')", badge: 'badgeRecharges' },
+            { icon: '💰', label: '充值审核', action: "openSubPage('recharges')", badge: 'badgeRecharges' },
+            { icon: '👥', label: '用户管理', action: "openSubPage('users')" },
+            { icon: '⚙️', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    } else if (role === 'dispatcher') {
+        items = [
+            { icon: '📋', label: '派单系统', action: "openSubPage('dispatcher')" },
+            { icon: '📦', label: '商品管理', action: "openSubPage('products')" },
+            { icon: '📊', label: '数据统计', action: "openSubPage('orders')" },
+            { icon: '⚙️', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    } else {
+        items = [{ icon: '⚙️', label: '账户设置', action: "openSubPage('account')" }];
+    }
+    grid.innerHTML = items.map(item => `
+        <div class="workbench-item" onclick="${item.action}">
+            <span class="icon">${item.icon}</span>
+            <span class="label">${item.label}</span>
+            ${item.badge ? `<span class="badge-count" id="${item.badge}">0</span>` : ''}
+        </div>
+    `).join('');
 }
 
 async function updateStats() {
@@ -3158,8 +2745,769 @@ async function updateStats() {
         document.getElementById('statEnergy').textContent = stats.stats.energy || 0;
     } catch (err) { console.error('加载统计数据失败', err); }
 }
+
 // ============================================================
-//  消息系统
+//  ===== 子页面渲染（含内嵌弹窗） =====
+// ============================================================
+async function renderSubProducts() {
+    const container = document.getElementById('subProductsContent');
+    if (!container) return;
+    try {
+        const products = await apiRequest('/admin/products');
+        await loadCategoriesForSelectors();
+        await loadShopSelect();
+        
+        // 内嵌弹窗状态
+        let showAddProduct = false;
+        
+        let html = `
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                <button class="btn btn-primary" onclick="toggleInlineModal('addProduct')"><i class="fas fa-plus"></i> 上架商品</button>
+                <button class="btn btn-outline" onclick="openSubPage('shops')"><i class="fas fa-store"></i> 店铺管理</button>
+                <button class="btn btn-outline" onclick="openSubPage('categories')"><i class="fas fa-tags"></i> 分类管理</button>
+                <button class="btn btn-warning" onclick="openSubPage('dispatcher')"><i class="fas fa-paper-plane"></i> 发布订单</button>
+            </div>
+            
+            <div class="inline-modal" id="addProductModal">
+                <div class="modal-title">
+                    <span>📦 上架新商品</span>
+                    <button class="close-btn" onclick="toggleInlineModal('addProduct')">✕</button>
+                </div>
+                <div class="admin-form-group"><label>主分类</label>
+                    <select class="admin-form-control" id="prodCategory"></select>
+                </div>
+                <div class="admin-form-group"><label>子分类</label>
+                    <select class="admin-form-control" id="prodGame"><option value="">-- 请选择子分类 --</option></select>
+                </div>
+                <div class="admin-form-group"><label>所属店铺</label>
+                    <select class="admin-form-control" id="prodShop"><option value="">-- 请选择店铺 --</option></select>
+                </div>
+                <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="prodTitle" placeholder="标题"></div>
+                <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="prodDesc" rows="2" placeholder="服务详情"></textarea></div>
+                <div class="admin-form-group"><label>价格（红钻）</label><input class="admin-form-control" id="prodPrice" type="number" placeholder="288"></div>
+                <div class="admin-form-group"><label>库存</label><input class="admin-form-control" id="prodQuantity" type="number" placeholder="1" value="1"></div>
+                <div class="admin-form-group"><label>商品图片URL</label>
+                    <input class="admin-form-control" id="prodImageUrl" placeholder="输入图片URL" />
+                    <img id="prodImagePreview" class="upload-preview" style="display:none;margin-top:4px;" onerror="this.style.display='none'" />
+                </div>
+                <div class="admin-form-group"><label>详情图片（多个URL用逗号分隔）</label>
+                    <input class="admin-form-control" id="prodDetailImages" placeholder="https://img1.jpg, https://img2.jpg" />
+                </div>
+                <div class="admin-form-group"><label>详情描述</label>
+                    <textarea class="admin-form-control" id="prodDetailDesc" rows="3" placeholder="详细描述内容"></textarea>
+                </div>
+                <button class="btn btn-success" onclick="shelfProduct()"><i class="fas fa-upload"></i> 上架商品</button>
+            </div>
+            
+            <div class="admin-card">
+                <div class="admin-card-title">📦 商品列表</div>
+                <div id="productsList"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        await renderProductsList();
+        
+        const prodCategorySel = document.getElementById('prodCategory');
+        if (prodCategorySel) {
+            prodCategorySel.onchange = function() {
+                loadSubCategoriesToSelect('prodGame', this.value);
+            };
+        }
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+function toggleInlineModal(id) {
+    const el = document.getElementById(id + 'Modal');
+    if (el) el.classList.toggle('active');
+}
+
+async function loadShopSelect() {
+    try {
+        const shops = await apiRequest('/shops') || [];
+        const sel = document.getElementById('prodShop');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">-- 请选择店铺 --</option>';
+        shops.forEach(s => {
+            sel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+        });
+    } catch (err) { console.error(err); }
+}
+
+async function renderProductsList() {
+    try {
+        const products = await apiRequest('/admin/products');
+        const container = document.getElementById('productsList');
+        if (!container) return;
+        if (products.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>暂无商品</p></div>';
+            return;
+        }
+        let html = '<div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const p of products) {
+            const remaining = p.quantity - p.sold;
+            const isHidden = p.hidden == 1 || p.hidden === true;
+            let statusText2 = isHidden ? '已下架' : (remaining > 0 ? '在售' : '已售罄');
+            let statusCls = isHidden ? 'status-hidden' : (remaining > 0 ? 'status-onsale' : 'status-soldout');
+            const productId = p.id;
+            let actions = '';
+            if (isHidden) {
+                actions += `<button class="btn btn-success btn-xs" onclick="confirmReshelf('${productId}')">重新上架</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteProduct('${productId}')">删除</button>`;
+            } else {
+                actions += `<button class="btn btn-danger btn-xs" onclick="confirmUnshelf('${productId}')">下架</button>`;
+            }
+            actions += `<button class="btn btn-primary btn-xs" onclick="openEditProduct('${productId}')">编辑</button>`;
+            html += `<tr>
+                <td>${p.title}</td>
+                <td>${p.price} 红钻</td>
+                <td>${p.sold}/${p.quantity}</td>
+                <td><span class="status-badge ${statusCls}">${statusText2}</span></td>
+                <td><div class="action-group">${actions}</div></td>
+            </tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); }
+}
+// ============================================================
+//  ===== 商品管理操作 =====
+// ============================================================
+let editProductId = null;
+
+window.openEditProduct = function(productId) {
+    editProductId = productId;
+    apiRequest('/admin/products').then(products => {
+        const p = products.find(x => x.id === productId);
+        if (!p) return toast('商品不存在', 'error');
+        apiRequest('/categories').then(categories => {
+            const mainCats = categories.filter(c => !c.parent_id);
+            const subCats = categories.filter(c => c.parent_id);
+            let selectedMainId = '';
+            let selectedSubId = '';
+            const categoryById = Object.fromEntries(categories.map(c => [c.id, c]));
+            const currentCategory = categoryById[p.category_id];
+            if (currentCategory?.parent_id) {
+                selectedSubId = currentCategory.id;
+                selectedMainId = currentCategory.parent_id;
+            } else if (currentCategory) {
+                selectedMainId = currentCategory.id;
+                const legacySub = subCats.find(c => c.parent_id === currentCategory.id && c.name === p.game);
+                if (legacySub) selectedSubId = legacySub.id;
+            }
+            if (!selectedSubId && p.game) {
+                const legacySub = subCats.find(c => c.name === p.game);
+                if (legacySub) {
+                    selectedSubId = legacySub.id;
+                    selectedMainId = legacySub.parent_id;
+                }
+            }
+            let categoryOptions = '<option value="">请选择主分类</option>';
+            mainCats.forEach(c => {
+                categoryOptions += `<option value="${c.id}" ${selectedMainId === c.id ? 'selected' : ''}>${c.name}</option>`;
+            });
+            const buildSubOptions = (mainId, selectedId = '') => {
+                const list = subCats.filter(c => c.parent_id === mainId);
+                let html = '<option value="">请选择子分类</option>';
+                list.forEach(c => {
+                    html += `<option value="${c.id}" ${selectedId === c.id ? 'selected' : ''}>${c.name}</option>`;
+                });
+                return html;
+            };
+            apiRequest('/shops').then(shops => {
+                let shopOptions = '<option value="">请选择店铺</option>';
+                shops.forEach(s => {
+                    shopOptions += `<option value="${s.id}" ${p.shop_id === s.id ? 'selected' : ''}>${s.name}</option>`;
+                });
+                showCustomModal(`
+                    <h3><i class="fas fa-edit"></i> 编辑商品</h3>
+                    <div class="admin-form-group"><label>主分类</label><select class="admin-form-control" id="editProdCategory">${categoryOptions}</select></div>
+                    <div class="admin-form-group"><label>子分类</label><select class="admin-form-control" id="editProdSubCategory">${buildSubOptions(selectedMainId, selectedSubId)}</select></div>
+                    <div class="admin-form-group"><label>所属店铺</label><select class="admin-form-control" id="editProdShop">${shopOptions}</select></div>
+                    <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="editProdTitle" value="${p.title}" /></div>
+                    <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="editProdDesc" rows="2">${p.description||''}</textarea></div>
+                    <div class="admin-form-group"><label>价格（红钻）</label><input class="admin-form-control" id="editProdPrice" type="number" value="${p.price}" /></div>
+                    <div class="admin-form-group"><label>库存</label><input class="admin-form-control" id="editProdQuantity" type="number" value="${p.quantity}" /></div>
+                    <div class="admin-form-group"><label>商品图片URL</label>
+                        <input class="admin-form-control" id="editProdImageUrl" value="${p.image||''}" placeholder="输入图片URL" oninput="previewProdImageUrl('editProdImageUrl','editProdImagePreview')" />
+                        <img id="editProdImagePreview" class="upload-preview" style="display:${p.image?'block':'none'};margin-top:4px;" src="${p.image||''}" onerror="this.style.display='none'" />
+                    </div>
+                    <div class="admin-form-group"><label>详情图片（多个URL用逗号分隔）</label>
+                        <input class="admin-form-control" id="editProdDetailImages" value="${p.detail_images || ''}" placeholder="https://img1.jpg, https://img2.jpg" />
+                    </div>
+                    <div class="admin-form-group"><label>详情描述</label>
+                        <textarea class="admin-form-control" id="editProdDetailDesc" rows="3">${p.detail_desc || ''}</textarea>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                        <button class="btn btn-success" onclick="doEditProduct()">保存修改</button>
+                    </div>
+                `);
+                const mainSelect = document.getElementById('editProdCategory');
+                const subSelect = document.getElementById('editProdSubCategory');
+                if (mainSelect && subSelect) {
+                    mainSelect.addEventListener('change', function() {
+                        subSelect.innerHTML = buildSubOptions(this.value, '');
+                    });
+                }
+            });
+        });
+    }).catch(err => toast(err.message, 'error'));
+};
+
+window.doEditProduct = function() {
+    const mainCategoryId = document.getElementById('editProdCategory').value || null;
+    const category_id = document.getElementById('editProdSubCategory').value || null;
+    const subSelect = document.getElementById('editProdSubCategory');
+    const game = subSelect?.options[subSelect.selectedIndex]?.textContent?.trim() || '';
+    const shop_id = document.getElementById('editProdShop').value || null;
+    const title = document.getElementById('editProdTitle').value.trim();
+    const desc = document.getElementById('editProdDesc').value.trim();
+    const price = parseFloat(document.getElementById('editProdPrice').value);
+    const quantity = parseInt(document.getElementById('editProdQuantity').value) || 1;
+    const image = document.getElementById('editProdImageUrl').value.trim();
+    const detail_images_raw = document.getElementById('editProdDetailImages').value.trim();
+    const detail_desc = document.getElementById('editProdDetailDesc').value.trim();
+    const detail_images = detail_images_raw ? detail_images_raw.split(',').map(s => s.trim()).filter(s => s) : [];
+    if (!mainCategoryId) return toast('请选择主分类', 'warning');
+    if (!category_id) return toast('请选择子分类', 'warning');
+    if (!title || !price) return toast('请填写完整信息', 'error');
+    apiRequest('/admin/products/' + editProductId + '/edit', {
+        method: 'PUT',
+        body: JSON.stringify({ game, title, desc, price, quantity, image, category_id, detail_images, detail_desc, shop_id })
+    }).then(() => {
+        closeCustomModal();
+        toast('✅ 商品已更新', 'success');
+        renderProductsList();
+        renderShops();
+        if (currentSubPage === 'products') renderSubProducts();
+        if (currentShopId) {
+            apiRequest('/shops/' + currentShopId + '/products').then(products => {
+                currentShopProducts = products;
+                renderShopProducts(currentShopFilter);
+            });
+        }
+    }).catch(err => toast(err.message, 'error'));
+};
+
+window.confirmUnshelf = function(productId) {
+    confirmAction('确认下架', '确认下架此商品？', '确认下架', `doUnshelf('${productId}')`);
+};
+
+async function doUnshelf(productId) {
+    try {
+        await apiRequest('/admin/products/' + productId + '/unshelf', { method: 'PUT' });
+        toast('已下架', 'success');
+        renderProductsList();
+        renderShops();
+        if (currentSubPage === 'products') renderSubProducts();
+        if (currentShopId) {
+            const products = await apiRequest('/shops/' + currentShopId + '/products');
+            currentShopProducts = products;
+            renderShopProducts(currentShopFilter);
+        }
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.confirmReshelf = function(productId) {
+    confirmAction('确认重新上架', '确认重新上架此商品？', '确认上架', `doReshelf('${productId}')`);
+};
+
+async function doReshelf(productId) {
+    try {
+        await apiRequest('/admin/products/' + productId + '/reshelf', { method: 'PUT' });
+        toast('已重新上架', 'success');
+        renderProductsList();
+        renderShops();
+        if (currentSubPage === 'products') renderSubProducts();
+        if (currentShopId) {
+            const products = await apiRequest('/shops/' + currentShopId + '/products');
+            currentShopProducts = products;
+            renderShopProducts(currentShopFilter);
+        }
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.confirmDeleteProduct = function(productId) {
+    confirmAction('确认删除', '⚠️ 确认永久删除此商品？', '确认删除', `doDeleteProduct('${productId}')`);
+};
+
+async function doDeleteProduct(productId) {
+    try {
+        await apiRequest('/admin/products/' + productId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderProductsList();
+        renderShops();
+        if (currentSubPage === 'products') renderSubProducts();
+        if (currentShopId) {
+            const products = await apiRequest('/shops/' + currentShopId + '/products');
+            currentShopProducts = products;
+            renderShopProducts(currentShopFilter);
+        }
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function shelfProduct() {
+    const category_id = document.getElementById('prodCategory').value || null;
+    const gameSelect = document.getElementById('prodGame');
+    const game = gameSelect?.options[gameSelect.selectedIndex]?.textContent?.trim() || '';
+    const shop_id = document.getElementById('prodShop').value || null;
+    const title = document.getElementById('prodTitle').value.trim();
+    const desc = document.getElementById('prodDesc').value.trim();
+    const price = parseFloat(document.getElementById('prodPrice').value);
+    const quantity = parseInt(document.getElementById('prodQuantity').value) || 1;
+    const image = document.getElementById('prodImageUrl').value.trim();
+    const detail_images_raw = document.getElementById('prodDetailImages').value.trim();
+    const detail_desc = document.getElementById('prodDetailDesc').value.trim();
+    const detail_images = detail_images_raw ? detail_images_raw.split(',').map(s => s.trim()).filter(s => s) : [];
+    if (!category_id) return toast('请选择主分类', 'warning');
+    const subCategoryId = document.getElementById('prodGame').value;
+    if (!subCategoryId) return toast('请选择子分类', 'warning');
+    if (!title || !price) return toast('请填写完整信息', 'error');
+    try {
+        await apiRequest('/admin/products', {
+            method: 'POST',
+            body: JSON.stringify({ game, title, desc, price, quantity, image, category_id: subCategoryId, detail_images, detail_desc, shop_id })
+        });
+        toast('上架成功', 'success');
+        document.getElementById('prodTitle').value = '';
+        document.getElementById('prodDesc').value = '';
+        document.getElementById('prodPrice').value = '';
+        document.getElementById('prodImageUrl').value = '';
+        document.getElementById('prodImagePreview').style.display = 'none';
+        document.getElementById('prodDetailImages').value = '';
+        document.getElementById('prodDetailDesc').value = '';
+        renderProductsList();
+        renderShops();
+        if (currentSubPage === 'products') renderSubProducts();
+        if (currentShopId) {
+            const products = await apiRequest('/shops/' + currentShopId + '/products');
+            currentShopProducts = products;
+            renderShopProducts(currentShopFilter);
+        }
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+function previewProdImageUrl(inputId, previewId) {
+    const url = document.getElementById(inputId).value.trim();
+    const img = document.getElementById(previewId);
+    if (url) {
+        img.src = url;
+        img.style.display = 'block';
+        img.onerror = function() { this.style.display = 'none'; };
+    } else {
+        img.style.display = 'none';
+    }
+}
+
+// ============================================================
+//  ===== 分类管理 =====
+// ============================================================
+async function renderSubCategories() {
+    const container = document.getElementById('subCategoriesContent');
+    if (!container) {
+        // 如果没有专门的分类子页面，使用主区域
+        const mainContainer = document.getElementById('adminSubContent');
+        if (mainContainer) {
+            await renderCategoriesInline(mainContainer);
+        }
+        return;
+    }
+    await renderCategoriesInline(container);
+}
+
+async function renderCategoriesInline(container) {
+    if (!container) return;
+    try {
+        const categories = await apiRequest('/categories');
+        const mainCats = categories.filter(c => !c.parent_id);
+        const subCats = categories.filter(c => c.parent_id);
+        
+        let html = `
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                <button class="btn btn-primary" onclick="toggleInlineModal('addCategory')"><i class="fas fa-plus"></i> 创建主分类</button>
+                <button class="btn btn-outline" onclick="toggleInlineModal('addSubCategory')"><i class="fas fa-plus"></i> 创建子分类</button>
+            </div>
+            
+            <div class="inline-modal" id="addCategoryModal">
+                <div class="modal-title">
+                    <span>🏷️ 创建主分类</span>
+                    <button class="close-btn" onclick="toggleInlineModal('addCategory')">✕</button>
+                </div>
+                <div class="admin-form-group"><label>分类名称</label><input class="admin-form-control" id="categoryName" placeholder="如：暗区突围" /></div>
+                <div class="admin-form-group"><label>分类图片URL</label><input class="admin-form-control" id="categoryImage" placeholder="输入图片URL" /></div>
+                <div class="admin-form-group"><label>排序权重</label><input class="admin-form-control" id="categorySortOrder" type="number" placeholder="0" value="0" /></div>
+                <button class="btn btn-success" onclick="createCategory()"><i class="fas fa-plus"></i> 创建分类</button>
+            </div>
+            
+            <div class="inline-modal" id="addSubCategoryModal">
+                <div class="modal-title">
+                    <span>🏷️ 创建子分类</span>
+                    <button class="close-btn" onclick="toggleInlineModal('addSubCategory')">✕</button>
+                </div>
+                <div class="admin-form-group"><label>所属主分类</label>
+                    <select class="admin-form-control" id="subCategoryParent">
+                        <option value="">-- 请选择 --</option>
+                        ${mainCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="admin-form-group"><label>子分类名称</label><input class="admin-form-control" id="subCategoryName" placeholder="如：暗区突围-排位" /></div>
+                <button class="btn btn-success" onclick="createSubCategory()"><i class="fas fa-plus"></i> 创建子分类</button>
+            </div>
+            
+            <div class="admin-card">
+                <div class="admin-card-title">🏷️ 分类列表</div>
+                <div id="categoriesList"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        
+        // 渲染分类列表
+        const listContainer = document.getElementById('categoriesList');
+        if (categories.length === 0) {
+            listContainer.innerHTML = '<div class="empty-state"><i class="fas fa-tags"></i><p>暂无分类</p></div>';
+        } else {
+            let listHtml = '<div class="table-wrap"><table><thead><tr><th>排序</th><th>名称</th><th>类型</th><th>图片</th><th>操作</th></tr></thead><tbody>';
+            for (const c of mainCats) {
+                const children = subCats.filter(s => s.parent_id === c.id);
+                listHtml += `<tr>
+                    <td><input type="number" class="admin-form-control" style="width:60px;padding:4px 6px;font-size:12px;" value="${c.sort_order || 0}" onchange="updateCategorySort('${c.id}', this.value)" /></td>
+                    <td>${c.name} ${children.length > 0 ? `<span style="font-size:11px;color:var(--text-muted);">(${children.length}个子分类)</span>` : ''}</td>
+                    <td><span class="status-badge status-onsale">主分类</span></td>
+                    <td>${c.image ? `<img src="${c.image}" style="max-width:50px;max-height:50px;border-radius:4px;" />` : '-'}</td>
+                    <td>
+                        <button class="btn btn-primary btn-xs" onclick="editCategory('${c.id}')">编辑</button>
+                        <button class="btn btn-danger btn-xs" onclick="confirmDeleteCategory('${c.id}')">删除</button>
+                    </td>
+                </tr>`;
+                children.forEach(child => {
+                    listHtml += `<tr style="background:var(--bg-card-hover);">
+                        <td style="padding-left:20px;">子分类</td>
+                        <td>├─ ${child.name}</td>
+                        <td><span class="status-badge status-pending">子分类</span></td>
+                        <td>${child.image ? `<img src="${child.image}" style="max-width:40px;max-height:40px;border-radius:4px;" />` : '-'}</td>
+                        <td>
+                            <button class="btn btn-primary btn-xs" onclick="editCategory('${child.id}')">编辑</button>
+                            <button class="btn btn-danger btn-xs" onclick="confirmDeleteCategory('${child.id}')">删除</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+            listHtml += '</tbody></table></div>';
+            listContainer.innerHTML = listHtml;
+        }
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+async function createCategory() {
+    const name = document.getElementById('categoryName').value.trim();
+    const image = document.getElementById('categoryImage').value.trim();
+    const sort_order = parseInt(document.getElementById('categorySortOrder').value) || 0;
+    if (!name) return toast('请输入分类名称', 'warning');
+    try {
+        await apiRequest('/admin/categories', {
+            method: 'POST',
+            body: JSON.stringify({ name, image, sort_order, parent_id: null })
+        });
+        toast('分类创建成功', 'success');
+        document.getElementById('categoryName').value = '';
+        document.getElementById('categoryImage').value = '';
+        document.getElementById('categorySortOrder').value = '0';
+        toggleInlineModal('addCategory');
+        renderSubCategories();
+        loadCategoryNav();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function createSubCategory() {
+    const parent_id = document.getElementById('subCategoryParent').value;
+    const name = document.getElementById('subCategoryName').value.trim();
+    if (!parent_id) return toast('请选择主分类', 'warning');
+    if (!name) return toast('请输入子分类名称', 'warning');
+    try {
+        await apiRequest('/admin/categories', {
+            method: 'POST',
+            body: JSON.stringify({ name, parent_id, sort_order: 0 })
+        });
+        toast('子分类创建成功', 'success');
+        document.getElementById('subCategoryName').value = '';
+        toggleInlineModal('addSubCategory');
+        renderSubCategories();
+        loadCategoryNav();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function editCategory(categoryId) {
+    const categories = await apiRequest('/categories');
+    const cat = categories.find(c => c.id === categoryId);
+    if (!cat) return toast('分类不存在', 'error');
+    showCustomModal(`
+        <h3><i class="fas fa-edit"></i> 编辑分类</h3>
+        <div class="form-group"><label>分类名称</label><input class="admin-form-control" id="editCategoryName" value="${cat.name}" /></div>
+        <div class="form-group"><label>分类图片URL</label><input class="admin-form-control" id="editCategoryImage" value="${cat.image || ''}" /></div>
+        <div class="form-group"><label>排序权重</label><input class="admin-form-control" id="editCategorySortOrder" type="number" value="${cat.sort_order || 0}" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doEditCategory('${categoryId}')">保存</button>
+        </div>
+    `);
+}
+
+async function doEditCategory(categoryId) {
+    const name = document.getElementById('editCategoryName').value.trim();
+    const image = document.getElementById('editCategoryImage').value.trim();
+    const sort_order = parseInt(document.getElementById('editCategorySortOrder').value) || 0;
+    if (!name) return toast('请输入分类名称', 'error');
+    try {
+        await apiRequest('/admin/categories/' + categoryId + '/edit', {
+            method: 'PUT',
+            body: JSON.stringify({ name, image, sort_order })
+        });
+        closeCustomModal();
+        toast('分类已更新', 'success');
+        renderSubCategories();
+        loadCategoryNav();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.confirmDeleteCategory = function(categoryId) {
+    confirmAction('确认删除', '确认删除此分类？', '确认删除', `doDeleteCategory('${categoryId}')`);
+};
+
+async function doDeleteCategory(categoryId) {
+    try {
+        await apiRequest('/admin/categories/' + categoryId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderSubCategories();
+        loadCategoryNav();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function loadCategoriesForSelectors() {
+    try {
+        const categories = await apiRequest('/categories');
+        const mainCats = categories.filter(c => !c.parent_id);
+        const sel = document.getElementById('prodCategory');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">-- 请选择主分类 --</option>';
+        mainCats.forEach(c => {
+            sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        });
+    } catch (err) { console.error(err); }
+}
+
+async function loadSubCategoriesToSelect(selectId, parentId) {
+    try {
+        const categories = await apiRequest('/categories');
+        const subCats = categories.filter(c => c.parent_id === parentId);
+        const sel = document.getElementById(selectId);
+        if (!sel) return;
+        sel.innerHTML = '<option value="">-- 请选择子分类 --</option>';
+        subCats.forEach(c => {
+            sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        });
+    } catch (err) { console.error(err); }
+}
+// ============================================================
+//  ===== 店铺管理（子页面） =====
+// ============================================================
+async function renderSubShops() {
+    const container = document.getElementById('subShopsContent');
+    if (!container) return;
+    try {
+        const shops = await apiRequest('/shops') || [];
+        const categories = await apiRequest('/categories');
+        const mainCats = categories.filter(c => !c.parent_id);
+        
+        let html = `
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                <button class="btn btn-primary" onclick="toggleInlineModal('addShop')"><i class="fas fa-plus"></i> 创建店铺</button>
+            </div>
+            
+            <div class="inline-modal" id="addShopModal">
+                <div class="modal-title">
+                    <span>🏪 创建店铺</span>
+                    <button class="close-btn" onclick="toggleInlineModal('addShop')">✕</button>
+                </div>
+                <div class="admin-form-group"><label>店铺名称</label><input class="admin-form-control" id="shopName" placeholder="输入店铺名称" /></div>
+                <div class="admin-form-group"><label>店铺简介</label><textarea class="admin-form-control" id="shopDesc" rows="2" placeholder="店铺简介"></textarea></div>
+                <div class="admin-form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="shopLogo" placeholder="输入Logo图片URL" /></div>
+                <div class="admin-form-group"><label>所属分类</label>
+                    <select class="admin-form-control" id="shopCategory">
+                        <option value="">-- 请选择分类 --</option>
+                        ${mainCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="admin-form-group">
+                    <label><input type="checkbox" id="shopIsSelf" /> 设为自营俱乐部</label>
+                </div>
+                <div class="admin-form-group">
+                    <label><input type="checkbox" id="shopIsRecommend" checked /> 设为推荐俱乐部</label>
+                </div>
+                <button class="btn btn-success" onclick="createShop()"><i class="fas fa-plus"></i> 创建店铺</button>
+            </div>
+            
+            <div class="admin-card">
+                <div class="admin-card-title">🏪 店铺列表</div>
+                <div id="shopList"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        
+        const shopList = document.getElementById('shopList');
+        if (shops.length === 0) {
+            shopList.innerHTML = '<div class="empty-state"><i class="fas fa-store"></i><p>暂无店铺</p></div>';
+        } else {
+            let shopHtml = '<div class="table-wrap"><table><thead><tr><th>名称</th><th>状态</th><th>标签</th><th>操作</th></tr></thead><tbody>';
+            for (const s of shops) {
+                const statusText = s.status === 'active' ? '营业中' : '已关闭';
+                const statusCls = s.status === 'active' ? 'status-onsale' : 'status-canceled';
+                let tags = [];
+                if (s.is_self) tags.push('🏆自营');
+                if (s.is_recommend) tags.push('🔥推荐');
+                if (s.is_followed) tags.push('⭐关注');
+                const tagHtml = tags.length > 0 ? tags.join(' ') : '普通';
+                shopHtml += `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td><span class="status-badge ${statusCls}">${statusText}</span></td>
+                        <td>${tagHtml}</td>
+                        <td>
+                            <button class="btn btn-primary btn-xs" onclick="editShop('${s.id}')">编辑</button>
+                            <button class="btn btn-${s.status === 'active' ? 'danger' : 'success'} btn-xs" onclick="toggleShop('${s.id}')">${s.status === 'active' ? '关闭' : '开启'}</button>
+                            <button class="btn btn-danger btn-xs" onclick="confirmDeleteShop('${s.id}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }
+            shopHtml += '</tbody></table></div>';
+            shopList.innerHTML = shopHtml;
+        }
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+async function createShop() {
+    const name = document.getElementById('shopName').value.trim();
+    const description = document.getElementById('shopDesc').value.trim();
+    const logo = document.getElementById('shopLogo').value.trim();
+    const category_id = document.getElementById('shopCategory').value || null;
+    const is_self = document.getElementById('shopIsSelf').checked;
+    const is_recommend = document.getElementById('shopIsRecommend').checked;
+    if (!name) return toast('请输入店铺名称', 'warning');
+    try {
+        await apiRequest('/shops', {
+            method: 'POST',
+            body: JSON.stringify({ name, description, logo, category_id, is_self, is_recommend })
+        });
+        toast('店铺创建成功', 'success');
+        document.getElementById('shopName').value = '';
+        document.getElementById('shopDesc').value = '';
+        document.getElementById('shopLogo').value = '';
+        document.getElementById('shopIsSelf').checked = false;
+        document.getElementById('shopIsRecommend').checked = true;
+        toggleInlineModal('addShop');
+        renderSubShops();
+        renderShops();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function editShop(shopId) {
+    const shops = await apiRequest('/shops');
+    const shop = shops.find(s => s.id === shopId);
+    if (!shop) return toast('店铺不存在', 'error');
+    const categories = await apiRequest('/categories');
+    const mainCats = categories.filter(c => !c.parent_id);
+    let catOptions = '<option value="">-- 请选择分类 --</option>';
+    mainCats.forEach(c => {
+        catOptions += `<option value="${c.id}" ${shop.category_id === c.id ? 'selected' : ''}>${c.name}</option>`;
+    });
+    showCustomModal(`
+        <h3>✏️ 编辑店铺</h3>
+        <div class="form-group"><label>店铺名称</label><input class="admin-form-control" id="editShopName" value="${shop.name}" /></div>
+        <div class="form-group"><label>店铺简介</label><textarea class="admin-form-control" id="editShopDesc" rows="2">${shop.description || ''}</textarea></div>
+        <div class="form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="editShopLogo" value="${shop.logo || ''}" /></div>
+        <div class="form-group"><label>所属分类</label><select class="admin-form-control" id="editShopCategory">${catOptions}</select></div>
+        <div class="form-group">
+            <label><input type="checkbox" id="editShopIsSelf" ${shop.is_self ? 'checked' : ''} /> 设为自营俱乐部</label>
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" id="editShopIsRecommend" ${shop.is_recommend ? 'checked' : ''} /> 设为推荐俱乐部</label>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doEditShop('${shopId}')">保存</button>
+        </div>
+    `);
+}
+
+async function doEditShop(shopId) {
+    const name = document.getElementById('editShopName').value.trim();
+    const description = document.getElementById('editShopDesc').value.trim();
+    const logo = document.getElementById('editShopLogo').value.trim();
+    const category_id = document.getElementById('editShopCategory').value || null;
+    const is_self = document.getElementById('editShopIsSelf').checked;
+    const is_recommend = document.getElementById('editShopIsRecommend').checked;
+    if (!name) return toast('请输入店铺名称', 'warning');
+    try {
+        await apiRequest('/shops/' + shopId, {
+            method: 'PUT',
+            body: JSON.stringify({ name, description, logo, category_id, is_self, is_recommend })
+        });
+        closeCustomModal();
+        toast('店铺已更新', 'success');
+        renderSubShops();
+        renderShops();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function toggleShop(shopId) {
+    try {
+        await apiRequest('/shops/' + shopId + '/toggle', { method: 'PUT' });
+        toast('店铺状态已更新', 'success');
+        renderSubShops();
+        renderShops();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.confirmDeleteShop = function(shopId) {
+    confirmAction('确认删除', '确认删除此店铺？', '确认删除', `doDeleteShop('${shopId}')`);
+};
+
+async function doDeleteShop(shopId) {
+    try {
+        await apiRequest('/shops/' + shopId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderSubShops();
+        renderShops();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  ===== 消息系统 =====
 // ============================================================
 async function loadContacts() {
     try {
@@ -3180,11 +3528,10 @@ async function loadContacts() {
         
         let filtered = contacts || [];
         if (search) {
-            filtered = filtered.filter(c => {
-                const name = (c.display_name || c.username || '').toLowerCase();
-                const id = (c.id || '').toLowerCase();
-                return name.includes(search) || id.includes(search);
-            });
+            filtered = filtered.filter(c => 
+                (c.username && c.username.toLowerCase().includes(search)) || 
+                (c.id && c.id.toLowerCase().includes(search))
+            );
         }
         
         const totalUnread = filtered.reduce((sum, c) => sum + (c.unread_count || 0), 0);
@@ -3201,8 +3548,8 @@ async function loadContacts() {
                         <div class="title">📞 联系客服 / 管理员</div>
                         <div class="btn-group">
                             ${availableSupport.map(s => `
-                                <button class="btn btn-primary btn-sm" onclick="openChat('${s.id}','${s.display_name || s.username}','contact')">
-                                    <i class="fas fa-headset"></i> ${s.display_name || s.username}
+                                <button class="btn btn-primary btn-sm" onclick="openChat('${s.id}','${s.username}','contact')">
+                                    <i class="fas fa-headset"></i> ${s.username}
                                 </button>
                             `).join('')}
                         </div>
@@ -3211,20 +3558,30 @@ async function loadContacts() {
             }
         }
         
+        // 添加搜索添加联系人功能
+        const addContactHtml = `
+            <div style="margin-bottom:12px;display:flex;gap:8px;">
+                <input class="admin-form-control" id="addContactById" placeholder="输入用户ID添加联系人..." style="flex:1;" />
+                <button class="btn btn-primary btn-sm" onclick="addContactById()"><i class="fas fa-user-plus"></i> 添加</button>
+            </div>
+        `;
+        
         if (filtered.length === 0 && !supportHtml) {
-            container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无联系人</p>
-                <button class="btn btn-primary btn-sm" onclick="showAddContact()"><i class="fas fa-user-plus"></i> 添加联系人</button>
+            container.innerHTML = addContactHtml + `<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无联系人</p>
+                ${isService ? `<button class="btn btn-primary btn-sm" onclick="showAddContact()"><i class="fas fa-user-plus"></i> 添加用户对话</button>` : ''}
             </div>`;
             return;
         }
         
-        let html = supportHtml;
-        html += `<button class="btn btn-primary btn-sm" onclick="showAddContact()" style="margin-bottom:12px;"><i class="fas fa-user-plus"></i> 添加联系人</button>`;
+        let html = addContactHtml + supportHtml;
+        if (isService) {
+            html += `<button class="btn btn-primary btn-sm" onclick="showAddContact()" style="margin-bottom:12px;"><i class="fas fa-user-plus"></i> 添加用户对话</button>`;
+        }
         
         filtered.forEach(c => {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
-            const displayName = c.display_name || c.username || c.id || '未知用户';
+            const displayName = c.username || c.id || '未知用户';
             html += `
                 <div class="contact-item" onclick="openChat('${c.id}','${displayName}','contact')">
                     <div>
@@ -3246,60 +3603,22 @@ async function loadContacts() {
     }
 }
 
-// ============================================================
-//  添加联系人（搜索ID）
-// ============================================================
-function showAddContact() {
-    showCustomModal(`
-        <h3><i class="fas fa-user-plus"></i> 添加联系人</h3>
-        <p style="color:var(--text-muted);font-size:14px;">输入用户ID或用户名进行搜索</p>
-        <div class="form-group">
-            <input class="admin-form-control" id="searchUserInput" placeholder="输入ID或用户名..." oninput="searchUsers()" />
-        </div>
-        <div id="searchUserResults" style="max-height:200px;overflow-y:auto;text-align:left;"></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-        </div>
-    `);
-    document.getElementById('customModal').classList.add('active');
-}
-
-async function searchUsers() {
-    const query = document.getElementById('searchUserInput').value.trim();
-    const container = document.getElementById('searchUserResults');
-    if (!query || query.length < 1) {
-        container.innerHTML = '';
-        return;
-    }
+async function addContactById() {
+    const input = document.getElementById('addContactById');
+    const userId = input.value.trim();
+    if (!userId) return toast('请输入用户ID', 'warning');
     try {
-        const users = await apiRequest('/search/users?q=' + encodeURIComponent(query));
-        if (users.length === 0) {
-            container.innerHTML = '<div style="padding:8px;color:var(--text-muted);">未找到用户</div>';
-            return;
-        }
-        const contactIds = await apiRequest('/messages/contacts').then(c => c.map(c => c.id));
-        container.innerHTML = users.map(u => `
-            <div style="padding:8px 12px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
-                <span>${u.display_name || u.username} (ID: ${u.id})</span>
-                ${contactIds.includes(u.id) ? 
-                    '<span style="color:var(--text-muted);font-size:12px;">已添加</span>' :
-                    `<button class="btn btn-success btn-xs" onclick="addContactBySearch('${u.id}')">添加</button>`
-                }
-            </div>
-        `).join('');
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-async function addContactBySearch(userId) {
-    try {
+        const users = await apiRequest('/admin/users');
+        const user = users.find(u => u.id === userId);
+        if (!user) return toast('用户不存在', 'error');
+        if (user.id === currentUser.id) return toast('不能添加自己', 'warning');
+        // 发送一条消息建立联系
         await apiRequest('/messages/send', {
             method: 'POST',
-            body: JSON.stringify({ receiverId: userId, content: '你好，我们已经是好友了！' })
+            body: JSON.stringify({ receiverId: userId, content: '你好，我们开始聊天吧！' })
         });
-        closeCustomModal();
         toast('✅ 已添加联系人', 'success');
+        input.value = '';
         loadContacts();
         updateBadges();
     } catch (err) {
@@ -3308,7 +3627,7 @@ async function addContactBySearch(userId) {
 }
 
 // ============================================================
-//  全屏聊天
+//  ===== 全屏聊天 =====
 // ============================================================
 async function openChat(id, username, type = 'contact') {
     if (!currentUser) { toast('请先登录', 'warning'); return; }
@@ -3328,7 +3647,7 @@ async function openChat(id, username, type = 'contact') {
         const user = users.find(u => u.id === id);
         if (user) {
             const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
-            document.getElementById('fullscreenChatRole').textContent = (user.display_name || user.username) + ' · ' + (roleMap[user.role] || '用户');
+            document.getElementById('fullscreenChatRole').textContent = roleMap[user.role] || '用户';
         } else if (type === 'order') {
             document.getElementById('fullscreenChatRole').textContent = '📋 订单聊天';
         }
@@ -3350,7 +3669,7 @@ async function loadFullscreenMessages() {
         });
         
         if (messages.length === 0) {
-            body.innerHTML = '<div class="empty-state"><i class="fas fa-comment-dots" style="font-size:30px;opacity:0.3;display:block;margin-bottom:10px;"></i><p>暂无消息，发送一条吧</p></div>';
+            body.innerHTML = '<div class="empty-state"><i class="fas fa-comment-dots" style="font-size:30px;opacity:0.3;display:block;margin-bottom:10px;"></i><p>暂无消息</p></div>';
         } else {
             let html = '';
             messages.forEach(m => {
@@ -3417,75 +3736,56 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// ============================================================
-//  账户页面
-// ============================================================
-async function loadAccountPage() {
-    if (!currentUser) return;
-    const user = await apiRequest('/me');
-    document.getElementById('accountDisplayName').textContent = user.display_name || user.username;
-    document.getElementById('accountId').textContent = user.id;
-    const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
-    document.getElementById('accountRole').textContent = roleMap[user.role] || user.role;
-    document.getElementById('accountAvatar').textContent = (user.display_name || user.username).substring(0, 2).toUpperCase();
-    if (user.avatar) {
-        document.getElementById('accountAvatar').innerHTML = `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
-    }
-    if (user.bg_image) {
-        document.getElementById('accountBgImage').src = user.bg_image;
-        document.getElementById('accountBgImage').style.display = 'block';
-    }
-    document.getElementById('editDisplayName').value = user.display_name || user.username;
-    document.getElementById('editAvatar').value = user.avatar || '';
-    document.getElementById('editBgImage').value = user.bg_image || '';
-    document.getElementById('editShopPrefix').value = user.shop_prefix || '';
-}
-
-function previewAvatar(url) {
-    const avatar = document.getElementById('accountAvatar');
-    if (url) {
-        avatar.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
-    } else {
-        avatar.innerHTML = (currentUser?.display_name || currentUser?.username || 'QW').substring(0, 2).toUpperCase();
-    }
-}
-
-function previewBgImage(url) {
-    const img = document.getElementById('accountBgImage');
-    if (url) {
-        img.src = url;
-        img.style.display = 'block';
-    } else {
-        img.style.display = 'none';
-    }
-}
-
-async function saveUserProfile() {
-    const display_name = document.getElementById('editDisplayName').value.trim();
-    const avatar = document.getElementById('editAvatar').value.trim();
-    const bg_image = document.getElementById('editBgImage').value.trim();
-    const shop_prefix = document.getElementById('editShopPrefix').value.trim();
-    
-    if (!display_name) return toast('请输入显示名称', 'warning');
-    
-    try {
-        await apiRequest('/me', {
-            method: 'PUT',
-            body: JSON.stringify({ display_name, avatar, bg_image, shop_prefix })
+function showAddContact() {
+    apiRequest('/admin/users').then(users => {
+        apiRequest('/messages/contacts').then(contacts => {
+            const contactIds = contacts.map(c => c.id);
+            const available = users.filter(u => 
+                u.id !== currentUser.id && 
+                !contactIds.includes(u.id) &&
+                (u.role === 'boss' || u.role === 'handler' || u.role === 'dispatcher')
+            );
+            if (available.length === 0) {
+                toast('没有可添加的用户', 'warning');
+                return;
+            }
+            let options = available.map(u => `<option value="${u.id}">${u.username} (${u.role})</option>`).join('');
+            showCustomModal(`
+                <h3><i class="fas fa-user-plus"></i> 添加对话</h3>
+                <p style="color:var(--text-muted);font-size:14px;">选择要添加的用户：</p>
+                <div class="form-group"><label>用户</label><select class="admin-form-control" id="addContactSelect">${options}</select></div>
+                <div class="form-group"><label>发送消息</label><input class="admin-form-control" id="addContactMessage" placeholder="输入消息..." /></div>
+                <div class="btn-row">
+                    <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                    <button class="btn btn-success" onclick="doAddContact()">添加</button>
+                </div>
+            `);
+            document.getElementById('customModal').classList.add('active');
         });
-        toast('✅ 资料已更新', 'success');
-        const user = await apiRequest('/me');
-        currentUser = user;
-        loadAccountPage();
-        renderAdminPage();
-        updateHeaderDiamond();
+    }).catch(err => toast(err.message, 'error'));
+}
+
+async function doAddContact() {
+    const userId = document.getElementById('addContactSelect').value;
+    const message = document.getElementById('addContactMessage').value.trim();
+    if (!userId) return toast('请选择用户', 'warning');
+    if (!message) return toast('请输入消息', 'warning');
+    closeCustomModal();
+    try {
+        await apiRequest('/messages/send', {
+            method: 'POST',
+            body: JSON.stringify({ receiverId: userId, content: message })
+        });
+        toast('✅ 已添加对话', 'success');
+        loadContacts();
+        updateBadges();
     } catch (err) {
         toast(err.message, 'error');
     }
 }
 
 // ============================================================
-//  红点更新
+//  ===== 红点更新 =====
 // ============================================================
 async function updateBadges() {
     if (!currentUser) return;
@@ -3522,114 +3822,7 @@ async function updateBadges() {
 }
 
 // ============================================================
-//  弹窗页面渲染函数
-// ============================================================
-// 订单管理弹窗
-function renderModalOrders() {
-    const container = document.getElementById('modalPageContent');
-    container.innerHTML = `
-        <div class="admin-card">
-            <div class="admin-card-title">📋 所有订单</div>
-            <div id="modalOrdersList"></div>
-        </div>
-        <div class="admin-card" style="border-left:4px solid #f59e0b;">
-            <div class="admin-card-title"><i class="fas fa-paper-plane" style="color:#f59e0b;"></i> 直接发布订单</div>
-            <div class="admin-form-group"><label>游戏</label><input class="admin-form-control" id="modalDirectGame" placeholder="游戏名称" value="暗区突围" /></div>
-            <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="modalDirectTitle" placeholder="标题" /></div>
-            <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="modalDirectDesc" rows="2" placeholder="服务详情"></textarea></div>
-            <div class="admin-form-group"><label>价格（红钻）</label><input class="admin-form-control" id="modalDirectPrice" type="number" placeholder="288" /></div>
-            <button class="btn btn-warning btn-block" onclick="modalDirectPublish()"><i class="fas fa-paper-plane"></i> 发布订单</button>
-        </div>
-    `;
-    renderModalOrdersList();
-}
-
-async function renderModalOrdersList() {
-    try {
-        const orders = await apiRequest('/admin/orders');
-        const container = document.getElementById('modalOrdersList');
-        if (orders.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无订单</p></div>';
-            return;
-        }
-        let html = '<div class="table-wrap"><table><thead><tr><th>订单号</th><th>标题</th><th>金额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
-        for (const o of orders) {
-            let actions = '';
-            if (o.status === 'pending') actions += `<button class="btn btn-success btn-xs" onclick="adminAssignHandler('${o.id}')">指派</button>`;
-            if (o.status === 'completed' && !o.settled) actions += `<button class="btn btn-primary btn-xs" onclick="adminSettleOrder('${o.id}')">结算</button>`;
-            actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteOrder('${o.id}')">删除</button>`;
-            html += `<tr><td>${o.id}</td><td>${o.title}</td><td>${o.price} 红钻</td><td><span class="status-badge ${statusClass(o.status)}">${statusText(o.status)}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
-        }
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
-    } catch (err) { console.error(err); }
-}
-
-window.adminAssignHandler = function(orderId) {
-    apiRequest('/admin/users').then(users => {
-        const handlers = users.filter(u => u.role === 'handler' && u.status === 'active');
-        if (handlers.length === 0) { toast('暂无可用打手', 'warning'); return; }
-        let options = handlers.map(u => `<option value="${u.id}">${u.username}</option>`).join('');
-        showCustomModal(`
-            <h3><i class="fas fa-user-check"></i> 指派打手</h3>
-            <div class="form-group"><label>打手</label><select class="admin-form-control" id="assignHandlerSelect">${options}</select></div>
-            <div class="btn-row">
-                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-                <button class="btn btn-success" onclick="doAdminAssign('${orderId}')">确认指派</button>
-            </div>
-        `);
-    }).catch(err => toast(err.message, 'error'));
-};
-
-window.doAdminAssign = function(orderId) {
-    const handlerId = document.getElementById('assignHandlerSelect').value;
-    if (!handlerId) return toast('请选择打手', 'warning');
-    apiRequest('/admin/orders/' + orderId + '/assign', { method: 'PUT', body: JSON.stringify({ handlerId }) })
-        .then(() => { closeCustomModal(); toast('✅ 指派成功', 'success'); renderModalOrdersList(); })
-        .catch(err => toast(err.message, 'error'));
-};
-
-window.adminSettleOrder = function(orderId) {
-    const earning = prompt('请输入打手收入金额（红钻）：');
-    if (!earning) return;
-    apiRequest('/admin/orders/' + orderId + '/settle', { method: 'PUT', body: JSON.stringify({ earning: parseFloat(earning) }) })
-        .then(() => { toast('✅ 结算成功', 'success'); renderModalOrdersList(); })
-        .catch(err => toast(err.message, 'error'));
-};
-
-window.confirmDeleteOrder = function(orderId) {
-    confirmAction('确认删除', '确认永久删除此订单？', '确认删除', `doDeleteOrder('${orderId}')`);
-};
-
-async function doDeleteOrder(orderId) {
-    try {
-        await apiRequest('/admin/orders/' + orderId, { method: 'DELETE' });
-        toast('已删除', 'success');
-        renderModalOrdersList();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-async function modalDirectPublish() {
-    const game = document.getElementById('modalDirectGame').value.trim() || '暗区突围';
-    const title = document.getElementById('modalDirectTitle').value.trim();
-    const desc = document.getElementById('modalDirectDesc').value.trim();
-    const price = parseFloat(document.getElementById('modalDirectPrice').value);
-    if (!title || !price) return toast('请填写完整信息', 'error');
-    try {
-        await apiRequest('/admin/orders/direct', {
-            method: 'POST',
-            body: JSON.stringify({ game, title, desc, price })
-        });
-        toast('✅ 订单已发布', 'success');
-        document.getElementById('modalDirectTitle').value = '';
-        document.getElementById('modalDirectDesc').value = '';
-        document.getElementById('modalDirectPrice').value = '';
-        renderModalOrdersList();
-    } catch (err) { toast(err.message, 'error'); }
-}
-
-// ============================================================
-//  认证相关
+//  ===== 认证相关 =====
 // ============================================================
 function toggleAuthModal() {
     if (currentUser) {
@@ -3691,9 +3884,6 @@ function showRegisterModal() {
                 <option value="service">客服</option>
             </select>
         </div>
-        <div class="form-group"><label>显示名称</label>
-            <input class="admin-form-control" id="regDisplayName" placeholder="显示名称（可选）" />
-        </div>
         <div id="regError" style="color:#ef4444;font-size:13px;min-height:20px;"></div>
         <div class="btn-row">
             <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
@@ -3710,7 +3900,6 @@ async function doRegister() {
     const username = document.getElementById('regUsername').value.trim();
     const password = document.getElementById('regPassword').value.trim();
     const role = document.getElementById('regRole').value;
-    const displayName = document.getElementById('regDisplayName').value.trim();
     const errorEl = document.getElementById('regError');
     errorEl.textContent = '';
     if (!username || !password) {
@@ -3718,10 +3907,7 @@ async function doRegister() {
         return;
     }
     try {
-        const data = await apiRequest('/register', {
-            method: 'POST',
-            body: JSON.stringify({ username, password, role, displayName: displayName || username })
-        });
+        const data = await apiRequest('/register', { method: 'POST', body: JSON.stringify({ username, password, role }) });
         if (role === 'handler' || role === 'dispatcher' || role === 'service') {
             toast('注册成功，请等待管理员审核', 'success');
         } else {
@@ -3741,14 +3927,15 @@ function doLogout() {
     token = null;
     currentUser = null;
     document.getElementById('authStatusText').textContent = '未登录';
+    document.getElementById('logoutBtn2').style.display = 'none';
     updateHeaderDiamond();
     if (window._badgeTimer) {
         clearInterval(window._badgeTimer);
         window._badgeTimer = null;
     }
-    if (adTimer) clearInterval(adTimer);
+    stopBannerAuto();
     renderShops();
-    closeModalPage();
+    closeSubPage();
     closeShopDetail();
     toast('已退出', 'warning');
 }
@@ -3762,12 +3949,120 @@ function logout() {
 }
 
 // ============================================================
-//  认证模块（登录后）
+//  ===== 改名功能 =====
+// ============================================================
+function showChangeName() {
+    showCustomModal(`
+        <h3><i class="fas fa-user-edit"></i> 修改昵称</h3>
+        <p style="color:var(--text-muted);font-size:14px;">当前昵称：<strong>${currentUser?.username}</strong></p>
+        <div class="form-group"><label>新昵称</label><input class="admin-form-control" id="newNameInput" placeholder="输入新昵称" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doChangeName()">确认修改</button>
+        </div>
+    `);
+}
+
+async function doChangeName() {
+    const newName = document.getElementById('newNameInput').value.trim();
+    if (!newName) return toast('请输入新昵称', 'warning');
+    try {
+        await apiRequest('/user/name', {
+            method: 'PUT',
+            body: JSON.stringify({ username: newName })
+        });
+        closeCustomModal();
+        toast('✅ 昵称已修改', 'success');
+        currentUser.username = newName;
+        updateAccountInfo();
+        updateRoleBasedUI();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  ===== 背景墙功能 =====
+// ============================================================
+function showChangeBanner() {
+    showCustomModal(`
+        <h3><i class="fas fa-image"></i> 设置背景墙</h3>
+        <p style="color:var(--text-muted);font-size:14px;">输入图片URL设置个人主页背景墙</p>
+        <div class="form-group"><label>图片URL</label><input class="admin-form-control" id="bannerUrlInput" placeholder="输入图片URL" /></div>
+        <div style="margin:8px 0;"><img id="bannerPreview" style="max-width:100%;max-height:100px;border-radius:8px;display:none;" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doChangeBanner()">确认设置</button>
+        </div>
+    `);
+    document.getElementById('bannerUrlInput').addEventListener('input', function() {
+        const img = document.getElementById('bannerPreview');
+        if (this.value) {
+            img.src = this.value;
+            img.style.display = 'block';
+            img.onerror = function() { this.style.display = 'none'; };
+        } else {
+            img.style.display = 'none';
+        }
+    });
+}
+
+async function doChangeBanner() {
+    const url = document.getElementById('bannerUrlInput').value.trim();
+    if (!url) return toast('请输入图片URL', 'warning');
+    try {
+        await apiRequest('/user/banner', {
+            method: 'PUT',
+            body: JSON.stringify({ banner: url })
+        });
+        closeCustomModal();
+        toast('✅ 背景墙已更新', 'success');
+        updateProfileBanner(url);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+function updateProfileBanner(url) {
+    const img = document.getElementById('profileBannerImg');
+    const placeholder = document.getElementById('bannerPlaceholder');
+    if (url) {
+        img.src = url;
+        img.style.display = 'block';
+        placeholder.style.display = 'none';
+    } else {
+        img.style.display = 'none';
+        placeholder.style.display = 'flex';
+    }
+}
+
+// ============================================================
+//  ===== 账号信息更新 =====
+// ============================================================
+function updateAccountInfo() {
+    if (!currentUser) return;
+    document.getElementById('accUsername').textContent = currentUser.username;
+    document.getElementById('accUserId').textContent = currentUser.id || '--';
+    const roleMap = { 'boss': '老板', 'handler': currentUser.status === 'pending' ? '待审核打手' : '打手', 'dispatcher': currentUser.status === 'pending' ? '待审核派单' : '派单员', 'service': currentUser.status === 'pending' ? '待审核客服' : '客服', 'admin': '管理员' };
+    document.getElementById('accRole').textContent = roleMap[currentUser.role] || currentUser.role;
+    const statusMap = { 'active': '正常', 'pending': '待审核', 'banned': '封禁' };
+    document.getElementById('accStatus').textContent = statusMap[currentUser.status] || currentUser.status;
+    document.getElementById('accDiamond').textContent = currentUser.diamond || 0;
+    document.getElementById('logoutBtn2').style.display = 'inline-block';
+    
+    // 加载背景墙
+    if (currentUser.banner) {
+        updateProfileBanner(currentUser.banner);
+    }
+}
+
+// ============================================================
+//  ===== 认证模块（登录后） =====
 // ============================================================
 function afterLogin() {
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
-    document.getElementById('authStatusText').textContent = currentUser.display_name || currentUser.username;
+    document.getElementById('authStatusText').textContent = currentUser.username;
     
     renderBottomNav();
     
@@ -3775,8 +4070,8 @@ function afterLogin() {
     document.getElementById('view-home').classList.add('active');
     document.querySelector('.bottom-nav .nav-item[data-target="home"]')?.classList.add('active');
     
+    updateAccountInfo();
     renderShops();
-    loadAds();
     updateHeaderDiamond();
     updateBadges();
     renderAdminPage();
@@ -3793,7 +4088,7 @@ function afterLogin() {
 }
 
 // ============================================================
-//  登录/注册页面按钮
+//  ===== 登录/注册页面按钮 =====
 // ============================================================
 async function doAuthLogin() {
     const username = document.getElementById('authUsername').value.trim();
@@ -3828,10 +4123,7 @@ async function doAuthRegister() {
         return;
     }
     try {
-        const data = await apiRequest('/register', {
-            method: 'POST',
-            body: JSON.stringify({ username, password, role, displayName: username })
-        });
+        const data = await apiRequest('/register', { method: 'POST', body: JSON.stringify({ username, password, role }) });
         if (role === 'handler' || role === 'dispatcher' || role === 'service') {
             toast('注册成功，请等待管理员审核', 'success');
         } else {
@@ -3844,45 +4136,41 @@ async function doAuthRegister() {
 }
 
 // ============================================================
-//  初始化
+//  ===== 分类导航（商城首页） =====
+// ============================================================
+async function loadCategoryNav() {
+    try {
+        const categories = await apiRequest('/categories');
+        const container = document.getElementById('categoryButtons');
+        if (!container) return;
+        const mainCategories = categories.filter(c => !c.parent_id).sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+        container.innerHTML = '';
+        mainCategories.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = 'category-btn';
+            btn.dataset.category = c.id;
+            btn.innerHTML = c.image ? `<img src="${c.image}" /> ${c.name}` : c.name;
+            btn.onclick = function() { filterShops(c.id); };
+            container.appendChild(btn);
+        });
+    } catch (err) {
+        console.error('加载分类导航失败', err);
+    }
+}
+
+// ============================================================
+//  ===== 初始化 =====
 // ============================================================
 async function init() {
-    console.log('🚀 初始化开始...');
-    
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
-    
+
     document.getElementById('authStatusText').textContent = '未登录';
     document.getElementById('headerDiamond').textContent = '0';
     document.getElementById('headerUnreadMail').textContent = '0';
 
-    // 先渲染空导航
-    const nav = document.getElementById('bottomNav');
-    if (nav) {
-        nav.innerHTML = `
-            <button class="nav-item active" data-target="home"><i class="fas fa-store"></i><span>商城</span></button>
-            <button class="nav-item" data-target="messages"><i class="fas fa-comment-dots"></i><span>消息</span></button>
-            <button class="nav-item" data-target="account"><i class="fas fa-user"></i><span>我的</span></button>
-        `;
-        nav.querySelectorAll('.nav-item').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (!currentUser) {
-                    toast('请先登录', 'warning');
-                    return;
-                }
-                navigateTo(this.dataset.target);
-            });
-        });
-    }
-    
-    try {
-        await renderShops();
-        await loadAds();
-        await loadAnnounceData();
-        showAnnounceModal();
-    } catch (err) {
-        console.error('初始化加载失败:', err);
-    }
+    renderShops();
+    loadCategoryNav();
 
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
@@ -3890,15 +4178,23 @@ async function init() {
         try {
             const user = await apiRequest('/me');
             currentUser = user;
-            document.getElementById('authStatusText').textContent = user.display_name || user.username;
+            document.getElementById('authStatusText').textContent = user.username;
             afterLogin();
         } catch (err) {
-            console.warn('登录验证失败:', err);
             localStorage.removeItem('token');
             token = null;
             currentUser = null;
             document.getElementById('authStatusText').textContent = '未登录';
+            renderShops();
+            renderBottomNav();
         }
+    } else {
+        renderBottomNav();
+        setTimeout(() => {
+            loadAnnounceData().then(() => {
+                showAnnounceModal();
+            });
+        }, 500);
     }
 
     if ('serviceWorker' in navigator) {
@@ -3912,10 +4208,9 @@ async function init() {
                 });
         });
     }
-    
-    console.log('✅ 初始化完成');
 }
 
+document.getElementById('logoutBtn')?.addEventListener('click', logout);
 init();
 console.log('✅ QW电竞护航平台已加载');
 </script>
