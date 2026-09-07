@@ -1,6 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API
-//  包含：用户、商品、订单、分类、充值、客服、消息、店铺、提现、广告、关注、改名、背景墙
+//  包含：用户、商品、订单、分类、充值、客服、消息、店铺、提现、广告、关注、改名、背景墙、图标
 // ============================================================
 
 function generateId() {
@@ -51,7 +51,6 @@ async function handleRegister(env, body) {
     return errorResponse('用户名已存在');
   }
 
-  // 获取下一个用户ID（从100000开始递增）
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM users');
   const count = countResult.results?.[0]?.count || 0;
   const userId = String(100000 + count);
@@ -236,10 +235,12 @@ async function handleGetCategoryProducts(env, categoryId) {
 async function handleGetProducts(env, url) {
   const category = url?.searchParams?.get('category');
   const shop = url?.searchParams?.get('shop');
-  let sql = `SELECT p.*, c.name as category_name, s.name as shop_name
+  const shopCategory = url?.searchParams?.get('shop_category');
+  let sql = `SELECT p.*, c.name as category_name, s.name as shop_name, sc.name as shop_category_name
              FROM products p 
              LEFT JOIN categories c ON p.category_id = c.id 
              LEFT JOIN shops s ON p.shop_id = s.id
+             LEFT JOIN shop_categories sc ON p.shop_category_id = sc.id
              WHERE p.hidden = 0`;
   const params = [];
   if (category) {
@@ -250,6 +251,10 @@ async function handleGetProducts(env, url) {
     sql += ' AND p.shop_id = ?';
     params.push(shop);
   }
+  if (shopCategory) {
+    sql += ' AND p.shop_category_id = ?';
+    params.push(shopCategory);
+  }
   sql += ' ORDER BY p.created_at DESC';
   const result = await queryDB(env, sql, params);
   return jsonResponse(result.results || []);
@@ -257,10 +262,11 @@ async function handleGetProducts(env, url) {
 
 async function handleGetProductDetail(env, productId) {
   const result = await queryDB(env,
-    `SELECT p.*, c.name as category_name, s.name as shop_name
+    `SELECT p.*, c.name as category_name, s.name as shop_name, sc.name as shop_category_name
      FROM products p 
      LEFT JOIN categories c ON p.category_id = c.id 
      LEFT JOIN shops s ON p.shop_id = s.id
+     LEFT JOIN shop_categories sc ON p.shop_category_id = sc.id
      WHERE p.id = ?`,
     [productId]
   );
@@ -279,32 +285,34 @@ async function handleGetProductDetail(env, productId) {
 
 async function handleAdminGetProducts(env) {
   const result = await queryDB(env,
-    `SELECT p.*, c.name as category_name, s.name as shop_name
+    `SELECT p.*, c.name as category_name, s.name as shop_name, sc.name as shop_category_name
      FROM products p 
      LEFT JOIN categories c ON p.category_id = c.id 
      LEFT JOIN shops s ON p.shop_id = s.id
+     LEFT JOIN shop_categories sc ON p.shop_category_id = sc.id
      ORDER BY p.created_at DESC`
   );
   return jsonResponse(result.results || []);
 }
 
 async function handleAdminCreateProduct(env, body) {
-  const { game, title, desc, price, quantity, image, category_id, detail_images, detail_desc, shop_id } = body;
+  const { game, title, desc, price, quantity, image, category_id, detail_images, detail_desc, shop_id, shop_category_id } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
-  if (!category_id) return errorResponse('请选择子分类');
+  if (!category_id) return errorResponse('请选择系统分类');
   if (!shop_id) return errorResponse('请选择店铺');
+  if (!shop_category_id) return errorResponse('请选择店铺分类');
   const id = generateId();
   const detailImagesJson = Array.isArray(detail_images) ? JSON.stringify(detail_images) : (detail_images || '[]');
   await runDB(env,
-    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, detail_images, detail_desc, category_id, shop_id) 
-     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?)`,
-    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', detailImagesJson, detail_desc || '', category_id, shop_id]
+    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, detail_images, detail_desc, category_id, shop_id, shop_category_id) 
+     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?)`,
+    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', detailImagesJson, detail_desc || '', category_id, shop_id, shop_category_id]
   );
   return jsonResponse({ success: true, id });
 }
 
 async function handleAdminUpdateProduct(env, productId, body) {
-  const { game, title, desc, price, quantity, image, category_id, detail_images, detail_desc, shop_id } = body;
+  const { game, title, desc, price, quantity, image, category_id, detail_images, detail_desc, shop_id, shop_category_id } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
 
   let finalGame = game || '';
@@ -321,13 +329,13 @@ async function handleAdminUpdateProduct(env, productId, body) {
     if (!category.parent_id) return errorResponse('商品必须选择子分类，不能直接选择主分类', 400);
     finalGame = category.name;
   } else {
-    return errorResponse('请选择子分类', 400);
+    return errorResponse('请选择系统分类', 400);
   }
 
   const detailImagesJson = Array.isArray(detail_images) ? JSON.stringify(detail_images) : (detail_images || '[]');
   await runDB(env,
-    `UPDATE products SET game = ?, title = ?, description = ?, price = ?, quantity = ?, image = ?, category_id = ?, detail_images = ?, detail_desc = ?, shop_id = ? WHERE id = ?`,
-    [finalGame, title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', finalCategoryId, detailImagesJson, detail_desc || '', shop_id || null, productId]
+    `UPDATE products SET game = ?, title = ?, description = ?, price = ?, quantity = ?, image = ?, category_id = ?, detail_images = ?, detail_desc = ?, shop_id = ?, shop_category_id = ? WHERE id = ?`,
+    [finalGame, title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', finalCategoryId, detailImagesJson, detail_desc || '', shop_id || null, shop_category_id || null, productId]
   );
   return jsonResponse({ success: true, message: '商品已更新' });
 }
@@ -362,13 +370,13 @@ async function handleDispatcherCreateProduct(env, authHeader, body) {
   if (user.role !== 'dispatcher' && user.role !== 'admin') {
     return errorResponse('只有派单员或管理员可上架商品', 403);
   }
-  const { game, title, desc, price, quantity, image, category_id, shop_id } = body;
+  const { game, title, desc, price, quantity, image, category_id, shop_id, shop_category_id } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
   const id = generateId();
   await runDB(env,
-    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, category_id, created_by, shop_id) 
-     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?)`,
-    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', category_id || null, userId, shop_id || null]
+    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, category_id, created_by, shop_id, shop_category_id) 
+     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?)`,
+    [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', category_id || null, userId, shop_id || null, shop_category_id || null]
   );
   return jsonResponse({ success: true, id, message: '商品上架成功' });
 }
@@ -876,8 +884,8 @@ async function handleCreateShop(env, authHeader, body) {
   
   const { name, description, logo, category_id, is_self, is_recommend } = body;
   if (!name) return errorResponse('请输入店铺名称');
+  if (!category_id) return errorResponse('请选择主分类');
   
-  // 获取下一个店铺ID（从a100000开始递增）
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM shops');
   const count = countResult.results?.[0]?.count || 0;
   const shopId = 'a' + String(100000 + count);
@@ -885,7 +893,7 @@ async function handleCreateShop(env, authHeader, body) {
   await runDB(env,
     `INSERT INTO shops (id, owner_id, name, description, logo, category_id, status, rating, sales, is_self, is_recommend, follow_count, created_at) 
      VALUES (?, ?, ?, ?, ?, ?, 'active', '4.9', 0, ?, ?, 0, ?)`,
-    [shopId, userId, name, description || '', logo || '', category_id || null, is_self ? 1 : 0, is_recommend ? 1 : 0, new Date().toISOString()]
+    [shopId, userId, name, description || '', logo || '', category_id, is_self ? 1 : 0, is_recommend ? 1 : 0, new Date().toISOString()]
   );
   return jsonResponse({ success: true, id: shopId, message: '店铺创建成功' });
 }
@@ -959,14 +967,59 @@ async function handleGetShopDetail(env, shopId) {
 
 async function handleGetShopProducts(env, shopId) {
   const result = await queryDB(env,
-    `SELECT p.*, c.name as category_name 
+    `SELECT p.*, c.name as category_name, sc.name as shop_category_name
      FROM products p 
      LEFT JOIN categories c ON p.category_id = c.id 
+     LEFT JOIN shop_categories sc ON p.shop_category_id = sc.id
      WHERE p.shop_id = ? AND p.hidden = 0
      ORDER BY p.created_at DESC`,
     [shopId]
   );
   return jsonResponse(result.results || []);
+}
+
+// ============================================================
+//  店铺分类管理
+// ============================================================
+async function handleGetShopCategories(env, shopId) {
+  const result = await queryDB(env,
+    'SELECT * FROM shop_categories WHERE shop_id = ? ORDER BY sort_order ASC, created_at DESC',
+    [shopId]
+  );
+  return jsonResponse(result.results || []);
+}
+
+async function handleCreateShopCategory(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  if (user.role !== 'admin') {
+    return errorResponse('只有管理员可操作', 403);
+  }
+  
+  const { shop_id, name } = body;
+  if (!shop_id) return errorResponse('请选择店铺');
+  if (!name) return errorResponse('请输入分类名称');
+  
+  const id = generateId();
+  await runDB(env,
+    'INSERT INTO shop_categories (id, shop_id, name, sort_order, created_at) VALUES (?, ?, ?, 0, ?)',
+    [id, shop_id, name, new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, id, message: '店铺分类创建成功' });
+}
+
+async function handleDeleteShopCategory(env, authHeader, categoryId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (user.role !== 'admin') {
+    return errorResponse('只有管理员可操作', 403);
+  }
+  
+  await runDB(env, 'DELETE FROM shop_categories WHERE id = ?', [categoryId]);
+  return jsonResponse({ success: true, message: '店铺分类已删除' });
 }
 
 // ============================================================
@@ -1028,6 +1081,46 @@ async function handleAdminDeleteBanner(env, authHeader, bannerId) {
   
   await runDB(env, 'DELETE FROM banners WHERE id = ?', [bannerId]);
   return jsonResponse({ success: true, message: '已删除' });
+}
+
+// ============================================================
+//  图标自定义管理
+// ============================================================
+async function handleGetIcons(env) {
+  const result = await queryDB(env, 'SELECT * FROM custom_icons');
+  return jsonResponse(result.results || []);
+}
+
+async function handleAdminSetIcon(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (user.role !== 'admin') return errorResponse('权限不足', 403);
+  
+  const { key, image_url } = body;
+  if (!key) return errorResponse('请指定图标key');
+  if (!image_url) return errorResponse('请输入图片URL');
+  
+  const existing = await queryDB(env, 'SELECT * FROM custom_icons WHERE key = ?', [key]);
+  if (existing.results && existing.results.length > 0) {
+    await runDB(env, 'UPDATE custom_icons SET image_url = ? WHERE key = ?', [image_url, key]);
+  } else {
+    await runDB(env,
+      'INSERT INTO custom_icons (id, key, image_url, created_at) VALUES (?, ?, ?, ?)',
+      [generateId(), key, image_url, new Date().toISOString()]
+    );
+  }
+  return jsonResponse({ success: true, message: '图标已更新' });
+}
+
+async function handleAdminDeleteIcon(env, authHeader, key) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (user.role !== 'admin') return errorResponse('权限不足', 403);
+  
+  await runDB(env, 'DELETE FROM custom_icons WHERE key = ?', [key]);
+  return jsonResponse({ success: true, message: '图标已删除' });
 }
 
 // ============================================================
@@ -1527,12 +1620,17 @@ export async function onRequest(context) {
     if (path === '/api/support-contacts' && method === 'GET') return await handleGetSupportContacts(env);
     if (path === '/api/shops' && method === 'GET') return await handleGetShops(env, url);
     if (path === '/api/banners' && method === 'GET') return await handleGetBanners(env);
+    if (path === '/api/icons' && method === 'GET') return await handleGetIcons(env);
     
     if (path.startsWith('/api/shops/') && path.endsWith('/products') && method === 'GET') {
       const shopId = path.replace('/api/shops/', '').replace('/products', '');
       return await handleGetShopProducts(env, shopId);
     }
-    if (path.startsWith('/api/shops/') && method === 'GET' && !path.endsWith('/products') && !path.endsWith('/follow') && !path.endsWith('/follow-status')) {
+    if (path.startsWith('/api/shops/') && path.endsWith('/categories') && method === 'GET') {
+      const shopId = path.replace('/api/shops/', '').replace('/categories', '');
+      return await handleGetShopCategories(env, shopId);
+    }
+    if (path.startsWith('/api/shops/') && method === 'GET' && !path.endsWith('/products') && !path.endsWith('/categories') && !path.endsWith('/follow') && !path.endsWith('/follow-status')) {
       const shopId = path.replace('/api/shops/', '');
       return await handleGetShopDetail(env, shopId);
     }
@@ -1626,11 +1724,25 @@ export async function onRequest(context) {
           if (method === 'DELETE') return await handleDeleteShop(env, authHeader, shopId);
         }
         
+        // 店铺分类管理
+        if (path === '/api/shop-categories' && method === 'POST') return await handleCreateShopCategory(env, authHeader, body);
+        if (path.startsWith('/api/shop-categories/') && method === 'DELETE') {
+          const categoryId = path.replace('/api/shop-categories/', '');
+          return await handleDeleteShopCategory(env, authHeader, categoryId);
+        }
+        
         // 广告管理
         if (path === '/api/admin/banners' && method === 'POST') return await handleAdminCreateBanner(env, authHeader, body);
         if (path.startsWith('/api/admin/banners/') && method === 'DELETE') {
           const bannerId = path.replace('/api/admin/banners/', '');
           return await handleAdminDeleteBanner(env, authHeader, bannerId);
+        }
+        
+        // 图标管理
+        if (path === '/api/admin/icons' && method === 'POST') return await handleAdminSetIcon(env, authHeader, body);
+        if (path.startsWith('/api/admin/icons/') && method === 'DELETE') {
+          const key = path.replace('/api/admin/icons/', '');
+          return await handleAdminDeleteIcon(env, authHeader, key);
         }
         
         // 提现管理
