@@ -1351,6 +1351,15 @@
         .star-rating .star.active { color: #f5c842; }
         .star-rating .star:hover { transform: scale(1.1); }
         
+        /* ===== 图标自定义 ===== */
+        .custom-icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+        
         /* ===== 响应式 ===== */
         @media(max-width:420px) {
             .view-container { padding: 10px 12px 4px; }
@@ -1436,9 +1445,8 @@
             </div>
         </div>
 
-        <!-- ===== 商城页面（店铺列表 + 广告轮播） ===== -->
+        <!-- ===== 商城页面 ===== -->
         <div class="view active" id="view-home">
-            <!-- 广告轮播 -->
             <div class="banner-carousel" id="bannerCarousel">
                 <div class="banner-track" id="bannerTrack"></div>
                 <div class="banner-dots" id="bannerDots"></div>
@@ -1459,7 +1467,7 @@
             <div id="shopListContainer"></div>
         </div>
 
-        <!-- ===== 店铺详情页（全屏） ===== -->
+        <!-- ===== 店铺详情页 ===== -->
         <div class="shop-detail-page" id="shopDetailPage">
             <div class="shop-detail-header" id="shopDetailHeader">
                 <button class="back-btn" onclick="closeShopDetail()"><i class="fas fa-arrow-left"></i></button>
@@ -1514,7 +1522,7 @@
             <div id="orderList"></div>
         </div>
 
-        <!-- ===== 管理页面（工作台 + 内嵌弹窗） ===== -->
+        <!-- ===== 管理页面 ===== -->
         <div class="view" id="view-admin">
             <div class="admin-card" style="padding:16px;">
                 <div class="profile-header">
@@ -1573,7 +1581,7 @@
             <div id="contactList"></div>
         </div>
 
-        <!-- ===== 账号管理（含改名、背景墙） ===== -->
+        <!-- ===== 账号管理 ===== -->
         <div class="view" id="view-account">
             <div id="profileBanner" style="width:100%;height:160px;border-radius:16px;overflow:hidden;margin-bottom:12px;background:linear-gradient(135deg,#1a1a2e,#2d2d44);position:relative;">
                 <img id="profileBannerImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;" />
@@ -1601,7 +1609,7 @@
         </div>
     </div>
 
-    <!-- ===== 底部导航（由 JavaScript 动态渲染） ===== -->
+    <!-- ===== 底部导航 ===== -->
     <div class="bottom-nav" id="bottomNav"></div>
 </div>
 
@@ -1692,6 +1700,22 @@
         <span class="title">🏷️ 分类管理</span>
     </div>
     <div id="subCategoriesContent"></div>
+</div>
+
+<div class="sub-page" id="subPageBanners">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">📸 广告管理</span>
+    </div>
+    <div id="subBannersContent"></div>
+</div>
+
+<div class="sub-page" id="subPageIcons">
+    <div class="sub-header">
+        <button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title">🎨 图标管理</span>
+    </div>
+    <div id="subIconsContent"></div>
 </div>
 
 <!-- ===== 全屏聊天 ===== -->
@@ -2021,7 +2045,9 @@ function openSubPage(page) {
         'account': 'subPageAccount',
         'service': 'subPageService',
         'dispatcher': 'subPageDispatcher',
-        'categories': 'subPageCategories'
+        'categories': 'subPageCategories',
+        'banners': 'subPageBanners',
+        'icons': 'subPageIcons'
     };
     
     const containerId = pageMap[page];
@@ -2043,6 +2069,8 @@ function openSubPage(page) {
         case 'service': renderSubService(); break;
         case 'dispatcher': renderSubDispatcher(); break;
         case 'categories': renderSubCategories(); break;
+        case 'banners': renderSubBanners(); break;
+        case 'icons': renderSubIcons(); break;
     }
 }
 
@@ -2051,7 +2079,6 @@ function closeSubPage() {
     document.body.style.overflow = '';
     currentSubPage = null;
 }
-
 // ============================================================
 //  ===== 广告轮播 =====
 // ============================================================
@@ -2403,6 +2430,7 @@ async function openProductDetail(productId) {
                 <div style="font-size:14px;color:var(--text-muted);margin:4px 0;">${product.detail_desc || product.description || '暂无描述'}</div>
                 <div style="font-size:12px;color:var(--text-muted);">库存：${product.quantity - (product.sold || 0)}</div>
                 ${product.shop_name ? `<div style="font-size:12px;color:var(--text-muted);">店铺：${product.shop_name}</div>` : ''}
+                ${product.shop_category_name ? `<div style="font-size:12px;color:var(--text-muted);">分类：${product.shop_category_name}</div>` : ''}
             </div>
             <div class="btn-row" style="margin-top:12px;">
                 <button class="btn btn-outline" onclick="closeCustomModal()">关闭</button>
@@ -2461,7 +2489,6 @@ async function doBuyWithHandler(productId) {
         toast(err.message, 'error');
     }
 }
-
 // ============================================================
 //  ===== 订单/打手页面 =====
 // ============================================================
@@ -2708,6 +2735,8 @@ function renderWorkbench() {
             { icon: '📢', label: '公告管理', action: "openSubPage('announce')" },
             { icon: '💳', label: '提现管理', action: "openSubPage('withdrawals')" },
             { icon: '🏷️', label: '分类管理', action: "openSubPage('categories')" },
+            { icon: '📸', label: '广告管理', action: "openSubPage('banners')" },
+            { icon: '🎨', label: '图标管理', action: "openSubPage('icons')" },
             { icon: '📤', label: '发布订单', action: "openSubPage('dispatcher')" },
             { icon: '⚙️', label: '账户设置', action: "openSubPage('account')" }
         ];
@@ -2746,7 +2775,6 @@ async function updateStats() {
         document.getElementById('statEnergy').textContent = stats.stats.energy || 0;
     } catch (err) { console.error('加载统计数据失败', err); }
 }
-
 // ============================================================
 //  ===== 子页面渲染 =====
 // ============================================================
@@ -2802,6 +2830,7 @@ async function renderSubProducts() {
         const products = await apiRequest('/admin/products');
         await loadCategoriesForSelectors();
         await loadShopSelect();
+        await loadShopCategorySelect();
         
         let html = `
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
@@ -2816,14 +2845,18 @@ async function renderSubProducts() {
                     <span>📦 上架新商品</span>
                     <button class="close-btn" onclick="toggleInlineModal('addProduct')">✕</button>
                 </div>
-                <div class="admin-form-group"><label>主分类</label>
+                <div class="admin-form-group"><label>系统分类</label>
                     <select class="admin-form-control" id="prodCategory"></select>
                 </div>
-                <div class="admin-form-group"><label>子分类</label>
-                    <select class="admin-form-control" id="prodGame"><option value="">-- 请选择子分类 --</option></select>
-                </div>
                 <div class="admin-form-group"><label>所属店铺</label>
-                    <select class="admin-form-control" id="prodShop"><option value="">-- 请选择店铺 --</option></select>
+                    <select class="admin-form-control" id="prodShop" onchange="loadShopCategoriesForProduct()">
+                        <option value="">-- 请选择店铺 --</option>
+                    </select>
+                </div>
+                <div class="admin-form-group"><label>店铺分类</label>
+                    <select class="admin-form-control" id="prodShopCategory">
+                        <option value="">-- 请选择店铺分类 --</option>
+                    </select>
                 </div>
                 <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="prodTitle" placeholder="标题"></div>
                 <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="prodDesc" rows="2" placeholder="服务详情"></textarea></div>
@@ -2879,6 +2912,24 @@ async function loadShopSelect() {
     } catch (err) { console.error(err); }
 }
 
+async function loadShopCategorySelect() {
+    const shopId = document.getElementById('prodShop')?.value;
+    if (!shopId) return;
+    try {
+        const categories = await apiRequest('/shops/' + shopId + '/categories') || [];
+        const sel = document.getElementById('prodShopCategory');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">-- 请选择店铺分类 --</option>';
+        categories.forEach(c => {
+            sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        });
+    } catch (err) { console.error(err); }
+}
+
+async function loadShopCategoriesForProduct() {
+    await loadShopCategorySelect();
+}
+
 async function renderProductsList() {
     try {
         const products = await apiRequest('/admin/products');
@@ -2888,7 +2939,7 @@ async function renderProductsList() {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>暂无商品</p></div>';
             return;
         }
-        let html = '<div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        let html = '<div class="table-wrap"><table><thead><tr><th>标题</th><th>价格</th><th>库存</th><th>店铺</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         for (const p of products) {
             const remaining = p.quantity - p.sold;
             const isHidden = p.hidden == 1 || p.hidden === true;
@@ -2907,6 +2958,7 @@ async function renderProductsList() {
                 <td>${p.title}</td>
                 <td>${p.price} 红钻</td>
                 <td>${p.sold}/${p.quantity}</td>
+                <td>${p.shop_name || '未分配'}</td>
                 <td><span class="status-badge ${statusCls}">${statusText2}</span></td>
                 <td><div class="action-group">${actions}</div></td>
             </tr>`;
@@ -2915,6 +2967,7 @@ async function renderProductsList() {
         container.innerHTML = html;
     } catch (err) { console.error(err); }
 }
+
 // ============================================================
 //  ===== 商品管理操作 =====
 // ============================================================
@@ -2947,7 +3000,7 @@ window.openEditProduct = function(productId) {
                     selectedMainId = legacySub.parent_id;
                 }
             }
-            let categoryOptions = '<option value="">请选择主分类</option>';
+            let categoryOptions = '<option value="">请选择系统分类</option>';
             mainCats.forEach(c => {
                 categoryOptions += `<option value="${c.id}" ${selectedMainId === c.id ? 'selected' : ''}>${c.name}</option>`;
             });
@@ -2964,40 +3017,60 @@ window.openEditProduct = function(productId) {
                 shops.forEach(s => {
                     shopOptions += `<option value="${s.id}" ${p.shop_id === s.id ? 'selected' : ''}>${s.name}</option>`;
                 });
-                showCustomModal(`
-                    <h3><i class="fas fa-edit"></i> 编辑商品</h3>
-                    <div class="admin-form-group"><label>主分类</label><select class="admin-form-control" id="editProdCategory">${categoryOptions}</select></div>
-                    <div class="admin-form-group"><label>子分类</label><select class="admin-form-control" id="editProdSubCategory">${buildSubOptions(selectedMainId, selectedSubId)}</select></div>
-                    <div class="admin-form-group"><label>所属店铺</label><select class="admin-form-control" id="editProdShop">${shopOptions}</select></div>
-                    <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="editProdTitle" value="${p.title}" /></div>
-                    <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="editProdDesc" rows="2">${p.description||''}</textarea></div>
-                    <div class="admin-form-group"><label>价格（红钻）</label><input class="admin-form-control" id="editProdPrice" type="number" value="${p.price}" /></div>
-                    <div class="admin-form-group"><label>库存</label><input class="admin-form-control" id="editProdQuantity" type="number" value="${p.quantity}" /></div>
-                    <div class="admin-form-group"><label>商品图片URL</label>
-                        <input class="admin-form-control" id="editProdImageUrl" value="${p.image||''}" placeholder="输入图片URL" oninput="previewProdImageUrl('editProdImageUrl','editProdImagePreview')" />
-                        <img id="editProdImagePreview" class="upload-preview" style="display:${p.image?'block':'none'};margin-top:4px;" src="${p.image||''}" onerror="this.style.display='none'" />
-                    </div>
-                    <div class="admin-form-group"><label>详情图片（多个URL用逗号分隔）</label>
-                        <input class="admin-form-control" id="editProdDetailImages" value="${p.detail_images || ''}" placeholder="https://img1.jpg, https://img2.jpg" />
-                    </div>
-                    <div class="admin-form-group"><label>详情描述</label>
-                        <textarea class="admin-form-control" id="editProdDetailDesc" rows="3">${p.detail_desc || ''}</textarea>
-                    </div>
-                    <div class="btn-row">
-                        <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-                        <button class="btn btn-success" onclick="doEditProduct()">保存修改</button>
-                    </div>
-                `);
-                const mainSelect = document.getElementById('editProdCategory');
-                const subSelect = document.getElementById('editProdSubCategory');
-                if (mainSelect && subSelect) {
-                    mainSelect.addEventListener('change', function() {
-                        subSelect.innerHTML = buildSubOptions(this.value, '');
+                // 加载店铺分类
+                apiRequest('/shops/' + (p.shop_id || '') + '/categories').then(shopCats => {
+                    let shopCatOptions = '<option value="">请选择店铺分类</option>';
+                    shopCats.forEach(c => {
+                        shopCatOptions += `<option value="${c.id}" ${p.shop_category_id === c.id ? 'selected' : ''}>${c.name}</option>`;
                     });
-                }
+                    showCustomModal(`
+                        <h3><i class="fas fa-edit"></i> 编辑商品</h3>
+                        <div class="admin-form-group"><label>系统分类</label><select class="admin-form-control" id="editProdCategory">${categoryOptions}</select></div>
+                        <div class="admin-form-group"><label>子分类</label><select class="admin-form-control" id="editProdSubCategory">${buildSubOptions(selectedMainId, selectedSubId)}</select></div>
+                        <div class="admin-form-group"><label>所属店铺</label><select class="admin-form-control" id="editProdShop" onchange="loadEditShopCategories()">${shopOptions}</select></div>
+                        <div class="admin-form-group"><label>店铺分类</label><select class="admin-form-control" id="editProdShopCategory">${shopCatOptions}</select></div>
+                        <div class="admin-form-group"><label>标题</label><input class="admin-form-control" id="editProdTitle" value="${p.title}" /></div>
+                        <div class="admin-form-group"><label>描述</label><textarea class="admin-form-control" id="editProdDesc" rows="2">${p.description||''}</textarea></div>
+                        <div class="admin-form-group"><label>价格（红钻）</label><input class="admin-form-control" id="editProdPrice" type="number" value="${p.price}" /></div>
+                        <div class="admin-form-group"><label>库存</label><input class="admin-form-control" id="editProdQuantity" type="number" value="${p.quantity}" /></div>
+                        <div class="admin-form-group"><label>商品图片URL</label>
+                            <input class="admin-form-control" id="editProdImageUrl" value="${p.image||''}" placeholder="输入图片URL" oninput="previewProdImageUrl('editProdImageUrl','editProdImagePreview')" />
+                            <img id="editProdImagePreview" class="upload-preview" style="display:${p.image?'block':'none'};margin-top:4px;" src="${p.image||''}" onerror="this.style.display='none'" />
+                        </div>
+                        <div class="admin-form-group"><label>详情图片（多个URL用逗号分隔）</label>
+                            <input class="admin-form-control" id="editProdDetailImages" value="${p.detail_images || ''}" placeholder="https://img1.jpg, https://img2.jpg" />
+                        </div>
+                        <div class="admin-form-group"><label>详情描述</label>
+                            <textarea class="admin-form-control" id="editProdDetailDesc" rows="3">${p.detail_desc || ''}</textarea>
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                            <button class="btn btn-success" onclick="doEditProduct()">保存修改</button>
+                        </div>
+                    `);
+                    const mainSelect = document.getElementById('editProdCategory');
+                    const subSelect = document.getElementById('editProdSubCategory');
+                    if (mainSelect && subSelect) {
+                        mainSelect.addEventListener('change', function() {
+                            subSelect.innerHTML = buildSubOptions(this.value, '');
+                        });
+                    }
+                });
             });
         });
     }).catch(err => toast(err.message, 'error'));
+};
+
+window.loadEditShopCategories = function() {
+    const shopId = document.getElementById('editProdShop').value;
+    if (!shopId) return;
+    apiRequest('/shops/' + shopId + '/categories').then(cats => {
+        const sel = document.getElementById('editProdShopCategory');
+        sel.innerHTML = '<option value="">请选择店铺分类</option>';
+        cats.forEach(c => {
+            sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        });
+    }).catch(err => console.error(err));
 };
 
 window.doEditProduct = function() {
@@ -3006,6 +3079,7 @@ window.doEditProduct = function() {
     const subSelect = document.getElementById('editProdSubCategory');
     const game = subSelect?.options[subSelect.selectedIndex]?.textContent?.trim() || '';
     const shop_id = document.getElementById('editProdShop').value || null;
+    const shop_category_id = document.getElementById('editProdShopCategory').value || null;
     const title = document.getElementById('editProdTitle').value.trim();
     const desc = document.getElementById('editProdDesc').value.trim();
     const price = parseFloat(document.getElementById('editProdPrice').value);
@@ -3014,12 +3088,14 @@ window.doEditProduct = function() {
     const detail_images_raw = document.getElementById('editProdDetailImages').value.trim();
     const detail_desc = document.getElementById('editProdDetailDesc').value.trim();
     const detail_images = detail_images_raw ? detail_images_raw.split(',').map(s => s.trim()).filter(s => s) : [];
-    if (!mainCategoryId) return toast('请选择主分类', 'warning');
+    if (!mainCategoryId) return toast('请选择系统分类', 'warning');
     if (!category_id) return toast('请选择子分类', 'warning');
+    if (!shop_id) return toast('请选择店铺', 'warning');
+    if (!shop_category_id) return toast('请选择店铺分类', 'warning');
     if (!title || !price) return toast('请填写完整信息', 'error');
     apiRequest('/admin/products/' + editProductId + '/edit', {
         method: 'PUT',
-        body: JSON.stringify({ game, title, desc, price, quantity, image, category_id, detail_images, detail_desc, shop_id })
+        body: JSON.stringify({ game, title, desc, price, quantity, image, category_id, detail_images, detail_desc, shop_id, shop_category_id })
     }).then(() => {
         closeCustomModal();
         toast('✅ 商品已更新', 'success');
@@ -3094,9 +3170,9 @@ async function doDeleteProduct(productId) {
 
 async function shelfProduct() {
     const category_id = document.getElementById('prodCategory').value || null;
-    const gameSelect = document.getElementById('prodGame');
-    const game = gameSelect?.options[gameSelect.selectedIndex]?.textContent?.trim() || '';
+    const subCategoryId = document.getElementById('prodGame')?.value || null;
     const shop_id = document.getElementById('prodShop').value || null;
+    const shop_category_id = document.getElementById('prodShopCategory').value || null;
     const title = document.getElementById('prodTitle').value.trim();
     const desc = document.getElementById('prodDesc').value.trim();
     const price = parseFloat(document.getElementById('prodPrice').value);
@@ -3105,15 +3181,15 @@ async function shelfProduct() {
     const detail_images_raw = document.getElementById('prodDetailImages').value.trim();
     const detail_desc = document.getElementById('prodDetailDesc').value.trim();
     const detail_images = detail_images_raw ? detail_images_raw.split(',').map(s => s.trim()).filter(s => s) : [];
-    if (!category_id) return toast('请选择主分类', 'warning');
-    const subCategoryId = document.getElementById('prodGame').value;
+    if (!category_id) return toast('请选择系统分类', 'warning');
     if (!subCategoryId) return toast('请选择子分类', 'warning');
     if (!shop_id) return toast('请选择店铺', 'warning');
+    if (!shop_category_id) return toast('请选择店铺分类', 'warning');
     if (!title || !price) return toast('请填写完整信息', 'error');
     try {
         await apiRequest('/admin/products', {
             method: 'POST',
-            body: JSON.stringify({ game, title, desc, price, quantity, image, category_id: subCategoryId, detail_images, detail_desc, shop_id })
+            body: JSON.stringify({ game: '暗区突围', title, desc, price, quantity, image, category_id: subCategoryId, detail_images, detail_desc, shop_id, shop_category_id })
         });
         toast('上架成功', 'success');
         document.getElementById('prodTitle').value = '';
@@ -3333,10 +3409,15 @@ async function loadCategoriesForSelectors() {
         const mainCats = categories.filter(c => !c.parent_id);
         const sel = document.getElementById('prodCategory');
         if (!sel) return;
-        sel.innerHTML = '<option value="">-- 请选择主分类 --</option>';
+        sel.innerHTML = '<option value="">-- 请选择系统分类 --</option>';
         mainCats.forEach(c => {
             sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
         });
+        // 子分类下拉
+        const subSel = document.getElementById('prodGame');
+        if (subSel) {
+            subSel.innerHTML = '<option value="">-- 请选择子分类 --</option>';
+        }
     } catch (err) { console.error(err); }
 }
 
@@ -3354,7 +3435,7 @@ async function loadSubCategoriesToSelect(selectId, parentId) {
 }
 
 // ============================================================
-//  ===== 店铺管理（子页面） =====
+//  ===== 店铺管理 =====
 // ============================================================
 async function renderSubShops() {
     const container = document.getElementById('subShopsContent');
@@ -3367,6 +3448,7 @@ async function renderSubShops() {
         let html = `
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
                 <button class="btn btn-primary" onclick="toggleInlineModal('addShop')"><i class="fas fa-plus"></i> 创建店铺</button>
+                <button class="btn btn-outline" onclick="toggleInlineModal('addShopCategory')"><i class="fas fa-tag"></i> 添加店铺分类</button>
             </div>
             
             <div class="inline-modal" id="addShopModal">
@@ -3377,7 +3459,7 @@ async function renderSubShops() {
                 <div class="admin-form-group"><label>店铺名称</label><input class="admin-form-control" id="shopName" placeholder="输入店铺名称" /></div>
                 <div class="admin-form-group"><label>店铺简介</label><textarea class="admin-form-control" id="shopDesc" rows="2" placeholder="店铺简介"></textarea></div>
                 <div class="admin-form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="shopLogo" placeholder="输入Logo图片URL" /></div>
-                <div class="admin-form-group"><label>所属分类</label>
+                <div class="admin-form-group"><label>所属主分类</label>
                     <select class="admin-form-control" id="shopCategory">
                         <option value="">-- 请选择分类 --</option>
                         ${mainCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
@@ -3392,6 +3474,21 @@ async function renderSubShops() {
                 <button class="btn btn-success" onclick="createShop()"><i class="fas fa-plus"></i> 创建店铺</button>
             </div>
             
+            <div class="inline-modal" id="addShopCategoryModal">
+                <div class="modal-title">
+                    <span>🏷️ 添加店铺分类</span>
+                    <button class="close-btn" onclick="toggleInlineModal('addShopCategory')">✕</button>
+                </div>
+                <div class="admin-form-group"><label>选择店铺</label>
+                    <select class="admin-form-control" id="shopCategorySelect">
+                        <option value="">-- 请选择店铺 --</option>
+                        ${shops.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="admin-form-group"><label>分类名称</label><input class="admin-form-control" id="shopCategoryName" placeholder="如：排位护航" /></div>
+                <button class="btn btn-success" onclick="createShopCategory()"><i class="fas fa-plus"></i> 添加分类</button>
+            </div>
+            
             <div class="admin-card">
                 <div class="admin-card-title">🏪 店铺列表</div>
                 <div id="shopList"></div>
@@ -3403,7 +3500,7 @@ async function renderSubShops() {
         if (shops.length === 0) {
             shopList.innerHTML = '<div class="empty-state"><i class="fas fa-store"></i><p>暂无店铺</p></div>';
         } else {
-            let shopHtml = '<div class="table-wrap"><table><thead><tr><th>名称</th><th>状态</th><th>标签</th><th>操作</th></tr></thead><tbody>';
+            let shopHtml = '<div class="table-wrap"><table><thead><tr><th>名称</th><th>状态</th><th>标签</th><th>分类</th><th>操作</th></tr></thead><tbody>';
             for (const s of shops) {
                 const statusText = s.status === 'active' ? '营业中' : '已关闭';
                 const statusCls = s.status === 'active' ? 'status-onsale' : 'status-canceled';
@@ -3412,11 +3509,13 @@ async function renderSubShops() {
                 if (s.is_recommend) tags.push('🔥推荐');
                 if (s.is_followed) tags.push('⭐关注');
                 const tagHtml = tags.length > 0 ? tags.join(' ') : '普通';
+                const catName = mainCats.find(c => c.id === s.category_id)?.name || '未分类';
                 shopHtml += `
                     <tr>
                         <td>${s.name}</td>
                         <td><span class="status-badge ${statusCls}">${statusText}</span></td>
                         <td>${tagHtml}</td>
+                        <td>${catName}</td>
                         <td>
                             <button class="btn btn-primary btn-xs" onclick="editShop('${s.id}')">编辑</button>
                             <button class="btn btn-${s.status === 'active' ? 'danger' : 'success'} btn-xs" onclick="toggleShop('${s.id}')">${s.status === 'active' ? '关闭' : '开启'}</button>
@@ -3442,6 +3541,7 @@ async function createShop() {
     const is_self = document.getElementById('shopIsSelf').checked;
     const is_recommend = document.getElementById('shopIsRecommend').checked;
     if (!name) return toast('请输入店铺名称', 'warning');
+    if (!category_id) return toast('请选择主分类', 'warning');
     try {
         await apiRequest('/shops', {
             method: 'POST',
@@ -3456,6 +3556,25 @@ async function createShop() {
         toggleInlineModal('addShop');
         renderSubShops();
         renderShops();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function createShopCategory() {
+    const shop_id = document.getElementById('shopCategorySelect').value;
+    const name = document.getElementById('shopCategoryName').value.trim();
+    if (!shop_id) return toast('请选择店铺', 'warning');
+    if (!name) return toast('请输入分类名称', 'warning');
+    try {
+        await apiRequest('/shop-categories', {
+            method: 'POST',
+            body: JSON.stringify({ shop_id, name })
+        });
+        toast('店铺分类添加成功', 'success');
+        document.getElementById('shopCategoryName').value = '';
+        toggleInlineModal('addShopCategory');
+        renderSubShops();
     } catch (err) {
         toast(err.message, 'error');
     }
@@ -3538,6 +3657,203 @@ async function doDeleteShop(shopId) {
     }
 }
 
+// ============================================================
+//  ===== 广告管理 =====
+// ============================================================
+async function renderSubBanners() {
+    const container = document.getElementById('subBannersContent');
+    if (!container) return;
+    try {
+        const banners = await apiRequest('/banners') || [];
+        let html = `
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                <button class="btn btn-primary" onclick="toggleInlineModal('addBanner')"><i class="fas fa-plus"></i> 添加广告</button>
+            </div>
+            
+            <div class="inline-modal" id="addBannerModal">
+                <div class="modal-title">
+                    <span>📸 添加广告</span>
+                    <button class="close-btn" onclick="toggleInlineModal('addBanner')">✕</button>
+                </div>
+                <div class="admin-form-group"><label>图片URL</label><input class="admin-form-control" id="bannerImageUrl" placeholder="输入图片URL" /></div>
+                <div class="admin-form-group"><label>链接（可选）</label><input class="admin-form-control" id="bannerLink" placeholder="输入跳转链接" /></div>
+                <div class="admin-form-group"><label>排序权重</label><input class="admin-form-control" id="bannerSortOrder" type="number" placeholder="0" value="0" /></div>
+                <button class="btn btn-success" onclick="createBanner()"><i class="fas fa-plus"></i> 添加广告</button>
+            </div>
+            
+            <div class="admin-card">
+                <div class="admin-card-title">📸 广告列表</div>
+                <div id="bannerList"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        
+        const listContainer = document.getElementById('bannerList');
+        if (banners.length === 0) {
+            listContainer.innerHTML = '<div class="empty-state"><i class="fas fa-image"></i><p>暂无广告</p></div>';
+        } else {
+            let listHtml = '<div class="table-wrap"><table><thead><tr><th>图片</th><th>排序</th><th>操作</th></tr></thead><tbody>';
+            for (const b of banners) {
+                listHtml += `
+                    <tr>
+                        <td><img src="${b.image_url}" style="max-width:80px;max-height:50px;border-radius:4px;object-fit:cover;" onclick="showImgPreview('${b.image_url}')" /></td>
+                        <td>${b.sort_order || 0}</td>
+                        <td>
+                            <button class="btn btn-danger btn-xs" onclick="confirmDeleteBanner('${b.id}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }
+            listHtml += '</tbody></table></div>';
+            listContainer.innerHTML = listHtml;
+        }
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+async function createBanner() {
+    const image_url = document.getElementById('bannerImageUrl').value.trim();
+    const link = document.getElementById('bannerLink').value.trim();
+    const sort_order = parseInt(document.getElementById('bannerSortOrder').value) || 0;
+    if (!image_url) return toast('请输入图片URL', 'warning');
+    try {
+        await apiRequest('/admin/banners', {
+            method: 'POST',
+            body: JSON.stringify({ image_url, link, sort_order })
+        });
+        toast('广告添加成功', 'success');
+        document.getElementById('bannerImageUrl').value = '';
+        document.getElementById('bannerLink').value = '';
+        document.getElementById('bannerSortOrder').value = '0';
+        toggleInlineModal('addBanner');
+        renderSubBanners();
+        // 刷新首页广告
+        loadBannerFromStorage();
+        renderBanner();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+window.confirmDeleteBanner = function(bannerId) {
+    confirmAction('确认删除', '确认删除此广告？', '确认删除', `doDeleteBanner('${bannerId}')`);
+};
+
+async function doDeleteBanner(bannerId) {
+    try {
+        await apiRequest('/admin/banners/' + bannerId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderSubBanners();
+        loadBannerFromStorage();
+        renderBanner();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+// ============================================================
+//  ===== 图标管理 =====
+// ============================================================
+async function renderSubIcons() {
+    const container = document.getElementById('subIconsContent');
+    if (!container) return;
+    try {
+        const icons = await apiRequest('/icons') || [];
+        const iconKeys = [
+            { key: 'shop_default', label: '店铺默认图标' },
+            { key: 'product_default', label: '商品默认图标' },
+            { key: 'banner_default', label: '广告默认图标' },
+            { key: 'avatar_default', label: '默认头像' },
+            { key: 'logo', label: '网站Logo' }
+        ];
+        
+        let html = `
+            <div class="admin-card">
+                <div class="admin-card-title">🎨 图标自定义</div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">上传图片URL自定义网站图标，留空则使用默认图标</p>
+                <div id="iconList"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        
+        const listContainer = document.getElementById('iconList');
+        let listHtml = '<div class="table-wrap"><table><thead><tr><th>图标名称</th><th>当前图标</th><th>操作</th></tr></thead><tbody>';
+        for (const item of iconKeys) {
+            const icon = icons.find(i => i.key === item.key);
+            const currentUrl = icon?.image_url || '';
+            listHtml += `
+                <tr>
+                    <td>${item.label}</td>
+                    <td>
+                        ${currentUrl ? `<img src="${currentUrl}" style="max-width:50px;max-height:50px;border-radius:4px;object-fit:cover;" onclick="showImgPreview('${currentUrl}')" />` : '<span style="color:var(--text-muted);">默认</span>'}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:4px;">
+                            <input class="admin-form-control" id="iconInput_${item.key}" placeholder="输入图片URL" style="width:200px;padding:4px 8px;font-size:12px;" value="${currentUrl}" />
+                            <button class="btn btn-primary btn-xs" onclick="setIcon('${item.key}')">设置</button>
+                            ${currentUrl ? `<button class="btn btn-danger btn-xs" onclick="deleteIcon('${item.key}')">清除</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        listHtml += '</tbody></table></div>';
+        listContainer.innerHTML = listHtml;
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+async function setIcon(key) {
+    const image_url = document.getElementById('iconInput_' + key).value.trim();
+    if (!image_url) return toast('请输入图片URL', 'warning');
+    try {
+        await apiRequest('/admin/icons', {
+            method: 'POST',
+            body: JSON.stringify({ key, image_url })
+        });
+        toast('图标已更新', 'success');
+        renderSubIcons();
+        // 刷新页面图标
+        applyCustomIcons();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function deleteIcon(key) {
+    confirmAction('确认清除', '确认清除此自定义图标？', '确认清除', `doDeleteIcon('${key}')`);
+}
+
+async function doDeleteIcon(key) {
+    try {
+        await apiRequest('/admin/icons/' + key, { method: 'DELETE' });
+        toast('图标已清除', 'success');
+        renderSubIcons();
+        applyCustomIcons();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+function applyCustomIcons() {
+    // 此函数在页面加载时应用自定义图标
+    apiRequest('/icons').then(icons => {
+        icons.forEach(icon => {
+            // 根据key应用图标到对应位置
+            if (icon.key === 'logo') {
+                const logoImg = document.querySelector('.brand-icon');
+                if (logoImg && icon.image_url) {
+                    logoImg.style.background = 'none';
+                    logoImg.innerHTML = `<img src="${icon.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" />`;
+                }
+            }
+        });
+    }).catch(err => console.error('加载自定义图标失败', err));
+}
 // ============================================================
 //  ===== 充值管理（子页面） =====
 // ============================================================
@@ -3970,34 +4286,6 @@ async function dispatcherDirectPublishSub() {
 }
 
 // ============================================================
-//  ===== 账户设置（子页面） =====
-// ============================================================
-function renderSubAccount() {
-    const container = document.getElementById('subAccountContent');
-    if (!container) return;
-    container.innerHTML = `
-        <div class="admin-card">
-            <div class="admin-card-title"><i class="fas fa-user"></i> 个人信息</div>
-            <div class="account-info">
-                <div class="info-row"><span class="label">用户名</span><span class="value">${currentUser?.username || '-'}</span></div>
-                <div class="info-row"><span class="label">用户ID</span><span class="value">${currentUser?.id || '-'}</span></div>
-                <div class="info-row"><span class="label">角色</span><span class="value">${currentUser?.role || '-'}</span></div>
-                <div class="info-row"><span class="label">状态</span><span class="value">${currentUser?.status || '-'}</span></div>
-                <div class="info-row"><span class="label">红钻余额</span><span class="value">${currentUser?.diamond || 0}</span></div>
-            </div>
-        </div>
-        <div class="admin-card" style="border-left:4px solid #22c55e;">
-            <div class="admin-card-title"><i class="fas fa-cog" style="color:#22c55e;"></i> 账户设置</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-primary btn-sm" onclick="showChangeName()"><i class="fas fa-user-edit"></i> 修改昵称</button>
-                <button class="btn btn-outline btn-sm" onclick="showChangeBanner()"><i class="fas fa-image"></i> 设置背景墙</button>
-                <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
-            </div>
-        </div>
-    `;
-}
-
-// ============================================================
 //  ===== 客服系统（子页面） =====
 // ============================================================
 async function renderSubService() {
@@ -4362,9 +4650,7 @@ async function doAddContact() {
         toast('✅ 已添加对话', 'success');
         loadContacts();
         updateBadges();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
 }
 
 // ============================================================
@@ -4401,6 +4687,29 @@ async function updateBadges() {
         }
     } catch (err) {
         console.error('更新红点失败', err);
+    }
+}
+
+// ============================================================
+//  ===== 分类导航（商城首页） =====
+// ============================================================
+async function loadCategoryNav() {
+    try {
+        const categories = await apiRequest('/categories');
+        const container = document.getElementById('categoryButtons');
+        if (!container) return;
+        const mainCategories = categories.filter(c => !c.parent_id).sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+        container.innerHTML = '';
+        mainCategories.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = 'category-btn';
+            btn.dataset.category = c.id;
+            btn.innerHTML = c.image ? `<img src="${c.image}" /> ${c.name}` : c.name;
+            btn.onclick = function() { filterShops(c.id); };
+            container.appendChild(btn);
+        });
+    } catch (err) {
+        console.error('加载分类导航失败', err);
     }
 }
 
@@ -4639,29 +4948,6 @@ function updateAccountInfo() {
 }
 
 // ============================================================
-//  ===== 分类导航（商城首页） =====
-// ============================================================
-async function loadCategoryNav() {
-    try {
-        const categories = await apiRequest('/categories');
-        const container = document.getElementById('categoryButtons');
-        if (!container) return;
-        const mainCategories = categories.filter(c => !c.parent_id).sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
-        container.innerHTML = '';
-        mainCategories.forEach(c => {
-            const btn = document.createElement('button');
-            btn.className = 'category-btn';
-            btn.dataset.category = c.id;
-            btn.innerHTML = c.image ? `<img src="${c.image}" /> ${c.name}` : c.name;
-            btn.onclick = function() { filterShops(c.id); };
-            container.appendChild(btn);
-        });
-    } catch (err) {
-        console.error('加载分类导航失败', err);
-    }
-}
-
-// ============================================================
 //  ===== 认证模块（登录后） =====
 // ============================================================
 function afterLogin() {
@@ -4682,6 +4968,7 @@ function afterLogin() {
     updateBadges();
     renderAdminPage();
     loadContacts();
+    applyCustomIcons();
     
     setTimeout(() => {
         loadAnnounceData().then(() => {
