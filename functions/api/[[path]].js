@@ -1,6 +1,6 @@
 // ============================================================
 //  QW电竞 - 完整后端 API
-//  包含：用户、商品、订单、分类、充值、客服、消息、店铺、提现、广告、关注、改名、背景墙、图标
+//  包含：用户、商品、订单、分类、充值、客服、消息、店铺、提现、广告、关注、改名、背景墙、图标、帖子、头像、打赏、派单、结算
 // ============================================================
 
 function generateId() {
@@ -51,15 +51,14 @@ async function handleRegister(env, body) {
     return errorResponse('用户名已存在');
   }
 
-  // 获取下一个用户ID（从100000开始递增）
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM users');
   const count = countResult.results?.[0]?.count || 0;
   const userId = String(100000 + count + 1);
 
   const userStatus = (role === 'handler' || role === 'dispatcher' || role === 'service') ? 'pending' : (status || 'active');
   await runDB(env,
-    'INSERT INTO users (id, username, password, role, diamond, balance, status) VALUES (?, ?, ?, ?, 0, 0, ?)',
-    [userId, username, password, role || 'boss', userStatus]
+    'INSERT INTO users (id, username, password, role, diamond, balance, status, avatar) VALUES (?, ?, ?, ?, 0, 0, ?, ?)',
+    [userId, username, password, role || 'boss', userStatus, '']
   );
 
   return jsonResponse({ 
@@ -93,6 +92,7 @@ async function handleLogin(env, body) {
       balance: user.balance || 0,
       status: user.status || 'active',
       banner: user.banner || '',
+      avatar: user.avatar || '',
       club_prefix: user.club_prefix || '',
       level: user.level || 1
     }
@@ -157,6 +157,18 @@ async function handleChangeUserId(env, authHeader, body) {
   
   await runDB(env, 'UPDATE users SET id = ? WHERE id = ?', [newId, targetUserId]);
   return jsonResponse({ success: true, message: '用户ID已修改' });
+}
+
+// ============================================================
+//  用户头像
+// ============================================================
+async function handleSetAvatar(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const { avatar } = body;
+  if (!avatar) return errorResponse('请提供头像URL');
+  await runDB(env, 'UPDATE users SET avatar = ? WHERE id = ?', [avatar, userId]);
+  return jsonResponse({ success: true, message: '头像已更新' });
 }
 
 // ============================================================
@@ -737,7 +749,7 @@ async function handleGetUsersForService(env, authHeader) {
     return errorResponse('权限不足', 403);
   }
   const result = await queryDB(env,
-    'SELECT id, username, role FROM users WHERE role NOT IN ("admin", "service", "handler")'
+    'SELECT id, username, role, avatar FROM users WHERE role NOT IN ("admin", "service", "handler")'
   );
   return jsonResponse(result.results || []);
 }
@@ -822,7 +834,7 @@ async function handleGetContacts(env, authHeader) {
       SELECT DISTINCT receiver_id as contact_id FROM messages WHERE sender_id = ?
     )
     SELECT 
-      u.id, u.username, u.role,
+      u.id, u.username, u.role, u.avatar,
       mc.last_message, mc.last_time, mc.unread_count
     FROM all_contacts ac
     JOIN users u ON u.id = ac.contact_id
@@ -846,10 +858,12 @@ async function handleGetMessages(env, authHeader, body) {
   if (!contact) return errorResponse('联系人不存在', 404);
   
   const result = await queryDB(env,
-    `SELECT * FROM messages 
-     WHERE (sender_id = ? AND receiver_id = ?) 
-     OR (sender_id = ? AND receiver_id = ?)
-     ORDER BY created_at ASC`,
+    `SELECT m.*, u.username, u.avatar 
+     FROM messages m
+     LEFT JOIN users u ON u.id = m.sender_id
+     WHERE (m.sender_id = ? AND m.receiver_id = ?) 
+     OR (m.sender_id = ? AND m.receiver_id = ?)
+     ORDER BY m.created_at ASC`,
     [userId, contactId, contactId, userId]
   );
   
@@ -878,7 +892,7 @@ async function handleGetUnreadCount(env, authHeader) {
 
 async function handleGetSupportContacts(env) {
   const result = await queryDB(env, 
-    'SELECT id, username, role FROM users WHERE role IN ("admin", "service") AND status = "active"'
+    'SELECT id, username, role, avatar FROM users WHERE role IN ("admin", "service") AND status = "active"'
   );
   return jsonResponse(result.results || []);
 }
@@ -911,7 +925,6 @@ async function handleCreateShop(env, authHeader, body) {
   if (!name) return errorResponse('请输入店铺名称');
   if (!category_id) return errorResponse('请选择主分类');
   
-  // 获取下一个店铺ID（从a100000开始递增）
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM shops');
   const count = countResult.results?.[0]?.count || 0;
   const shopId = 'a' + String(100000 + count + 1);
@@ -1279,7 +1292,7 @@ async function handleAdminGetOrders(env) {
 }
 
 async function handleAdminGetUsers(env) {
-  const result = await queryDB(env, 'SELECT id, username, role, diamond, balance, status, created_at, banner, club_prefix, level FROM users');
+  const result = await queryDB(env, 'SELECT id, username, role, diamond, balance, status, created_at, banner, avatar, club_prefix, level FROM users');
   return jsonResponse(result.results || []);
 }
 
@@ -1513,7 +1526,7 @@ async function handleChangeUsername(env, targetUserId, body) {
 //  获取打手列表
 // ============================================================
 async function handleGetHandlers(env) {
-  const result = await queryDB(env, 'SELECT id, username FROM users WHERE role = "handler" AND status = "active"');
+  const result = await queryDB(env, 'SELECT id, username, avatar FROM users WHERE role = "handler" AND status = "active"');
   return jsonResponse(result.results || []);
 }
 
@@ -1618,6 +1631,137 @@ async function handleDispatcherOrders(env, authHeader) {
 }
 
 // ============================================================
+//  帖子系统（新增）
+// ============================================================
+async function handleGetPosts(env, url) {
+  const limit = parseInt(url?.searchParams?.get('limit')) || 20;
+  const offset = parseInt(url?.searchParams?.get('offset')) || 0;
+  const result = await queryDB(env,
+    `SELECT p.*, u.username, u.avatar 
+     FROM posts p 
+     LEFT JOIN users u ON p.user_id = u.id 
+     ORDER BY p.created_at DESC 
+     LIMIT ? OFFSET ?`,
+    [limit, offset]
+  );
+  return jsonResponse(result.results || []);
+}
+
+async function handleGetPostDetail(env, postId) {
+  const postResult = await queryDB(env,
+    `SELECT p.*, u.username, u.avatar 
+     FROM posts p 
+     LEFT JOIN users u ON p.user_id = u.id 
+     WHERE p.id = ?`,
+    [postId]
+  );
+  const post = (postResult.results && postResult.results[0]) || null;
+  if (!post) return errorResponse('帖子不存在', 404);
+  
+  await runDB(env, 'UPDATE posts SET views = views + 1 WHERE id = ?', [postId]);
+  
+  const commentsResult = await queryDB(env,
+    `SELECT c.*, u.username, u.avatar 
+     FROM comments c 
+     LEFT JOIN users u ON c.user_id = u.id 
+     WHERE c.post_id = ? 
+     ORDER BY c.created_at ASC`,
+    [postId]
+  );
+  post.comments = commentsResult.results || [];
+  
+  return jsonResponse(post);
+}
+
+async function handleCreatePost(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const { title, content, image, images } = body;
+  if (!title && !content) return errorResponse('请填写标题或内容');
+  
+  const id = generateId();
+  const now = new Date().toISOString();
+  const imagesJson = Array.isArray(images) ? JSON.stringify(images) : (images || '[]');
+  
+  await runDB(env,
+    `INSERT INTO posts (id, user_id, title, content, image, images, created_at, updated_at) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, userId, title || '', content || '', image || '', imagesJson, now, now]
+  );
+  
+  return jsonResponse({ success: true, id, message: '帖子发布成功' });
+}
+
+async function handleDeletePost(env, authHeader, postId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  
+  const postResult = await queryDB(env, 'SELECT * FROM posts WHERE id = ?', [postId]);
+  const post = (postResult.results && postResult.results[0]) || null;
+  if (!post) return errorResponse('帖子不存在', 404);
+  if (post.user_id !== userId && user.role !== 'admin') {
+    return errorResponse('无权删除', 403);
+  }
+  
+  await runDB(env, 'DELETE FROM posts WHERE id = ?', [postId]);
+  await runDB(env, 'DELETE FROM comments WHERE post_id = ?', [postId]);
+  await runDB(env, 'DELETE FROM post_likes WHERE post_id = ?', [postId]);
+  return jsonResponse({ success: true, message: '帖子已删除' });
+}
+
+async function handleLikePost(env, authHeader, postId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  
+  const existing = await queryDB(env, 'SELECT * FROM post_likes WHERE post_id = ? AND user_id = ?', [postId, userId]);
+  if (existing.results && existing.results.length > 0) {
+    await runDB(env, 'DELETE FROM post_likes WHERE post_id = ? AND user_id = ?', [postId, userId]);
+    await runDB(env, 'UPDATE posts SET likes = likes - 1 WHERE id = ?', [postId]);
+    return jsonResponse({ success: true, liked: false });
+  } else {
+    await runDB(env,
+      'INSERT INTO post_likes (id, post_id, user_id, created_at) VALUES (?, ?, ?, ?)',
+      [generateId(), postId, userId, new Date().toISOString()]
+    );
+    await runDB(env, 'UPDATE posts SET likes = likes + 1 WHERE id = ?', [postId]);
+    return jsonResponse({ success: true, liked: true });
+  }
+}
+
+async function handleCreateComment(env, authHeader, postId, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const { content } = body;
+  if (!content || !content.trim()) return errorResponse('请输入评论内容');
+  
+  const id = generateId();
+  await runDB(env,
+    'INSERT INTO comments (id, post_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)',
+    [id, postId, userId, content.trim(), new Date().toISOString()]
+  );
+  await runDB(env, 'UPDATE posts SET comments_count = comments_count + 1 WHERE id = ?', [postId]);
+  return jsonResponse({ success: true, id, message: '评论成功' });
+}
+
+async function handleDeleteComment(env, authHeader, commentId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  
+  const commentResult = await queryDB(env, 'SELECT * FROM comments WHERE id = ?', [commentId]);
+  const comment = (commentResult.results && commentResult.results[0]) || null;
+  if (!comment) return errorResponse('评论不存在', 404);
+  if (comment.user_id !== userId && user.role !== 'admin') {
+    return errorResponse('无权删除', 403);
+  }
+  
+  await runDB(env, 'DELETE FROM comments WHERE id = ?', [commentId]);
+  await runDB(env, 'UPDATE posts SET comments_count = comments_count - 1 WHERE id = ?', [comment.post_id]);
+  return jsonResponse({ success: true, message: '评论已删除' });
+}
+
+// ============================================================
 //  健康检查
 // ============================================================
 async function handleHealthCheck(env) {
@@ -1669,6 +1813,7 @@ export async function onRequest(context) {
     if (path === '/api/shops' && method === 'GET') return await handleGetShops(env, url);
     if (path === '/api/banners' && method === 'GET') return await handleGetBanners(env);
     if (path === '/api/icons' && method === 'GET') return await handleGetIcons(env);
+    if (path === '/api/posts' && method === 'GET') return await handleGetPosts(env, url);
     
     if (path.startsWith('/api/shops/') && path.endsWith('/products') && method === 'GET') {
       const shopId = path.replace('/api/shops/', '').replace('/products', '');
@@ -1690,6 +1835,10 @@ export async function onRequest(context) {
       const productId = path.replace('/api/products/', '');
       return await handleGetProductDetail(env, productId);
     }
+    if (path.startsWith('/api/posts/') && method === 'GET' && !path.endsWith('/like') && !path.endsWith('/comments')) {
+      const postId = path.replace('/api/posts/', '');
+      return await handleGetPostDetail(env, postId);
+    }
 
     // ============================================================
     //  需要登录
@@ -1707,8 +1856,9 @@ export async function onRequest(context) {
     if (path === '/api/withdraw/request' && method === 'POST') return await handleRequestWithdraw(env, authHeader, body);
     if (path === '/api/user/name' && method === 'PUT') return await handleChangeName(env, authHeader, body);
     if (path === '/api/user/banner' && method === 'PUT') return await handleSetBanner(env, authHeader, body);
+    if (path === '/api/user/avatar' && method === 'PUT') return await handleSetAvatar(env, authHeader, body);
+    if (path === '/api/posts' && method === 'POST') return await handleCreatePost(env, authHeader, body);
     
-    // 关注店铺
     if (path.startsWith('/api/shops/') && path.endsWith('/follow') && method === 'POST') {
       const shopId = path.replace('/api/shops/', '').replace('/follow', '');
       return await handleFollowShop(env, authHeader, shopId);
@@ -1718,23 +1868,36 @@ export async function onRequest(context) {
       return await handleGetFollowStatus(env, authHeader, shopId);
     }
     
-    // 充值
     if (path === '/api/recharge/custom' && method === 'POST') return await handleCustomRecharge(env, authHeader, body);
     if (path === '/api/recharge/my' && method === 'GET') return await handleGetMyRecharges(env, authHeader);
 
-    // 客服
     if (path === '/api/service/recharges' && method === 'GET') return await handleGetPendingRecharges(env, authHeader);
     if (path === '/api/service/process' && method === 'POST') return await handleProcessRecharge(env, authHeader, body);
     if (path === '/api/service/users' && method === 'GET') return await handleGetUsersForService(env, authHeader);
     if (path === '/api/service/gift' && method === 'POST') return await handleServiceGift(env, authHeader, body);
 
-    // 消息
     if (path === '/api/messages/send' && method === 'POST') return await handleSendMessage(env, authHeader, body);
     if (path === '/api/messages/contacts' && method === 'GET') return await handleGetContacts(env, authHeader);
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
 
-    // 带参数的订单接口
+    if (path.startsWith('/api/posts/') && path.endsWith('/like') && method === 'POST') {
+      const postId = path.replace('/api/posts/', '').replace('/like', '');
+      return await handleLikePost(env, authHeader, postId);
+    }
+    if (path.startsWith('/api/posts/') && path.endsWith('/comments') && method === 'POST') {
+      const postId = path.replace('/api/posts/', '').replace('/comments', '');
+      return await handleCreateComment(env, authHeader, postId, body);
+    }
+    if (path.startsWith('/api/posts/') && method === 'DELETE') {
+      const postId = path.replace('/api/posts/', '');
+      return await handleDeletePost(env, authHeader, postId);
+    }
+    if (path.startsWith('/api/comments/') && method === 'DELETE') {
+      const commentId = path.replace('/api/comments/', '');
+      return await handleDeleteComment(env, authHeader, commentId);
+    }
+
     if (path.startsWith('/api/orders/')) {
       const orderId = path.replace('/api/orders/', '');
       if (method === 'GET') return await handleGetOrderDetail(env, authHeader, orderId);
@@ -1747,7 +1910,6 @@ export async function onRequest(context) {
       if (orderId.endsWith('/cancel') && method === 'PUT') { const id = orderId.replace('/cancel', ''); return await handleAdminCancelOrder(env, id); }
     }
 
-    // 邮件领取
     if (path.startsWith('/api/mails/') && path.endsWith('/claim') && method === 'PUT') {
       const mailId = path.replace('/api/mails/', '').replace('/claim', '');
       return await handleClaimMail(env, authHeader, mailId);
@@ -1760,12 +1922,9 @@ export async function onRequest(context) {
     if (userId) {
       const user = await getUserById(env, userId);
       if (user && user.role === 'admin') {
-        // 用户ID修改
         if (path === '/api/admin/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
-        // 店铺ID修改
         if (path === '/api/admin/shop-id' && method === 'PUT') return await handleChangeShopId(env, authHeader, body);
         
-        // 店铺管理
         if (path === '/api/shops' && method === 'POST') return await handleCreateShop(env, authHeader, body);
         if (path.startsWith('/api/shops/')) {
           const shopId = path.replace('/api/shops/', '');
@@ -1777,28 +1936,24 @@ export async function onRequest(context) {
           if (method === 'DELETE') return await handleDeleteShop(env, authHeader, shopId);
         }
         
-        // 店铺分类管理
         if (path === '/api/shop-categories' && method === 'POST') return await handleCreateShopCategory(env, authHeader, body);
         if (path.startsWith('/api/shop-categories/') && method === 'DELETE') {
           const categoryId = path.replace('/api/shop-categories/', '');
           return await handleDeleteShopCategory(env, authHeader, categoryId);
         }
         
-        // 广告管理
         if (path === '/api/admin/banners' && method === 'POST') return await handleAdminCreateBanner(env, authHeader, body);
         if (path.startsWith('/api/admin/banners/') && method === 'DELETE') {
           const bannerId = path.replace('/api/admin/banners/', '');
           return await handleAdminDeleteBanner(env, authHeader, bannerId);
         }
         
-        // 图标管理
         if (path === '/api/admin/icons' && method === 'POST') return await handleAdminSetIcon(env, authHeader, body);
         if (path.startsWith('/api/admin/icons/') && method === 'DELETE') {
           const key = path.replace('/api/admin/icons/', '');
           return await handleAdminDeleteIcon(env, authHeader, key);
         }
         
-        // 提现管理
         if (path === '/api/admin/withdrawals' && method === 'GET') return await handleAdminGetWithdrawals(env, authHeader);
         if (path.startsWith('/api/admin/withdrawals/')) {
           const withdrawId = path.replace('/api/admin/withdrawals/', '');
@@ -1812,7 +1967,6 @@ export async function onRequest(context) {
           }
         }
         
-        // 订单管理
         if (path === '/api/admin/orders' && method === 'GET') return await handleAdminGetOrders(env);
         if (path === '/api/admin/orders/direct' && method === 'POST') return await handleAdminDirectPublish(env, authHeader, body);
         if (path.startsWith('/api/admin/orders/')) {
@@ -1826,7 +1980,6 @@ export async function onRequest(context) {
           if (method === 'DELETE') return await handleAdminDeleteOrder(env, orderId);
         }
         
-        // 商品管理
         if (path === '/api/admin/products' && method === 'GET') return await handleAdminGetProducts(env);
         if (path === '/api/admin/products' && method === 'POST') return await handleAdminCreateProduct(env, body);
         if (path.startsWith('/api/admin/products/')) {
@@ -1837,7 +1990,6 @@ export async function onRequest(context) {
           if (method === 'DELETE') return await handleAdminDeleteProduct(env, productId);
         }
         
-        // 充值管理
         if (path === '/api/admin/recharges' && method === 'GET') return await handleAdminGetRecharges(env);
         if (path.startsWith('/api/admin/recharges/')) {
           const rechargeId = path.replace('/api/admin/recharges/', '');
@@ -1846,7 +1998,6 @@ export async function onRequest(context) {
           if (method === 'DELETE') return await handleAdminDeleteRecharge(env, rechargeId);
         }
         
-        // 用户管理
         if (path === '/api/admin/users' && method === 'GET') return await handleAdminGetUsers(env);
         if (path === '/api/admin/gift' && method === 'POST') return await handleAdminGiftDiamond(env, body);
         if (path.startsWith('/api/admin/users/')) {
@@ -1857,7 +2008,6 @@ export async function onRequest(context) {
           if (targetUserId.endsWith('/username') && method === 'PUT') { const id = targetUserId.replace('/username', ''); return await handleChangeUsername(env, id, body); }
         }
         
-        // 分类管理
         if (path === '/api/admin/categories' && method === 'POST') return await handleAdminCreateCategory(env, body);
         if (path.startsWith('/api/admin/categories/')) {
           const categoryId = path.replace('/api/admin/categories/', '');
@@ -1865,7 +2015,6 @@ export async function onRequest(context) {
           if (method === 'DELETE') return await handleAdminDeleteCategory(env, categoryId);
         }
         
-        // 公告管理
         if (path === '/api/admin/announce' && method === 'PUT') return await handleAdminUpdateAnnounce(env, body);
       }
     }
