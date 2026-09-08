@@ -40,7 +40,7 @@ async function runDB(env, sql, params = []) {
 }
 
 // ============================================================
-//  用户认证
+//  用户认证（用户ID自动分配 100000+）
 // ============================================================
 async function handleRegister(env, body) {
   const { username, password, role, status } = body;
@@ -51,9 +51,10 @@ async function handleRegister(env, body) {
     return errorResponse('用户名已存在');
   }
 
+  // 获取下一个用户ID（从100000开始递增）
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM users');
   const count = countResult.results?.[0]?.count || 0;
-  const userId = String(100000 + count);
+  const userId = String(100000 + count + 1);
 
   const userStatus = (role === 'handler' || role === 'dispatcher' || role === 'service') ? 'pending' : (status || 'active');
   await runDB(env,
@@ -92,7 +93,8 @@ async function handleLogin(env, body) {
       balance: user.balance || 0,
       status: user.status || 'active',
       banner: user.banner || '',
-      club_prefix: user.club_prefix || ''
+      club_prefix: user.club_prefix || '',
+      level: user.level || 1
     }
   });
 }
@@ -132,6 +134,29 @@ async function handleChangeName(env, authHeader, body) {
   }
   await runDB(env, 'UPDATE users SET username = ? WHERE id = ?', [username, userId]);
   return jsonResponse({ success: true, message: '昵称已修改' });
+}
+
+// ============================================================
+//  用户修改ID（管理员）
+// ============================================================
+async function handleChangeUserId(env, authHeader, body) {
+  const adminId = verifyAndGetUserId(authHeader);
+  if (!adminId) return errorResponse('请先登录', 401);
+  const admin = await getUserById(env, adminId);
+  if (admin.role !== 'admin') return errorResponse('权限不足', 403);
+  
+  const { targetUserId, newId } = body;
+  if (!targetUserId || !newId) return errorResponse('请提供用户ID和新ID');
+  if (!/^\d+$/.test(newId)) return errorResponse('ID必须为数字');
+  if (newId.length < 6) return errorResponse('ID至少6位');
+  
+  const existing = await queryDB(env, 'SELECT * FROM users WHERE id = ?', [newId]);
+  if (existing.results && existing.results.length > 0) {
+    return errorResponse('该ID已被使用');
+  }
+  
+  await runDB(env, 'UPDATE users SET id = ? WHERE id = ?', [newId, targetUserId]);
+  return jsonResponse({ success: true, message: '用户ID已修改' });
 }
 
 // ============================================================
@@ -882,18 +907,19 @@ async function handleCreateShop(env, authHeader, body) {
     return errorResponse('只有管理员可创建店铺', 403);
   }
   
-  const { name, description, logo, category_id, is_self, is_recommend } = body;
+  const { name, description, logo, banner, category_id, is_self, is_recommend } = body;
   if (!name) return errorResponse('请输入店铺名称');
   if (!category_id) return errorResponse('请选择主分类');
   
+  // 获取下一个店铺ID（从a100000开始递增）
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM shops');
   const count = countResult.results?.[0]?.count || 0;
-  const shopId = 'a' + String(100000 + count);
+  const shopId = 'a' + String(100000 + count + 1);
   
   await runDB(env,
-    `INSERT INTO shops (id, owner_id, name, description, logo, category_id, status, rating, sales, is_self, is_recommend, follow_count, created_at) 
-     VALUES (?, ?, ?, ?, ?, ?, 'active', '4.9', 0, ?, ?, 0, ?)`,
-    [shopId, userId, name, description || '', logo || '', category_id, is_self ? 1 : 0, is_recommend ? 1 : 0, new Date().toISOString()]
+    `INSERT INTO shops (id, owner_id, name, description, logo, banner, category_id, status, rating, sales, is_self, is_recommend, follow_count, created_at) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'active', '4.9', 0, ?, ?, 0, ?)`,
+    [shopId, userId, name, description || '', logo || '', banner || '', category_id, is_self ? 1 : 0, is_recommend ? 1 : 0, new Date().toISOString()]
   );
   return jsonResponse({ success: true, id: shopId, message: '店铺创建成功' });
 }
@@ -907,12 +933,12 @@ async function handleUpdateShop(env, authHeader, shopId, body) {
     return errorResponse('只有管理员可编辑店铺', 403);
   }
   
-  const { name, description, logo, category_id, is_self, is_recommend } = body;
+  const { name, description, logo, banner, category_id, is_self, is_recommend } = body;
   if (!name) return errorResponse('请输入店铺名称');
   
   await runDB(env,
-    `UPDATE shops SET name = ?, description = ?, logo = ?, category_id = ?, is_self = ?, is_recommend = ? WHERE id = ?`,
-    [name, description || '', logo || '', category_id || null, is_self ? 1 : 0, is_recommend ? 1 : 0, shopId]
+    `UPDATE shops SET name = ?, description = ?, logo = ?, banner = ?, category_id = ?, is_self = ?, is_recommend = ? WHERE id = ?`,
+    [name, description || '', logo || '', banner || '', category_id || null, is_self ? 1 : 0, is_recommend ? 1 : 0, shopId]
   );
   return jsonResponse({ success: true, message: '店铺已更新' });
 }
@@ -1020,6 +1046,28 @@ async function handleDeleteShopCategory(env, authHeader, categoryId) {
   
   await runDB(env, 'DELETE FROM shop_categories WHERE id = ?', [categoryId]);
   return jsonResponse({ success: true, message: '店铺分类已删除' });
+}
+
+// ============================================================
+//  店铺修改ID（管理员）
+// ============================================================
+async function handleChangeShopId(env, authHeader, body) {
+  const adminId = verifyAndGetUserId(authHeader);
+  if (!adminId) return errorResponse('请先登录', 401);
+  const admin = await getUserById(env, adminId);
+  if (admin.role !== 'admin') return errorResponse('权限不足', 403);
+  
+  const { shopId, newId } = body;
+  if (!shopId || !newId) return errorResponse('请提供店铺ID和新ID');
+  if (!/^a\d+$/.test(newId) && !/^\d+$/.test(newId)) return errorResponse('ID格式错误，应为 a100000 格式');
+  
+  const existing = await queryDB(env, 'SELECT * FROM shops WHERE id = ?', [newId]);
+  if (existing.results && existing.results.length > 0) {
+    return errorResponse('该ID已被使用');
+  }
+  
+  await runDB(env, 'UPDATE shops SET id = ? WHERE id = ?', [newId, shopId]);
+  return jsonResponse({ success: true, message: '店铺ID已修改' });
 }
 
 // ============================================================
@@ -1231,7 +1279,7 @@ async function handleAdminGetOrders(env) {
 }
 
 async function handleAdminGetUsers(env) {
-  const result = await queryDB(env, 'SELECT id, username, role, diamond, balance, status, created_at, banner, club_prefix FROM users');
+  const result = await queryDB(env, 'SELECT id, username, role, diamond, balance, status, created_at, banner, club_prefix, level FROM users');
   return jsonResponse(result.results || []);
 }
 
@@ -1712,6 +1760,11 @@ export async function onRequest(context) {
     if (userId) {
       const user = await getUserById(env, userId);
       if (user && user.role === 'admin') {
+        // 用户ID修改
+        if (path === '/api/admin/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
+        // 店铺ID修改
+        if (path === '/api/admin/shop-id' && method === 'PUT') return await handleChangeShopId(env, authHeader, body);
+        
         // 店铺管理
         if (path === '/api/shops' && method === 'POST') return await handleCreateShop(env, authHeader, body);
         if (path.startsWith('/api/shops/')) {
