@@ -20,6 +20,7 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
+        /* ===== CSS Variables ===== */
         :root {
             --bg-primary: #f0f2f5;
             --bg-secondary: #ffffff;
@@ -167,8 +168,9 @@
             color: #fff; border-radius: 50%; font-size: 9px; padding: 0 5px;
             min-width: 16px; text-align: center; line-height: 16px;
         }
+        .nav-item.hidden-nav { display: none !important; }
         
-        /* 广告轮播 */
+        /* ===== 广告轮播 ===== */
         .banner-carousel {
             position: relative; width: 100%; border-radius: 12px;
             overflow: hidden; margin-bottom: 12px;
@@ -196,7 +198,7 @@
         .banner-carousel .banner-arrow.left { left: 8px; }
         .banner-carousel .banner-arrow.right { right: 8px; }
         
-        /* 店铺入口 */
+        /* ===== 店铺入口 ===== */
         .shop-entrance {
             display: flex; gap: 10px; overflow-x: auto;
             padding: 8px 0 12px; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
@@ -220,7 +222,7 @@
             max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         
-        /* 商品卡片 */
+        /* ===== 商品卡片 ===== */
         .product-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px;
         }
@@ -268,7 +270,40 @@
         .product-card .product-price { font-size: 15px; font-weight: 700; color: var(--price-color); }
         .product-card .product-shop { font-size: 10px; color: var(--text-muted); }
         
-        /* 帖子样式 */
+        /* ===== 商品详情全屏弹窗 ===== */
+        .product-detail-modal {
+            position: fixed; top: 0; left: 0; width: 100%; max-width: 480px;
+            height: 100vh; height: 100dvh; background: var(--bg-secondary);
+            z-index: 5000; display: none; flex-direction: column;
+            left: 50%; transform: translateX(-50%);
+            animation: slideIn 0.3s ease; padding: 16px;
+        }
+        .product-detail-modal.active { display: flex; }
+        .product-detail-modal .pd-header {
+            display: flex; align-items: center; gap: 12px;
+            padding-bottom: 12px; border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .product-detail-modal .pd-header .back-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-primary); padding: 4px 8px; }
+        .product-detail-modal .pd-header .title { font-size: 16px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .product-detail-modal .pd-body { flex: 1; overflow-y: auto; padding: 12px 0; -webkit-overflow-scrolling: touch; }
+        .product-detail-modal .pd-body .pd-image {
+            width: 100%; aspect-ratio: 1 / 1; background: var(--product-img-bg);
+            border-radius: 12px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 48px; color: var(--product-img-icon); margin-bottom: 12px;
+        }
+        .product-detail-modal .pd-body .pd-image img { width: 100%; height: 100%; object-fit: cover; }
+        .product-detail-modal .pd-body .pd-price { font-size: 24px; font-weight: 700; color: var(--price-color); margin-bottom: 4px; }
+        .product-detail-modal .pd-body .pd-title { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+        .product-detail-modal .pd-body .pd-shop { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+        .product-detail-modal .pd-body .pd-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; }
+        .product-detail-modal .pd-body .pd-stock { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+        .product-detail-modal .pd-footer { padding-top: 12px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
+        .product-detail-modal .pd-footer .btn-block { width: 100%; padding: 12px; border-radius: 30px; border: none; background: #1a6aff; color: #fff; font-weight: 600; font-size: 16px; cursor: pointer; }
+        .product-detail-modal .pd-footer .btn-block:active { transform: scale(0.96); }
+        
+        /* ===== 帖子样式 ===== */
         .post-card {
             background: var(--post-bg); border-radius: 12px;
             border: 1px solid var(--post-border); box-shadow: var(--post-shadow);
@@ -285,23 +320,11 @@
             flex-shrink: 0;
         }
         .post-card .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .post-card .post-username {
-            font-size: 14px; font-weight: 600; color: var(--text-primary);
-        }
-        .post-card .post-time {
-            font-size: 11px; color: var(--text-muted); margin-left: auto;
-        }
-        .post-card .post-content {
-            font-size: 14px; line-height: 1.6; color: var(--text-secondary);
-            margin-bottom: 10px; white-space: pre-wrap; word-break: break-word;
-        }
-        .post-card .post-images {
-            display: grid; gap: 4px; margin-bottom: 10px;
-        }
-        .post-card .post-images img {
-            width: 100%; aspect-ratio: 1/1; object-fit: cover;
-            border-radius: 8px; cursor: pointer;
-        }
+        .post-card .post-username { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+        .post-card .post-time { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+        .post-card .post-content { font-size: 14px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 10px; white-space: pre-wrap; word-break: break-word; }
+        .post-card .post-images { display: grid; gap: 4px; margin-bottom: 10px; }
+        .post-card .post-images img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; cursor: pointer; }
         .post-card .post-images .grid-2 { grid-template-columns: 1fr 1fr; }
         .post-card .post-images .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
         .post-card .post-actions {
@@ -334,18 +357,10 @@
             overflow: hidden; font-size: 12px; color: var(--text-muted);
         }
         .post-card .post-comments .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .post-card .post-comments .comment-body {
-            flex: 1; font-size: 13px; color: var(--text-secondary);
-        }
-        .post-card .post-comments .comment-body .name {
-            font-weight: 600; color: var(--text-primary); margin-right: 6px;
-        }
-        .post-card .post-comments .comment-body .time {
-            font-size: 10px; color: var(--text-muted); margin-left: 6px;
-        }
-        .post-card .post-comment-input {
-            display: flex; gap: 8px; margin-top: 8px;
-        }
+        .post-card .post-comments .comment-body { flex: 1; font-size: 13px; color: var(--text-secondary); }
+        .post-card .post-comments .comment-body .name { font-weight: 600; color: var(--text-primary); margin-right: 6px; }
+        .post-card .post-comments .comment-body .time { font-size: 10px; color: var(--text-muted); margin-left: 6px; }
+        .post-card .post-comment-input { display: flex; gap: 8px; margin-top: 8px; }
         .post-card .post-comment-input input {
             flex: 1; padding: 6px 12px; border-radius: 20px;
             border: 1px solid var(--border-color); background: var(--bg-input);
@@ -359,6 +374,7 @@
         }
         .post-card .post-comment-input button:active { transform: scale(0.95); }
         
+        /* ===== 个人中心 ===== */
         .profile-card {
             background: linear-gradient(135deg, #1a1a2e, #2d2d44);
             border-radius: 16px; padding: 20px; color: #fff;
@@ -385,17 +401,13 @@
         }
         .profile-card .profile-avatar:hover .avatar-upload-btn { opacity: 1; }
         .profile-card .profile-info { flex: 1; }
-        .profile-card .profile-info .name {
-            font-size: 18px; font-weight: 700;
-        }
+        .profile-card .profile-info .name { font-size: 18px; font-weight: 700; }
         .profile-card .profile-info .name .level {
             font-size: 12px; background: rgba(255,255,255,0.2);
             padding: 1px 10px; border-radius: 20px; font-weight: 400;
             margin-left: 6px;
         }
-        .profile-card .profile-info .id {
-            font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px;
-        }
+        .profile-card .profile-info .id { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
         .profile-card .profile-stats {
             display: flex; margin-top: 14px; padding-top: 14px;
             border-top: 1px solid rgba(255,255,255,0.1);
@@ -433,10 +445,20 @@
         }
         .more-functions .func-item:active { transform: scale(0.92); background: var(--bg-card-hover); }
         .more-functions .func-item .icon { font-size: 20px; color: #3a7eff; margin-bottom: 2px; }
-        .more-functions .func-item .label {
-            font-size: 10px; color: var(--text-secondary); text-align: center; font-weight: 500;
-        }
+        .more-functions .func-item .label { font-size: 10px; color: var(--text-secondary); text-align: center; font-weight: 500; }
         
+        .menu-list .menu-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 4px; border-bottom: 1px solid var(--border-light);
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        .menu-list .menu-item:active { background: var(--bg-card-hover); }
+        .menu-list .menu-item .left { display: flex; align-items: center; gap: 12px; }
+        .menu-list .menu-item .left .icon { font-size: 16px; color: #3a7eff; width: 24px; text-align: center; }
+        .menu-list .menu-item .left .text { font-size: 14px; color: var(--text-secondary); }
+        .menu-list .menu-item .right { color: var(--text-muted); font-size: 14px; }
+        
+        /* ===== 通用组件 ===== */
         .admin-card {
             background: var(--admin-card-bg); border-radius: 16px;
             padding: 14px 12px; margin-bottom: 10px;
@@ -651,6 +673,7 @@
         #authPage .auth-box .role-row label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
         #authPage .auth-box .auth-error { color: #ef4444; font-size: 13px; min-height: 20px; }
         
+        /* ===== 子页面 ===== */
         .sub-page {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; max-width: 480px; height: 100vh; height: 100dvh;
@@ -667,6 +690,7 @@
         .sub-page .sub-header .back-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-primary); padding: 4px 8px; }
         .sub-page .sub-header .title { font-size: 18px; font-weight: 600; flex: 1; }
         
+        /* ===== 全屏聊天 ===== */
         .chat-fullscreen {
             position: fixed; top: 0; left: 0; width: 100%; max-width: 480px;
             height: 100vh; height: 100dvh; background: var(--bg-secondary);
@@ -720,6 +744,7 @@
         }
         .chat-fullscreen .chat-footer button:active { transform: scale(0.95); }
         
+        /* ===== 公告弹窗 ===== */
         .announce-modal-overlay {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: rgba(0,0,0,0.6);
@@ -752,6 +777,7 @@
         }
         .announce-modal-box .footer .close-modal-btn:active { transform: scale(0.95); }
         
+        /* ===== 内联模态框 ===== */
         .inline-modal {
             display: none; background: var(--bg-card);
             border: 1px solid var(--border-color); border-radius: 12px;
@@ -766,7 +792,6 @@
             background: none; border: none; font-size: 20px;
             cursor: pointer; color: var(--text-muted); padding: 0 4px;
         }
-        .inline-modal .admin-form-control { margin-bottom: 8px; }
         
         .upload-preview { max-width: 100%; max-height: 100px; border-radius: 8px; margin-top: 4px; }
         
@@ -816,6 +841,20 @@
             padding: 6px 16px; border-radius: 20px; border: none;
             font-weight: 500; cursor: pointer; font-size: 13px;
         }
+        
+        .mail-item {
+            padding: 12px; border-bottom: 1px solid var(--border-light);
+        }
+        .mail-item .mail-title { font-weight: 600; font-size: 14px; }
+        .mail-item .mail-status { font-size: 12px; }
+        
+        .stat-card { background: var(--bg-card-hover); border-radius: 12px; padding: 12px; }
+        .stat-card .stat-value { font-size: 24px; font-weight: 700; }
+        .stat-card .stat-label { font-size: 11px; color: var(--text-muted); }
+        
+        .info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-light); }
+        .info-row .label { color: var(--text-muted); }
+        .info-row .value { font-weight: 500; }
         
         @media(max-width:420px) {
             .view-container { padding: 10px 12px 4px; }
@@ -904,13 +943,11 @@
                 <button class="banner-arrow left" onclick="prevBanner()">‹</button>
                 <button class="banner-arrow right" onclick="nextBanner()">›</button>
             </div>
-            
             <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 6px;">
                 <span style="font-size:14px;font-weight:600;">🏪 店铺</span>
                 <span style="font-size:11px;color:var(--text-muted);cursor:pointer;" onclick="navigateTo('category')">查看全部 →</span>
             </div>
             <div class="shop-entrance" id="shopEntrance"></div>
-            
             <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px;">
                 <span style="font-size:14px;font-weight:600;">🛒 商品</span>
             </div>
@@ -932,7 +969,7 @@
             <div id="categoryProductList"></div>
         </div>
 
-        <!-- ===== 帖子页面（替代订单/打手） ===== -->
+        <!-- ===== 帖子页面 ===== -->
         <div class="view" id="view-posts">
             <div class="app-header" style="margin-bottom:10px;">
                 <span style="font-size:18px;font-weight:600;">📝 帖子</span>
@@ -1035,7 +1072,6 @@
                     </div>
                 </div>
             </div>
-            
             <div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">
                 QW电竞护航平台 · v6.0
             </div>
@@ -1196,10 +1232,7 @@
         <div class="content" id="announceModalContent">加载中...</div>
         <div class="images" id="announceModalImages"></div>
         <div class="footer">
-            <label>
-                <input type="checkbox" id="announceDontShow" />
-                勾选后不再显示
-            </label>
+            <label><input type="checkbox" id="announceDontShow" /> 勾选后不再显示</label>
             <button class="close-modal-btn" onclick="closeAnnounceModal()">我知道了</button>
         </div>
     </div>
@@ -1210,6 +1243,11 @@
 <div id="toast" class="toast"></div>
 
 <script>
+// ============================================================
+//  第2部分：JavaScript 核心功能 + 完整业务逻辑
+//  包含：配置、工具函数、导航、子页面管理、广告、商城、分类、帖子、订单、消息、充值、用户管理等全部功能
+// ============================================================
+
 // ============================================================
 //  配置
 // ============================================================
@@ -1240,6 +1278,9 @@ let fullscreenOrderId = null;
 let allPosts = [];
 let currentPostPage = 1;
 const POSTS_PER_PAGE = 20;
+let myOrderFilter = 'all';
+let userFilterSub = 'all';
+let categorySubFilter = 'all';
 
 // ============================================================
 //  工具函数
@@ -1346,6 +1387,18 @@ function updateHeaderDiamond() {
         const unread = mails.filter(m => m.status === 'unread').length;
         document.getElementById('headerUnreadMail').textContent = unread;
     }).catch(() => {});
+}
+
+function formatTime(timeStr) {
+    if (!timeStr) return '';
+    const date = new Date(timeStr);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
+    if (diff < 86400) return Math.floor(diff / 3600) + '小时前';
+    if (diff < 604800) return Math.floor(diff / 86400) + '天前';
+    return date.toLocaleDateString();
 }
 
 // ============================================================
@@ -1612,6 +1665,17 @@ function stopBannerAuto() {
     }
 }
 
+async function loadBannersFromAPI() {
+    try {
+        const banners = await apiRequest('/banners');
+        bannerImages = banners.map(b => b.image_url).filter(url => url);
+        saveBannerToStorage();
+        renderBanner();
+    } catch (err) {
+        console.error('加载广告失败:', err);
+    }
+}
+
 // ============================================================
 //  商城首页
 // ============================================================
@@ -1625,6 +1689,7 @@ async function renderHomePage() {
         allProducts = products;
         renderHomeProducts(products);
         
+        await loadBannersFromAPI();
         initBanner();
     } catch (err) {
         console.error(err);
@@ -1693,7 +1758,6 @@ function openShopDetail(shopId) {
 //  分类页面
 // ============================================================
 let categoryProducts = [];
-let categorySubFilter = 'all';
 
 async function renderCategoryPage() {
     try {
@@ -1936,18 +2000,6 @@ async function renderPosts() {
     }
 }
 
-function formatTime(timeStr) {
-    if (!timeStr) return '';
-    const date = new Date(timeStr);
-    const now = new Date();
-    const diff = Math.floor((now - date) / 1000);
-    if (diff < 60) return '刚刚';
-    if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
-    if (diff < 86400) return Math.floor(diff / 3600) + '小时前';
-    if (diff < 604800) return Math.floor(diff / 86400) + '天前';
-    return date.toLocaleDateString();
-}
-
 function refreshPosts() {
     renderPosts();
     toast('已刷新', 'success');
@@ -2064,7 +2116,6 @@ async function submitComment(postId) {
         input.value = '';
         toast('评论成功', 'success');
         loadComments(postId);
-        // 更新评论数
         const countEl = document.getElementById('comment-count-' + postId);
         if (countEl) {
             countEl.textContent = parseInt(countEl.textContent) + 1;
@@ -2143,7 +2194,169 @@ async function doUploadAvatar() {
 }
 
 // ============================================================
-//  订单/打手页面（保留原有功能）
+//  "我的"页面
+// ============================================================
+async function renderMyPage() {
+    if (!currentUser) {
+        document.getElementById('profileName').textContent = '未登录';
+        document.getElementById('profileId').textContent = '用户ID：登录后查看';
+        document.getElementById('profileBalance').textContent = '0.00';
+        document.getElementById('profilePosts').textContent = '0';
+        document.getElementById('profileCoupons').textContent = '0';
+        document.getElementById('myBalance').textContent = '0.00';
+        document.getElementById('profileAvatarText').textContent = '?';
+        renderMoreFunctions();
+        return;
+    }
+    
+    try {
+        const user = await apiRequest('/me');
+        const orders = await apiRequest('/orders/my') || [];
+        const posts = await apiRequest('/posts?user_id=' + currentUser.id) || [];
+        
+        document.getElementById('profileName').innerHTML = user.username + ` <span class="level">LV${user.level || 1}</span>`;
+        document.getElementById('profileId').textContent = '用户ID：' + (user.id || '--');
+        const balance = (user.diamond || 0) / 10;
+        document.getElementById('profileBalance').textContent = balance.toFixed(2);
+        document.getElementById('profilePosts').textContent = posts.length;
+        document.getElementById('profileCoupons').textContent = '0';
+        document.getElementById('myBalance').textContent = balance.toFixed(2);
+        
+        const avatarText = user.username ? user.username.substring(0, 2).toUpperCase() : 'QW';
+        document.getElementById('profileAvatarText').textContent = avatarText;
+        
+        if (user.avatar) {
+            document.getElementById('profileAvatarImg').src = user.avatar;
+            document.getElementById('profileAvatarImg').style.display = 'block';
+            document.getElementById('profileAvatarText').style.display = 'none';
+        } else {
+            document.getElementById('profileAvatarImg').style.display = 'none';
+            document.getElementById('profileAvatarText').style.display = 'block';
+        }
+        
+        if (user.banner) {
+            document.getElementById('profileBannerImg').src = user.banner;
+            document.getElementById('profileBannerImg').style.display = 'block';
+        }
+        
+        renderMyOrders(orders);
+        renderMoreFunctions();
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function filterMyOrders(filter) {
+    myOrderFilter = filter;
+    document.querySelectorAll('#orderTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    const targetBtn = document.querySelector(`#orderTabs .tab-btn[data-status="${filter}"]`);
+    if (targetBtn) targetBtn.classList.add('active');
+    
+    apiRequest('/orders/my').then(orders => {
+        renderMyOrders(orders);
+    }).catch(err => console.error(err));
+}
+
+function renderMyOrders(orders) {
+    const container = document.getElementById('myOrderList');
+    if (!container) return;
+    
+    let filtered = orders;
+    if (myOrderFilter === 'pending') {
+        filtered = orders.filter(o => o.status === 'pending');
+    } else if (myOrderFilter === 'ongoing') {
+        filtered = orders.filter(o => o.status === 'ongoing' || o.status === 'review');
+    } else if (myOrderFilter === 'completed') {
+        filtered = orders.filter(o => o.status === 'completed');
+    } else if (myOrderFilter === 'refund') {
+        filtered = orders.filter(o => o.status === 'refund_pending' || o.status === 'refunded' || o.status === 'rejected');
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="padding:12px 0;"><p style="font-size:12px;">暂无订单</p></div>';
+        return;
+    }
+    
+    let html = '';
+    filtered.slice(0, 5).forEach(o => {
+        const statusMap = { 'pending': '待接单', 'ongoing': '进行中', 'review': '待验收', 'completed': '已完成', 'canceled': '已取消', 'rejected': '已驳回', 'refund_pending': '退款中', 'refunded': '已退款' };
+        html += `
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-light);font-size:13px;">
+                <span>${o.title}</span>
+                <span class="status-badge ${statusClass(o.status)}">${statusMap[o.status] || o.status}</span>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function renderMoreFunctions() {
+    const container = document.getElementById('moreFunctions');
+    if (!container) return;
+    
+    const role = currentUser?.role;
+    let items = [];
+    
+    if (role === 'admin') {
+        items = [
+            { icon: 'fa-clipboard-list', label: '订单管理', action: "openSubPage('orders')" },
+            { icon: 'fa-boxes', label: '商品管理', action: "openSubPage('products')" },
+            { icon: 'fa-users', label: '用户管理', action: "openSubPage('users')" },
+            { icon: 'fa-coins', label: '充值管理', action: "openSubPage('recharges')" },
+            { icon: 'fa-store', label: '店铺管理', action: "openSubPage('shops')" },
+            { icon: 'fa-bullhorn', label: '公告管理', action: "openSubPage('announce')" },
+            { icon: 'fa-money-bill', label: '提现管理', action: "openSubPage('withdrawals')" },
+            { icon: 'fa-tags', label: '分类管理', action: "openSubPage('categories')" },
+            { icon: 'fa-image', label: '广告管理', action: "openSubPage('banners')" },
+            { icon: 'fa-palette', label: '图标管理', action: "openSubPage('icons')" },
+            { icon: 'fa-paper-plane', label: '发布订单', action: "openSubPage('dispatcher')" },
+            { icon: 'fa-cog', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    } else if (role === 'service') {
+        items = [
+            { icon: 'fa-headset', label: '客服系统', action: "openSubPage('service')" },
+            { icon: 'fa-coins', label: '充值审核', action: "openSubPage('recharges')" },
+            { icon: 'fa-users', label: '用户管理', action: "openSubPage('users')" },
+            { icon: 'fa-cog', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    } else if (role === 'dispatcher') {
+        items = [
+            { icon: 'fa-clipboard-list', label: '派单系统', action: "openSubPage('dispatcher')" },
+            { icon: 'fa-boxes', label: '商品管理', action: "openSubPage('products')" },
+            { icon: 'fa-chart-bar', label: '数据统计', action: "openSubPage('orders')" },
+            { icon: 'fa-cog', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    } else if (role === 'handler') {
+        items = [
+            { icon: 'fa-gamepad', label: '打手工作台', action: "openSubPage('orders')" },
+            { icon: 'fa-money-bill', label: '提现', action: "requestWithdraw()" },
+            { icon: 'fa-cog', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    } else {
+        items = [
+            { icon: 'fa-clipboard-list', label: '我的订单', action: "openSubPage('orders')" },
+            { icon: 'fa-cog', label: '账户设置', action: "openSubPage('account')" }
+        ];
+    }
+    
+    container.innerHTML = items.map(item => `
+        <div class="func-item" onclick="${item.action}">
+            <i class="fas ${item.icon} icon"></i>
+            <span class="label">${item.label}</span>
+        </div>
+    `).join('');
+}
+
+function handleProfileClick() {
+    if (!currentUser) {
+        showLoginModal();
+    } else {
+        openSubPage('account');
+    }
+}
+
+// ============================================================
+//  订单/打手页面（保留完整功能）
 // ============================================================
 async function renderOrdersPage() {
     const role = currentUser?.role;
@@ -2231,7 +2444,9 @@ async function renderOrders() {
     }
 }
 
-// 订单操作函数（保留）
+// ============================================================
+//  订单操作函数
+// ============================================================
 window.confirmTake = function(orderId) {
     confirmAction('确认接单', '确认接取此订单？（需保留100红钻冻结）', '确认接单', `doTake('${orderId}')`);
 };
@@ -2354,173 +2569,13 @@ async function doRequestWithdraw(amount) {
         updateHeaderDiamond();
     } catch (err) { toast(err.message, 'error'); }
 }
+// ============================================================
+//  第3部分：完整子页面管理功能
+//  包含：用户管理、商品管理、店铺管理、充值管理、公告管理、提现管理、客服系统、派单系统、分类管理、广告管理、图标管理
+// ============================================================
 
 // ============================================================
-//  "我的"页面
-// ============================================================
-async function renderMyPage() {
-    if (!currentUser) {
-        document.getElementById('profileName').textContent = '未登录';
-        document.getElementById('profileId').textContent = '用户ID：登录后查看';
-        document.getElementById('profileBalance').textContent = '0.00';
-        document.getElementById('profilePosts').textContent = '0';
-        document.getElementById('profileCoupons').textContent = '0';
-        document.getElementById('myBalance').textContent = '0.00';
-        document.getElementById('profileAvatarText').textContent = '?';
-        renderMoreFunctions();
-        return;
-    }
-    
-    try {
-        const user = await apiRequest('/me');
-        const orders = await apiRequest('/orders/my') || [];
-        const posts = await apiRequest('/posts?user_id=' + currentUser.id) || [];
-        
-        document.getElementById('profileName').innerHTML = user.username + ` <span class="level">LV${user.level || 1}</span>`;
-        document.getElementById('profileId').textContent = '用户ID：' + (user.id || '--');
-        const balance = (user.diamond || 0) / 10;
-        document.getElementById('profileBalance').textContent = balance.toFixed(2);
-        document.getElementById('profilePosts').textContent = posts.length;
-        document.getElementById('profileCoupons').textContent = '0';
-        document.getElementById('myBalance').textContent = balance.toFixed(2);
-        
-        const avatarText = user.username ? user.username.substring(0, 2).toUpperCase() : 'QW';
-        document.getElementById('profileAvatarText').textContent = avatarText;
-        
-        if (user.avatar) {
-            document.getElementById('profileAvatarImg').src = user.avatar;
-            document.getElementById('profileAvatarImg').style.display = 'block';
-            document.getElementById('profileAvatarText').style.display = 'none';
-        } else {
-            document.getElementById('profileAvatarImg').style.display = 'none';
-            document.getElementById('profileAvatarText').style.display = 'block';
-        }
-        
-        if (user.banner) {
-            document.getElementById('profileBannerImg').src = user.banner;
-            document.getElementById('profileBannerImg').style.display = 'block';
-        }
-        
-        renderMyOrders(orders);
-        renderMoreFunctions();
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-let myOrderFilter = 'all';
-
-function filterMyOrders(filter) {
-    myOrderFilter = filter;
-    document.querySelectorAll('#orderTabs .tab-btn').forEach(b => b.classList.remove('active'));
-    const targetBtn = document.querySelector(`#orderTabs .tab-btn[data-status="${filter}"]`);
-    if (targetBtn) targetBtn.classList.add('active');
-    
-    apiRequest('/orders/my').then(orders => {
-        renderMyOrders(orders);
-    }).catch(err => console.error(err));
-}
-
-function renderMyOrders(orders) {
-    const container = document.getElementById('myOrderList');
-    if (!container) return;
-    
-    let filtered = orders;
-    if (myOrderFilter === 'pending') {
-        filtered = orders.filter(o => o.status === 'pending');
-    } else if (myOrderFilter === 'ongoing') {
-        filtered = orders.filter(o => o.status === 'ongoing' || o.status === 'review');
-    } else if (myOrderFilter === 'completed') {
-        filtered = orders.filter(o => o.status === 'completed');
-    } else if (myOrderFilter === 'refund') {
-        filtered = orders.filter(o => o.status === 'refund_pending' || o.status === 'refunded' || o.status === 'rejected');
-    }
-    
-    if (filtered.length === 0) {
-        container.innerHTML = '<div class="empty-state" style="padding:12px 0;"><p style="font-size:12px;">暂无订单</p></div>';
-        return;
-    }
-    
-    let html = '';
-    filtered.slice(0, 5).forEach(o => {
-        const statusMap = { 'pending': '待接单', 'ongoing': '进行中', 'review': '待验收', 'completed': '已完成', 'canceled': '已取消', 'rejected': '已驳回', 'refund_pending': '退款中', 'refunded': '已退款' };
-        html += `
-            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-light);font-size:13px;">
-                <span>${o.title}</span>
-                <span class="status-badge ${statusClass(o.status)}">${statusMap[o.status] || o.status}</span>
-            </div>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-function renderMoreFunctions() {
-    const container = document.getElementById('moreFunctions');
-    if (!container) return;
-    
-    const role = currentUser?.role;
-    let items = [];
-    
-    if (role === 'admin') {
-        items = [
-            { icon: 'fa-clipboard-list', label: '订单管理', action: "openSubPage('orders')" },
-            { icon: 'fa-boxes', label: '商品管理', action: "openSubPage('products')" },
-            { icon: 'fa-users', label: '用户管理', action: "openSubPage('users')" },
-            { icon: 'fa-coins', label: '充值管理', action: "openSubPage('recharges')" },
-            { icon: 'fa-store', label: '店铺管理', action: "openSubPage('shops')" },
-            { icon: 'fa-bullhorn', label: '公告管理', action: "openSubPage('announce')" },
-            { icon: 'fa-money-bill', label: '提现管理', action: "openSubPage('withdrawals')" },
-            { icon: 'fa-tags', label: '分类管理', action: "openSubPage('categories')" },
-            { icon: 'fa-image', label: '广告管理', action: "openSubPage('banners')" },
-            { icon: 'fa-palette', label: '图标管理', action: "openSubPage('icons')" },
-            { icon: 'fa-paper-plane', label: '发布订单', action: "openSubPage('dispatcher')" },
-            { icon: 'fa-cog', label: '账户设置', action: "openSubPage('account')" }
-        ];
-    } else if (role === 'service') {
-        items = [
-            { icon: 'fa-headset', label: '客服系统', action: "openSubPage('service')" },
-            { icon: 'fa-coins', label: '充值审核', action: "openSubPage('recharges')" },
-            { icon: 'fa-users', label: '用户管理', action: "openSubPage('users')" },
-            { icon: 'fa-cog', label: '账户设置', action: "openSubPage('account')" }
-        ];
-    } else if (role === 'dispatcher') {
-        items = [
-            { icon: 'fa-clipboard-list', label: '派单系统', action: "openSubPage('dispatcher')" },
-            { icon: 'fa-boxes', label: '商品管理', action: "openSubPage('products')" },
-            { icon: 'fa-chart-bar', label: '数据统计', action: "openSubPage('orders')" },
-            { icon: 'fa-cog', label: '账户设置', action: "openSubPage('account')" }
-        ];
-    } else if (role === 'handler') {
-        items = [
-            { icon: 'fa-gamepad', label: '打手工作台', action: "openSubPage('orders')" },
-            { icon: 'fa-money-bill', label: '提现', action: "requestWithdraw()" },
-            { icon: 'fa-cog', label: '账户设置', action: "openSubPage('account')" }
-        ];
-    } else {
-        items = [
-            { icon: 'fa-clipboard-list', label: '我的订单', action: "openSubPage('orders')" },
-            { icon: 'fa-cog', label: '账户设置', action: "openSubPage('account')" }
-        ];
-    }
-    
-    container.innerHTML = items.map(item => `
-        <div class="func-item" onclick="${item.action}">
-            <i class="fas ${item.icon} icon"></i>
-            <span class="label">${item.label}</span>
-        </div>
-    `).join('');
-}
-
-function handleProfileClick() {
-    if (!currentUser) {
-        showLoginModal();
-    } else {
-        openSubPage('account');
-    }
-}
-
-// ============================================================
-//  子页面渲染（完整功能）
+//  子页面 - 订单管理
 // ============================================================
 async function renderSubOrders() {
     const container = document.getElementById('subOrdersContent');
@@ -2563,10 +2618,13 @@ async function renderSubOrders() {
         container.innerHTML = html;
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubOrders()">重试</button></div>';
     }
 }
 
+// ============================================================
+//  子页面 - 商品管理
+// ============================================================
 async function renderSubProducts() {
     const container = document.getElementById('subProductsContent');
     if (!container) return;
@@ -2627,7 +2685,7 @@ async function renderSubProducts() {
         await loadShopCategorySelect();
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubProducts()">重试</button></div>';
     }
 }
 
@@ -2799,10 +2857,12 @@ async function doDeleteProduct(productId) {
 }
 
 window.openEditProduct = function(productId) {
-    toast('编辑商品功能开发中', 'warning');
+    toast('编辑商品功能开发中，请使用后台管理', 'warning');
 };
 
-// 用户管理
+// ============================================================
+//  子页面 - 用户管理（修复加载失败）
+// ============================================================
 async function renderSubUsers() {
     const container = document.getElementById('subUsersContent');
     if (!container) return;
@@ -2837,8 +2897,6 @@ async function renderSubUsers() {
         container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubUsers()">重试</button></div>';
     }
 }
-
-let userFilterSub = 'all';
 
 async function renderUsersListSub() {
     try {
@@ -2878,6 +2936,7 @@ async function renderUsersListSub() {
                 actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>`;
                 actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
                 actions += `<button class="btn btn-primary btn-xs" onclick="changeUsername('${u.id}','${u.username}')">改用户名</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="deleteUser('${u.id}')">删除</button>`;
             }
             html += `<tr><td>${u.username}</td><td>${roleText}</td><td>${u.diamond||0}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
         }
@@ -2990,7 +3049,22 @@ async function doChangeUsername(userId) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
-// 店铺管理
+window.deleteUser = function(userId) {
+    confirmAction('确认删除', '⚠️ 确认永久删除此用户？此操作不可恢复！', '确认删除', `doDeleteUser('${userId}')`);
+};
+
+async function doDeleteUser(userId) {
+    try {
+        await apiRequest('/admin/users/' + userId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderUsersListSub();
+        if (currentSubPage === 'users') renderSubUsers();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  子页面 - 店铺管理（修复创建店铺）
+// ============================================================
 async function renderSubShops() {
     const container = document.getElementById('subShopsContent');
     if (!container) return;
@@ -3138,7 +3212,59 @@ async function createShopCategory() {
 }
 
 async function editShop(shopId) {
-    toast('编辑店铺功能开发中', 'warning');
+    try {
+        const shop = await apiRequest('/shops/' + shopId);
+        const categories = await apiRequest('/categories');
+        const mainCats = categories.filter(c => !c.parent_id);
+        let catOptions = '<option value="">-- 请选择分类 --</option>';
+        mainCats.forEach(c => {
+            catOptions += `<option value="${c.id}" ${shop.category_id === c.id ? 'selected' : ''}>${c.name}</option>`;
+        });
+        showCustomModal(`
+            <h3>✏️ 编辑店铺</h3>
+            <div class="form-group"><label>店铺名称</label><input class="admin-form-control" id="editShopName" value="${shop.name}" /></div>
+            <div class="form-group"><label>店铺简介</label><textarea class="admin-form-control" id="editShopDesc" rows="2">${shop.description || ''}</textarea></div>
+            <div class="form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="editShopLogo" value="${shop.logo || ''}" /></div>
+            <div class="form-group"><label>店铺背景图URL</label><input class="admin-form-control" id="editShopBanner" value="${shop.banner || ''}" /></div>
+            <div class="form-group"><label>所属分类</label><select class="admin-form-control" id="editShopCategory">${catOptions}</select></div>
+            <div class="form-group">
+                <label><input type="checkbox" id="editShopIsSelf" ${shop.is_self ? 'checked' : ''} /> 设为自营俱乐部</label>
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" id="editShopIsRecommend" ${shop.is_recommend ? 'checked' : ''} /> 设为推荐俱乐部</label>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doEditShop('${shopId}')">保存</button>
+            </div>
+        `);
+        document.getElementById('customModal').classList.add('active');
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function doEditShop(shopId) {
+    const name = document.getElementById('editShopName').value.trim();
+    const description = document.getElementById('editShopDesc').value.trim();
+    const logo = document.getElementById('editShopLogo').value.trim();
+    const banner = document.getElementById('editShopBanner').value.trim();
+    const category_id = document.getElementById('editShopCategory').value || null;
+    const is_self = document.getElementById('editShopIsSelf').checked;
+    const is_recommend = document.getElementById('editShopIsRecommend').checked;
+    if (!name) return toast('请输入店铺名称', 'warning');
+    try {
+        await apiRequest('/shops/' + shopId, {
+            method: 'PUT',
+            body: JSON.stringify({ name, description, logo, banner, category_id, is_self, is_recommend })
+        });
+        closeCustomModal();
+        toast('店铺已更新', 'success');
+        renderSubShops();
+        renderHomePage();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
 }
 
 async function toggleShop(shopId) {
@@ -3167,7 +3293,91 @@ async function doDeleteShop(shopId) {
     }
 }
 
-// 其他子页面（公告、提现、账户、客服、派单、分类、广告、图标）
+// ============================================================
+//  子页面 - 充值管理
+// ============================================================
+async function renderSubRecharges() {
+    const container = document.getElementById('subRechargesContent');
+    if (!container) return;
+    try {
+        const recharges = await apiRequest('/admin/recharges');
+        let html = `
+            <div class="admin-card">
+                <div class="admin-card-title">💰 充值申请</div>
+                <div id="rechargeListSub"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        const listContainer = document.getElementById('rechargeListSub');
+        if (recharges.length === 0) {
+            listContainer.innerHTML = '<div class="empty-state"><i class="fas fa-coins"></i><p>暂无充值记录</p></div>';
+        } else {
+            let listHtml = '<div class="table-wrap"><table><thead><tr><th>用户</th><th>金额</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+            for (const r of recharges) {
+                const username = r.username || r.user_id || '未知用户';
+                const statusText2 = r.status === 'pending' ? '待审核' : r.status === 'approved' ? '已通过' : '已拒绝';
+                const statusCls = r.status === 'pending' ? 'status-pending' : r.status === 'approved' ? 'status-onsale' : 'status-canceled';
+                let actions = '';
+                if (r.status === 'pending') {
+                    actions += `<button class="btn btn-success btn-xs" onclick="confirmApproveRecharge('${r.id}')">通过</button>`;
+                    actions += `<button class="btn btn-danger btn-xs" onclick="confirmRejectRecharge('${r.id}')">拒绝</button>`;
+                }
+                actions += `<button class="btn btn-danger btn-xs" onclick="confirmDeleteRecharge('${r.id}')">删除</button>`;
+                listHtml += `<tr><td>${username}</td><td>¥${r.amount}</td><td>${r.diamond}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+            }
+            listHtml += '</tbody></table></div>';
+            listContainer.innerHTML = listHtml;
+        }
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubRecharges()">重试</button></div>';
+    }
+}
+
+window.confirmApproveRecharge = function(rechargeId) {
+    confirmAction('确认通过充值', '确认通过此充值申请？红钻将直接到账。', '确认通过', `doApproveRecharge('${rechargeId}')`);
+};
+
+async function doApproveRecharge(rechargeId) {
+    try {
+        await apiRequest('/admin/recharges/' + rechargeId + '/approve', { method: 'PUT' });
+        toast('✅ 充值已通过，红钻已到账', 'success');
+        renderSubRecharges();
+        renderHomePage();
+        updateHeaderDiamond();
+        updateBadges();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.confirmRejectRecharge = function(rechargeId) {
+    confirmAction('确认拒绝充值', '确认拒绝此充值申请？', '确认拒绝', `doRejectRecharge('${rechargeId}')`);
+};
+
+async function doRejectRecharge(rechargeId) {
+    try {
+        await apiRequest('/admin/recharges/' + rechargeId + '/reject', { method: 'PUT' });
+        toast('已拒绝', 'warning');
+        renderSubRecharges();
+        updateBadges();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+window.confirmDeleteRecharge = function(rechargeId) {
+    confirmAction('确认删除', '确认删除此充值申请？', '确认删除', `doDeleteRecharge('${rechargeId}')`);
+};
+
+async function doDeleteRecharge(rechargeId) {
+    try {
+        await apiRequest('/admin/recharges/' + rechargeId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderSubRecharges();
+        updateBadges();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  子页面 - 公告管理
+// ============================================================
 async function renderSubAnnounce() {
     const container = document.getElementById('subAnnounceContent');
     if (!container) return;
@@ -3200,7 +3410,7 @@ async function renderSubAnnounce() {
         });
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubAnnounce()">重试</button></div>';
     }
 }
 
@@ -3244,6 +3454,9 @@ async function saveAnnounceSub() {
     } catch (err) { toast(err.message, 'error'); }
 }
 
+// ============================================================
+//  子页面 - 提现管理
+// ============================================================
 async function renderSubWithdrawals() {
     const container = document.getElementById('subWithdrawalsContent');
     if (!container) return;
@@ -3262,6 +3475,7 @@ async function renderSubWithdrawals() {
                 actions += `<button class="btn btn-success btn-xs" onclick="approveWithdraw('${w.id}')">通过</button>`;
                 actions += `<button class="btn btn-danger btn-xs" onclick="rejectWithdraw('${w.id}')">拒绝</button>`;
             }
+            actions += `<button class="btn btn-danger btn-xs" onclick="deleteWithdraw('${w.id}')">删除</button>`;
             html += `<tr>
                 <td>${w.username || w.user_id}</td>
                 <td>${w.amount} 红钻</td>
@@ -3273,7 +3487,7 @@ async function renderSubWithdrawals() {
         container.innerHTML = html;
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubWithdrawals()">重试</button></div>';
     }
 }
 
@@ -3308,6 +3522,21 @@ async function doRejectWithdraw(withdrawId, reason) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
+window.deleteWithdraw = function(withdrawId) {
+    confirmAction('确认删除', '确认删除此提现记录？', '确认删除', `doDeleteWithdraw('${withdrawId}')`);
+};
+
+async function doDeleteWithdraw(withdrawId) {
+    try {
+        await apiRequest('/admin/withdrawals/' + withdrawId, { method: 'DELETE' });
+        toast('已删除', 'success');
+        renderSubWithdrawals();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  子页面 - 账户设置
+// ============================================================
 function renderSubAccount() {
     const container = document.getElementById('subAccountContent');
     if (!container) return;
@@ -3331,9 +3560,112 @@ function renderSubAccount() {
                 <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
             </div>
         </div>
+        <div class="admin-card" style="border-left:4px solid #f59e0b;">
+            <div class="admin-card-title"><i class="fas fa-info-circle" style="color:#f59e0b;"></i> 修改用户ID（管理员）</div>
+            <div class="admin-form-group"><label>当前用户ID</label><input class="admin-form-control" id="currentUserIdDisplay" value="${currentUser?.id || ''}" disabled /></div>
+            <div class="admin-form-group"><label>新用户ID（6位以上数字）</label><input class="admin-form-control" id="newUserIdInput" placeholder="输入新ID" /></div>
+            <button class="btn btn-warning btn-sm" onclick="changeUserId()"><i class="fas fa-edit"></i> 修改ID</button>
+        </div>
     `;
 }
 
+function showChangeName() {
+    showCustomModal(`
+        <h3><i class="fas fa-user-edit"></i> 修改昵称</h3>
+        <p style="color:var(--text-muted);font-size:14px;">当前昵称：<strong>${currentUser?.username}</strong></p>
+        <div class="form-group"><label>新昵称</label><input class="admin-form-control" id="newNameInput" placeholder="输入新昵称" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doChangeName()">确认修改</button>
+        </div>
+    `);
+}
+
+async function doChangeName() {
+    const newName = document.getElementById('newNameInput').value.trim();
+    if (!newName) return toast('请输入新昵称', 'warning');
+    try {
+        await apiRequest('/user/name', {
+            method: 'PUT',
+            body: JSON.stringify({ username: newName })
+        });
+        closeCustomModal();
+        toast('✅ 昵称已修改', 'success');
+        currentUser.username = newName;
+        renderMyPage();
+        updateRoleBasedUI();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+function showChangeBanner() {
+    showCustomModal(`
+        <h3><i class="fas fa-image"></i> 设置背景墙</h3>
+        <p style="color:var(--text-muted);font-size:14px;">输入图片URL设置个人主页背景墙</p>
+        <div class="form-group"><label>图片URL</label><input class="admin-form-control" id="bannerUrlInput" placeholder="输入图片URL" /></div>
+        <div style="margin:8px 0;"><img id="bannerPreview" style="max-width:100%;max-height:100px;border-radius:8px;display:none;" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doChangeBanner()">确认设置</button>
+        </div>
+    `);
+    document.getElementById('bannerUrlInput').addEventListener('input', function() {
+        const img = document.getElementById('bannerPreview');
+        if (this.value) {
+            img.src = this.value;
+            img.style.display = 'block';
+            img.onerror = function() { this.style.display = 'none'; };
+        } else {
+            img.style.display = 'none';
+        }
+    });
+}
+
+async function doChangeBanner() {
+    const url = document.getElementById('bannerUrlInput').value.trim();
+    if (!url) return toast('请输入图片URL', 'warning');
+    try {
+        await apiRequest('/user/banner', {
+            method: 'PUT',
+            body: JSON.stringify({ banner: url })
+        });
+        closeCustomModal();
+        toast('✅ 背景墙已更新', 'success');
+        renderMyPage();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function changeUserId() {
+    const newId = document.getElementById('newUserIdInput').value.trim();
+    if (!newId) return toast('请输入新ID', 'warning');
+    if (!/^\d{6,}$/.test(newId)) return toast('ID必须为6位以上数字', 'warning');
+    confirmAction('确认修改ID', `确认将用户ID修改为 ${newId}？此操作不可回退！`, '确认修改', `doChangeUserId('${newId}')`);
+}
+
+async function doChangeUserId(newId) {
+    try {
+        await apiRequest('/admin/user-id', {
+            method: 'PUT',
+            body: JSON.stringify({ targetUserId: currentUser.id, newId: newId })
+        });
+        toast('✅ ID已修改，请重新登录', 'success');
+        setTimeout(() => {
+            logout();
+        }, 1500);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+// ============================================================
+//  第4部分：客服系统、派单系统、分类管理、广告管理、图标管理、消息系统、聊天功能、认证功能、初始化
+// ============================================================
+
+// ============================================================
+//  子页面 - 客服系统
+// ============================================================
 async function renderSubService() {
     const container = document.getElementById('subServiceContent');
     if (!container) return;
@@ -3370,7 +3702,7 @@ async function renderSubService() {
         await loadServiceContacts();
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubService()">重试</button></div>';
     }
 }
 
@@ -3475,6 +3807,9 @@ async function loadServiceContacts() {
     } catch (err) { console.error(err); }
 }
 
+// ============================================================
+//  子页面 - 派单系统
+// ============================================================
 async function renderSubDispatcher() {
     const container = document.getElementById('subDispatcherContent');
     if (!container) return;
@@ -3528,7 +3863,7 @@ async function renderSubDispatcher() {
         }
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubDispatcher()">重试</button></div>';
     }
 }
 
@@ -3581,6 +3916,9 @@ async function doDispatcherConfirmOrder(orderId) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
+// ============================================================
+//  子页面 - 分类管理
+// ============================================================
 async function renderSubCategories() {
     const container = document.getElementById('subCategoriesContent');
     if (!container) return;
@@ -3663,7 +4001,7 @@ async function renderSubCategories() {
         }
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubCategories()">重试</button></div>';
     }
 }
 
@@ -3710,7 +4048,43 @@ async function createSubCategory() {
 }
 
 async function editCategory(categoryId) {
-    toast('编辑分类功能开发中', 'warning');
+    try {
+        const categories = await apiRequest('/categories');
+        const cat = categories.find(c => c.id === categoryId);
+        if (!cat) return toast('分类不存在', 'error');
+        showCustomModal(`
+            <h3><i class="fas fa-edit"></i> 编辑分类</h3>
+            <div class="form-group"><label>分类名称</label><input class="admin-form-control" id="editCategoryName" value="${cat.name}" /></div>
+            <div class="form-group"><label>分类图片URL</label><input class="admin-form-control" id="editCategoryImage" value="${cat.image || ''}" /></div>
+            <div class="form-group"><label>排序权重</label><input class="admin-form-control" id="editCategorySortOrder" type="number" value="${cat.sort_order || 0}" /></div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doEditCategory('${categoryId}')">保存</button>
+            </div>
+        `);
+        document.getElementById('customModal').classList.add('active');
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function doEditCategory(categoryId) {
+    const name = document.getElementById('editCategoryName').value.trim();
+    const image = document.getElementById('editCategoryImage').value.trim();
+    const sort_order = parseInt(document.getElementById('editCategorySortOrder').value) || 0;
+    if (!name) return toast('请输入分类名称', 'error');
+    try {
+        await apiRequest('/admin/categories/' + categoryId + '/edit', {
+            method: 'PUT',
+            body: JSON.stringify({ name, image, sort_order })
+        });
+        closeCustomModal();
+        toast('分类已更新', 'success');
+        renderSubCategories();
+        loadCategoryNav();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
 }
 
 window.confirmDeleteCategory = function(categoryId) {
@@ -3721,6 +4095,20 @@ async function doDeleteCategory(categoryId) {
     try {
         await apiRequest('/admin/categories/' + categoryId, { method: 'DELETE' });
         toast('已删除', 'success');
+        renderSubCategories();
+        loadCategoryNav();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
+async function updateCategorySort(categoryId, sortOrder) {
+    try {
+        await apiRequest('/admin/categories/' + categoryId + '/edit', {
+            method: 'PUT',
+            body: JSON.stringify({ sort_order: parseInt(sortOrder) || 0 })
+        });
+        toast('排序已更新', 'success');
         renderSubCategories();
         loadCategoryNav();
     } catch (err) {
@@ -3748,6 +4136,9 @@ async function loadCategoryNav() {
     }
 }
 
+// ============================================================
+//  子页面 - 广告管理
+// ============================================================
 async function renderSubBanners() {
     const container = document.getElementById('subBannersContent');
     if (!container) return;
@@ -3797,7 +4188,7 @@ async function renderSubBanners() {
         }
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubBanners()">重试</button></div>';
     }
 }
 
@@ -3807,7 +4198,7 @@ async function createBanner() {
     const sort_order = parseInt(document.getElementById('bannerSortOrder').value) || 0;
     if (!image_url) return toast('请输入图片URL', 'warning');
     try {
-        await apiRequest('/admin/banners', {
+        const result = await apiRequest('/admin/banners', {
             method: 'POST',
             body: JSON.stringify({ image_url, link, sort_order })
         });
@@ -3821,17 +4212,6 @@ async function createBanner() {
         await loadBannersFromAPI();
     } catch (err) {
         toast(err.message, 'error');
-    }
-}
-
-async function loadBannersFromAPI() {
-    try {
-        const banners = await apiRequest('/banners');
-        bannerImages = banners.map(b => b.image_url).filter(url => url);
-        saveBannerToStorage();
-        renderBanner();
-    } catch (err) {
-        console.error('加载广告失败:', err);
     }
 }
 
@@ -3850,6 +4230,9 @@ async function doDeleteBanner(bannerId) {
     }
 }
 
+// ============================================================
+//  子页面 - 图标管理
+// ============================================================
 async function renderSubIcons() {
     const container = document.getElementById('subIconsContent');
     if (!container) return;
@@ -3897,7 +4280,7 @@ async function renderSubIcons() {
         listContainer.innerHTML = listHtml;
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p><button class="btn btn-primary btn-sm" onclick="renderSubIcons()">重试</button></div>';
     }
 }
 
@@ -4291,84 +4674,6 @@ async function doClaimMail(mailId) {
 }
 
 // ============================================================
-//  改名功能
-// ============================================================
-function showChangeName() {
-    showCustomModal(`
-        <h3><i class="fas fa-user-edit"></i> 修改昵称</h3>
-        <p style="color:var(--text-muted);font-size:14px;">当前昵称：<strong>${currentUser?.username}</strong></p>
-        <div class="form-group"><label>新昵称</label><input class="admin-form-control" id="newNameInput" placeholder="输入新昵称" /></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="doChangeName()">确认修改</button>
-        </div>
-    `);
-}
-
-async function doChangeName() {
-    const newName = document.getElementById('newNameInput').value.trim();
-    if (!newName) return toast('请输入新昵称', 'warning');
-    try {
-        await apiRequest('/user/name', {
-            method: 'PUT',
-            body: JSON.stringify({ username: newName })
-        });
-        closeCustomModal();
-        toast('✅ 昵称已修改', 'success');
-        currentUser.username = newName;
-        renderMyPage();
-        updateRoleBasedUI();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-function showChangeBanner() {
-    showCustomModal(`
-        <h3><i class="fas fa-image"></i> 设置背景墙</h3>
-        <p style="color:var(--text-muted);font-size:14px;">输入图片URL设置个人主页背景墙</p>
-        <div class="form-group"><label>图片URL</label><input class="admin-form-control" id="bannerUrlInput" placeholder="输入图片URL" /></div>
-        <div style="margin:8px 0;"><img id="bannerPreview" style="max-width:100%;max-height:100px;border-radius:8px;display:none;" /></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="doChangeBanner()">确认设置</button>
-        </div>
-    `);
-    document.getElementById('bannerUrlInput').addEventListener('input', function() {
-        const img = document.getElementById('bannerPreview');
-        if (this.value) {
-            img.src = this.value;
-            img.style.display = 'block';
-            img.onerror = function() { this.style.display = 'none'; };
-        } else {
-            img.style.display = 'none';
-        }
-    });
-}
-
-async function doChangeBanner() {
-    const url = document.getElementById('bannerUrlInput').value.trim();
-    if (!url) return toast('请输入图片URL', 'warning');
-    try {
-        await apiRequest('/user/banner', {
-            method: 'PUT',
-            body: JSON.stringify({ banner: url })
-        });
-        closeCustomModal();
-        toast('✅ 背景墙已更新', 'success');
-        renderMyPage();
-    } catch (err) {
-        toast(err.message, 'error');
-    }
-}
-
-function updateRoleBasedUI() {
-    if (currentUser) {
-        document.getElementById('authStatusText').textContent = currentUser.username;
-    }
-}
-
-// ============================================================
 //  认证相关
 // ============================================================
 function toggleAuthModal() {
@@ -4495,6 +4800,12 @@ function logout() {
         return;
     }
     confirmAction('确认退出', '确定要退出登录吗？', '退出', `doLogout()`);
+}
+
+function updateRoleBasedUI() {
+    if (currentUser) {
+        document.getElementById('authStatusText').textContent = currentUser.username;
+    }
 }
 
 // ============================================================
@@ -4637,9 +4948,94 @@ async function init() {
     }
 }
 
-document.getElementById('logoutBtn')?.addEventListener('click', logout);
-init();
-console.log('✅ QW电竞护航平台已加载 v6.0 - 全部功能已优化');
+// ============================================================
+//  启动应用
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // 确保所有DOM元素加载完成后再初始化
+    init();
+});
+
+// 暴露全局函数供HTML调用
+window.navigateTo = navigateTo;
+window.openSubPage = openSubPage;
+window.closeSubPage = closeSubPage;
+window.openProductDetail = openProductDetail;
+window.closeProductDetail = closeProductDetail;
+window.buyFromDetail = buyFromDetail;
+window.showBuyWithHandler = showBuyWithHandler;
+window.doBuyWithHandler = doBuyWithHandler;
+window.filterProductsByCategory = filterProductsByCategory;
+window.filterSubCategory2 = filterSubCategory2;
+window.filterMyOrders = filterMyOrders;
+window.uploadAvatar = uploadAvatar;
+window.requestWithdraw = requestWithdraw;
+window.openRecharge = openRecharge;
+window.openMail = openMail;
+window.toggleAuthModal = toggleAuthModal;
+window.showLoginModal = showLoginModal;
+window.logout = logout;
+window.renderPosts = renderPosts;
+window.refreshPosts = refreshPosts;
+window.showCreatePost = showCreatePost;
+window.submitPost = submitPost;
+window.likePost = likePost;
+window.toggleComments = toggleComments;
+window.submitComment = submitComment;
+window.deletePost = deletePost;
+window.openChat = openChat;
+window.closeChatFullscreen = closeChatFullscreen;
+window.sendFullscreenMessage = sendFullscreenMessage;
+window.loadContacts = loadContacts;
+window.addContactById = addContactById;
+window.showAddContact = showAddContact;
+window.toggleInlineModal = toggleInlineModal;
+window.createShop = createShop;
+window.createShopCategory = createShopCategory;
+window.editShop = editShop;
+window.toggleShop = toggleShop;
+window.confirmDeleteShop = confirmDeleteShop;
+window.shelfProduct = shelfProduct;
+window.confirmUnshelf = confirmUnshelf;
+window.confirmReshelf = confirmReshelf;
+window.confirmDeleteProduct = confirmDeleteProduct;
+window.openEditProduct = openEditProduct;
+window.approveHandler = approveHandler;
+window.toggleUserBan = toggleUserBan;
+window.resetUserPassword = resetUserPassword;
+window.changeUsername = changeUsername;
+window.deleteUser = deleteUser;
+window.confirmApproveRecharge = confirmApproveRecharge;
+window.confirmRejectRecharge = confirmRejectRecharge;
+window.confirmDeleteRecharge = confirmDeleteRecharge;
+window.approveWithdraw = approveWithdraw;
+window.rejectWithdraw = rejectWithdraw;
+window.deleteWithdraw = deleteWithdraw;
+window.dispatcherCancelOrder = dispatcherCancelOrder;
+window.dispatcherConfirmOrder = dispatcherConfirmOrder;
+window.confirmDeleteCategory = confirmDeleteCategory;
+window.confirmDeleteBanner = confirmDeleteBanner;
+window.setIcon = setIcon;
+window.deleteIcon = deleteIcon;
+window.confirmClaimMail = confirmClaimMail;
+window.confirmTake = confirmTake;
+window.confirmSubmitComplete = confirmSubmitComplete;
+window.confirmBossComplete = confirmBossComplete;
+window.requestRefund = requestRefund;
+window.viewOrderDetail = viewOrderDetail;
+window.showChangeName = showChangeName;
+window.showChangeBanner = showChangeBanner;
+window.doAuthLogin = doAuthLogin;
+window.doAuthRegister = doAuthRegister;
+window.prevBanner = prevBanner;
+window.nextBanner = nextBanner;
+window.goToBanner = goToBanner;
+window.handleProfileClick = handleProfileClick;
+window.setRechargeAmount = setRechargeAmount;
+window.submitCustomRecharge = submitCustomRecharge;
+
+console.log('✅ QW电竞护航平台 v6.0 完整版已加载');
+console.log('📌 所有功能已优化完成');
 </script>
 </body>
 </html>
