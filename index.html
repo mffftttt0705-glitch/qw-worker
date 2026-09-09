@@ -221,6 +221,7 @@
             font-size: 10px; color: var(--text-muted); text-align: center;
             max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
+        .shop-entrance .shop-entry .entry-name.active { color: var(--text-primary); font-weight: 600; }
         
         /* ===== 商品卡片 ===== */
         .product-grid {
@@ -856,6 +857,34 @@
         .info-row .label { color: var(--text-muted); }
         .info-row .value { font-weight: 500; }
         
+        /* ===== 店铺详情弹窗 ===== */
+        .shop-detail-modal {
+            position: fixed; top: 0; left: 0; width: 100%; max-width: 480px;
+            height: 100vh; height: 100dvh; background: var(--bg-secondary);
+            z-index: 4000; display: none; flex-direction: column;
+            left: 50%; transform: translateX(-50%);
+            animation: slideIn 0.3s ease; padding: 16px;
+        }
+        .shop-detail-modal.active { display: flex; }
+        .shop-detail-modal .sd-header {
+            display: flex; align-items: center; gap: 12px;
+            padding-bottom: 12px; border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .shop-detail-modal .sd-header .back-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-primary); padding: 4px 8px; }
+        .shop-detail-modal .sd-header .title { font-size: 16px; font-weight: 600; flex: 1; }
+        .shop-detail-modal .sd-body { flex: 1; overflow-y: auto; padding: 12px 0; -webkit-overflow-scrolling: touch; }
+        .shop-detail-modal .sd-body .sd-banner {
+            width: 100%; height: 120px; background: var(--product-img-bg);
+            border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center;
+            font-size: 48px; color: var(--text-muted); margin-bottom: 12px;
+        }
+        .shop-detail-modal .sd-body .sd-banner img { width: 100%; height: 100%; object-fit: cover; }
+        .shop-detail-modal .sd-body .sd-info { text-align: center; margin-bottom: 12px; }
+        .shop-detail-modal .sd-body .sd-info .sd-name { font-size: 20px; font-weight: 700; }
+        .shop-detail-modal .sd-body .sd-info .sd-desc { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+        .shop-detail-modal .sd-body .sd-info .sd-stats { display: flex; justify-content: center; gap: 20px; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
+        
         @media(max-width:420px) {
             .view-container { padding: 10px 12px 4px; }
             .bottom-nav { padding: 4px 0 max(8px, env(safe-area-inset-bottom)); min-height: 48px; }
@@ -881,6 +910,8 @@
             .app-wrapper { padding-top: env(safe-area-inset-top); }
             .sub-page { padding-top: env(safe-area-inset-top); }
             .product-detail-modal { padding-top: env(safe-area-inset-top); }
+            .shop-detail-modal { padding-top: env(safe-area-inset-top); }
+            .chat-fullscreen { padding-top: env(safe-area-inset-top); }
         }
     </style>
 </head>
@@ -910,7 +941,7 @@
 <!-- ===== 主应用 ===== -->
 <div id="mainApp" class="app-wrapper">
     <div class="view-container">
-        <!-- 头部 -->
+        <!-- 头部 - 已移除多余的 📈 4510 + ❤️ 慕非非 -->
         <div class="app-header">
             <div class="brand">
                 <div class="brand-icon" id="brandIcon">QW</div>
@@ -1101,6 +1132,27 @@
     </div>
 </div>
 
+<!-- ===== 店铺详情弹窗 ===== -->
+<div class="shop-detail-modal" id="shopDetailModal">
+    <div class="sd-header">
+        <button class="back-btn" onclick="closeShopDetail()"><i class="fas fa-arrow-left"></i></button>
+        <span class="title" id="sdTitle">店铺详情</span>
+    </div>
+    <div class="sd-body" id="sdBody">
+        <div class="sd-banner" id="sdBanner">🏪</div>
+        <div class="sd-info">
+            <div class="sd-name" id="sdName">店铺名称</div>
+            <div class="sd-desc" id="sdDesc">店铺简介</div>
+            <div class="sd-stats">
+                <span>⭐ <span id="sdRating">4.9</span></span>
+                <span>📦 <span id="sdProducts">0</span> 商品</span>
+                <span>👥 <span id="sdFollows">0</span> 关注</span>
+            </div>
+        </div>
+        <div id="sdProductList"></div>
+    </div>
+</div>
+
 <!-- ===== 子页面容器 ===== -->
 <div class="sub-page" id="subPageOrders">
     <div class="sub-header">
@@ -1241,11 +1293,9 @@
 <!-- ===== 模态框 ===== -->
 <div class="modal-overlay" id="customModal"><div class="modal-box" id="customModalContent"></div></div>
 <div id="toast" class="toast"></div>
-
-<script>
 // ============================================================
-//  第2部分：JavaScript 核心功能 + 完整业务逻辑
-//  包含：配置、工具函数、导航、子页面管理、广告、商城、分类、帖子、订单、消息、充值、用户管理等全部功能
+//  第4部分：完整前端 JavaScript 代码
+//  包含：配置、工具函数、导航、子页面管理、广告、商城、分类、帖子、订单、消息、充值、用户管理、店铺管理、客服、派单、分类管理、广告管理、图标管理、认证、初始化
 // ============================================================
 
 // ============================================================
@@ -1534,8 +1584,6 @@ function navigateTo(target) {
     }
 }
 
-function closeShopDetail() {}
-
 // ============================================================
 //  子页面管理
 // ============================================================
@@ -1584,6 +1632,74 @@ function closeSubPage() {
     document.querySelectorAll('.sub-page').forEach(el => el.classList.remove('active'));
     document.body.style.overflow = '';
     currentSubPage = null;
+}
+
+// ============================================================
+//  店铺详情（修复 - 可进入店铺）
+// ============================================================
+function openShopDetail(shopId) {
+    currentShopId = shopId;
+    apiRequest('/shops/' + shopId).then(shop => {
+        document.getElementById('sdTitle').textContent = shop.name || '店铺详情';
+        document.getElementById('sdName').textContent = shop.name || '未知店铺';
+        document.getElementById('sdDesc').textContent = shop.description || '暂无简介';
+        document.getElementById('sdRating').textContent = shop.rating || '4.9';
+        document.getElementById('sdProducts').textContent = shop.productCount || 0;
+        document.getElementById('sdFollows').textContent = shop.follow_count || 0;
+        
+        const bannerEl = document.getElementById('sdBanner');
+        if (shop.banner) {
+            bannerEl.innerHTML = `<img src="${shop.banner}" />`;
+        } else if (shop.logo) {
+            bannerEl.innerHTML = `<img src="${shop.logo}" />`;
+        } else {
+            bannerEl.textContent = '🏪';
+        }
+        
+        document.getElementById('shopDetailModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // 加载店铺商品
+        apiRequest('/shops/' + shopId + '/products').then(products => {
+            const container = document.getElementById('sdProductList');
+            if (products.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding:12px 0;"><p style="font-size:12px;">暂无商品</p></div>';
+                return;
+            }
+            let html = '<div style="margin-top:12px;"><div style="font-size:14px;font-weight:600;margin-bottom:8px;">📦 店铺商品</div><div class="product-grid">';
+            products.forEach(p => {
+                const remaining = p.quantity - p.sold;
+                html += `
+                    <div class="product-card" onclick="closeShopDetail();openProductDetail('${p.id}')">
+                        <div class="product-img">
+                            ${p.image ? `<img src="${p.image}" />` : '🏷️'}
+                            <span class="tag">${p.game || '商品'}</span>
+                        </div>
+                        <div class="product-body">
+                            <div class="product-title">${p.title}</div>
+                            <div class="product-desc">${p.description || ''}</div>
+                            <div class="product-stock">剩余 ${remaining}</div>
+                            <div class="product-bottom">
+                                <span class="product-price">${p.price} 红钻</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div></div>';
+            container.innerHTML = html;
+        }).catch(err => {
+            document.getElementById('sdProductList').innerHTML = '<div class="empty-state"><p>加载商品失败</p></div>';
+        });
+    }).catch(err => {
+        toast('加载店铺失败: ' + err.message, 'error');
+    });
+}
+
+function closeShopDetail() {
+    document.getElementById('shopDetailModal').classList.remove('active');
+    document.body.style.overflow = '';
+    currentShopId = null;
 }
 
 // ============================================================
@@ -1748,10 +1864,6 @@ function renderHomeProducts(products) {
     });
     html += '</div>';
     container.innerHTML = html;
-}
-
-function openShopDetail(shopId) {
-    toast('店铺详情功能开发中', 'warning');
 }
 
 // ============================================================
@@ -2356,7 +2468,7 @@ function handleProfileClick() {
 }
 
 // ============================================================
-//  订单/打手页面（保留完整功能）
+//  订单/打手页面
 // ============================================================
 async function renderOrdersPage() {
     const role = currentUser?.role;
@@ -2569,10 +2681,6 @@ async function doRequestWithdraw(amount) {
         updateHeaderDiamond();
     } catch (err) { toast(err.message, 'error'); }
 }
-// ============================================================
-//  第3部分：完整子页面管理功能
-//  包含：用户管理、商品管理、店铺管理、充值管理、公告管理、提现管理、客服系统、派单系统、分类管理、广告管理、图标管理
-// ============================================================
 
 // ============================================================
 //  子页面 - 订单管理
@@ -3063,7 +3171,7 @@ async function doDeleteUser(userId) {
 }
 
 // ============================================================
-//  子页面 - 店铺管理（修复创建店铺）
+//  子页面 - 店铺管理
 // ============================================================
 async function renderSubShops() {
     const container = document.getElementById('subShopsContent');
@@ -3659,9 +3767,12 @@ async function doChangeUserId(newId) {
         toast(err.message, 'error');
     }
 }
-// ============================================================
-//  第4部分：客服系统、派单系统、分类管理、广告管理、图标管理、消息系统、聊天功能、认证功能、初始化
-// ============================================================
+
+function updateRoleBasedUI() {
+    if (currentUser) {
+        document.getElementById('authStatusText').textContent = currentUser.username;
+    }
+}
 
 // ============================================================
 //  子页面 - 客服系统
@@ -4208,7 +4319,6 @@ async function createBanner() {
         document.getElementById('bannerSortOrder').value = '0';
         toggleInlineModal('addBanner');
         renderSubBanners();
-        // 刷新首页广告
         await loadBannersFromAPI();
     } catch (err) {
         toast(err.message, 'error');
@@ -4802,12 +4912,6 @@ function logout() {
     confirmAction('确认退出', '确定要退出登录吗？', '退出', `doLogout()`);
 }
 
-function updateRoleBasedUI() {
-    if (currentUser) {
-        document.getElementById('authStatusText').textContent = currentUser.username;
-    }
-}
-
 // ============================================================
 //  认证模块（登录后）
 // ============================================================
@@ -4952,16 +5056,19 @@ async function init() {
 //  启动应用
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
-    // 确保所有DOM元素加载完成后再初始化
     init();
 });
 
-// 暴露全局函数供HTML调用
+// ============================================================
+//  暴露全局函数供HTML调用
+// ============================================================
 window.navigateTo = navigateTo;
 window.openSubPage = openSubPage;
 window.closeSubPage = closeSubPage;
 window.openProductDetail = openProductDetail;
 window.closeProductDetail = closeProductDetail;
+window.openShopDetail = openShopDetail;
+window.closeShopDetail = closeShopDetail;
 window.buyFromDetail = buyFromDetail;
 window.showBuyWithHandler = showBuyWithHandler;
 window.doBuyWithHandler = doBuyWithHandler;
@@ -5033,9 +5140,22 @@ window.goToBanner = goToBanner;
 window.handleProfileClick = handleProfileClick;
 window.setRechargeAmount = setRechargeAmount;
 window.submitCustomRecharge = submitCustomRecharge;
+window.renderSubOrders = renderSubOrders;
+window.renderSubProducts = renderSubProducts;
+window.renderSubUsers = renderSubUsers;
+window.renderSubRecharges = renderSubRecharges;
+window.renderSubShops = renderSubShops;
+window.renderSubAnnounce = renderSubAnnounce;
+window.renderSubWithdrawals = renderSubWithdrawals;
+window.renderSubAccount = renderSubAccount;
+window.renderSubService = renderSubService;
+window.renderSubDispatcher = renderSubDispatcher;
+window.renderSubCategories = renderSubCategories;
+window.renderSubBanners = renderSubBanners;
+window.renderSubIcons = renderSubIcons;
 
 console.log('✅ QW电竞护航平台 v6.0 完整版已加载');
-console.log('📌 所有功能已优化完成');
+console.log('📌 所有功能已优化完成 - 店铺可进入、帖子可发布、顶部栏已清理');
 </script>
 </body>
 </html>
