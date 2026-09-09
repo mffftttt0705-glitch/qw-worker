@@ -657,6 +657,9 @@
 <div id="toast" class="toast"></div>
 
 <script>
+// ============================================================
+//  第2次发送：JavaScript - 配置 + 工具函数 + 导航 + 子页面管理 + 广告 + 商城
+// ============================================================
 var API_URL = '/api';
 var currentUser = null;
 var token = localStorage.getItem('token');
@@ -1115,6 +1118,9 @@ function renderHomeProducts(products) {
     html += '</div>';
     container.innerHTML = html;
 }
+// ============================================================
+//  第2次：JavaScript - 分类 + 帖子 + 头像 + 我的页面 + 订单
+// ============================================================
 
 var categoryProducts = [];
 
@@ -1724,6 +1730,10 @@ async function doRequestWithdraw(amount) {
         updateHeaderDiamond();
     } catch (err) { toast(err.message, 'error'); }
 }
+// ============================================================
+//  第3次：JavaScript - 子页面渲染
+//  用户管理、商品管理、店铺管理、充值管理、公告管理、提现管理
+// ============================================================
 
 async function renderSubOrders() {
     var container = document.getElementById('subOrdersContent');
@@ -2532,6 +2542,9 @@ function updateRoleBasedUI() {
         document.getElementById('authStatusText').textContent = currentUser.username;
     }
 }
+// ============================================================
+//  第4次：JavaScript - 客服系统、派单系统、分类管理、广告管理、图标管理、消息系统、聊天、认证、初始化
+// ============================================================
 
 async function renderSubService() {
     var container = document.getElementById('subServiceContent');
@@ -3572,7 +3585,7 @@ window.renderSubCategories = renderSubCategories;
 window.renderSubBanners = renderSubBanners;
 window.renderSubIcons = renderSubIcons;
 
-console.log('✅ QW电竞护航平台 v6.0 完整版已加载');
+console.log('✅ QW电竞护航平台 v6.0 完整版已加载')；
 </script>
 </body>
 </html>
