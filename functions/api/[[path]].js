@@ -1,6 +1,5 @@
 // ============================================================
-//  QW电竞 - 完整后端 API
-//  包含：用户、商品、订单、分类、充值、客服、消息、店铺、提现、广告、关注、改名、背景墙、图标、头像、帖子
+//  QW电竞 - 完整后端 API (修复版)
 //  部署：Cloudflare Pages Functions + D1 数据库
 // ============================================================
 
@@ -73,7 +72,7 @@ async function handleRegister(env, body) {
 
   const userStatus = (role === 'handler' || role === 'dispatcher' || role === 'service') ? 'pending' : (status || 'active');
   await runDB(env,
-    'INSERT INTO users (id, username, password, role, diamond, balance, status, avatar) VALUES (?, ?, ?, ?, 0, 0, ?, ?)',
+    'INSERT INTO users (id, username, password, role, diamond, balance, status, avatar, level) VALUES (?, ?, ?, ?, 0, 0, ?, ?, 1)',
     [userId, username, password, role || 'boss', userStatus, '']
   );
 
@@ -182,11 +181,8 @@ async function handleChangeUsername(env, targetUserId, body) {
 }
 
 async function handleAdminDeleteUser(env, targetUserId) {
-  // 检查是否为管理员
   const user = await getUserById(env, targetUserId);
   if (user.role === 'admin') return errorResponse('不能删除管理员', 403);
-  
-  // 删除用户相关数据
   await runDB(env, 'DELETE FROM user_avatars WHERE user_id = ?', [targetUserId]);
   await runDB(env, 'DELETE FROM posts WHERE user_id = ?', [targetUserId]);
   await runDB(env, 'DELETE FROM post_comments WHERE user_id = ?', [targetUserId]);
@@ -262,7 +258,7 @@ async function handleSetBanner(env, authHeader, body) {
 }
 
 // ============================================================
-//  帖子系统
+//  帖子系统（修复版 - 不需要 title）
 // ============================================================
 async function handleCreatePost(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -722,28 +718,6 @@ async function handleDeleteShopCategory(env, authHeader, categoryId) {
   
   await runDB(env, 'DELETE FROM shop_categories WHERE id = ?', [categoryId]);
   return jsonResponse({ success: true, message: '店铺分类已删除' });
-}
-
-// ============================================================
-//  店铺修改ID（管理员）
-// ============================================================
-async function handleChangeShopId(env, authHeader, body) {
-  const adminId = verifyAndGetUserId(authHeader);
-  if (!adminId) return errorResponse('请先登录', 401);
-  const admin = await getUserById(env, adminId);
-  if (admin.role !== 'admin') return errorResponse('权限不足', 403);
-  
-  const { shopId, newId } = body;
-  if (!shopId || !newId) return errorResponse('请提供店铺ID和新ID');
-  if (!/^a\d+$/.test(newId) && !/^\d+$/.test(newId)) return errorResponse('ID格式错误，应为 a100000 格式');
-  
-  const existing = await queryDB(env, 'SELECT * FROM shops WHERE id = ?', [newId]);
-  if (existing.results && existing.results.length > 0) {
-    return errorResponse('该ID已被使用');
-  }
-  
-  await runDB(env, 'UPDATE shops SET id = ? WHERE id = ?', [newId, shopId]);
-  return jsonResponse({ success: true, message: '店铺ID已修改' });
 }
 
 // ============================================================
