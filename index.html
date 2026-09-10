@@ -16,7 +16,7 @@
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="msapplication-TileColor" content="#1a6aff">
-    <meta name="msapplication-TileImage" href="/icons/icon-144x144.png">
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
@@ -554,7 +554,6 @@
         .toast.error { border-left-color: #ef4444; }
         .toast.warning { border-left-color: #f59e0b; }
         
-        /* ===== 补丁：模态框 z-index 提升到 99999 ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -596,31 +595,8 @@
         .modal-box .detail-row .label { color: var(--detail-label); }
         .modal-box .detail-row .value { color: var(--detail-value); font-weight: 500; }
         
-        .app-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding-bottom: 10px; border-bottom: 1px solid var(--header-border);
-            margin-bottom: 10px; flex-shrink: 0; flex-wrap: wrap; gap: 6px;
-        }
-        .brand { display: flex; align-items: center; gap: 8px; }
-        .brand-icon {
-            width: 32px; height: 32px;
-            background: linear-gradient(145deg,#00c8ff,#0055ff);
-            border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 800; color: #fff;
-            box-shadow: 0 0 20px rgba(0,150,255,0.3); overflow: hidden;
-        }
-        .brand-icon img { width: 100%; height: 100%; object-fit: cover; }
-        .brand-name {
-            font-size: 16px; font-weight: 700;
-            background: linear-gradient(to right,#b0e0ff,#7ac7ff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text; color: var(--text-primary);
-        }
-        .brand-name small { font-weight: 300; font-size: 10px; color: var(--text-muted); }
-        .header-right {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 13px; color: var(--text-muted); flex-wrap: wrap;
-        }
+        /* ⚠️ 已删除 .app-header 样式（不再使用全局头部） */
+        
         .diamond-display {
             display: flex; align-items: center; gap: 4px;
             background: var(--bg-input); padding: 4px 10px; border-radius: 20px;
@@ -950,30 +926,7 @@
 <!-- ===== 主应用 ===== -->
 <div id="mainApp" class="app-wrapper">
     <div class="view-container">
-        <!-- 头部 -->
-        <div class="app-header">
-            <div class="brand">
-                <div class="brand-icon" id="brandIcon">QW</div>
-                <span class="brand-name" id="brandName">电竞 <small>· 护航</small></span>
-            </div>
-            <div class="header-right">
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <div class="diamond-display" onclick="openRecharge()">
-                        <i class="fas fa-gem"></i>
-                        <span id="headerDiamond">0</span>
-                        <span>+</span>
-                    </div>
-                    <div class="mail-badge" onclick="openMail()">
-                        <i class="fas fa-envelope"></i>
-                        <span class="badge-num" id="headerUnreadMail">0</span>
-                    </div>
-                </div>
-                <div class="auth-status" onclick="toggleAuthModal()">
-                    <i class="fas fa-user"></i>
-                    <span id="authStatusText">未登录</span>
-                </div>
-            </div>
-        </div>
+        <!-- ⚠️ 问题2 修复：已删除整个 <div class="app-header">...</div> 全局头部 -->
 
         <!-- ===== 商城页面 ===== -->
         <div class="view active" id="view-home">
@@ -996,7 +949,7 @@
 
         <!-- ===== 分类页面 ===== -->
         <div class="view" id="view-category">
-            <div class="app-header" style="margin-bottom:10px;">
+            <div style="margin-bottom:10px;">
                 <span style="font-size:18px;font-weight:600;">📂 分类</span>
             </div>
             <div class="category-nav-wrapper" id="categoryNavWrapper2">
@@ -1011,7 +964,7 @@
 
         <!-- ===== 帖子页面 ===== -->
         <div class="view" id="view-posts">
-            <div class="app-header" style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                 <span style="font-size:18px;font-weight:600;">📝 帖子</span>
                 <span style="font-size:12px;color:var(--text-muted);" id="postCount">0</span>
             </div>
@@ -1024,7 +977,7 @@
 
         <!-- ===== 消息页面 ===== -->
         <div class="view" id="view-messages">
-            <div class="app-header" style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                 <span style="font-size:18px;font-weight:600;">💬 消息</span>
                 <span style="font-size:12px;color:var(--text-muted);" id="msgUnreadTotal"></span>
             </div>
@@ -1058,8 +1011,8 @@
                     </div>
                     <div class="profile-stats">
                         <div class="stat-item">
-                            <div class="num" id="profileBalance">0.00</div>
-                            <div class="label">我的余额</div>
+                            <div class="num" id="profileBalance">0 红钻</div>
+                            <div class="label">我的红钻</div>
                         </div>
                         <div class="stat-item">
                             <div class="num" id="profilePosts">0</div>
@@ -1090,8 +1043,8 @@
 
             <div class="admin-card" style="padding:10px 12px;border-left:4px solid #f5c842;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-size:14px;font-weight:600;">💎 我的余额</span>
-                    <span style="font-size:18px;font-weight:700;color:#f5c842;" id="myBalance">0.00</span>
+                    <span style="font-size:14px;font-weight:600;">💎 我的余额 (1元=10红钻)</span>
+                    <span style="font-size:18px;font-weight:700;color:#f5c842;" id="myBalance">≈ ¥0.00</span>
                 </div>
             </div>
 
@@ -1305,12 +1258,11 @@
 
 <script>
 // ============================================================
-//  第4部分：完整前端 JavaScript 代码
+//  配置
 // ============================================================
-
 const API_URL = '/api';
 let currentUser = null;
-let currentUserRole = null; // ✅ 新增：独立保存角色
+let currentUserRole = null;
 let token = localStorage.getItem('token');
 let announceImages = [];
 let userFilter = 'all';
@@ -1389,9 +1341,6 @@ async function apiRequest(url, options = {}) {
     }
 }
 
-// ============================================================
-//  补丁：模态框恢复简单版本（z-index 已提升到 99999）
-// ============================================================
 function showCustomModal(html) {
     document.getElementById('customModalContent').innerHTML = html;
     document.getElementById('customModal').classList.add('active');
@@ -1437,17 +1386,13 @@ function confirmAction(title, message, confirmText, callback) {
     `);
 }
 
+// ============================================================
+//  ⚠️ 问题2b 修复：updateHeaderDiamond 加 null 保护
+//  因为头部已删除，headerDiamond / headerUnreadMail 元素不存在
+// ============================================================
 function updateHeaderDiamond() {
-    if (!currentUser) {
-        document.getElementById('headerDiamond').textContent = '0';
-        document.getElementById('headerUnreadMail').textContent = '0';
-        return;
-    }
-    document.getElementById('headerDiamond').textContent = currentUser.diamond || 0;
-    apiRequest('/mails').then(mails => {
-        const unread = mails.filter(m => m.status === 'unread').length;
-        document.getElementById('headerUnreadMail').textContent = unread;
-    }).catch(() => {});
+    const el = document.getElementById('headerDiamond');
+    if (el) el.textContent = currentUser ? (currentUser.diamond || 0) : '0';
 }
 
 function formatTime(timeStr) {
@@ -2310,27 +2255,29 @@ async function doUploadAvatar() {
 }
 
 // ============================================================
-//  补丁：renderMyPage 修复版
+//  ⚠️ 优化：renderMyPage 余额显示改为 红钻 + ¥
 // ============================================================
 async function renderMyPage() {
     if (!currentUser) {
         document.getElementById('profileName').textContent = '未登录';
         document.getElementById('profileId').textContent = '用户ID：登录后查看';
-        document.getElementById('profileBalance').textContent = '0.00';
+        document.getElementById('profileBalance').textContent = '0 红钻';
         document.getElementById('profilePosts').textContent = '0';
         document.getElementById('profileCoupons').textContent = '0';
-        document.getElementById('myBalance').textContent = '0.00';
+        document.getElementById('myBalance').textContent = '≈ ¥0.00';
         document.getElementById('profileAvatarText').textContent = '?';
         renderMoreFunctions();
         return;
     }
     
-    // ✅ 先用 currentUser 立即填充基础信息（即使接口报错也显示）
+    // 先用 currentUser 立即填充基础信息
     document.getElementById('profileName').innerHTML = currentUser.username + ` <span class="level">LV${currentUser.level || 1}</span>`;
     document.getElementById('profileId').textContent = '用户ID：' + (currentUser.id || '--');
-    const balance = (currentUser.diamond || 0) / 10;
-    document.getElementById('profileBalance').textContent = balance.toFixed(2);
-    document.getElementById('myBalance').textContent = balance.toFixed(2);
+    
+    const diamond = currentUser.diamond || 0;
+    const yuan = diamond / 10;
+    document.getElementById('profileBalance').textContent = diamond + ' 红钻';
+    document.getElementById('myBalance').textContent = '≈ ¥' + yuan.toFixed(2);
     
     const avatarText = currentUser.username ? currentUser.username.substring(0, 2).toUpperCase() : 'QW';
     document.getElementById('profileAvatarText').textContent = avatarText;
@@ -2349,19 +2296,20 @@ async function renderMyPage() {
         document.getElementById('profileBannerImg').style.display = 'block';
     }
     
-    // ✅ 先渲染功能按钮（不依赖接口）
     renderMoreFunctions();
     
-    // 再尝试获取最新数据（失败也不影响显示）
+    // 再拉最新数据
     try {
         const user = await apiRequest('/me');
         currentUser = { ...currentUser, ...user };
         currentUserRole = user.role;
         document.getElementById('profileName').innerHTML = user.username + ` <span class="level">LV${user.level || 1}</span>`;
         document.getElementById('profileId').textContent = '用户ID：' + (user.id || '--');
-        const bal = (user.diamond || 0) / 10;
-        document.getElementById('profileBalance').textContent = bal.toFixed(2);
-        document.getElementById('myBalance').textContent = bal.toFixed(2);
+        
+        const d2 = user.diamond || 0;
+        const y2 = d2 / 10;
+        document.getElementById('profileBalance').textContent = d2 + ' 红钻';
+        document.getElementById('myBalance').textContent = '≈ ¥' + y2.toFixed(2);
         
         if (user.avatar) {
             document.getElementById('profileAvatarImg').src = user.avatar;
@@ -2431,9 +2379,6 @@ function renderMyOrders(orders) {
     container.innerHTML = html;
 }
 
-// ============================================================
-//  补丁：renderMoreFunctions（用 currentUserRole 判断）
-// ============================================================
 function renderMoreFunctions() {
     const container = document.getElementById('moreFunctions');
     if (!container) return;
@@ -2997,8 +2942,79 @@ async function doDeleteProduct(productId) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
-window.openEditProduct = function(productId) {
-    toast('编辑商品功能开发中，请使用后台管理', 'warning');
+// ============================================================
+//  ⚠️ 问题5 修复：openEditProduct 完整版 + 新增 doEditProduct
+// ============================================================
+window.openEditProduct = async function(productId) {
+    try {
+        const products = await apiRequest('/admin/products');
+        const p = products.find(x => x.id === productId);
+        if (!p) return toast('商品不存在', 'error');
+        
+        const categories = await apiRequest('/categories');
+        const mainCats = categories.filter(c => !c.parent_id);
+        const shops = await apiRequest('/shops') || [];
+        
+        let catOptions = '<option value="">-- 请选择系统分类 --</option>';
+        mainCats.forEach(c => {
+            catOptions += `<option value="${c.id}" ${p.category_id === c.id ? 'selected' : ''}>${c.name}</option>`;
+        });
+        
+        let shopOptions = '<option value="">-- 请选择店铺 --</option>';
+        shops.forEach(s => {
+            shopOptions += `<option value="${s.id}" ${p.shop_id === s.id ? 'selected' : ''}>${s.name}</option>`;
+        });
+        
+        showCustomModal(`
+            <h3><i class="fas fa-edit"></i> 编辑商品</h3>
+            <div class="form-group"><label>系统分类</label><select class="admin-form-control" id="editProdCategory">${catOptions}</select></div>
+            <div class="form-group"><label>所属店铺</label><select class="admin-form-control" id="editProdShop">${shopOptions}</select></div>
+            <div class="form-group"><label>标题</label><input class="admin-form-control" id="editProdTitle" value="${p.title || ''}" /></div>
+            <div class="form-group"><label>描述</label><textarea class="admin-form-control" id="editProdDesc" rows="2">${p.description || ''}</textarea></div>
+            <div class="form-group"><label>价格（红钻）</label><input class="admin-form-control" id="editProdPrice" type="number" value="${p.price || 0}" /></div>
+            <div class="form-group"><label>库存</label><input class="admin-form-control" id="editProdQuantity" type="number" value="${p.quantity || 1}" /></div>
+            <div class="form-group"><label>商品图片URL</label><input class="admin-form-control" id="editProdImage" value="${p.image || ''}" /></div>
+            <div class="form-group"><label>详情描述</label><textarea class="admin-form-control" id="editProdDetailDesc" rows="3">${p.detail_desc || ''}</textarea></div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doEditProduct('${productId}')">保存</button>
+            </div>
+        `);
+        document.getElementById('customModal').classList.add('active');
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+};
+
+window.doEditProduct = async function(productId) {
+    const category_id = document.getElementById('editProdCategory').value;
+    const shop_id = document.getElementById('editProdShop').value;
+    const title = document.getElementById('editProdTitle').value.trim();
+    const desc = document.getElementById('editProdDesc').value.trim();
+    const price = parseFloat(document.getElementById('editProdPrice').value);
+    const quantity = parseInt(document.getElementById('editProdQuantity').value) || 1;
+    const image = document.getElementById('editProdImage').value.trim();
+    const detail_desc = document.getElementById('editProdDetailDesc').value.trim();
+    
+    if (!title || !price) return toast('请填写完整信息', 'error');
+    
+    try {
+        await apiRequest('/admin/products/' + productId + '/edit', {
+            method: 'PUT',
+            body: JSON.stringify({ 
+                title, desc, price, quantity, image, 
+                category_id: category_id || null,
+                shop_id: shop_id || null,
+                detail_desc
+            })
+        });
+        closeCustomModal();
+        toast('✅ 商品已更新', 'success');
+        renderProductsList();
+        renderHomePage();
+    } catch (err) {
+        toast(err.message, 'error');
+    }
 };
 
 // ============================================================
@@ -4853,7 +4869,7 @@ async function doLogin() {
         token = data.token;
         localStorage.setItem('token', token);
         currentUser = data.user;
-        currentUserRole = data.user.role; // ✅ 新增
+        currentUserRole = data.user.role;
         closeCustomModal();
         afterLogin();
         toast('欢迎回来，' + username, 'success');
@@ -4916,8 +4932,9 @@ function doLogout() {
     localStorage.removeItem('token');
     token = null;
     currentUser = null;
-    currentUserRole = null; // ✅ 新增
-    document.getElementById('authStatusText').textContent = '未登录';
+    currentUserRole = null;
+    const st = document.getElementById('authStatusText');
+    if (st) st.textContent = '未登录';
     updateHeaderDiamond();
     if (window._badgeTimer) {
         clearInterval(window._badgeTimer);
@@ -4948,7 +4965,7 @@ async function afterLogin() {
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
     
-    // ✅ 从服务器获取最新用户信息（确保角色正确）
+    // 从服务器获取最新用户信息（确保角色正确）
     try {
         const user = await apiRequest('/me');
         currentUser = user;
@@ -4958,7 +4975,8 @@ async function afterLogin() {
         console.error('获取用户信息失败:', err);
     }
     
-    document.getElementById('authStatusText').textContent = currentUser.username;
+    const st = document.getElementById('authStatusText');
+    if (st && currentUser) st.textContent = currentUser.username;
     
     renderBottomNav();
     
@@ -5004,7 +5022,7 @@ async function doAuthLogin() {
         token = data.token;
         localStorage.setItem('token', token);
         currentUser = data.user;
-        currentUserRole = data.user.role; // ✅ 新增
+        currentUserRole = data.user.role;
         afterLogin();
         toast('欢迎回来，' + username, 'success');
     } catch (err) {
@@ -5043,9 +5061,8 @@ async function init() {
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
 
-    document.getElementById('authStatusText').textContent = '未登录';
-    document.getElementById('headerDiamond').textContent = '0';
-    document.getElementById('headerUnreadMail').textContent = '0';
+    const st = document.getElementById('authStatusText');
+    if (st) st.textContent = '未登录';
 
     renderBottomNav();
     renderHomePage();
@@ -5060,15 +5077,15 @@ async function init() {
         try {
             const user = await apiRequest('/me');
             currentUser = user;
-            currentUserRole = user.role; // ✅ 新增
-            document.getElementById('authStatusText').textContent = user.username;
+            currentUserRole = user.role;
+            if (st) st.textContent = user.username;
             afterLogin();
         } catch (err) {
             localStorage.removeItem('token');
             token = null;
             currentUser = null;
             currentUserRole = null;
-            document.getElementById('authStatusText').textContent = '未登录';
+            if (st) st.textContent = '未登录';
             renderBottomNav();
             renderHomePage();
             renderMyPage();
@@ -5150,6 +5167,7 @@ window.confirmUnshelf = confirmUnshelf;
 window.confirmReshelf = confirmReshelf;
 window.confirmDeleteProduct = confirmDeleteProduct;
 window.openEditProduct = openEditProduct;
+window.doEditProduct = doEditProduct;
 window.approveHandler = approveHandler;
 window.toggleUserBan = toggleUserBan;
 window.resetUserPassword = resetUserPassword;
@@ -5198,7 +5216,7 @@ window.renderSubBanners = renderSubBanners;
 window.renderSubIcons = renderSubIcons;
 
 console.log('✅ QW电竞护航平台 v6.0 完整版已加载');
-console.log('📌 已应用补丁：z-index 99999 + renderMyPage 兜底 + currentUserRole + 简单弹窗');
+console.log('📌 已应用：删除全局头部 + updateHeaderDiamond null保护 + renderMyPage红钻显示 + 编辑商品 + openEditProduct完整版');
 </script>
 </body>
 </html>
