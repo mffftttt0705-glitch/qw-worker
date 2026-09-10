@@ -546,19 +546,28 @@
         .toast {
             position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
             background: var(--toast-bg); padding: 12px 28px;
-            border-radius: 40px; z-index: 9999; box-shadow: var(--toast-shadow);
+            border-radius: 40px; z-index: 99999; box-shadow: var(--toast-shadow);
             border-left: 4px solid var(--toast-border); color: var(--toast-text);
-            font-size: 14px; display: none; max-width: 90%; text-align: center; max-width: 420px;
+            font-size: 14px; display: none; max-width: 90%; text-align: center;
         }
         .toast.show { display: block; animation: fadeUp 0.3s ease; }
         .toast.error { border-left-color: #ef4444; }
         .toast.warning { border-left-color: #f59e0b; }
         
+        /* ===== 补丁：模态框 z-index 提升到 99999 ===== */
         .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            justify-content: center; align-items: center; z-index: 999;
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
         }
         .modal-overlay.active { display: flex; }
         .modal-box {
@@ -750,7 +759,7 @@
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: rgba(0,0,0,0.6);
             backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            justify-content: center; align-items: center; z-index: 10000; padding: 20px;
+            justify-content: center; align-items: center; z-index: 100000; padding: 20px;
         }
         .announce-modal-overlay.active { display: flex; }
         .announce-modal-box {
@@ -947,7 +956,6 @@
                 <div class="brand-icon" id="brandIcon">QW</div>
                 <span class="brand-name" id="brandName">电竞 <small>· 护航</small></span>
             </div>
-            <!-- ===== 补丁1：已移除顶部多余元素 ===== -->
             <div class="header-right">
                 <div style="display:flex;align-items:center;gap:8px;">
                     <div class="diamond-display" onclick="openRecharge()">
@@ -1302,6 +1310,7 @@
 
 const API_URL = '/api';
 let currentUser = null;
+let currentUserRole = null; // ✅ 新增：独立保存角色
 let token = localStorage.getItem('token');
 let announceImages = [];
 let userFilter = 'all';
@@ -1381,37 +1390,15 @@ async function apiRequest(url, options = {}) {
 }
 
 // ============================================================
-//  补丁5：showCustomModal / closeCustomModal 优化
-//  弹窗优先显示在当前子页面内
+//  补丁：模态框恢复简单版本（z-index 已提升到 99999）
 // ============================================================
 function showCustomModal(html) {
-    // 优先弹窗到当前子页面，如果子页面激活则弹窗在子页面内
-    if (currentSubPage) {
-        const subPageEl = document.querySelector('.sub-page.active');
-        if (subPageEl) {
-            // 检查是否已存在内联弹窗
-            let inlineModal = subPageEl.querySelector('.inline-custom-modal');
-            if (!inlineModal) {
-                inlineModal = document.createElement('div');
-                inlineModal.className = 'modal-overlay inline-custom-modal';
-                inlineModal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);display:flex;justify-content:center;align-items:center;z-index:3000;';
-                subPageEl.appendChild(inlineModal);
-            }
-            inlineModal.innerHTML = `<div class="modal-box">${html}</div>`;
-            inlineModal.classList.add('active');
-            return;
-        }
-    }
-    // 默认全局弹窗
     document.getElementById('customModalContent').innerHTML = html;
     document.getElementById('customModal').classList.add('active');
 }
 
 function closeCustomModal() {
-    // 关闭全局弹窗
     document.getElementById('customModal').classList.remove('active');
-    // 关闭子页面内的弹窗
-    document.querySelectorAll('.sub-page .inline-custom-modal').forEach(el => el.classList.remove('active'));
 }
 
 function showImgPreview(src) {
@@ -1607,7 +1594,6 @@ function navigateTo(target) {
 
 // ============================================================
 //  子页面管理
-//  补丁5：openSubPage（与原来一致，保留兼容）
 // ============================================================
 function openSubPage(page) {
     const pageMap = {
@@ -1657,7 +1643,7 @@ function closeSubPage() {
 }
 
 // ============================================================
-//  补丁3：店铺详情（修复 - 可进入店铺）
+//  店铺详情
 // ============================================================
 function openShopDetail(shopId) {
     currentShopId = shopId;
@@ -2041,7 +2027,6 @@ async function showBuyWithHandler(productId) {
                 <button class="btn btn-success" onclick="doBuyWithHandler('${productId}')">确认购买</button>
             </div>
         `);
-        document.getElementById('customModal').classList.add('active');
     } catch (err) {
         toast(err.message, 'error');
     }
@@ -2155,7 +2140,6 @@ function showCreatePost() {
             <button class="btn btn-primary" onclick="submitPost()">发布</button>
         </div>
     `);
-    document.getElementById('customModal').classList.add('active');
 }
 
 async function submitPost() {
@@ -2305,7 +2289,6 @@ function uploadAvatar() {
             img.style.display = 'none';
         }
     });
-    document.getElementById('customModal').classList.add('active');
 }
 
 async function doUploadAvatar() {
@@ -2327,7 +2310,7 @@ async function doUploadAvatar() {
 }
 
 // ============================================================
-//  "我的"页面
+//  补丁：renderMyPage 修复版
 // ============================================================
 async function renderMyPage() {
     if (!currentUser) {
@@ -2342,41 +2325,66 @@ async function renderMyPage() {
         return;
     }
     
+    // ✅ 先用 currentUser 立即填充基础信息（即使接口报错也显示）
+    document.getElementById('profileName').innerHTML = currentUser.username + ` <span class="level">LV${currentUser.level || 1}</span>`;
+    document.getElementById('profileId').textContent = '用户ID：' + (currentUser.id || '--');
+    const balance = (currentUser.diamond || 0) / 10;
+    document.getElementById('profileBalance').textContent = balance.toFixed(2);
+    document.getElementById('myBalance').textContent = balance.toFixed(2);
+    
+    const avatarText = currentUser.username ? currentUser.username.substring(0, 2).toUpperCase() : 'QW';
+    document.getElementById('profileAvatarText').textContent = avatarText;
+    
+    if (currentUser.avatar) {
+        document.getElementById('profileAvatarImg').src = currentUser.avatar;
+        document.getElementById('profileAvatarImg').style.display = 'block';
+        document.getElementById('profileAvatarText').style.display = 'none';
+    } else {
+        document.getElementById('profileAvatarImg').style.display = 'none';
+        document.getElementById('profileAvatarText').style.display = 'block';
+    }
+    
+    if (currentUser.banner) {
+        document.getElementById('profileBannerImg').src = currentUser.banner;
+        document.getElementById('profileBannerImg').style.display = 'block';
+    }
+    
+    // ✅ 先渲染功能按钮（不依赖接口）
+    renderMoreFunctions();
+    
+    // 再尝试获取最新数据（失败也不影响显示）
     try {
         const user = await apiRequest('/me');
-        const orders = await apiRequest('/orders/my') || [];
-        const posts = await apiRequest('/posts?user_id=' + currentUser.id) || [];
-        
+        currentUser = { ...currentUser, ...user };
+        currentUserRole = user.role;
         document.getElementById('profileName').innerHTML = user.username + ` <span class="level">LV${user.level || 1}</span>`;
         document.getElementById('profileId').textContent = '用户ID：' + (user.id || '--');
-        const balance = (user.diamond || 0) / 10;
-        document.getElementById('profileBalance').textContent = balance.toFixed(2);
-        document.getElementById('profilePosts').textContent = posts.length;
-        document.getElementById('profileCoupons').textContent = '0';
-        document.getElementById('myBalance').textContent = balance.toFixed(2);
-        
-        const avatarText = user.username ? user.username.substring(0, 2).toUpperCase() : 'QW';
-        document.getElementById('profileAvatarText').textContent = avatarText;
+        const bal = (user.diamond || 0) / 10;
+        document.getElementById('profileBalance').textContent = bal.toFixed(2);
+        document.getElementById('myBalance').textContent = bal.toFixed(2);
         
         if (user.avatar) {
             document.getElementById('profileAvatarImg').src = user.avatar;
             document.getElementById('profileAvatarImg').style.display = 'block';
             document.getElementById('profileAvatarText').style.display = 'none';
-        } else {
-            document.getElementById('profileAvatarImg').style.display = 'none';
-            document.getElementById('profileAvatarText').style.display = 'block';
         }
-        
         if (user.banner) {
             document.getElementById('profileBannerImg').src = user.banner;
             document.getElementById('profileBannerImg').style.display = 'block';
         }
-        
-        renderMyOrders(orders);
-        renderMoreFunctions();
     } catch (err) {
-        console.error(err);
+        console.error('获取用户信息失败:', err);
     }
+    
+    try {
+        const orders = await apiRequest('/orders/my');
+        renderMyOrders(orders || []);
+    } catch (err) { console.error('订单加载失败:', err); }
+    
+    try {
+        const posts = await apiRequest('/posts?user_id=' + currentUser.id);
+        document.getElementById('profilePosts').textContent = (posts || []).length;
+    } catch (err) { console.error('帖子加载失败:', err); }
 }
 
 function filterMyOrders(filter) {
@@ -2424,13 +2432,13 @@ function renderMyOrders(orders) {
 }
 
 // ============================================================
-//  补丁2：修复管理员功能列表
+//  补丁：renderMoreFunctions（用 currentUserRole 判断）
 // ============================================================
 function renderMoreFunctions() {
     const container = document.getElementById('moreFunctions');
     if (!container) return;
     
-    const role = currentUser?.role;
+    const role = currentUserRole || currentUser?.role;
     let items = [];
     
     if (role === 'admin') {
@@ -2495,7 +2503,7 @@ function handleProfileClick() {
 //  订单/打手页面
 // ============================================================
 async function renderOrdersPage() {
-    const role = currentUser?.role;
+    const role = currentUserRole || currentUser?.role;
     const title = document.getElementById('orderPageTitle');
     const handlerInfo = document.getElementById('handlerInfo');
     
@@ -2531,7 +2539,7 @@ async function renderOrders() {
             return;
         }
         let html = '';
-        const role = currentUser?.role;
+        const role = currentUserRole || currentUser?.role;
         for (const o of orders) {
             let actions = '';
             let shouldShow = false;
@@ -2718,19 +2726,20 @@ async function renderSubOrders() {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><p>暂无订单</p></div>';
             return;
         }
+        const role = currentUserRole || currentUser?.role;
         let html = '';
         for (const o of orders) {
             let actions = '';
-            if (o.status === 'review' && (currentUser.role === 'boss' || currentUser.role === 'service')) {
+            if (o.status === 'review' && (role === 'boss' || role === 'service')) {
                 actions += `<button class="btn btn-success btn-xs" onclick="confirmBossComplete('${o.id}')">确认完成</button>`;
             }
-            if ((o.status === 'ongoing' || o.status === 'pending') && (currentUser.role === 'boss' || currentUser.role === 'service')) {
+            if ((o.status === 'ongoing' || o.status === 'pending') && (role === 'boss' || role === 'service')) {
                 actions += `<button class="btn btn-warning btn-xs" onclick="requestRefund('${o.id}')">申请退款</button>`;
             }
-            if (o.status === 'pending' && currentUser.role === 'handler') {
+            if (o.status === 'pending' && role === 'handler') {
                 actions += `<button class="btn btn-primary btn-xs" onclick="confirmTake('${o.id}')">接单</button>`;
             }
-            if (o.status === 'ongoing' && currentUser.role === 'handler') {
+            if (o.status === 'ongoing' && role === 'handler') {
                 actions += `<button class="btn btn-warning btn-xs" onclick="confirmSubmitComplete('${o.id}')">提交完成</button>`;
             }
             actions += `<button class="btn btn-primary btn-xs" onclick="openChat('${o.id}','${o.title}','order')">💬</button>`;
@@ -3370,7 +3379,6 @@ async function editShop(shopId) {
                 <button class="btn btn-success" onclick="doEditShop('${shopId}')">保存</button>
             </div>
         `);
-        document.getElementById('customModal').classList.add('active');
     } catch (err) {
         toast(err.message, 'error');
     }
@@ -4197,7 +4205,6 @@ async function editCategory(categoryId) {
                 <button class="btn btn-success" onclick="doEditCategory('${categoryId}')">保存</button>
             </div>
         `);
-        document.getElementById('customModal').classList.add('active');
     } catch (err) {
         toast(err.message, 'error');
     }
@@ -4668,7 +4675,6 @@ function showAddContact() {
                     <button class="btn btn-success" onclick="doAddContact()">添加</button>
                 </div>
             `);
-            document.getElementById('customModal').classList.add('active');
         });
     }).catch(err => toast(err.message, 'error'));
 }
@@ -4737,7 +4743,6 @@ window.openRecharge = function() {
         </div>
     `;
     showCustomModal(html);
-    document.getElementById('customModal').classList.add('active');
     document.getElementById('rechargeAmount').addEventListener('input', function() {
         const amount = parseFloat(this.value) || 0;
         document.getElementById('rechargePreview').textContent = Math.floor(amount * 10) + ' 红钻';
@@ -4832,7 +4837,6 @@ function showLoginModal() {
             还没有账号？<button class="btn btn-outline btn-sm" onclick="closeCustomModal();showRegisterModal()">去注册</button>
         </div>
     `);
-    document.getElementById('customModal').classList.add('active');
 }
 
 async function doLogin() {
@@ -4849,6 +4853,7 @@ async function doLogin() {
         token = data.token;
         localStorage.setItem('token', token);
         currentUser = data.user;
+        currentUserRole = data.user.role; // ✅ 新增
         closeCustomModal();
         afterLogin();
         toast('欢迎回来，' + username, 'success');
@@ -4879,7 +4884,6 @@ function showRegisterModal() {
             已有账号？<button class="btn btn-outline btn-sm" onclick="closeCustomModal();showLoginModal()">去登录</button>
         </div>
     `);
-    document.getElementById('customModal').classList.add('active');
 }
 
 async function doRegister() {
@@ -4912,6 +4916,7 @@ function doLogout() {
     localStorage.removeItem('token');
     token = null;
     currentUser = null;
+    currentUserRole = null; // ✅ 新增
     document.getElementById('authStatusText').textContent = '未登录';
     updateHeaderDiamond();
     if (window._badgeTimer) {
@@ -4939,9 +4944,20 @@ function logout() {
 // ============================================================
 //  认证模块（登录后）
 // ============================================================
-function afterLogin() {
+async function afterLogin() {
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
+    
+    // ✅ 从服务器获取最新用户信息（确保角色正确）
+    try {
+        const user = await apiRequest('/me');
+        currentUser = user;
+        currentUserRole = user.role;
+        console.log('当前用户角色:', currentUserRole);
+    } catch (err) {
+        console.error('获取用户信息失败:', err);
+    }
+    
     document.getElementById('authStatusText').textContent = currentUser.username;
     
     renderBottomNav();
@@ -4988,6 +5004,7 @@ async function doAuthLogin() {
         token = data.token;
         localStorage.setItem('token', token);
         currentUser = data.user;
+        currentUserRole = data.user.role; // ✅ 新增
         afterLogin();
         toast('欢迎回来，' + username, 'success');
     } catch (err) {
@@ -5043,12 +5060,14 @@ async function init() {
         try {
             const user = await apiRequest('/me');
             currentUser = user;
+            currentUserRole = user.role; // ✅ 新增
             document.getElementById('authStatusText').textContent = user.username;
             afterLogin();
         } catch (err) {
             localStorage.removeItem('token');
             token = null;
             currentUser = null;
+            currentUserRole = null;
             document.getElementById('authStatusText').textContent = '未登录';
             renderBottomNav();
             renderHomePage();
@@ -5179,7 +5198,7 @@ window.renderSubBanners = renderSubBanners;
 window.renderSubIcons = renderSubIcons;
 
 console.log('✅ QW电竞护航平台 v6.0 完整版已加载');
-console.log('📌 所有功能已优化完成 - 店铺可进入、帖子可发布、顶部栏已清理');
+console.log('📌 已应用补丁：z-index 99999 + renderMyPage 兜底 + currentUserRole + 简单弹窗');
 </script>
 </body>
 </html>
