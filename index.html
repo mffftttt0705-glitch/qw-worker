@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -657,7 +658,7 @@
 <div id="toast" class="toast"></div>
 <script>
 // ============================================================
-//  第2部分：JavaScript 完整配置 + 工具函数 + 导航 + 商城 + 分类 + 帖子 + 购买
+//  第2部分：JavaScript 完整配置 + 工具函数 + API + 导航 + 子页面管理 + 广告 + 商城 + 分类 + 商品详情 + 购买 + 帖子 + 头像
 // ============================================================
 
 var API_URL = '/api';
@@ -1563,10 +1564,9 @@ function handleProfileClick() {
         openSubPage('account');
     }
 }
-
 <script>
 // ============================================================
-//  第3部分：订单系统 + 打手功能 + 子页面渲染完整版
+//  第3部分：订单系统 + 打手功能 + 子页面渲染（用户管理 + 商品管理 + 店铺管理）
 // ============================================================
 
 async function renderOrdersPage() {
@@ -2260,6 +2260,11 @@ async function doDeleteShop(shopId) {
         toast(err.message, 'error');
     }
 }
+</script>
+<script>
+// ============================================================
+//  第4部分：子页面渲染 - 充值管理 + 公告管理 + 提现管理 + 账户设置 + 客服系统 + 派单系统
+// ============================================================
 
 async function renderSubRecharges() {
     var container = document.getElementById('subRechargesContent');
@@ -2462,11 +2467,7 @@ async function doDeleteWithdraw(withdrawId) {
         toast('已删除', 'success');
         renderSubWithdrawals();
     } catch (err) { toast(err.message, 'error'); }
-｝
-<script>
-// ============================================================
-//  第4部分：客服系统 + 派单系统 + 分类管理 + 广告管理 + 图标管理 + 消息系统 + 聊天 + 认证 + 初始化
-// ============================================================
+}
 
 function renderSubAccount() {
     var container = document.getElementById('subAccountContent');
@@ -2735,6 +2736,11 @@ async function doDispatcherConfirmOrder(orderId) {
         updateHeaderDiamond();
     } catch (err) { toast(err.message, 'error'); }
 }
+</script>
+<script>
+// ============================================================
+//  第5部分：分类管理 + 广告管理 + 图标管理 + 消息系统 + 全屏聊天 + 充值 + 邮件 + 认证 + 初始化 + 结尾
+// ============================================================
 
 async function renderSubCategories() {
     var container = document.getElementById('subCategoriesContent');
