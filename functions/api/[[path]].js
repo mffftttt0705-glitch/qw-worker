@@ -193,6 +193,9 @@ async function handleAdminDeleteUser(env, targetUserId) {
   return jsonResponse({ success: true, message: '用户已删除' });
 }
 
+// ============================================================
+//  ✅ 补丁：修改用户ID（关闭外键约束 + 批量更新关联表）
+// ============================================================
 async function handleChangeUserId(env, authHeader, body) {
   const adminId = verifyAndGetUserId(authHeader);
   if (!adminId) return errorResponse('请先登录', 401);
@@ -209,7 +212,26 @@ async function handleChangeUserId(env, authHeader, body) {
     return errorResponse('该ID已被使用');
   }
   
-  await runDB(env, 'UPDATE users SET id = ? WHERE id = ?', [newId, targetUserId]);
+  // 临时关闭外键检查，批量更新所有关联表
+  await runDB(env, 'PRAGMA foreign_keys = OFF');
+  try {
+    await runDB(env, 'UPDATE users SET id = ? WHERE id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE orders SET boss_id = ? WHERE boss_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE orders SET handler_id = ? WHERE handler_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE messages SET sender_id = ? WHERE sender_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE messages SET receiver_id = ? WHERE receiver_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE message_contacts SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE message_contacts SET contact_id = ? WHERE contact_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE posts SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE post_comments SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE post_likes SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE user_avatars SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE recharge_requests SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
+    await runDB(env, 'UPDATE withdraw_requests SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
+  } finally {
+    await runDB(env, 'PRAGMA foreign_keys = ON');
+  }
+  
   return jsonResponse({ success: true, message: '用户ID已修改' });
 }
 
@@ -258,7 +280,7 @@ async function handleSetBanner(env, authHeader, body) {
 }
 
 // ============================================================
-//  帖子系统（修复版 - 不需要 title）
+//  帖子系统（兼容旧表结构）
 // ============================================================
 async function handleCreatePost(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -270,10 +292,22 @@ async function handleCreatePost(env, authHeader, body) {
   const id = generateId();
   const imagesJson = Array.isArray(images) ? JSON.stringify(images) : '[]';
   
-  await runDB(env,
-    `INSERT INTO posts (id, user_id, content, images, created_at) VALUES (?, ?, ?, ?, ?)`,
-    [id, userId, content.trim(), imagesJson, new Date().toISOString()]
-  );
+  try {
+    await runDB(env,
+      `INSERT INTO posts (id, user_id, content, images, created_at) VALUES (?, ?, ?, ?, ?)`,
+      [id, userId, content.trim(), imagesJson, new Date().toISOString()]
+    );
+  } catch (err) {
+    // 如果表结构有 title NOT NULL 约束，尝试兼容旧结构
+    if (err.message && err.message.includes('title')) {
+      await runDB(env,
+        `INSERT INTO posts (id, user_id, content, images, title, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+        [id, userId, content.trim(), imagesJson, content.substring(0, 30), new Date().toISOString()]
+      );
+    } else {
+      throw err;
+    }
+  }
   
   return jsonResponse({ success: true, postId: id, message: '帖子发布成功' });
 }
@@ -1813,7 +1847,6 @@ export async function onRequest(context) {
         // 用户管理
         if (path === '/api/admin/users' && method === 'GET') return await handleAdminGetUsers(env);
         if (path === '/api/admin/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
-        if (path === '/api/admin/shop-id' && method === 'PUT') return await handleChangeShopId(env, authHeader, body);
         if (path === '/api/admin/gift' && method === 'POST') return await handleAdminGiftDiamond(env, body);
         if (path.startsWith('/api/admin/users/')) {
           const targetUserId = path.replace('/api/admin/users/', '');
