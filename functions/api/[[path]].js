@@ -1,6 +1,7 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (修复版)
+//  QW电竞 - 完整后端 API (v6.1)
 //  部署：Cloudflare Pages Functions + D1 数据库
+//  更新：店铺分类支持 image_url；编辑商品严格校验子分类
 // ============================================================
 
 function generateId() {
@@ -76,9 +77,9 @@ async function handleRegister(env, body) {
     [userId, username, password, role || 'boss', userStatus, '']
   );
 
-  return jsonResponse({ 
-    message: (role === 'handler' || role === 'dispatcher' || role === 'service') ? '注册成功，请等待管理员审核' : '注册成功', 
-    id: userId 
+  return jsonResponse({
+    message: (role === 'handler' || role === 'dispatcher' || role === 'service') ? '注册成功，请等待管理员审核' : '注册成功',
+    id: userId
   });
 }
 
@@ -91,7 +92,7 @@ async function handleLogin(env, body) {
   if (!user) return errorResponse('用户不存在');
   if (user.password !== password) return errorResponse('密码错误');
   if (user.status === 'banned') return errorResponse('账号已被封禁');
-  
+
   if ((user.role === 'handler' || user.role === 'dispatcher' || user.role === 'service') && user.status !== 'active') {
     return errorResponse('账号待审核，请等待管理员审核通过后再登录');
   }
@@ -119,10 +120,10 @@ async function handleGetMe(env, authHeader) {
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
-  
+
   const avatarResult = await queryDB(env, 'SELECT avatar_url FROM user_avatars WHERE user_id = ? ORDER BY created_at DESC LIMIT 1', [userId]);
   const avatar = avatarResult.results?.[0]?.avatar_url || user.avatar || '';
-  
+
   const { password, ...rest } = user;
   rest.avatar = avatar;
   return jsonResponse(rest);
@@ -133,7 +134,7 @@ async function handleGetMe(env, authHeader) {
 // ============================================================
 async function handleAdminGetUsers(env) {
   try {
-    const result = await queryDB(env, 
+    const result = await queryDB(env,
       'SELECT id, username, role, diamond, balance, status, created_at, banner, avatar, club_prefix, level FROM users ORDER BY created_at DESC'
     );
     return jsonResponse(result.results || []);
@@ -201,18 +202,17 @@ async function handleChangeUserId(env, authHeader, body) {
   if (!adminId) return errorResponse('请先登录', 401);
   const admin = await getUserById(env, adminId);
   if (admin.role !== 'admin') return errorResponse('权限不足', 403);
-  
+
   const { targetUserId, newId } = body;
   if (!targetUserId || !newId) return errorResponse('请提供用户ID和新ID');
   if (!/^\d+$/.test(newId)) return errorResponse('ID必须为数字');
   if (newId.length < 6) return errorResponse('ID至少6位');
-  
+
   const existing = await queryDB(env, 'SELECT * FROM users WHERE id = ?', [newId]);
   if (existing.results && existing.results.length > 0) {
     return errorResponse('该ID已被使用');
   }
-  
-  // 临时关闭外键检查，批量更新所有关联表
+
   await runDB(env, 'PRAGMA foreign_keys = OFF');
   try {
     await runDB(env, 'UPDATE users SET id = ? WHERE id = ?', [newId, targetUserId]);
@@ -231,7 +231,7 @@ async function handleChangeUserId(env, authHeader, body) {
   } finally {
     await runDB(env, 'PRAGMA foreign_keys = ON');
   }
-  
+
   return jsonResponse({ success: true, message: '用户ID已修改' });
 }
 
@@ -241,17 +241,17 @@ async function handleChangeUserId(env, authHeader, body) {
 async function handleUploadAvatar(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
-  
+
   const { avatar_url } = body;
   if (!avatar_url) return errorResponse('请提供头像URL');
-  
+
   await runDB(env,
     'INSERT INTO user_avatars (id, user_id, avatar_url, created_at) VALUES (?, ?, ?, ?)',
     [generateId(), userId, avatar_url, new Date().toISOString()]
   );
-  
+
   await runDB(env, 'UPDATE users SET avatar = ? WHERE id = ?', [avatar_url, userId]);
-  
+
   return jsonResponse({ success: true, avatar_url, message: '头像已更新' });
 }
 
@@ -280,34 +280,33 @@ async function handleSetBanner(env, authHeader, body) {
 }
 
 // ============================================================
-//  帖子系统（兼容 updated_at NOT NULL）
+//  帖子系统
 // ============================================================
 async function handleCreatePost(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
-  
+
   const { content, images } = body;
   if (!content || !content.trim()) return errorResponse('请输入内容');
-  
+
   const id = generateId();
   const imagesJson = Array.isArray(images) ? JSON.stringify(images) : '[]';
   const now = new Date().toISOString();
-  
+
   try {
     await runDB(env,
-      `INSERT INTO posts (id, user_id, content, images, likes, comments_count, status, created_at, updated_at) 
+      `INSERT INTO posts (id, user_id, content, images, likes, comments_count, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, 0, 0, 'active', ?, ?)`,
       [id, userId, content.trim(), imagesJson, now, now]
     );
   } catch (err) {
-    // 兼容没有 updated_at 的表
     await runDB(env,
-      `INSERT INTO posts (id, user_id, content, images, likes, comments_count, status, created_at) 
+      `INSERT INTO posts (id, user_id, content, images, likes, comments_count, status, created_at)
        VALUES (?, ?, ?, ?, 0, 0, 'active', ?)`,
       [id, userId, content.trim(), imagesJson, now]
     );
   }
-  
+
   return jsonResponse({ success: true, postId: id, message: '帖子发布成功' });
 }
 
@@ -322,14 +321,14 @@ async function handleGetPosts(env, url) {
     WHERE p.status = 'active'
   `;
   const params = [];
-  
+
   if (userId) {
     sql += ' AND p.user_id = ?';
     params.push(userId);
   }
-  
+
   sql += ' ORDER BY p.created_at DESC';
-  
+
   const result = await queryDB(env, sql, params);
   return jsonResponse(result.results || []);
 }
@@ -343,10 +342,10 @@ async function handleGetPostDetail(env, postId) {
     LEFT JOIN users u ON p.user_id = u.id
     WHERE p.id = ? AND p.status = 'active'
   `, [postId]);
-  
+
   const post = result.results?.[0] || null;
   if (!post) return errorResponse('帖子不存在', 404);
-  
+
   const commentsResult = await queryDB(env, `
     SELECT c.*, u.username, u.avatar
     FROM post_comments c
@@ -354,7 +353,7 @@ async function handleGetPostDetail(env, postId) {
     WHERE c.post_id = ?
     ORDER BY c.created_at ASC
   `, [postId]);
-  
+
   post.comments = commentsResult.results || [];
   return jsonResponse(post);
 }
@@ -362,7 +361,7 @@ async function handleGetPostDetail(env, postId) {
 async function handleLikePost(env, authHeader, postId) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
-  
+
   const check = await queryDB(env, 'SELECT * FROM post_likes WHERE post_id = ? AND user_id = ?', [postId, userId]);
   if (check.results && check.results.length > 0) {
     await runDB(env, 'DELETE FROM post_likes WHERE post_id = ? AND user_id = ?', [postId, userId]);
@@ -379,34 +378,34 @@ async function handleLikePost(env, authHeader, postId) {
 async function handleCommentPost(env, authHeader, postId, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
-  
+
   const { content } = body;
   if (!content || !content.trim()) return errorResponse('请输入评论内容');
-  
+
   const id = generateId();
   await runDB(env,
     'INSERT INTO post_comments (id, post_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)',
     [id, postId, userId, content.trim(), new Date().toISOString()]
   );
-  
+
   await runDB(env, 'UPDATE posts SET comments_count = comments_count + 1 WHERE id = ?', [postId]);
-  
+
   return jsonResponse({ success: true, commentId: id, message: '评论成功' });
 }
 
 async function handleDeletePost(env, authHeader, postId) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
-  
+
   const result = await queryDB(env, 'SELECT * FROM posts WHERE id = ?', [postId]);
   const post = result.results?.[0] || null;
   if (!post) return errorResponse('帖子不存在', 404);
-  
+
   if (post.user_id !== userId) {
     const user = await getUserById(env, userId);
     if (user.role !== 'admin') return errorResponse('无权删除', 403);
   }
-  
+
   await runDB(env, 'UPDATE posts SET status = "deleted" WHERE id = ?', [postId]);
   return jsonResponse({ success: true, message: '已删除' });
 }
@@ -467,8 +466,8 @@ async function handleGetProducts(env, url) {
   const shop = url?.searchParams?.get('shop');
   const shopCategory = url?.searchParams?.get('shop_category');
   let sql = `SELECT p.*, c.name as category_name, s.name as shop_name, sc.name as shop_category_name
-             FROM products p 
-             LEFT JOIN categories c ON p.category_id = c.id 
+             FROM products p
+             LEFT JOIN categories c ON p.category_id = c.id
              LEFT JOIN shops s ON p.shop_id = s.id
              LEFT JOIN shop_categories sc ON p.shop_category_id = sc.id
              WHERE p.hidden = 0`;
@@ -493,8 +492,8 @@ async function handleGetProducts(env, url) {
 async function handleGetProductDetail(env, productId) {
   const result = await queryDB(env,
     `SELECT p.*, c.name as category_name, s.name as shop_name, sc.name as shop_category_name
-     FROM products p 
-     LEFT JOIN categories c ON p.category_id = c.id 
+     FROM products p
+     LEFT JOIN categories c ON p.category_id = c.id
      LEFT JOIN shops s ON p.shop_id = s.id
      LEFT JOIN shop_categories sc ON p.shop_category_id = sc.id
      WHERE p.id = ?`,
@@ -516,8 +515,8 @@ async function handleGetProductDetail(env, productId) {
 async function handleAdminGetProducts(env) {
   const result = await queryDB(env,
     `SELECT p.*, c.name as category_name, s.name as shop_name, sc.name as shop_category_name
-     FROM products p 
-     LEFT JOIN categories c ON p.category_id = c.id 
+     FROM products p
+     LEFT JOIN categories c ON p.category_id = c.id
      LEFT JOIN shops s ON p.shop_id = s.id
      LEFT JOIN shop_categories sc ON p.shop_category_id = sc.id
      ORDER BY p.created_at DESC`
@@ -534,7 +533,7 @@ async function handleAdminCreateProduct(env, body) {
   const id = generateId();
   const detailImagesJson = Array.isArray(detail_images) ? JSON.stringify(detail_images) : (detail_images || '[]');
   await runDB(env,
-    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, detail_images, detail_desc, category_id, shop_id, shop_category_id) 
+    `INSERT INTO products (id, game, title, description, price, quantity, sold, hidden, image, detail_images, detail_desc, category_id, shop_id, shop_category_id)
      VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?)`,
     [id, game || '暗区突围', title, desc || '', parseFloat(price), parseInt(quantity) || 1, image || '', detailImagesJson, detail_desc || '', category_id, shop_id, shop_category_id]
   );
@@ -612,17 +611,17 @@ async function handleCreateShop(env, authHeader, body) {
   if (user.role !== 'admin') {
     return errorResponse('只有管理员可创建店铺', 403);
   }
-  
+
   const { name, description, logo, banner, category_id, is_self, is_recommend } = body;
   if (!name) return errorResponse('请输入店铺名称');
   if (!category_id) return errorResponse('请选择主分类');
-  
+
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM shops');
   const count = countResult.results?.[0]?.count || 0;
   const shopId = 'a' + String(100000 + count + 1);
-  
+
   await runDB(env,
-    `INSERT INTO shops (id, owner_id, name, description, logo, banner, category_id, status, rating, sales, is_self, is_recommend, follow_count, created_at) 
+    `INSERT INTO shops (id, owner_id, name, description, logo, banner, category_id, status, rating, sales, is_self, is_recommend, follow_count, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, 'active', '4.9', 0, ?, ?, 0, ?)`,
     [shopId, userId, name, description || '', logo || '', banner || '', category_id, is_self ? 1 : 0, is_recommend ? 1 : 0, new Date().toISOString()]
   );
@@ -637,10 +636,10 @@ async function handleUpdateShop(env, authHeader, shopId, body) {
   if (user.role !== 'admin') {
     return errorResponse('只有管理员可编辑店铺', 403);
   }
-  
+
   const { name, description, logo, banner, category_id, is_self, is_recommend } = body;
   if (!name) return errorResponse('请输入店铺名称');
-  
+
   await runDB(env,
     `UPDATE shops SET name = ?, description = ?, logo = ?, banner = ?, category_id = ?, is_self = ?, is_recommend = ? WHERE id = ?`,
     [name, description || '', logo || '', banner || '', category_id || null, is_self ? 1 : 0, is_recommend ? 1 : 0, shopId]
@@ -656,7 +655,7 @@ async function handleToggleShop(env, authHeader, shopId) {
   if (user.role !== 'admin') {
     return errorResponse('只有管理员可操作', 403);
   }
-  
+
   const result = await queryDB(env, 'SELECT * FROM shops WHERE id = ?', [shopId]);
   if (!result.results || result.results.length === 0) {
     return errorResponse('店铺不存在', 404);
@@ -675,12 +674,12 @@ async function handleDeleteShop(env, authHeader, shopId) {
   if (user.role !== 'admin') {
     return errorResponse('只有管理员可删除店铺', 403);
   }
-  
+
   const check = await queryDB(env, 'SELECT COUNT(*) as count FROM products WHERE shop_id = ?', [shopId]);
   if (check.results && check.results[0] && check.results[0].count > 0) {
     return errorResponse('该店铺下还有商品，请先移除商品', 400);
   }
-  
+
   await runDB(env, 'DELETE FROM shops WHERE id = ?', [shopId]);
   return jsonResponse({ success: true, message: '店铺已删除' });
 }
@@ -699,8 +698,8 @@ async function handleGetShopDetail(env, shopId) {
 async function handleGetShopProducts(env, shopId) {
   const result = await queryDB(env,
     `SELECT p.*, c.name as category_name, sc.name as shop_category_name
-     FROM products p 
-     LEFT JOIN categories c ON p.category_id = c.id 
+     FROM products p
+     LEFT JOIN categories c ON p.category_id = c.id
      LEFT JOIN shop_categories sc ON p.shop_category_id = sc.id
      WHERE p.shop_id = ? AND p.hidden = 0
      ORDER BY p.created_at DESC`,
@@ -710,7 +709,7 @@ async function handleGetShopProducts(env, shopId) {
 }
 
 // ============================================================
-//  店铺分类管理
+//  店铺分类管理（支持 image_url）
 // ============================================================
 async function handleGetShopCategories(env, shopId) {
   const result = await queryDB(env,
@@ -728,15 +727,15 @@ async function handleCreateShopCategory(env, authHeader, body) {
   if (user.role !== 'admin') {
     return errorResponse('只有管理员可操作', 403);
   }
-  
-  const { shop_id, name } = body;
+
+  const { shop_id, name, image_url } = body;
   if (!shop_id) return errorResponse('请选择店铺');
   if (!name) return errorResponse('请输入分类名称');
-  
+
   const id = generateId();
   await runDB(env,
-    'INSERT INTO shop_categories (id, shop_id, name, sort_order, created_at) VALUES (?, ?, ?, 0, ?)',
-    [id, shop_id, name, new Date().toISOString()]
+    'INSERT INTO shop_categories (id, shop_id, name, image_url, sort_order, created_at) VALUES (?, ?, ?, ?, 0, ?)',
+    [id, shop_id, name, image_url || '', new Date().toISOString()]
   );
   return jsonResponse({ success: true, id, message: '店铺分类创建成功' });
 }
@@ -748,7 +747,7 @@ async function handleDeleteShopCategory(env, authHeader, categoryId) {
   if (user.role !== 'admin') {
     return errorResponse('只有管理员可操作', 403);
   }
-  
+
   await runDB(env, 'DELETE FROM shop_categories WHERE id = ?', [categoryId]);
   return jsonResponse({ success: true, message: '店铺分类已删除' });
 }
@@ -759,7 +758,7 @@ async function handleDeleteShopCategory(env, authHeader, categoryId) {
 async function handleFollowShop(env, authHeader, shopId) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
-  
+
   const check = await queryDB(env, 'SELECT * FROM shop_follows WHERE user_id = ? AND shop_id = ?', [userId, shopId]);
   if (check.results && check.results.length > 0) {
     await runDB(env, 'DELETE FROM shop_follows WHERE user_id = ? AND shop_id = ?', [userId, shopId]);
@@ -800,9 +799,9 @@ async function handleBuyProduct(env, authHeader, body) {
   await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [diamondCost, userId]);
   const orderId = generateId();
   await runDB(env,
-    `INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages, handler_id) 
+    `INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages, handler_id)
      VALUES (?, ?, ?, "pending", ?, ?, ?, ?, ?, ?)`,
-    [orderId, productId, userId, product.price, product.game, product.title, product.desc || '', 
+    [orderId, productId, userId, product.price, product.game, product.title, product.desc || '',
      JSON.stringify([{ sender: 'system', content: '🎉 订单已创建', time: new Date().toISOString() }]),
      assignedHandlerId || null]
   );
@@ -954,7 +953,7 @@ async function handleDispatcherPublish(env, authHeader, body) {
     }
   }
   await runDB(env,
-    `INSERT INTO orders (id, boss_id, handler_id, status, price, game, title, description, messages, start_time) 
+    `INSERT INTO orders (id, boss_id, handler_id, status, price, game, title, description, messages, start_time)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [orderId, userId, handlerId, status, parseFloat(price), game || '暗区突围', title, desc || '', messages, handlerId ? new Date().toISOString() : null]
   );
@@ -969,8 +968,8 @@ async function handleDispatcherStats(env, authHeader) {
   if (user.role !== 'dispatcher' && user.role !== 'admin') {
     return errorResponse('无权查看', 403);
   }
-  const result = await queryDB(env, 
-    `SELECT 
+  const result = await queryDB(env,
+    `SELECT
       COUNT(*) as total,
       SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
       SUM(CASE WHEN status = 'ongoing' THEN 1 ELSE 0 END) as ongoing,
@@ -989,7 +988,7 @@ async function handleDispatcherOrders(env, authHeader) {
   if (user.role !== 'dispatcher' && user.role !== 'admin') {
     return errorResponse('无权查看', 403);
   }
-  const result = await queryDB(env, 
+  const result = await queryDB(env,
     'SELECT * FROM orders WHERE boss_id = ? ORDER BY created_at DESC',
     [userId]
   );
@@ -1022,8 +1021,8 @@ async function handleDispatcherConfirmComplete(env, authHeader, orderId) {
   if (order.handler_id) {
     await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [handlerEarning, order.handler_id]);
   }
-  await runDB(env, 
-    'UPDATE orders SET status = "completed", end_time = ?, settled = 1, settled_amount = ? WHERE id = ?', 
+  await runDB(env,
+    'UPDATE orders SET status = "completed", end_time = ?, settled = 1, settled_amount = ? WHERE id = ?',
     [new Date().toISOString(), handlerEarning, orderId]
   );
   return jsonResponse({ success: true, message: `验收完成，打手获得 ${handlerEarning} 红钻，平台扣除 ${order.price - handlerEarning} 红钻手续费` });
@@ -1094,10 +1093,10 @@ async function handleGetPendingRecharges(env, authHeader) {
     return errorResponse('权限不足', 403);
   }
   const result = await queryDB(env,
-    `SELECT r.*, u.username 
-     FROM recharge_requests r 
-     LEFT JOIN users u ON r.user_id = u.id 
-     WHERE r.status = 'pending' 
+    `SELECT r.*, u.username
+     FROM recharge_requests r
+     LEFT JOIN users u ON r.user_id = u.id
+     WHERE r.status = 'pending'
      ORDER BY r.created_at DESC`
   );
   return jsonResponse(result.results || []);
@@ -1113,12 +1112,12 @@ async function handleProcessRecharge(env, authHeader, body) {
   const { requestId, action, rejectReason } = body;
   if (!requestId || !action) return errorResponse('参数不完整');
   if (action !== 'approve' && action !== 'reject') return errorResponse('无效操作');
-  
+
   const req = await queryDB(env, 'SELECT * FROM recharge_requests WHERE id = ?', [requestId]);
   if (!req.results || req.results.length === 0) return errorResponse('申请不存在');
   const request = req.results[0];
   if (request.status !== 'pending') return errorResponse('已处理');
-  
+
   if (action === 'approve') {
     if (user.diamond < request.diamond) {
       return errorResponse(`红钻不足，需要 ${request.diamond} 红钻`);
@@ -1181,15 +1180,15 @@ async function handleSendMessage(env, authHeader, body) {
   if (!receiverId || !content || !content.trim()) return errorResponse('请完整填写');
   const receiver = await getUserById(env, receiverId);
   if (!receiver) return errorResponse('接收者不存在', 404);
-  
+
   if (userId === receiverId) return errorResponse('不能给自己发消息', 403);
-  
+
   const id = generateId();
   await runDB(env,
     'INSERT INTO messages (id, sender_id, receiver_id, content, is_read, created_at) VALUES (?, ?, ?, ?, 0, ?)',
     [id, userId, receiverId, content.trim(), new Date().toISOString()]
   );
-  
+
   const c1 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [userId, receiverId]);
   if (!c1.results || c1.results.length === 0) {
     await runDB(env,
@@ -1202,7 +1201,7 @@ async function handleSendMessage(env, authHeader, body) {
       [content.trim(), new Date().toISOString(), userId, receiverId]
     );
   }
-  
+
   const c2 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [receiverId, userId]);
   if (!c2.results || c2.results.length === 0) {
     await runDB(env,
@@ -1215,7 +1214,7 @@ async function handleSendMessage(env, authHeader, body) {
       [content.trim(), new Date().toISOString(), receiverId, userId]
     );
   }
-  
+
   return jsonResponse({ success: true, message: '发送成功' });
 }
 
@@ -1227,14 +1226,14 @@ async function handleGetContacts(env, authHeader) {
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
-  
+
   const sql = `
     WITH all_contacts AS (
       SELECT DISTINCT sender_id as contact_id FROM messages WHERE receiver_id = ?
       UNION
       SELECT DISTINCT receiver_id as contact_id FROM messages WHERE sender_id = ?
     )
-    SELECT 
+    SELECT
       u.id, u.username, u.role, u.avatar,
       mc.last_message, mc.last_time, mc.unread_count
     FROM all_contacts ac
@@ -1244,7 +1243,7 @@ async function handleGetContacts(env, authHeader) {
     ORDER BY COALESCE(mc.last_time, '1970-01-01') DESC
   `;
   const result = await queryDB(env, sql, [userId, userId, userId, userId]);
-  
+
   return jsonResponse(result.results || []);
 }
 
@@ -1260,17 +1259,17 @@ async function handleGetMessages(env, authHeader, body) {
   if (!contactId) return errorResponse('请选择联系人');
   const contact = await getUserById(env, contactId);
   if (!contact) return errorResponse('联系人不存在', 404);
-  
+
   const result = await queryDB(env,
     `SELECT m.*, u.username as sender_name, u.avatar as sender_avatar
      FROM messages m
      LEFT JOIN users u ON m.sender_id = u.id
-     WHERE (m.sender_id = ? AND m.receiver_id = ?) 
+     WHERE (m.sender_id = ? AND m.receiver_id = ?)
      OR (m.sender_id = ? AND m.receiver_id = ?)
      ORDER BY m.created_at ASC`,
     [userId, contactId, contactId, userId]
   );
-  
+
   await runDB(env,
     'UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?',
     [contactId, userId]
@@ -1279,7 +1278,7 @@ async function handleGetMessages(env, authHeader, body) {
     'UPDATE message_contacts SET unread_count = 0 WHERE user_id = ? AND contact_id = ?',
     [userId, contactId]
   );
-  
+
   return jsonResponse(result.results || []);
 }
 
@@ -1295,7 +1294,7 @@ async function handleGetUnreadCount(env, authHeader) {
 }
 
 async function handleGetSupportContacts(env) {
-  const result = await queryDB(env, 
+  const result = await queryDB(env,
     'SELECT id, username, role FROM users WHERE role IN ("admin", "service") AND status = "active"'
   );
   return jsonResponse(result.results || []);
@@ -1312,22 +1311,22 @@ async function handleRequestWithdraw(env, authHeader, body) {
   if (user.role !== 'handler') {
     return errorResponse('只有打手可申请提现', 403);
   }
-  
+
   const { amount } = body;
   if (!amount || amount < 1) return errorResponse('请输入有效数量');
-  
+
   const available = Math.max(0, (user.diamond || 0) - 100);
   if (amount > available) {
     return errorResponse(`可提现红钻不足，可用：${available} 红钻（需保留100冻结）`, 400);
   }
-  
+
   const id = generateId();
   await runDB(env,
-    `INSERT INTO withdraw_requests (id, user_id, amount, status, created_at) 
+    `INSERT INTO withdraw_requests (id, user_id, amount, status, created_at)
      VALUES (?, ?, ?, "pending", ?)`,
     [id, userId, amount, new Date().toISOString()]
   );
-  
+
   return jsonResponse({ success: true, message: '提现申请已提交' });
 }
 
@@ -1338,11 +1337,11 @@ async function handleAdminGetWithdrawals(env, authHeader) {
   if (user.role !== 'admin') {
     return errorResponse('权限不足', 403);
   }
-  
+
   const result = await queryDB(env,
-    `SELECT w.*, u.username 
-     FROM withdraw_requests w 
-     LEFT JOIN users u ON w.user_id = u.id 
+    `SELECT w.*, u.username
+     FROM withdraw_requests w
+     LEFT JOIN users u ON w.user_id = u.id
      ORDER BY w.created_at DESC`
   );
   return jsonResponse(result.results || []);
@@ -1355,7 +1354,7 @@ async function handleAdminApproveWithdraw(env, authHeader, withdrawId) {
   if (user.role !== 'admin') {
     return errorResponse('权限不足', 403);
   }
-  
+
   const result = await queryDB(env, 'SELECT * FROM withdraw_requests WHERE id = ?', [withdrawId]);
   if (!result.results || result.results.length === 0) {
     return errorResponse('提现申请不存在', 404);
@@ -1364,13 +1363,13 @@ async function handleAdminApproveWithdraw(env, authHeader, withdrawId) {
   if (withdraw.status !== 'pending') {
     return errorResponse('已处理', 400);
   }
-  
+
   await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [withdraw.amount, withdraw.user_id]);
   await runDB(env,
     'UPDATE withdraw_requests SET status = "approved", handled_at = ? WHERE id = ?',
     [new Date().toISOString(), withdrawId]
   );
-  
+
   return jsonResponse({ success: true, message: `提现已通过，已扣除 ${withdraw.amount} 红钻` });
 }
 
@@ -1381,7 +1380,7 @@ async function handleAdminRejectWithdraw(env, authHeader, withdrawId, body) {
   if (user.role !== 'admin') {
     return errorResponse('权限不足', 403);
   }
-  
+
   const { reason } = body;
   const result = await queryDB(env, 'SELECT * FROM withdraw_requests WHERE id = ?', [withdrawId]);
   if (!result.results || result.results.length === 0) {
@@ -1391,12 +1390,12 @@ async function handleAdminRejectWithdraw(env, authHeader, withdrawId, body) {
   if (withdraw.status !== 'pending') {
     return errorResponse('已处理', 400);
   }
-  
+
   await runDB(env,
     'UPDATE withdraw_requests SET status = "rejected", reject_reason = ?, handled_at = ? WHERE id = ?',
     [reason || '无原因', new Date().toISOString(), withdrawId]
   );
-  
+
   return jsonResponse({ success: true, message: '已拒绝' });
 }
 
@@ -1407,7 +1406,7 @@ async function handleAdminDeleteWithdraw(env, authHeader, withdrawId) {
   if (user.role !== 'admin') {
     return errorResponse('权限不足', 403);
   }
-  
+
   await runDB(env, 'DELETE FROM withdraw_requests WHERE id = ?', [withdrawId]);
   return jsonResponse({ success: true, message: '已删除' });
 }
@@ -1425,7 +1424,7 @@ async function handleAdminCreateBanner(env, authHeader, body) {
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (user.role !== 'admin') return errorResponse('权限不足', 403);
-  
+
   const { image_url, link, sort_order } = body;
   if (!image_url) return errorResponse('请输入图片URL');
   const id = generateId();
@@ -1433,10 +1432,10 @@ async function handleAdminCreateBanner(env, authHeader, body) {
     'INSERT INTO banners (id, image_url, link, sort_order, created_at) VALUES (?, ?, ?, ?, ?)',
     [id, image_url, link || '', sort_order || 0, new Date().toISOString()]
   );
-  
+
   const bannersResult = await queryDB(env, 'SELECT * FROM banners ORDER BY sort_order ASC');
   const banners = bannersResult.results || [];
-  
+
   return jsonResponse({ success: true, id, message: '广告添加成功', banners });
 }
 
@@ -1445,12 +1444,12 @@ async function handleAdminDeleteBanner(env, authHeader, bannerId) {
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (user.role !== 'admin') return errorResponse('权限不足', 403);
-  
+
   await runDB(env, 'DELETE FROM banners WHERE id = ?', [bannerId]);
-  
+
   const bannersResult = await queryDB(env, 'SELECT * FROM banners ORDER BY sort_order ASC');
   const banners = bannersResult.results || [];
-  
+
   return jsonResponse({ success: true, message: '已删除', banners });
 }
 
@@ -1467,11 +1466,11 @@ async function handleAdminSetIcon(env, authHeader, body) {
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (user.role !== 'admin') return errorResponse('权限不足', 403);
-  
+
   const { key, image_url } = body;
   if (!key) return errorResponse('请指定图标key');
   if (!image_url) return errorResponse('请输入图片URL');
-  
+
   const existing = await queryDB(env, 'SELECT * FROM custom_icons WHERE key = ?', [key]);
   if (existing.results && existing.results.length > 0) {
     await runDB(env, 'UPDATE custom_icons SET image_url = ? WHERE key = ?', [image_url, key]);
@@ -1489,7 +1488,7 @@ async function handleAdminDeleteIcon(env, authHeader, key) {
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (user.role !== 'admin') return errorResponse('权限不足', 403);
-  
+
   await runDB(env, 'DELETE FROM custom_icons WHERE key = ?', [key]);
   return jsonResponse({ success: true, message: '图标已删除' });
 }
@@ -1625,9 +1624,9 @@ async function handleAdminDeleteOrder(env, orderId) {
 // ============================================================
 async function handleAdminGetRecharges(env) {
   const result = await queryDB(env,
-    `SELECT r.*, u.username 
-     FROM recharge_requests r 
-     LEFT JOIN users u ON r.user_id = u.id 
+    `SELECT r.*, u.username
+     FROM recharge_requests r
+     LEFT JOIN users u ON r.user_id = u.id
      ORDER BY r.created_at DESC`
   );
   return jsonResponse(result.results || []);
@@ -1843,14 +1842,14 @@ export async function onRequest(context) {
           if (method === 'PUT') return await handleUpdateShop(env, authHeader, shopId, body);
           if (method === 'DELETE') return await handleDeleteShop(env, authHeader, shopId);
         }
-        
+
         // 店铺分类管理
         if (path === '/api/shop-categories' && method === 'POST') return await handleCreateShopCategory(env, authHeader, body);
         if (path.startsWith('/api/shop-categories/') && method === 'DELETE') {
           const categoryId = path.replace('/api/shop-categories/', '');
           return await handleDeleteShopCategory(env, authHeader, categoryId);
         }
-        
+
         // 用户管理
         if (path === '/api/admin/users' && method === 'GET') return await handleAdminGetUsers(env);
         if (path === '/api/admin/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
@@ -1875,7 +1874,7 @@ export async function onRequest(context) {
           }
           if (method === 'DELETE') return await handleAdminDeleteUser(env, targetUserId);
         }
-        
+
         // 商品管理
         if (path === '/api/admin/products' && method === 'GET') return await handleAdminGetProducts(env);
         if (path === '/api/admin/products' && method === 'POST') return await handleAdminCreateProduct(env, body);
@@ -1895,7 +1894,7 @@ export async function onRequest(context) {
           }
           if (method === 'DELETE') return await handleAdminDeleteProduct(env, productId);
         }
-        
+
         // 分类管理
         if (path === '/api/admin/categories' && method === 'POST') return await handleAdminCreateCategory(env, body);
         if (path.startsWith('/api/admin/categories/')) {
@@ -1906,21 +1905,21 @@ export async function onRequest(context) {
           }
           if (method === 'DELETE') return await handleAdminDeleteCategory(env, categoryId);
         }
-        
+
         // 广告管理
         if (path === '/api/admin/banners' && method === 'POST') return await handleAdminCreateBanner(env, authHeader, body);
         if (path.startsWith('/api/admin/banners/') && method === 'DELETE') {
           const bannerId = path.replace('/api/admin/banners/', '');
           return await handleAdminDeleteBanner(env, authHeader, bannerId);
         }
-        
+
         // 图标管理
         if (path === '/api/admin/icons' && method === 'POST') return await handleAdminSetIcon(env, authHeader, body);
         if (path.startsWith('/api/admin/icons/') && method === 'DELETE') {
           const key = path.replace('/api/admin/icons/', '');
           return await handleAdminDeleteIcon(env, authHeader, key);
         }
-        
+
         // 提现管理
         if (path === '/api/admin/withdrawals' && method === 'GET') return await handleAdminGetWithdrawals(env, authHeader);
         if (path.startsWith('/api/admin/withdrawals/')) {
@@ -1935,7 +1934,7 @@ export async function onRequest(context) {
           }
           if (method === 'DELETE') return await handleAdminDeleteWithdraw(env, authHeader, withdrawId);
         }
-        
+
         // 订单管理
         if (path === '/api/admin/orders' && method === 'GET') return await handleAdminGetOrders(env);
         if (path === '/api/admin/orders/direct' && method === 'POST') return await handleAdminDirectPublish(env, authHeader, body);
@@ -1967,7 +1966,7 @@ export async function onRequest(context) {
           }
           if (method === 'DELETE') return await handleAdminDeleteOrder(env, orderId);
         }
-        
+
         // 充值管理
         if (path === '/api/admin/recharges' && method === 'GET') return await handleAdminGetRecharges(env);
         if (path.startsWith('/api/admin/recharges/')) {
@@ -1982,7 +1981,7 @@ export async function onRequest(context) {
           }
           if (method === 'DELETE') return await handleAdminDeleteRecharge(env, rechargeId);
         }
-        
+
         // 公告管理
         if (path === '/api/admin/announce' && method === 'PUT') return await handleAdminUpdateAnnounce(env, body);
       }
