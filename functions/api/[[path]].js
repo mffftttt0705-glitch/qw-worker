@@ -194,7 +194,7 @@ async function handleAdminDeleteUser(env, targetUserId) {
 }
 
 // ============================================================
-//  ✅ 补丁：修改用户ID（关闭外键约束 + 批量更新关联表）
+//  修改用户ID（关闭外键约束 + 批量更新关联表）
 // ============================================================
 async function handleChangeUserId(env, authHeader, body) {
   const adminId = verifyAndGetUserId(authHeader);
@@ -280,7 +280,7 @@ async function handleSetBanner(env, authHeader, body) {
 }
 
 // ============================================================
-//  帖子系统（兼容旧表结构）
+//  帖子系统（兼容 updated_at NOT NULL）
 // ============================================================
 async function handleCreatePost(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -291,22 +291,21 @@ async function handleCreatePost(env, authHeader, body) {
   
   const id = generateId();
   const imagesJson = Array.isArray(images) ? JSON.stringify(images) : '[]';
+  const now = new Date().toISOString();
   
   try {
     await runDB(env,
-      `INSERT INTO posts (id, user_id, content, images, created_at) VALUES (?, ?, ?, ?, ?)`,
-      [id, userId, content.trim(), imagesJson, new Date().toISOString()]
+      `INSERT INTO posts (id, user_id, content, images, likes, comments_count, status, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, 0, 0, 'active', ?, ?)`,
+      [id, userId, content.trim(), imagesJson, now, now]
     );
   } catch (err) {
-    // 如果表结构有 title NOT NULL 约束，尝试兼容旧结构
-    if (err.message && err.message.includes('title')) {
-      await runDB(env,
-        `INSERT INTO posts (id, user_id, content, images, title, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-        [id, userId, content.trim(), imagesJson, content.substring(0, 30), new Date().toISOString()]
-      );
-    } else {
-      throw err;
-    }
+    // 兼容没有 updated_at 的表
+    await runDB(env,
+      `INSERT INTO posts (id, user_id, content, images, likes, comments_count, status, created_at) 
+       VALUES (?, ?, ?, ?, 0, 0, 'active', ?)`,
+      [id, userId, content.trim(), imagesJson, now]
+    );
   }
   
   return jsonResponse({ success: true, postId: id, message: '帖子发布成功' });
@@ -1220,6 +1219,9 @@ async function handleSendMessage(env, authHeader, body) {
   return jsonResponse({ success: true, message: '发送成功' });
 }
 
+// ============================================================
+//  获取联系人（带头像）
+// ============================================================
 async function handleGetContacts(env, authHeader) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -1233,7 +1235,7 @@ async function handleGetContacts(env, authHeader) {
       SELECT DISTINCT receiver_id as contact_id FROM messages WHERE sender_id = ?
     )
     SELECT 
-      u.id, u.username, u.role,
+      u.id, u.username, u.role, u.avatar,
       mc.last_message, mc.last_time, mc.unread_count
     FROM all_contacts ac
     JOIN users u ON u.id = ac.contact_id
@@ -1246,6 +1248,9 @@ async function handleGetContacts(env, authHeader) {
   return jsonResponse(result.results || []);
 }
 
+// ============================================================
+//  获取聊天记录（带头像）
+// ============================================================
 async function handleGetMessages(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -1257,10 +1262,12 @@ async function handleGetMessages(env, authHeader, body) {
   if (!contact) return errorResponse('联系人不存在', 404);
   
   const result = await queryDB(env,
-    `SELECT * FROM messages 
-     WHERE (sender_id = ? AND receiver_id = ?) 
-     OR (sender_id = ? AND receiver_id = ?)
-     ORDER BY created_at ASC`,
+    `SELECT m.*, u.username as sender_name, u.avatar as sender_avatar
+     FROM messages m
+     LEFT JOIN users u ON m.sender_id = u.id
+     WHERE (m.sender_id = ? AND m.receiver_id = ?) 
+     OR (m.sender_id = ? AND m.receiver_id = ?)
+     ORDER BY m.created_at ASC`,
     [userId, contactId, contactId, userId]
   );
   
