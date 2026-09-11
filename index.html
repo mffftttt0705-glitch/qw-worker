@@ -595,8 +595,6 @@
         .modal-box .detail-row .label { color: var(--detail-label); }
         .modal-box .detail-row .value { color: var(--detail-value); font-weight: 500; }
         
-        /* ⚠️ 已删除 .app-header 样式（不再使用全局头部） */
-        
         .diamond-display {
             display: flex; align-items: center; gap: 4px;
             background: var(--bg-input); padding: 4px 10px; border-radius: 20px;
@@ -781,17 +779,37 @@
         
         .upload-preview { max-width: 100%; max-height: 100px; border-radius: 8px; margin-top: 4px; }
         
+        /* ===== 联系人（带头像） ===== */
         .contact-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 12px; border-bottom: 1px solid var(--border-light);
-            cursor: pointer; -webkit-tap-highlight-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 4px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
         }
-        .contact-item:active { background: var(--bg-card-hover); }
+        .contact-item .contact-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--product-img-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .contact-item .contact-body { flex: 1; min-width: 0; }
+        .contact-item .contact-body > div:first-child { font-size: 14px; }
         .contact-item .unread-badge {
             background: #ef4444; color: #fff; border-radius: 50%;
             font-size: 10px; padding: 0 6px; min-width: 18px; text-align: center;
             line-height: 18px; display: inline-block; margin-left: 4px;
         }
+        
         .support-contact-section { margin-bottom: 12px; padding: 8px 0; }
         .support-contact-section .title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
         .support-contact-section .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -819,6 +837,56 @@
             -webkit-overflow-scrolling: touch;
         }
         .category-nav-wrapper::-webkit-scrollbar, .sub-category-wrapper::-webkit-scrollbar { display: none; }
+        
+        /* ===== 问题3：主分类 - 左图右文卡片 ===== */
+        .category-card-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .category-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .category-card:active { transform: scale(0.97); }
+        .category-card.active {
+            border-color: #3a7eff;
+            box-shadow: 0 4px 12px rgba(58,126,255,0.2);
+        }
+        .category-card .cat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: var(--product-img-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .category-card .cat-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .category-card .cat-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         
         .post-actions-bar {
             display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
@@ -869,6 +937,22 @@
         .shop-detail-modal .sd-body .sd-info .sd-name { font-size: 20px; font-weight: 700; }
         .shop-detail-modal .sd-body .sd-info .sd-desc { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
         .shop-detail-modal .sd-body .sd-info .sd-stats { display: flex; justify-content: center; gap: 20px; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
+        
+        /* ===== 聊天头像 ===== */
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--product-img-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--text-muted);
+            overflow: hidden;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
         
         @media(max-width:420px) {
             .view-container { padding: 10px 12px 4px; }
@@ -926,8 +1010,6 @@
 <!-- ===== 主应用 ===== -->
 <div id="mainApp" class="app-wrapper">
     <div class="view-container">
-        <!-- ⚠️ 问题2 修复：已删除整个 <div class="app-header">...</div> 全局头部 -->
-
         <!-- ===== 商城页面 ===== -->
         <div class="view active" id="view-home">
             <div class="banner-carousel" id="bannerCarousel">
@@ -947,14 +1029,26 @@
             <div id="homeProductList"></div>
         </div>
 
-        <!-- ===== 分类页面 ===== -->
+        <!-- ===== 问题2 + 问题3：分类页面（广告栏 + 左图右文卡片） ===== -->
         <div class="view" id="view-category">
             <div style="margin-bottom:10px;">
                 <span style="font-size:18px;font-weight:600;">📂 分类</span>
             </div>
-            <div class="category-nav-wrapper" id="categoryNavWrapper2">
+            <div class="banner-carousel" id="categoryBannerCarousel">
+                <div class="banner-track" id="categoryBannerTrack"></div>
+                <div class="banner-dots" id="categoryBannerDots"></div>
+                <button class="banner-arrow left" onclick="prevCategoryBanner()">‹</button>
+                <button class="banner-arrow right" onclick="nextCategoryBanner()">›</button>
+            </div>
+            <div class="category-nav-wrapper" id="categoryNavWrapper2" style="display:none;">
                 <button class="category-btn active" data-category="all" onclick="filterProductsByCategory('all')">全部</button>
-                <div id="categoryButtons2" style="display:flex;gap:6px;flex-wrap:nowrap;"></div>
+                <div id="categoryButtons2"></div>
+            </div>
+            <div class="category-card-list" id="categoryCardList">
+                <div class="category-card active" onclick="filterProductsByCategory('all')" data-cat="all">
+                    <div class="cat-icon">📦</div>
+                    <div class="cat-name">全部</div>
+                </div>
             </div>
             <div class="sub-category-wrapper" id="subCategoryWrapper2">
                 <button class="sub-btn active" data-sub="all" onclick="filterSubCategory2('all')">全部</button>
@@ -1386,10 +1480,6 @@ function confirmAction(title, message, confirmText, callback) {
     `);
 }
 
-// ============================================================
-//  ⚠️ 问题2b 修复：updateHeaderDiamond 加 null 保护
-//  因为头部已删除，headerDiamond / headerUnreadMail 元素不存在
-// ============================================================
 function updateHeaderDiamond() {
     const el = document.getElementById('headerDiamond');
     if (el) el.textContent = currentUser ? (currentUser.diamond || 0) : '0';
@@ -1655,7 +1745,7 @@ function closeShopDetail() {
 }
 
 // ============================================================
-//  广告轮播
+//  广告轮播（首页）
 // ============================================================
 function initBanner() {
     loadBannerFromStorage();
@@ -1745,6 +1835,56 @@ async function loadBannersFromAPI() {
 }
 
 // ============================================================
+//  问题2：分类页广告轮播
+// ============================================================
+let categoryBannerIndex = 0;
+let categoryBannerTimer = null;
+
+async function renderCategoryBanner() {
+    const track = document.getElementById('categoryBannerTrack');
+    const dots = document.getElementById('categoryBannerDots');
+    if (!track || !dots) return;
+    
+    try {
+        const banners = await apiRequest('/banners');
+        const imgs = banners.map(b => b.image_url).filter(url => url);
+        
+        if (imgs.length === 0) {
+            track.innerHTML = `<div class="banner-slide"><span style="opacity:0.5;">📢 暂无广告</span></div>`;
+            dots.innerHTML = '';
+            return;
+        }
+        
+        track.innerHTML = imgs.map(img => `<div class="banner-slide"><img src="${img}" /></div>`).join('');
+        dots.innerHTML = imgs.map((_, i) => `<span class="dot ${i === categoryBannerIndex ? 'active' : ''}" onclick="goToCategoryBanner(${i})"></span>`).join('');
+        track.style.transform = `translateX(-${categoryBannerIndex * 100}%)`;
+        
+        if (categoryBannerTimer) clearInterval(categoryBannerTimer);
+        if (imgs.length > 1) {
+            categoryBannerTimer = setInterval(() => {
+                categoryBannerIndex = (categoryBannerIndex + 1) % imgs.length;
+                renderCategoryBanner();
+            }, 4000);
+        }
+    } catch (err) {
+        console.error('分类广告加载失败:', err);
+    }
+}
+
+function goToCategoryBanner(index) {
+    categoryBannerIndex = index;
+    renderCategoryBanner();
+}
+function prevCategoryBanner() {
+    categoryBannerIndex = Math.max(0, categoryBannerIndex - 1);
+    renderCategoryBanner();
+}
+function nextCategoryBanner() {
+    categoryBannerIndex++;
+    renderCategoryBanner();
+}
+
+// ============================================================
 //  商城首页
 // ============================================================
 async function renderHomePage() {
@@ -1819,7 +1959,7 @@ function renderHomeProducts(products) {
 }
 
 // ============================================================
-//  分类页面
+//  问题3：分类页面（左图右文卡片）
 // ============================================================
 let categoryProducts = [];
 
@@ -1827,22 +1967,47 @@ async function renderCategoryPage() {
     try {
         const categories = await apiRequest('/categories') || [];
         const mainCats = categories.filter(c => !c.parent_id);
-        const container = document.getElementById('categoryButtons2');
-        if (container) {
-            container.innerHTML = '';
+        const cardList = document.getElementById('categoryCardList');
+        
+        if (cardList) {
+            let html = `
+                <div class="category-card active" onclick="filterProductsByCategory('all')" data-cat="all">
+                    <div class="cat-icon">📦</div>
+                    <div class="cat-name">全部</div>
+                </div>
+            `;
+            mainCats.forEach(c => {
+                const iconHtml = c.image 
+                    ? `<img src="${c.image}" onerror="this.parentElement.textContent='📁'" />` 
+                    : '📁';
+                html += `
+                    <div class="category-card" onclick="filterProductsByCategory('${c.id}')" data-cat="${c.id}">
+                        <div class="cat-icon">${iconHtml}</div>
+                        <div class="cat-name">${c.name}</div>
+                    </div>
+                `;
+            });
+            cardList.innerHTML = html;
+        }
+        
+        // 兼容旧按钮
+        const oldContainer = document.getElementById('categoryButtons2');
+        if (oldContainer) {
+            oldContainer.innerHTML = '';
             mainCats.forEach(c => {
                 const btn = document.createElement('button');
                 btn.className = 'category-btn';
                 btn.dataset.category = c.id;
                 btn.textContent = c.image ? c.image + ' ' + c.name : c.name;
                 btn.onclick = function() { filterProductsByCategory(c.id); };
-                container.appendChild(btn);
+                oldContainer.appendChild(btn);
             });
         }
         
         const products = await apiRequest('/products') || [];
         categoryProducts = products;
         renderCategoryProducts('all');
+        renderCategoryBanner();
     } catch (err) {
         console.error(err);
     }
@@ -1850,12 +2015,17 @@ async function renderCategoryPage() {
 
 function filterProductsByCategory(categoryId) {
     currentCategoryFilter = categoryId;
+    
+    // 卡片高亮
+    document.querySelectorAll('#categoryCardList .category-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.cat === categoryId);
+    });
+    
+    // 兼容旧按钮高亮
     document.querySelectorAll('#categoryNavWrapper2 .category-btn').forEach(b => b.classList.remove('active'));
     const targetBtn = document.querySelector(`#categoryNavWrapper2 .category-btn[data-category="${categoryId}"]`);
     if (targetBtn) targetBtn.classList.add('active');
-    if (categoryId === 'all') {
-        document.querySelector('#categoryNavWrapper2 .category-btn[data-category="all"]')?.classList.add('active');
-    }
+    
     renderCategoryProducts(categoryId);
 }
 
@@ -2255,7 +2425,7 @@ async function doUploadAvatar() {
 }
 
 // ============================================================
-//  ⚠️ 优化：renderMyPage 余额显示改为 红钻 + ¥
+//  "我的"页面
 // ============================================================
 async function renderMyPage() {
     if (!currentUser) {
@@ -2270,7 +2440,6 @@ async function renderMyPage() {
         return;
     }
     
-    // 先用 currentUser 立即填充基础信息
     document.getElementById('profileName').innerHTML = currentUser.username + ` <span class="level">LV${currentUser.level || 1}</span>`;
     document.getElementById('profileId').textContent = '用户ID：' + (currentUser.id || '--');
     
@@ -2298,7 +2467,6 @@ async function renderMyPage() {
     
     renderMoreFunctions();
     
-    // 再拉最新数据
     try {
         const user = await apiRequest('/me');
         currentUser = { ...currentUser, ...user };
@@ -2447,22 +2615,6 @@ function handleProfileClick() {
 // ============================================================
 //  订单/打手页面
 // ============================================================
-async function renderOrdersPage() {
-    const role = currentUserRole || currentUser?.role;
-    const title = document.getElementById('orderPageTitle');
-    const handlerInfo = document.getElementById('handlerInfo');
-    
-    if (role === 'handler') {
-        title.textContent = '🎮 打手工作台';
-        handlerInfo.style.display = 'block';
-        await updateHandlerInfo();
-    } else {
-        title.textContent = '📋 我的订单';
-        handlerInfo.style.display = 'none';
-    }
-    await renderOrders();
-}
-
 async function updateHandlerInfo() {
     try {
         const user = await apiRequest('/me');
@@ -2709,7 +2861,7 @@ async function renderSubOrders() {
 }
 
 // ============================================================
-//  子页面 - 商品管理
+//  子页面 - 商品管理（问题4：上架加子分类）
 // ============================================================
 async function renderSubProducts() {
     const container = document.getElementById('subProductsContent');
@@ -2729,8 +2881,13 @@ async function renderSubProducts() {
                     <span>📦 上架新商品</span>
                     <button class="close-btn" onclick="toggleInlineModal('addProduct')">✕</button>
                 </div>
-                <div class="admin-form-group"><label>系统分类</label>
-                    <select class="admin-form-control" id="prodCategory"></select>
+                <div class="admin-form-group"><label>系统分类（主分类）</label>
+                    <select class="admin-form-control" id="prodCategory" onchange="loadProdSubCategories()"></select>
+                </div>
+                <div class="admin-form-group"><label>子分类</label>
+                    <select class="admin-form-control" id="prodSubCategory">
+                        <option value="">-- 请先选择主分类 --</option>
+                    </select>
                 </div>
                 <div class="admin-form-group"><label>所属店铺</label>
                     <select class="admin-form-control" id="prodShop" onchange="loadShopCategoriesForProduct()">
@@ -2778,6 +2935,31 @@ async function renderSubProducts() {
 function toggleInlineModal(id) {
     const el = document.getElementById(id + 'Modal');
     if (el) el.classList.toggle('active');
+}
+
+// 问题4：根据主分类加载子分类
+async function loadProdSubCategories() {
+    const mainId = document.getElementById('prodCategory').value;
+    const subSel = document.getElementById('prodSubCategory');
+    if (!subSel) return;
+    
+    if (!mainId) {
+        subSel.innerHTML = '<option value="">-- 请先选择主分类 --</option>';
+        return;
+    }
+    
+    try {
+        const categories = await apiRequest('/categories');
+        const subCats = categories.filter(c => c.parent_id === mainId);
+        if (subCats.length === 0) {
+            subSel.innerHTML = '<option value="">-- 该主分类下暂无子分类 --</option>';
+            return;
+        }
+        subSel.innerHTML = '<option value="">-- 请选择子分类 --</option>' + 
+            subCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 async function loadShopSelect() {
@@ -2861,8 +3043,11 @@ async function loadCategoriesForSelectors() {
     } catch (err) { console.error(err); }
 }
 
+// 问题4：上架时读取主分类+子分类
 async function shelfProduct() {
-    const category_id = document.getElementById('prodCategory').value || null;
+    const mainCategoryId = document.getElementById('prodCategory').value || null;
+    const subCategoryId = document.getElementById('prodSubCategory').value || null;
+    const category_id = subCategoryId || mainCategoryId;
     const shop_id = document.getElementById('prodShop').value || null;
     const shop_category_id = document.getElementById('prodShopCategory').value || null;
     const title = document.getElementById('prodTitle').value.trim();
@@ -2873,14 +3058,19 @@ async function shelfProduct() {
     const detail_images_raw = document.getElementById('prodDetailImages').value.trim();
     const detail_desc = document.getElementById('prodDetailDesc').value.trim();
     const detail_images = detail_images_raw ? detail_images_raw.split(',').map(s => s.trim()).filter(s => s) : [];
+    
     if (!category_id) return toast('请选择系统分类', 'warning');
     if (!shop_id) return toast('请选择店铺', 'warning');
     if (!shop_category_id) return toast('请选择店铺分类', 'warning');
     if (!title || !price) return toast('请填写完整信息', 'error');
+    
     try {
         await apiRequest('/admin/products', {
             method: 'POST',
-            body: JSON.stringify({ game: '暗区突围', title, desc, price, quantity, image, category_id, detail_images, detail_desc, shop_id, shop_category_id })
+            body: JSON.stringify({ 
+                game: '暗区突围', title, desc, price, quantity, image, 
+                category_id, detail_images, detail_desc, shop_id, shop_category_id 
+            })
         });
         toast('上架成功', 'success');
         document.getElementById('prodTitle').value = '';
@@ -2942,9 +3132,6 @@ async function doDeleteProduct(productId) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
-// ============================================================
-//  ⚠️ 问题5 修复：openEditProduct 完整版 + 新增 doEditProduct
-// ============================================================
 window.openEditProduct = async function(productId) {
     try {
         const products = await apiRequest('/admin/products');
@@ -2980,7 +3167,6 @@ window.openEditProduct = async function(productId) {
                 <button class="btn btn-success" onclick="doEditProduct('${productId}')">保存</button>
             </div>
         `);
-        document.getElementById('customModal').classList.add('active');
     } catch (err) {
         toast(err.message, 'error');
     }
@@ -3818,7 +4004,8 @@ async function doChangeUserId(newId) {
 
 function updateRoleBasedUI() {
     if (currentUser) {
-        document.getElementById('authStatusText').textContent = currentUser.username;
+        const el = document.getElementById('authStatusText');
+        if (el) el.textContent = currentUser.username;
     }
 }
 
@@ -3960,7 +4147,20 @@ async function loadServiceContacts() {
         let html = '';
         contacts.forEach(c => {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
-            html += `<div class="contact-item" onclick="openChat('${c.id}','${c.username}','contact')"><div><strong>${c.username}</strong> ${unreadBadge}<div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div></div><div style="font-size:11px;color:var(--text-muted);">${c.last_time ? new Date(c.last_time).toLocaleTimeString() : ''}</div></div>`;
+            const avatarUrl = c.avatar || '';
+            const avatarHtml = avatarUrl 
+                ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` 
+                : (c.username ? c.username.charAt(0).toUpperCase() : '?');
+            html += `
+                <div class="contact-item">
+                    <div class="contact-avatar">${avatarHtml}</div>
+                    <div class="contact-body" onclick="openChat('${c.id}','${c.username}','contact')">
+                        <div><strong>${c.username}</strong> ${unreadBadge}</div>
+                        <div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-muted);">${c.last_time ? new Date(c.last_time).toLocaleTimeString() : ''}</div>
+                </div>
+            `;
         });
         container.innerHTML = html;
     } catch (err) { console.error(err); }
@@ -4487,7 +4687,7 @@ function applyCustomIcons() {
 }
 
 // ============================================================
-//  消息系统
+//  问题5：消息系统（带头像 + 用户主页弹窗）
 // ============================================================
 async function loadContacts() {
     try {
@@ -4540,7 +4740,22 @@ async function loadContacts() {
             const unreadBadge = c.unread_count > 0 ? `<span class="unread-badge">${c.unread_count}</span>` : '';
             const roleIcon = c.role === 'admin' ? '🔴' : c.role === 'service' ? '🟢' : '';
             const displayName = c.username || c.id || '未知用户';
-            html += `<div class="contact-item" onclick="openChat('${c.id}','${displayName}','contact')"><div><strong>${displayName}</strong> ${roleIcon}${unreadBadge}<div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div></div><div style="font-size:11px;color:var(--text-muted);">${c.last_time ? new Date(c.last_time).toLocaleTimeString() : ''}</div></div>`;
+            const avatarUrl = c.avatar || '';
+            const avatarHtml = avatarUrl 
+                ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` 
+                : (displayName ? displayName.charAt(0).toUpperCase() : '?');
+            html += `
+                <div class="contact-item">
+                    <div class="contact-avatar" onclick="event.stopPropagation();viewUserProfile('${c.id}')">
+                        ${avatarHtml}
+                    </div>
+                    <div class="contact-body" onclick="openChat('${c.id}','${displayName}','contact')">
+                        <div><strong>${displayName}</strong> ${roleIcon}${unreadBadge}</div>
+                        <div style="font-size:12px;color:var(--text-muted);">${c.last_message || '暂无消息'}</div>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-muted);">${c.last_time ? new Date(c.last_time).toLocaleTimeString() : ''}</div>
+                </div>
+            `;
         });
         container.innerHTML = html;
     } catch (err) {
@@ -4571,6 +4786,50 @@ async function addContactById() {
         updateBadges();
     } catch (err) {
         toast(err.message, 'error');
+    }
+}
+
+// 问题5：查看用户主页
+async function viewUserProfile(userId) {
+    if (!userId) return;
+    try {
+        const users = await apiRequest('/admin/users');
+        const user = users.find(u => u.id === userId);
+        if (!user) return toast('用户不存在', 'error');
+        
+        const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
+        const roleText = roleMap[user.role] || user.role;
+        const avatarUrl = user.avatar || '';
+        const avatarHtml = avatarUrl 
+            ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;" />` 
+            : (user.username ? user.username.charAt(0).toUpperCase() : '?');
+        
+        showCustomModal(`
+            <div style="text-align:center;padding:10px 0;">
+                <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a6aff,#0044cc);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff;margin:0 auto 12px;overflow:hidden;">
+                    ${avatarHtml}
+                </div>
+                <h3 style="margin-bottom:6px;">${user.username || '未知用户'}</h3>
+                <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">ID: ${user.id}</div>
+                <div style="display:inline-block;padding:2px 12px;background:#3a7eff22;color:#3a7eff;border-radius:20px;font-size:12px;margin-bottom:12px;">${roleText}</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;">
+                    <div style="background:var(--bg-card-hover);border-radius:10px;padding:10px;">
+                        <div style="font-size:18px;font-weight:700;color:#f5c842;">${user.diamond || 0}</div>
+                        <div style="font-size:11px;color:var(--text-muted);">红钻</div>
+                    </div>
+                    <div style="background:var(--bg-card-hover);border-radius:10px;padding:10px;">
+                        <div style="font-size:18px;font-weight:700;">LV${user.level || 1}</div>
+                        <div style="font-size:11px;color:var(--text-muted);">等级</div>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-outline" onclick="closeCustomModal()">关闭</button>
+                    <button class="btn btn-primary" onclick="closeCustomModal();openChat('${user.id}','${user.username}','contact')">发消息</button>
+                </div>
+            </div>
+        `);
+    } catch (err) {
+        toast('加载用户信息失败', 'error');
     }
 }
 
@@ -4622,7 +4881,17 @@ async function loadFullscreenMessages() {
             let html = '';
             messages.forEach(m => {
                 const isMe = m.sender_id === currentUser.id;
-                html += `<div style="display:flex;justify-content:${isMe ? 'flex-end' : 'flex-start'};"><div class="chat-bubble ${isMe ? 'me' : 'other'}">${m.content}<span class="time">${new Date(m.created_at).toLocaleTimeString()}</span></div></div>`;
+                const senderAvatar = m.sender_avatar || '';
+                const avatarHtml = senderAvatar 
+                    ? `<img src="${senderAvatar}" style="width:100%;height:100%;object-fit:cover;" />` 
+                    : (m.sender_name ? m.sender_name.charAt(0).toUpperCase() : '?');
+                html += `
+                    <div style="display:flex;justify-content:${isMe ? 'flex-end' : 'flex-start'};align-items:flex-start;gap:8px;">
+                        ${!isMe ? `<div class="chat-avatar" onclick="viewUserProfile('${m.sender_id}')">${avatarHtml}</div>` : ''}
+                        <div class="chat-bubble ${isMe ? 'me' : 'other'}">${m.content}<span class="time">${new Date(m.created_at).toLocaleTimeString()}</span></div>
+                        ${isMe ? `<div class="chat-avatar">${avatarHtml}</div>` : ''}
+                    </div>
+                `;
             });
             body.innerHTML = html;
             body.scrollTop = body.scrollHeight;
@@ -4965,7 +5234,6 @@ async function afterLogin() {
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
     
-    // 从服务器获取最新用户信息（确保角色正确）
     try {
         const user = await apiRequest('/me');
         currentUser = user;
@@ -5156,6 +5424,7 @@ window.sendFullscreenMessage = sendFullscreenMessage;
 window.loadContacts = loadContacts;
 window.addContactById = addContactById;
 window.showAddContact = showAddContact;
+window.viewUserProfile = viewUserProfile;
 window.toggleInlineModal = toggleInlineModal;
 window.createShop = createShop;
 window.createShopCategory = createShopCategory;
@@ -5163,6 +5432,7 @@ window.editShop = editShop;
 window.toggleShop = toggleShop;
 window.confirmDeleteShop = confirmDeleteShop;
 window.shelfProduct = shelfProduct;
+window.loadProdSubCategories = loadProdSubCategories;
 window.confirmUnshelf = confirmUnshelf;
 window.confirmReshelf = confirmReshelf;
 window.confirmDeleteProduct = confirmDeleteProduct;
@@ -5198,6 +5468,9 @@ window.doAuthRegister = doAuthRegister;
 window.prevBanner = prevBanner;
 window.nextBanner = nextBanner;
 window.goToBanner = goToBanner;
+window.prevCategoryBanner = prevCategoryBanner;
+window.nextCategoryBanner = nextCategoryBanner;
+window.goToCategoryBanner = goToCategoryBanner;
 window.handleProfileClick = handleProfileClick;
 window.setRechargeAmount = setRechargeAmount;
 window.submitCustomRecharge = submitCustomRecharge;
@@ -5216,7 +5489,7 @@ window.renderSubBanners = renderSubBanners;
 window.renderSubIcons = renderSubIcons;
 
 console.log('✅ QW电竞护航平台 v6.0 完整版已加载');
-console.log('📌 已应用：删除全局头部 + updateHeaderDiamond null保护 + renderMyPage红钻显示 + 编辑商品 + openEditProduct完整版');
+console.log('📌 已应用：分类页广告 + 左图右文卡片 + 上架加子分类 + 消息头像 + 用户主页');
 </script>
 </body>
 </html>
