@@ -1,5 +1,5 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v6.3 完整版)
+//  QW电竞 - 完整后端 API (v6.3 完整无缺失版)
 //  Cloudflare Pages Functions + D1 数据库
 // ============================================================
 
@@ -113,7 +113,7 @@ async function handleGetUserPublic(env, userId) {
 }
 
 // ============================================================
-//  用户管理
+//  用户管理（管理员）
 // ============================================================
 async function handleAdminGetUsers(env) {
   try {
@@ -220,7 +220,6 @@ async function handleChangeUserId(env, authHeader, body) {
     { table: 'user_avatars', cols: ['user_id'] },
     { table: 'recharge_requests', cols: ['user_id'] },
     { table: 'withdraw_requests', cols: ['user_id'] },
-    { table: 'shop_follows', cols: ['user_id'] },
   ];
   for (const item of migrateTables) {
     for (const col of item.cols) {
@@ -710,6 +709,9 @@ async function handleDeleteShopCategory(env, authHeader, categoryId) {
   return jsonResponse({ success: true, message: '店铺分类已删除' });
 }
 
+// ============================================================
+//  关注店铺
+// ============================================================
 async function handleFollowShop(env, authHeader, shopId) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -866,6 +868,9 @@ async function handleRefundRequest(env, authHeader, orderId, body) {
   return jsonResponse({ success: true, message: '退款申请已提交' });
 }
 
+// ============================================================
+//  派单员
+// ============================================================
 async function handleDispatcherPublish(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -991,10 +996,7 @@ async function handleCustomRecharge(env, authHeader, body) {
 async function handleGetMyRecharges(env, authHeader) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
-  const result = await queryDB(env,
-    'SELECT * FROM recharge_requests WHERE user_id = ? ORDER BY created_at DESC',
-    [userId]
-  );
+  const result = await queryDB(env, 'SELECT * FROM recharge_requests WHERE user_id = ? ORDER BY created_at DESC', [userId]);
   return jsonResponse(result.results || []);
 }
 
@@ -1313,8 +1315,10 @@ async function handleAdminSetIcon(env, authHeader, body) {
   if (existing.results && existing.results.length > 0) {
     await runDB(env, 'UPDATE custom_icons SET image_url = ? WHERE key = ?', [image_url, key]);
   } else {
-    await runDB(env, 'INSERT INTO custom_icons (id, key, image_url, created_at) VALUES (?, ?, ?, ?)',
-      [generateId(), key, image_url, new Date().toISOString()]);
+    await runDB(env,
+      'INSERT INTO custom_icons (id, key, image_url, created_at) VALUES (?, ?, ?, ?)',
+      [generateId(), key, image_url, new Date().toISOString()]
+    );
   }
   return jsonResponse({ success: true, message: '图标已更新' });
 }
@@ -1373,7 +1377,7 @@ async function handleClaimMail(env, authHeader, mailId) {
 }
 
 // ============================================================
-//  管理员订单（完整）
+//  管理员订单
 // ============================================================
 async function handleAdminGetOrders(env) {
   const result = await queryDB(env, 'SELECT * FROM orders ORDER BY created_at DESC');
@@ -1543,9 +1547,7 @@ export async function onRequest(context) {
   try {
     const authHeader = request.headers.get('Authorization');
 
-    // ============================================================
-    //  公开接口
-    // ============================================================
+    // ========== 公开接口 ==========
     if (path === '/api/health' && method === 'GET') return await handleHealthCheck(env);
     if (path === '/api/register' && method === 'POST') return await handleRegister(env, body);
     if (path === '/api/login' && method === 'POST') return await handleLogin(env, body);
@@ -1567,41 +1569,23 @@ export async function onRequest(context) {
       return await handleGetUserPublic(env, userId);
     }
 
-    // 帖子详情
     if (path.startsWith('/api/posts/') && method === 'GET') {
-      const postId = path.replace('/api/posts/', '');
-      return await handleGetPostDetail(env, postId);
+      return await handleGetPostDetail(env, path.replace('/api/posts/', ''));
     }
-
-    // 店铺公开接口
     if (path.startsWith('/api/shops/') && path.endsWith('/products') && method === 'GET') {
-      const shopId = path.replace('/api/shops/', '').replace('/products', '');
-      return await handleGetShopProducts(env, shopId);
+      return await handleGetShopProducts(env, path.replace('/api/shops/', '').replace('/products', ''));
     }
     if (path.startsWith('/api/shops/') && path.endsWith('/categories') && method === 'GET') {
-      const shopId = path.replace('/api/shops/', '').replace('/categories', '');
-      return await handleGetShopCategories(env, shopId);
+      return await handleGetShopCategories(env, path.replace('/api/shops/', '').replace('/categories', ''));
     }
     if (path.startsWith('/api/shops/') && method === 'GET' && !path.endsWith('/products') && !path.endsWith('/categories') && !path.endsWith('/follow') && !path.endsWith('/follow-status')) {
-      const shopId = path.replace('/api/shops/', '');
-      return await handleGetShopDetail(env, shopId);
+      return await handleGetShopDetail(env, path.replace('/api/shops/', ''));
     }
     if (path.startsWith('/api/products/') && method === 'GET') {
-      const productId = path.replace('/api/products/', '');
-      return await handleGetProductDetail(env, productId);
+      return await handleGetProductDetail(env, path.replace('/api/products/', ''));
     }
 
-    // 店铺关注
-    if (path.startsWith('/api/shops/') && path.endsWith('/follow') && method === 'POST') {
-      return await handleFollowShop(env, authHeader, path.replace('/api/shops/', '').replace('/follow', ''));
-    }
-    if (path.startsWith('/api/shops/') && path.endsWith('/follow-status') && method === 'GET') {
-      return await handleGetFollowStatus(env, authHeader, path.replace('/api/shops/', '').replace('/follow-status', ''));
-    }
-
-    // ============================================================
-    //  需要登录的接口
-    // ============================================================
+    // ========== 需登录 ==========
     if (path === '/api/me' && method === 'GET') return await handleGetMe(env, authHeader);
     if (path === '/api/user/avatar' && method === 'POST') return await handleUploadAvatar(env, authHeader, body);
     if (path === '/api/user/name' && method === 'PUT') return await handleChangeName(env, authHeader, body);
@@ -1621,23 +1605,21 @@ export async function onRequest(context) {
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
 
-    // 邮件领取
-    if (path.startsWith('/api/mails/') && path.endsWith('/claim') && method === 'PUT') {
-      const mailId = path.replace('/api/mails/', '').replace('/claim', '');
-      return await handleClaimMail(env, authHeader, mailId);
-    }
-
-    // ============================================================
-    //  客服接口
-    // ============================================================
+    // ========== 客服 ==========
     if (path === '/api/service/recharges' && method === 'GET') return await handleGetPendingRecharges(env, authHeader);
     if (path === '/api/service/process' && method === 'POST') return await handleProcessRecharge(env, authHeader, body);
     if (path === '/api/service/users' && method === 'GET') return await handleGetUsersForService(env, authHeader);
     if (path === '/api/service/gift' && method === 'POST') return await handleServiceGift(env, authHeader, body);
 
-    // ============================================================
-    //  订单带参数
-    // ============================================================
+    // ========== 关注店铺 ==========
+    if (path.startsWith('/api/shops/') && path.endsWith('/follow') && method === 'POST') {
+      return await handleFollowShop(env, authHeader, path.replace('/api/shops/', '').replace('/follow', ''));
+    }
+    if (path.startsWith('/api/shops/') && path.endsWith('/follow-status') && method === 'GET') {
+      return await handleGetFollowStatus(env, authHeader, path.replace('/api/shops/', '').replace('/follow-status', ''));
+    }
+
+    // ========== 订单带参数 ==========
     if (path.startsWith('/api/orders/')) {
       const orderId = path.replace('/api/orders/', '');
       if (method === 'GET') return await handleGetOrderDetail(env, authHeader, orderId);
@@ -1650,9 +1632,7 @@ export async function onRequest(context) {
       if (orderId.endsWith('/cancel') && method === 'PUT') return await handleAdminCancelOrder(env, orderId.replace('/cancel', ''));
     }
 
-    // ============================================================
-    //  帖子带参数
-    // ============================================================
+    // ========== 帖子带参数 ==========
     if (path.startsWith('/api/posts/')) {
       const postId = path.replace('/api/posts/', '');
       if (postId.endsWith('/like') && method === 'POST') return await handleLikePost(env, authHeader, postId.replace('/like', ''));
@@ -1660,14 +1640,17 @@ export async function onRequest(context) {
       if (method === 'DELETE') return await handleDeletePost(env, authHeader, postId);
     }
 
-    // ============================================================
-    //  管理员接口
-    // ============================================================
+    // ========== 邮件领取 ==========
+    if (path.startsWith('/api/mails/') && path.endsWith('/claim') && method === 'PUT') {
+      return await handleClaimMail(env, authHeader, path.replace('/api/mails/', '').replace('/claim', ''));
+    }
+
+    // ========== 管理员 ==========
     const userId = verifyAndGetUserId(authHeader);
     if (userId) {
       const user = await getUserById(env, userId);
       if (user && user.role === 'admin') {
-        // 店铺管理
+        // 店铺
         if (path === '/api/shops' && method === 'POST') return await handleCreateShop(env, authHeader, body);
         if (path.startsWith('/api/shops/')) {
           const shopId = path.replace('/api/shops/', '');
@@ -1676,12 +1659,12 @@ export async function onRequest(context) {
           if (method === 'PUT') return await handleUpdateShop(env, authHeader, shopId, body);
           if (method === 'DELETE') return await handleDeleteShop(env, authHeader, shopId);
         }
+        // 店铺分类
         if (path === '/api/shop-categories' && method === 'POST') return await handleCreateShopCategory(env, authHeader, body);
         if (path.startsWith('/api/shop-categories/') && method === 'DELETE') {
           return await handleDeleteShopCategory(env, authHeader, path.replace('/api/shop-categories/', ''));
         }
-
-        // 用户管理
+        // 用户
         if (path === '/api/admin/users' && method === 'GET') return await handleAdminGetUsers(env);
         if (path === '/api/admin/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
         if (path === '/api/admin/gift' && method === 'POST') return await handleAdminGiftDiamond(env, body);
@@ -1693,8 +1676,7 @@ export async function onRequest(context) {
           if (tId.endsWith('/username') && method === 'PUT') return await handleChangeUsername(env, tId.replace('/username', ''), body);
           if (method === 'DELETE') return await handleAdminDeleteUser(env, tId);
         }
-
-        // 商品管理
+        // 商品
         if (path === '/api/admin/products' && method === 'GET') return await handleAdminGetProducts(env);
         if (path === '/api/admin/products' && method === 'POST') return await handleAdminCreateProduct(env, body);
         if (path.startsWith('/api/admin/products/')) {
@@ -1704,7 +1686,6 @@ export async function onRequest(context) {
           if (pId.endsWith('/edit') && method === 'PUT') return await handleAdminUpdateProduct(env, pId.replace('/edit', ''), body);
           if (method === 'DELETE') return await handleAdminDeleteProduct(env, pId);
         }
-
         // 商品分类
         if (path === '/api/admin/categories' && method === 'POST') return await handleAdminCreateCategory(env, body);
         if (path.startsWith('/api/admin/categories/')) {
@@ -1712,31 +1693,26 @@ export async function onRequest(context) {
           if (cId.endsWith('/edit') && method === 'PUT') return await handleAdminUpdateCategory(env, cId.replace('/edit', ''), body);
           if (method === 'DELETE') return await handleAdminDeleteCategory(env, cId);
         }
-
         // 帖子分类
         if (path === '/api/admin/post-categories' && method === 'POST') return await handleCreatePostCategory(env, authHeader, body);
         if (path.startsWith('/api/admin/post-categories/') && method === 'DELETE') {
           return await handleDeletePostCategory(env, authHeader, path.replace('/api/admin/post-categories/', ''));
         }
-
         // 充值图片
         if (path === '/api/admin/recharge-images' && method === 'POST') return await handleAddRechargeImage(env, authHeader, body);
         if (path.startsWith('/api/admin/recharge-images/') && method === 'DELETE') {
           return await handleDeleteRechargeImage(env, authHeader, path.replace('/api/admin/recharge-images/', ''));
         }
-
         // 广告
         if (path === '/api/admin/banners' && method === 'POST') return await handleAdminCreateBanner(env, authHeader, body);
         if (path.startsWith('/api/admin/banners/') && method === 'DELETE') {
           return await handleAdminDeleteBanner(env, authHeader, path.replace('/api/admin/banners/', ''));
         }
-
-        // 图标管理
+        // 图标
         if (path === '/api/admin/icons' && method === 'POST') return await handleAdminSetIcon(env, authHeader, body);
         if (path.startsWith('/api/admin/icons/') && method === 'DELETE') {
           return await handleAdminDeleteIcon(env, authHeader, path.replace('/api/admin/icons/', ''));
         }
-
         // 提现
         if (path === '/api/admin/withdrawals' && method === 'GET') return await handleAdminGetWithdrawals(env, authHeader);
         if (path.startsWith('/api/admin/withdrawals/')) {
@@ -1745,8 +1721,7 @@ export async function onRequest(context) {
           if (wId.endsWith('/reject') && method === 'PUT') return await handleAdminRejectWithdraw(env, authHeader, wId.replace('/reject', ''), body);
           if (method === 'DELETE') return await handleAdminDeleteWithdraw(env, authHeader, wId);
         }
-
-        // 订单管理
+        // 订单
         if (path === '/api/admin/orders' && method === 'GET') return await handleAdminGetOrders(env);
         if (path === '/api/admin/orders/direct' && method === 'POST') return await handleAdminDirectPublish(env, authHeader, body);
         if (path.startsWith('/api/admin/orders/')) {
@@ -1759,8 +1734,7 @@ export async function onRequest(context) {
           if (oId.endsWith('/settle') && method === 'PUT') return await handleAdminSettle(env, oId.replace('/settle', ''), body);
           if (method === 'DELETE') return await handleAdminDeleteOrder(env, oId);
         }
-
-        // 充值管理
+        // 充值
         if (path === '/api/admin/recharges' && method === 'GET') return await handleAdminGetRecharges(env);
         if (path.startsWith('/api/admin/recharges/')) {
           const rId = path.replace('/api/admin/recharges/', '');
@@ -1768,7 +1742,6 @@ export async function onRequest(context) {
           if (rId.endsWith('/reject') && method === 'PUT') return await handleAdminRejectRecharge(env, rId.replace('/reject', ''));
           if (method === 'DELETE') return await handleAdminDeleteRecharge(env, rId);
         }
-
         // 公告
         if (path === '/api/admin/announce' && method === 'PUT') return await handleAdminUpdateAnnounce(env, body);
       }
