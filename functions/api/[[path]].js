@@ -1,7 +1,7 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v6.1)
+//  QW电竞 - 完整后端 API (v6.2)
 //  部署：Cloudflare Pages Functions + D1 数据库
-//  更新：店铺分类支持 image_url；编辑商品严格校验子分类
+//  更新：handleChangeUserId 逐表更新；新增店铺排序接口
 // ============================================================
 
 function generateId() {
@@ -195,12 +195,13 @@ async function handleAdminDeleteUser(env, targetUserId) {
 }
 
 // ============================================================
-//  修改用户ID（关闭外键约束 + 批量更新关联表）
+//  修改用户ID（逐表更新，兼容 D1 外键）
 // ============================================================
 async function handleChangeUserId(env, authHeader, body) {
   const adminId = verifyAndGetUserId(authHeader);
   if (!adminId) return errorResponse('请先登录', 401);
   const admin = await getUserById(env, adminId);
+  if (!admin) return errorResponse('用户不存在', 404);
   if (admin.role !== 'admin') return errorResponse('权限不足', 403);
 
   const { targetUserId, newId } = body;
@@ -213,26 +214,36 @@ async function handleChangeUserId(env, authHeader, body) {
     return errorResponse('该ID已被使用');
   }
 
-  await runDB(env, 'PRAGMA foreign_keys = OFF');
   try {
+    await runDB(env, 'PRAGMA foreign_keys = OFF');
     await runDB(env, 'UPDATE users SET id = ? WHERE id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE orders SET boss_id = ? WHERE boss_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE orders SET handler_id = ? WHERE handler_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE messages SET sender_id = ? WHERE sender_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE messages SET receiver_id = ? WHERE receiver_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE message_contacts SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE message_contacts SET contact_id = ? WHERE contact_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE posts SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE post_comments SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE post_likes SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE user_avatars SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE recharge_requests SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
-    await runDB(env, 'UPDATE withdraw_requests SET user_id = ? WHERE user_id = ?', [newId, targetUserId]);
-  } finally {
+    const tables = [
+      ['orders', 'boss_id'],
+      ['orders', 'handler_id'],
+      ['messages', 'sender_id'],
+      ['messages', 'receiver_id'],
+      ['message_contacts', 'user_id'],
+      ['message_contacts', 'contact_id'],
+      ['posts', 'user_id'],
+      ['post_comments', 'user_id'],
+      ['post_likes', 'user_id'],
+      ['user_avatars', 'user_id'],
+      ['recharge_requests', 'user_id'],
+      ['withdraw_requests', 'user_id'],
+    ];
+    for (const [t, col] of tables) {
+      try {
+        await runDB(env, `UPDATE ${t} SET ${col} = ? WHERE ${col} = ?`, [newId, targetUserId]);
+      } catch (e) {
+        console.warn('跳过更新:', t, col, e.message);
+      }
+    }
     await runDB(env, 'PRAGMA foreign_keys = ON');
+  } catch (err) {
+    return errorResponse('更新失败: ' + err.message, 500);
   }
 
-  return jsonResponse({ success: true, message: '用户ID已修改' });
+  return jsonResponse({ success: true, message: '用户ID已修改，请重新登录' });
 }
 
 // ============================================================
@@ -589,18 +600,29 @@ async function handleAdminDeleteProduct(env, productId) {
 }
 
 // ============================================================
-//  店铺管理
+//  店铺管理（带排序）
 // ============================================================
 async function handleGetShops(env, url) {
   const category = url?.searchParams?.get('category');
-  let sql = 'SELECT * FROM shops ORDER BY is_self DESC, is_recommend DESC, created_at DESC';
+  let sql = 'SELECT * FROM shops ORDER BY sort_order ASC, is_self DESC, is_recommend DESC, created_at DESC';
   const params = [];
   if (category) {
-    sql = 'SELECT * FROM shops WHERE category_id = ? ORDER BY is_self DESC, is_recommend DESC, created_at DESC';
+    sql = 'SELECT * FROM shops WHERE category_id = ? ORDER BY sort_order ASC, is_self DESC, is_recommend DESC, created_at DESC';
     params.push(category);
   }
   const result = await queryDB(env, sql, params);
   return jsonResponse(result.results || []);
+}
+
+async function handleUpdateShopSort(env, authHeader, shopId, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
+
+  const { sort_order } = body;
+  await runDB(env, 'UPDATE shops SET sort_order = ? WHERE id = ?', [parseInt(sort_order) || 0, shopId]);
+  return jsonResponse({ success: true, message: '排序已更新' });
 }
 
 async function handleCreateShop(env, authHeader, body) {
@@ -1838,6 +1860,10 @@ export async function onRequest(context) {
           if (shopId.endsWith('/toggle') && method === 'PUT') {
             const id = shopId.replace('/toggle', '');
             return await handleToggleShop(env, authHeader, id);
+          }
+          if (shopId.endsWith('/sort') && method === 'PUT') {
+            const id = shopId.replace('/sort', '');
+            return await handleUpdateShopSort(env, authHeader, id, body);
           }
           if (method === 'PUT') return await handleUpdateShop(env, authHeader, shopId, body);
           if (method === 'DELETE') return await handleDeleteShop(env, authHeader, shopId);
