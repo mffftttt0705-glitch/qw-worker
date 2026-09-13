@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v6.7)
-//  更新：清洗用户名 / 数字类型转换 / is_liked / shop_reviews
+//  QW电竞 - 完整后端 API (v6.8)
+//  更新：我的店铺系统 / 用户管理字段保护 / 帖子严格过滤
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -91,9 +91,22 @@ async function handleGetUserPublic(env, userId) {
 // ============================================================
 async function handleAdminGetUsers(env) {
   try {
-    const result = await queryDB(env, 'SELECT id, username, role, diamond, balance, status, created_at, banner, avatar, club_prefix, level FROM users ORDER BY created_at DESC');
-    return jsonResponse(result.results || []);
-  } catch (err) { return errorResponse('获取用户列表失败: ' + err.message, 500); }
+    const result = await queryDB(env,
+      'SELECT id, username, role, diamond, balance, status, created_at, banner, avatar, club_prefix, level FROM users ORDER BY created_at DESC'
+    );
+    const users = (result.results || []).map(u => ({
+      ...u,
+      username: u.username || '未知',
+      role: u.role || 'boss',
+      diamond: Number(u.diamond) || 0,
+      balance: Number(u.balance) || 0,
+      status: u.status || 'active',
+      level: Number(u.level) || 1,
+    }));
+    return jsonResponse(users);
+  } catch (err) {
+    return errorResponse('获取用户列表失败: ' + err.message, 500);
+  }
 }
 
 async function handleAdminToggleBan(env, targetUserId) {
@@ -143,9 +156,6 @@ async function handleAdminDeleteUser(env, targetUserId) {
   return jsonResponse({ success: true, message: '用户已删除' });
 }
 
-// ============================================================
-//  修改用户ID（清洗脏用户名 + 迁移）
-// ============================================================
 async function handleChangeUserId(env, authHeader, body) {
   const adminId = verifyAndGetUserId(authHeader);
   if (!adminId) return errorResponse('请先登录', 401);
@@ -263,13 +273,17 @@ async function handleGetPosts(env, url) {
       (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) as comments_count
     FROM posts p
     LEFT JOIN users u ON p.user_id = u.id
-    WHERE p.status = 'active' OR p.status IS NULL
+    WHERE (p.status = 'active' OR p.status IS NULL)
   `;
   const params = [];
-  if (userId) { sql += ' AND p.user_id = ?'; params.push(userId); }
+  if (userId) {
+    sql += ' AND p.user_id = ?';
+    params.push(userId);
+  }
   sql += ' ORDER BY p.created_at DESC';
   const result = await queryDB(env, sql, params);
   const posts = result.results || [];
+
   if (currentUserId) {
     for (const post of posts) {
       try {
@@ -508,7 +522,7 @@ async function handleAdminDeleteProduct(env, productId) {
 }
 
 // ============================================================
-//  店铺管理（数字类型转换）
+//  店铺管理
 // ============================================================
 async function handleGetShops(env, url) {
   const category = url?.searchParams?.get('category');
@@ -707,6 +721,173 @@ async function handleGetFollowStatus(env, authHeader, shopId) {
   if (!userId) return jsonResponse({ followed: false });
   const check = await queryDB(env, 'SELECT * FROM shop_follows WHERE user_id = ? AND shop_id = ?', [userId, shopId]);
   return jsonResponse({ followed: (check.results && check.results.length > 0) });
+}
+
+// ============================================================
+//  我的店铺系统
+// ============================================================
+async function handleMyShop(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const shopResult = await queryDB(env, 'SELECT * FROM shops WHERE owner_id = ? LIMIT 1', [userId]);
+  const shop = shopResult.results?.[0];
+  if (!shop) return jsonResponse({ hasShop: false });
+  shop.is_self = Number(shop.is_self) || 0;
+  shop.is_recommend = Number(shop.is_recommend) || 0;
+  return jsonResponse({ hasShop: true, shop });
+}
+
+async function handleApplyShop(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
+  const role = user.role || 'boss';
+  if (role === 'handler') return errorResponse('打手不能创建店铺', 403);
+  if (role === 'boss') return errorResponse('老板不能创建店铺', 403);
+
+  const existing = await queryDB(env, 'SELECT * FROM shops WHERE owner_id = ?', [userId]);
+  if (existing.results && existing.results.length > 0) return errorResponse('您已拥有店铺');
+
+  const pending = await queryDB(env, 'SELECT * FROM shop_applications WHERE applicant_id = ? AND status = "pending"', [userId]);
+  if (pending.results && pending.results.length > 0) return errorResponse('已有待审核的申请');
+
+  const { shop_name, description, logo, banner } = body;
+  if (!shop_name) return errorResponse('请输入店铺名称');
+  const id = generateId();
+  await runDB(env,
+    'INSERT INTO shop_applications (id, applicant_id, shop_name, description, logo, banner, status, created_at) VALUES (?, ?, ?, ?, ?, ?, "pending", ?)',
+    [id, userId, shop_name, description || '', logo || '', banner || '', new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, id, message: '申请已提交，请等待管理员审核' });
+}
+
+async function handleGetMyShopProducts(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const shopResult = await queryDB(env, 'SELECT * FROM shops WHERE owner_id = ? LIMIT 1', [userId]);
+  const shop = shopResult.results?.[0];
+  if (!shop) return jsonResponse([]);
+  const result = await queryDB(env, 'SELECT * FROM products WHERE shop_id = ? ORDER BY created_at DESC', [shop.id]);
+  return jsonResponse(result.results || []);
+}
+
+async function handleGetMyShopOrders(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const shopResult = await queryDB(env, 'SELECT * FROM shops WHERE owner_id = ? LIMIT 1', [userId]);
+  const shop = shopResult.results?.[0];
+  if (!shop) return jsonResponse([]);
+  const result = await queryDB(env,
+    `SELECT o.* FROM orders o
+     LEFT JOIN products p ON o.product_id = p.id
+     WHERE p.shop_id = ?
+     ORDER BY o.created_at DESC`, [shop.id]);
+  return jsonResponse(result.results || []);
+}
+
+async function handleGetMyShopHandlers(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const shopResult = await queryDB(env, 'SELECT * FROM shops WHERE owner_id = ? LIMIT 1', [userId]);
+  const shop = shopResult.results?.[0];
+  if (!shop) return jsonResponse([]);
+  const result = await queryDB(env,
+    `SELECT u.id, u.username, u.avatar, u.diamond FROM shop_handlers sh
+     LEFT JOIN users u ON sh.handler_id = u.id
+     WHERE sh.shop_id = ? AND sh.status = 'active'`, [shop.id]);
+  return jsonResponse(result.results || []);
+}
+
+async function handleMyShopUpdate(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const shopResult = await queryDB(env, 'SELECT * FROM shops WHERE owner_id = ? LIMIT 1', [userId]);
+  const shop = shopResult.results?.[0];
+  if (!shop) return errorResponse('您没有店铺', 403);
+  const { name, description, logo, banner } = body;
+  await runDB(env,
+    'UPDATE shops SET name = ?, description = ?, logo = ?, banner = ? WHERE id = ?',
+    [name || shop.name, description || '', logo || '', banner || '', shop.id]
+  );
+  return jsonResponse({ success: true, message: '已更新' });
+}
+
+async function handleInviteHandler(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const shopResult = await queryDB(env, 'SELECT * FROM shops WHERE owner_id = ? LIMIT 1', [userId]);
+  const shop = shopResult.results?.[0];
+  if (!shop) return errorResponse('您没有店铺', 403);
+  const { handler_id } = body;
+  if (!handler_id) return errorResponse('请选择打手');
+  const h = await getUserById(env, handler_id);
+  if (!h || h.role !== 'handler') return errorResponse('该用户不是打手');
+  const existing = await queryDB(env, 'SELECT * FROM shop_handlers WHERE shop_id = ? AND handler_id = ?', [shop.id, handler_id]);
+  if (existing.results && existing.results.length > 0) return errorResponse('该打手已入驻');
+  await runDB(env,
+    'INSERT INTO shop_handlers (id, shop_id, handler_id, status, created_at) VALUES (?, ?, ?, "active", ?)',
+    [generateId(), shop.id, handler_id, new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, message: '已邀请打手入驻' });
+}
+
+async function handleGetAllShopApplications(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
+  const result = await queryDB(env,
+    `SELECT a.*, u.username as applicant_name FROM shop_applications a
+     LEFT JOIN users u ON a.applicant_id = u.id
+     WHERE a.status = 'pending' ORDER BY a.created_at DESC`);
+  return jsonResponse(result.results || []);
+}
+
+async function handleApproveShopApplication(env, authHeader, appId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
+  const appResult = await queryDB(env, 'SELECT * FROM shop_applications WHERE id = ?', [appId]);
+  const app = appResult.results?.[0];
+  if (!app || app.status !== 'pending') return errorResponse('申请不存在或已处理');
+
+  const countResult = await queryDB(env, 'SELECT COUNT(*) as c FROM shops');
+  const count = countResult.results?.[0]?.c || 0;
+  const shopId = 'a' + String(100000 + count + 1);
+
+  await runDB(env,
+    `INSERT INTO shops (id, owner_id, name, description, logo, banner, status, rating, sales, is_self, is_recommend, follow_count, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'active', '5.0', 0, 0, 0, 0, ?)`,
+    [shopId, app.applicant_id, app.shop_name, app.description || '', app.logo || '', app.banner || '', new Date().toISOString()]
+  );
+  await runDB(env, 'UPDATE shop_applications SET status = "approved", handled_at = ? WHERE id = ?',
+    [new Date().toISOString(), appId]);
+  return jsonResponse({ success: true, shopId, message: '已通过' });
+}
+
+async function handleRejectShopApplication(env, authHeader, appId, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
+  await runDB(env, 'UPDATE shop_applications SET status = "rejected", reject_reason = ?, handled_at = ? WHERE id = ?',
+    [body.reason || '无原因', new Date().toISOString(), appId]);
+  return jsonResponse({ success: true, message: '已拒绝' });
+}
+
+async function handleChangeShopOwner(env, authHeader, shopId, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
+  const { new_owner_id } = body;
+  if (!new_owner_id) return errorResponse('请选择新拥有者');
+  const u = await getUserById(env, new_owner_id);
+  if (!u) return errorResponse('用户不存在');
+  await runDB(env, 'UPDATE shops SET owner_id = ? WHERE id = ?', [new_owner_id, shopId]);
+  return jsonResponse({ success: true, message: '拥有者已更换' });
 }
 
 // ============================================================
@@ -1384,6 +1565,15 @@ export async function onRequest(context) {
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
 
+    // 我的店铺
+    if (path === '/api/my-shop' && method === 'GET') return await handleMyShop(env, authHeader);
+    if (path === '/api/my-shop/apply' && method === 'POST') return await handleApplyShop(env, authHeader, body);
+    if (path === '/api/my-shop/products' && method === 'GET') return await handleGetMyShopProducts(env, authHeader);
+    if (path === '/api/my-shop/orders' && method === 'GET') return await handleGetMyShopOrders(env, authHeader);
+    if (path === '/api/my-shop/handlers' && method === 'GET') return await handleGetMyShopHandlers(env, authHeader);
+    if (path === '/api/my-shop/update' && method === 'PUT') return await handleMyShopUpdate(env, authHeader, body);
+    if (path === '/api/my-shop/invite' && method === 'POST') return await handleInviteHandler(env, authHeader, body);
+
     // 客服
     if (path === '/api/service/recharges' && method === 'GET') return await handleGetPendingRecharges(env, authHeader);
     if (path === '/api/service/process' && method === 'POST') return await handleProcessRecharge(env, authHeader, body);
@@ -1434,6 +1624,7 @@ export async function onRequest(context) {
           const shopId = path.replace('/api/shops/', '');
           if (shopId.endsWith('/toggle') && method === 'PUT') return await handleToggleShop(env, authHeader, shopId.replace('/toggle', ''));
           if (shopId.endsWith('/sort') && method === 'PUT') return await handleUpdateShopSort(env, authHeader, shopId.replace('/sort', ''), body);
+          if (shopId.endsWith('/owner') && method === 'PUT') return await handleChangeShopOwner(env, authHeader, shopId.replace('/owner', ''), body);
           if (method === 'PUT') return await handleUpdateShop(env, authHeader, shopId, body);
           if (method === 'DELETE') return await handleDeleteShop(env, authHeader, shopId);
         }
@@ -1442,6 +1633,12 @@ export async function onRequest(context) {
           const catId = path.replace('/api/shop-categories/', '');
           if (method === 'PUT') return await handleUpdateShopCategory(env, authHeader, catId, body);
           if (method === 'DELETE') return await handleDeleteShopCategory(env, authHeader, catId);
+        }
+        if (path === '/api/admin/shop-applications' && method === 'GET') return await handleGetAllShopApplications(env, authHeader);
+        if (path.startsWith('/api/admin/shop-applications/')) {
+          const appId = path.replace('/api/admin/shop-applications/', '');
+          if (appId.endsWith('/approve') && method === 'PUT') return await handleApproveShopApplication(env, authHeader, appId.replace('/approve', ''));
+          if (appId.endsWith('/reject') && method === 'PUT') return await handleRejectShopApplication(env, authHeader, appId.replace('/reject', ''), body);
         }
         if (path === '/api/admin/users' && method === 'GET') return await handleAdminGetUsers(env);
         if (path === '/api/admin/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
