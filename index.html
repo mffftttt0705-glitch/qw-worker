@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="msapplication-TileColor" content="#1a6aff">
-<meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+<meta name="msapplication-TileImage" href="/icons/icon-144x144.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 <style>
 :root{--bg-primary:#f0f2f5;--bg-secondary:#fff;--bg-card:#fff;--bg-card-hover:#f5f6f8;--bg-input:#fff;--text-primary:#1a1a2e;--text-secondary:#4a4a5a;--text-muted:#6a6a7a;--text-nav:#4a4a5a;--border-color:#d0d5dd;--border-light:rgba(0,0,0,0.06);--shadow:0 30px 80px rgba(0,0,0,0.15);--btn-primary-bg:linear-gradient(145deg,#1a6aff,#0044cc);--btn-primary-color:#fff;--toast-bg:#fff;--toast-border:#22c55e;--modal-bg:rgba(255,255,255,0.95);--bottom-nav-bg:rgba(255,255,255,0.95);--product-card-bg:#fff;--product-card-border:rgba(0,0,0,0.06);--price-color:#e8a800;--product-img-bg:linear-gradient(145deg,#e8ecf0,#d0d5dd);--product-img-icon:#6a6a7a;--product-title:#1a1a2e;--product-desc:#4a4a5a;--product-stock:#6a6a7a;--product-bottom-border:rgba(0,0,0,0.06);--admin-card-bg:#fff;--admin-card-border:rgba(0,0,0,0.06);--admin-card-shadow:0 4px 20px rgba(0,0,0,0.06);--admin-card-title:#1a1a2e;--post-bg:#fff;--post-border:rgba(0,0,0,0.06);--post-shadow:0 2px 12px rgba(0,0,0,0.06);}
@@ -504,7 +504,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 </div>
 </div>
 </div>
-<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v6.7</div>
+<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v6.8</div>
 </div>
 </div>
 <div class="bottom-nav" id="bottomNav"></div>
@@ -598,6 +598,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 <div class="sub-page" id="subPageCategories"><div class="sub-header"><button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button><span class="title">🏷️ 分类管理</span></div><div id="subCategoriesContent"></div></div>
 <div class="sub-page" id="subPageBanners"><div class="sub-header"><button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button><span class="title">📸 广告管理</span></div><div id="subBannersContent"></div></div>
 <div class="sub-page" id="subPageIcons"><div class="sub-header"><button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button><span class="title">🎨 图标管理</span></div><div id="subIconsContent"></div></div>
+<div class="sub-page" id="subPageMyShop"><div class="sub-header"><button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button><span class="title">🏪 我的店铺</span></div><div id="subMyShopContent"></div></div>
 
 <div class="chat-fullscreen" id="chatFullscreen">
 <div class="chat-header">
@@ -629,7 +630,6 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 
 <div class="modal-overlay" id="customModal"><div class="modal-box" id="customModalContent"></div></div>
 <div id="toast" class="toast"></div>
-
 <script>
 /* ============================================================
    全局状态
@@ -828,7 +828,7 @@ function openSubPage(page){
     'recharges':'subPageRecharges','shops':'subPageShops','announce':'subPageAnnounce',
     'withdrawals':'subPageWithdrawals','account':'subPageAccount','service':'subPageService',
     'dispatcher':'subPageDispatcher','categories':'subPageCategories',
-    'banners':'subPageBanners','icons':'subPageIcons'
+    'banners':'subPageBanners','icons':'subPageIcons','myshop':'subPageMyShop'
   };
   const containerId=pageMap[page];
   if(!containerId)return;
@@ -848,6 +848,7 @@ function openSubPage(page){
     case 'categories':renderSubCategories();break;
     case 'banners':renderSubBanners();break;
     case 'icons':renderSubIcons();break;
+    case 'myshop':renderSubMyShop();break;
   }
 }
 function closeSubPage(){
@@ -1664,6 +1665,7 @@ function renderMoreFunctions(){
     ];
   }else if(role==='service'){
     items=[
+      {icon:'fa-store',label:'我的店铺',action:"openSubPage('myshop')"},
       {icon:'fa-headset',label:'客服系统',action:"openSubPage('service')"},
       {icon:'fa-coins',label:'充值审核',action:"openSubPage('recharges')"},
       {icon:'fa-users',label:'用户管理',action:"openSubPage('users')"},
@@ -1671,6 +1673,7 @@ function renderMoreFunctions(){
     ];
   }else if(role==='dispatcher'){
     items=[
+      {icon:'fa-store',label:'我的店铺',action:"openSubPage('myshop')"},
       {icon:'fa-clipboard-list',label:'派单系统',action:"openSubPage('dispatcher')"},
       {icon:'fa-boxes',label:'商品管理',action:"openSubPage('products')"},
       {icon:'fa-chart-bar',label:'数据统计',action:"openSubPage('orders')"},
@@ -1762,22 +1765,24 @@ async function viewUserProfile(userId){
 async function loadUserPosts(userId){
   const container=document.getElementById('upPostList');
   try{
-    const posts=await apiRequest('/posts?user_id='+userId);
-    document.getElementById('upPostCount').textContent=posts.length;
-    if(posts.length===0){
+    const posts=await apiRequest('/posts?user_id='+encodeURIComponent(userId));
+    const targetId=String(userId);
+    const myPosts=(posts||[]).filter(p=>String(p.user_id)===targetId);
+    document.getElementById('upPostCount').textContent=myPosts.length;
+    if(myPosts.length===0){
       container.innerHTML='<div class="empty-state"><i class="fas fa-newspaper"></i><p>暂无帖子</p></div>';
       return;
     }
     let html='';
-    for(const post of posts){
+    for(const post of myPosts){
       let images=[];
-      try{images=post.images?JSON.parse(post.images):[];}catch(e){}
+      try{images=post.images?JSON.parse(post.images):[];}catch(e){images=[];}
       let imagesHtml='';
       if(images.length>0){
         const gridClass=images.length===1?'':images.length===2?'grid-2':'grid-3';
         imagesHtml=`<div class="post-images ${gridClass}">${images.map(img=>`<img src="${img}" onclick="showImgPreview('${img}')" />`).join('')}</div>`;
       }
-      html+=`<div class="post-card"><div class="post-content">${post.content}</div>${imagesHtml}<div class="post-time" style="font-size:11px;color:var(--text-muted);margin-top:6px;">${formatTime(post.created_at)}</div></div>`;
+      html+=`<div class="post-card"><div class="post-content">${post.content}</div>${imagesHtml}<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${formatTime(post.created_at)}</div></div>`;
     }
     container.innerHTML=html;
   }catch(err){container.innerHTML='<div class="empty-state"><p>加载失败</p></div>';}
@@ -1786,7 +1791,7 @@ async function loadUserShops(userId){
   const container=document.getElementById('upShopList');
   try{
     const shops=await apiRequest('/shops');
-    const userShops=shops.filter(s=>s.owner_id===userId);
+    const userShops=shops.filter(s=>String(s.owner_id)===String(userId));
     if(userShops.length===0){
       container.innerHTML='<div class="empty-state"><i class="fas fa-store"></i><p>暂无店铺</p></div>';
       return;
@@ -1989,7 +1994,6 @@ async function doWithdrawSubmit(){
     toast(result.message||'提现申请已提交','success');
   }catch(err){toast(err.message,'error');}
 }
-
 /* ============================================================
    子页面-订单
 ============================================================ */
@@ -2280,38 +2284,65 @@ async function renderSubUsers(){
     await populateGiftUsersSub();
   }catch(err){}
 }
-async function renderUsersListSub(){
-  try{
-    const search=document.getElementById('searchUserSub')?.value.toLowerCase()||'';
-    const users=await apiRequest('/admin/users');
-    let filtered=users;
-    if(userFilterSub==='boss')filtered=users.filter(u=>u.role==='boss');
-    else if(userFilterSub==='handler')filtered=users.filter(u=>u.role==='handler');
-    else if(userFilterSub==='dispatcher')filtered=users.filter(u=>u.role==='dispatcher');
-    else if(userFilterSub==='service')filtered=users.filter(u=>u.role==='service');
-    else if(userFilterSub==='pending')filtered=users.filter(u=>u.status==='pending'&&(u.role==='handler'||u.role==='dispatcher'||u.role==='service'));
-    if(search)filtered=filtered.filter(u=>(u.username||'').toLowerCase().includes(search));
-    const container=document.getElementById('usersListSub');
-    if(!container)return;
-    if(filtered.length===0){container.innerHTML='<div class="empty-state"><p>暂无用户</p></div>';return;}
-    let html='<div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
-    for(const u of filtered){
-      let roleText=u.role==='boss'?'老板':u.role==='handler'?(u.status==='pending'?'待审核打手':'打手'):u.role==='dispatcher'?(u.status==='pending'?'待审核派单':'派单员'):u.role==='service'?(u.status==='pending'?'待审核客服':'客服'):'管理员';
-      let statusText2=u.status==='active'?'正常':u.status==='pending'?'待审核':'封禁';
-      let statusCls=u.status==='active'?'status-onsale':u.status==='pending'?'status-pending':'status-canceled';
-      let actions='';
-      if(u.role!=='admin'){
-        if((u.role==='handler'||u.role==='dispatcher'||u.role==='service')&&u.status==='pending')actions+=`<button class="btn btn-success btn-xs" onclick="approveHandler('${u.id}')">审核通过</button>`;
-        actions+=`<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status==='active'?'封禁':'解禁'}</button>`;
-        actions+=`<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
-        actions+=`<button class="btn btn-primary btn-xs" onclick="changeUsername('${u.id}','${(u.username||'').replace(/'/g,"\\'")}')">改用户名</button>`;
-        actions+=`<button class="btn btn-danger btn-xs" onclick="deleteUser('${u.id}')">删除</button>`;
-      }
-      html+=`<tr><td>${u.username||'-'}</td><td>${roleText}</td><td>${u.diamond||0}</td><td><span class="status-badge ${statusCls}">${statusText2}</span></td><td><div class="action-group">${actions}</div></td></tr>`;
+async function renderUsersListSub() {
+  try {
+    const search = (document.getElementById('searchUserSub')?.value || '').toLowerCase();
+    const users = await apiRequest('/admin/users');
+    let filtered = users || [];
+    if (userFilterSub === 'boss') filtered = filtered.filter(u => u.role === 'boss');
+    else if (userFilterSub === 'handler') filtered = filtered.filter(u => u.role === 'handler');
+    else if (userFilterSub === 'dispatcher') filtered = filtered.filter(u => u.role === 'dispatcher');
+    else if (userFilterSub === 'service') filtered = filtered.filter(u => u.role === 'service');
+    else if (userFilterSub === 'pending') filtered = filtered.filter(u => u.status === 'pending' && (u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service'));
+    if (search) filtered = filtered.filter(u => (u.username || '').toLowerCase().includes(search));
+
+    const container = document.getElementById('usersListSub');
+    if (!container) return;
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>暂无用户</p></div>';
+      return;
     }
-    html+='</tbody></table></div>';
-    container.innerHTML=html;
-  }catch(err){}
+
+    let html = '<div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+    for (const u of filtered) {
+      const roleText = u.role === 'boss' ? '老板'
+        : u.role === 'handler' ? (u.status === 'pending' ? '待审核打手' : '打手')
+        : u.role === 'dispatcher' ? (u.status === 'pending' ? '待审核派单' : '派单员')
+        : u.role === 'service' ? (u.status === 'pending' ? '待审核客服' : '客服')
+        : u.role === 'admin' ? '管理员' : (u.role || '未知');
+
+      const statusText2 = u.status === 'active' ? '正常'
+        : u.status === 'pending' ? '待审核'
+        : u.status === 'banned' ? '封禁' : (u.status || '未知');
+      const statusCls = u.status === 'active' ? 'status-onsale'
+        : u.status === 'pending' ? 'status-pending' : 'status-canceled';
+
+      let actions = '';
+      if (u.role !== 'admin') {
+        if ((u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service') && u.status === 'pending') {
+          actions += `<button class="btn btn-success btn-xs" onclick="approveHandler('${u.id}')">审核通过</button>`;
+        }
+        actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status === 'active' ? '封禁' : '解禁'}</button>`;
+        actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
+        actions += `<button class="btn btn-primary btn-xs" onclick="changeUsername('${u.id}','${(u.username || '').replace(/'/g, "\\'")}')">改用户名</button>`;
+        actions += `<button class="btn btn-danger btn-xs" onclick="deleteUser('${u.id}')">删除</button>`;
+      }
+
+      html += `<tr>
+        <td>${u.username || '未知'}</td>
+        <td>${roleText}</td>
+        <td>${u.diamond || 0}</td>
+        <td><span class="status-badge ${statusCls}">${statusText2}</span></td>
+        <td><div class="action-group">${actions}</div></td>
+      </tr>`;
+    }
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  } catch (err) {
+    console.error('renderUsersListSub error:', err);
+    const container = document.getElementById('usersListSub');
+    if (container) container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p></div>';
+  }
 }
 function setUserFilterSub(filter){
   userFilterSub=filter;
@@ -2432,8 +2463,58 @@ async function renderSubShops(){
         container.appendChild(catSection);
       }
     }catch(err){}
+
+    // 店铺申请审核区
+    let appSection = document.getElementById('shopAppSection');
+    if (!appSection) {
+      appSection = document.createElement('div');
+      appSection.id = 'shopAppSection';
+      container.appendChild(appSection);
+    }
+    appSection.innerHTML = '';
+    try {
+      const apps = await apiRequest('/admin/shop-applications');
+      if (apps.length > 0) {
+        appSection.innerHTML = `
+          <div class="admin-card">
+            <div class="admin-card-title">📝 店铺申请（${apps.length}）</div>
+            ${apps.map(a => `
+              <div style="padding:10px;background:var(--bg-card-hover);border-radius:10px;margin-bottom:8px;">
+                <div style="font-weight:600;">${a.shop_name}</div>
+                <div style="font-size:12px;color:var(--text-muted);">申请人：${a.applicant_name || a.applicant_id}</div>
+                <div style="font-size:13px;margin-top:6px;">${a.description || ''}</div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                  <button class="btn btn-success btn-xs" onclick="approveShopApp('${a.id}')">通过</button>
+                  <button class="btn btn-danger btn-xs" onclick="rejectShopApp('${a.id}')">拒绝</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>`;
+      }
+    } catch (e) {}
   }catch(err){container.innerHTML='<div class="empty-state"><p>加载失败</p></div>';}
 }
+
+async function approveShopApp(appId) {
+  confirmAction('确认通过', '确认通过此店铺申请？', '通过', `doApproveShopApp('${appId}')`);
+}
+async function doApproveShopApp(appId) {
+  try {
+    const res = await apiRequest('/admin/shop-applications/' + appId + '/approve', { method: 'PUT' });
+    toast(res.message || '已通过', 'success');
+    renderSubShops();
+  } catch (err) { toast(err.message, 'error'); }
+}
+async function rejectShopApp(appId) {
+  const reason = prompt('请输入拒绝原因：');
+  if (reason === null) return;
+  try {
+    await apiRequest('/admin/shop-applications/' + appId + '/reject', { method: 'PUT', body: JSON.stringify({ reason }) });
+    toast('已拒绝', 'success');
+    renderSubShops();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
 function editShopCategory(catId,name,imageUrl){
   showCustomModal(`<h3><i class="fas fa-edit"></i> 编辑店铺分类</h3><div class="form-group"><label>分类名称</label><input class="admin-form-control" id="editShopCatName" value="${name}" /></div><div class="form-group"><label>分类图标URL</label><input class="admin-form-control" id="editShopCatImage" value="${imageUrl}" /></div><div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">取消</button><button class="btn btn-success" onclick="doEditShopCategory('${catId}')">保存</button></div>`);
 }
@@ -2502,12 +2583,21 @@ async function editShop(shopId){
       <div class="form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="editShopLogo" value="${shop.logo||''}" /></div>
       <div class="form-group"><label>店铺背景图URL</label><input class="admin-form-control" id="editShopBanner" value="${shop.banner||''}" /></div>
       <div class="form-group"><label>所属分类</label><select class="admin-form-control" id="editShopCategory">${catOptions}</select></div>
+      <div class="form-group"><label>店铺拥有者</label><select class="admin-form-control" id="editShopOwner"><option value="">-- 不更改 --</option></select></div>
       <div class="form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="editShopIsSelf" ${Number(shop.is_self)===1?'checked':''} style="width:20px;height:20px;" /><label style="margin:0;font-size:14px;">🏆 自营</label></div>
       <div class="form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="editShopIsRecommend" ${Number(shop.is_recommend)===1?'checked':''} style="width:20px;height:20px;" /><label style="margin:0;font-size:14px;">🔥 推荐</label></div>
       <div class="btn-row">
         <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
         <button class="btn btn-success" onclick="doEditShop('${shopId}')">保存</button>
       </div>`);
+    try {
+      const allUsers = await apiRequest('/admin/users');
+      const ownerCandidates = allUsers.filter(u => ['dispatcher', 'service', 'boss'].includes(u.role));
+      const ownerSel = document.getElementById('editShopOwner');
+      ownerCandidates.forEach(u => {
+        ownerSel.innerHTML += `<option value="${u.id}" ${shop.owner_id === u.id ? 'selected' : ''}>${u.username} (${u.role})</option>`;
+      });
+    } catch (e) {}
   }catch(err){toast(err.message,'error');}
 }
 async function doEditShop(shopId){
@@ -2521,6 +2611,10 @@ async function doEditShop(shopId){
   if(!name)return toast('请输入店铺名称','warning');
   try{
     await apiRequest('/shops/'+shopId,{method:'PUT',body:JSON.stringify({name,description,logo,banner,category_id,is_self,is_recommend})});
+    const newOwnerId = document.getElementById('editShopOwner')?.value;
+    if (newOwnerId) {
+      await apiRequest('/admin/shops/' + shopId + '/owner', { method: 'PUT', body: JSON.stringify({ new_owner_id: newOwnerId }) });
+    }
     closeCustomModal();
     toast('店铺已更新','success');
     renderSubShops();
@@ -3066,6 +3160,153 @@ async function renderSubIcons(){
 }
 
 /* ============================================================
+   我的店铺
+============================================================ */
+async function renderSubMyShop() {
+  const container = document.getElementById('subMyShopContent');
+  if (!container) return;
+  container.innerHTML = '<div class="empty-state"><p>加载中...</p></div>';
+  try {
+    const res = await apiRequest('/my-shop');
+    if (!res.hasShop) {
+      container.innerHTML = `
+        <div class="admin-card">
+          <div class="admin-card-title">🏪 申请创建店铺</div>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">提交后需等待管理员审核</p>
+          <div class="admin-form-group"><label>店铺名称</label><input class="admin-form-control" id="applyShopName" /></div>
+          <div class="admin-form-group"><label>店铺简介</label><textarea class="admin-form-control" id="applyShopDesc" rows="2"></textarea></div>
+          <div class="admin-form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="applyShopLogo" /></div>
+          <div class="admin-form-group"><label>店铺背景图URL</label><input class="admin-form-control" id="applyShopBanner" /></div>
+          <button class="btn btn-success" onclick="submitShopApplication()">提交申请</button>
+        </div>`;
+      return;
+    }
+
+    const shop = res.shop;
+    container.innerHTML = `
+      <div class="admin-card">
+        <div class="admin-card-title">🏪 ${shop.name}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">${shop.description || '暂无简介'}</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="editMyShopInfo()">编辑店铺信息</button>
+          <button class="btn btn-success btn-sm" onclick="inviteHandlerToShop()">邀请打手入驻</button>
+        </div>
+      </div>
+      <div class="admin-card"><div class="admin-card-title">📦 我的商品</div><div id="myShopProducts"></div></div>
+      <div class="admin-card"><div class="admin-card-title">📋 我的店铺订单</div><div id="myShopOrders"></div></div>
+      <div class="admin-card"><div class="admin-card-title">👥 入驻打手</div><div id="myShopHandlers"></div></div>
+    `;
+    loadMyShopProducts();
+    loadMyShopOrders();
+    loadMyShopHandlers();
+  } catch (err) {
+    container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p></div>';
+  }
+}
+
+async function submitShopApplication() {
+  const shop_name = document.getElementById('applyShopName').value.trim();
+  if (!shop_name) return toast('请输入店铺名称', 'warning');
+  const description = document.getElementById('applyShopDesc').value.trim();
+  const logo = document.getElementById('applyShopLogo').value.trim();
+  const banner = document.getElementById('applyShopBanner').value.trim();
+  try {
+    const res = await apiRequest('/my-shop/apply', { method: 'POST', body: JSON.stringify({ shop_name, description, logo, banner }) });
+    toast(res.message || '已提交申请', 'success');
+    renderSubMyShop();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function loadMyShopProducts() {
+  const c = document.getElementById('myShopProducts');
+  if (!c) return;
+  try {
+    const products = await apiRequest('/my-shop/products');
+    if (products.length === 0) { c.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">暂无商品</p>'; return; }
+    c.innerHTML = products.map(p => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);"><span>${p.title}</span><span style="color:#f5c842;">${p.price} 红钻</span></div>`).join('');
+  } catch (err) { c.innerHTML = '<p>加载失败</p>'; }
+}
+
+async function loadMyShopOrders() {
+  const c = document.getElementById('myShopOrders');
+  if (!c) return;
+  try {
+    const orders = await apiRequest('/my-shop/orders');
+    if (orders.length === 0) { c.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">暂无订单</p>'; return; }
+    c.innerHTML = orders.map(o => `<div style="padding:8px 0;border-bottom:1px solid var(--border-light);"><strong>${o.title}</strong><br><span style="font-size:12px;color:var(--text-muted);">${o.price} 红钻 | ${statusText(o.status)}</span></div>`).join('');
+  } catch (err) { c.innerHTML = '<p>加载失败</p>'; }
+}
+
+async function loadMyShopHandlers() {
+  const c = document.getElementById('myShopHandlers');
+  if (!c) return;
+  try {
+    const handlers = await apiRequest('/my-shop/handlers');
+    if (handlers.length === 0) { c.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">暂无入驻打手</p>'; return; }
+    c.innerHTML = handlers.map(h => `<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-light);"><strong>${h.username}</strong></div>`).join('');
+  } catch (err) { c.innerHTML = '<p>加载失败</p>'; }
+}
+
+function editMyShopInfo() {
+  apiRequest('/my-shop').then(res => {
+    if (!res.hasShop) return;
+    const s = res.shop;
+    showCustomModal(`
+      <h3>编辑店铺</h3>
+      <div class="form-group"><label>店铺名称</label><input class="admin-form-control" id="myShopName" value="${s.name}" /></div>
+      <div class="form-group"><label>店铺简介</label><textarea class="admin-form-control" id="myShopDesc" rows="2">${s.description || ''}</textarea></div>
+      <div class="form-group"><label>Logo URL</label><input class="admin-form-control" id="myShopLogo" value="${s.logo || ''}" /></div>
+      <div class="form-group"><label>背景图 URL</label><input class="admin-form-control" id="myShopBanner" value="${s.banner || ''}" /></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+        <button class="btn btn-success" onclick="saveMyShopInfo()">保存</button>
+      </div>
+    `);
+  });
+}
+
+async function saveMyShopInfo() {
+  try {
+    await apiRequest('/my-shop/update', { method: 'PUT', body: JSON.stringify({
+      name: document.getElementById('myShopName').value.trim(),
+      description: document.getElementById('myShopDesc').value.trim(),
+      logo: document.getElementById('myShopLogo').value.trim(),
+      banner: document.getElementById('myShopBanner').value.trim(),
+    }) });
+    closeCustomModal();
+    toast('已保存', 'success');
+    renderSubMyShop();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function inviteHandlerToShop() {
+  try {
+    const users = await apiRequest('/admin/users');
+    const handlers = users.filter(u => u.role === 'handler' && u.status === 'active');
+    if (handlers.length === 0) return toast('暂无可用打手', 'warning');
+    const options = handlers.map(h => `<option value="${h.id}">${h.username}</option>`).join('');
+    showCustomModal(`
+      <h3>邀请打手入驻</h3>
+      <div class="form-group"><label>选择打手</label><select class="admin-form-control" id="inviteHandlerSelect">${options}</select></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+        <button class="btn btn-success" onclick="doInviteHandler()">邀请</button>
+      </div>
+    `);
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function doInviteHandler() {
+  const handler_id = document.getElementById('inviteHandlerSelect').value;
+  try {
+    await apiRequest('/my-shop/invite', { method: 'POST', body: JSON.stringify({ handler_id }) });
+    closeCustomModal();
+    toast('已邀请', 'success');
+    renderSubMyShop();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+/* ============================================================
    消息
 ============================================================ */
 async function loadContacts(){
@@ -3421,6 +3662,15 @@ window.renderSubDispatcher=renderSubDispatcher;
 window.renderSubCategories=renderSubCategories;
 window.renderSubBanners=renderSubBanners;
 window.renderSubIcons=renderSubIcons;
+window.renderSubMyShop=renderSubMyShop;
+window.submitShopApplication=submitShopApplication;
+window.editMyShopInfo=editMyShopInfo;
+window.saveMyShopInfo=saveMyShopInfo;
+window.inviteHandlerToShop=inviteHandlerToShop;
+window.doInviteHandler=doInviteHandler;
+window.approveShopApp=approveShopApp;
+window.doApproveShopApp=doApproveShopApp;
+window.rejectShopApp=rejectShopApp;
 window.closeUserProfile=closeUserProfile;
 window.userProfileMore=userProfileMore;
 window.userProfileSendMsg=userProfileSendMsg;
@@ -3482,7 +3732,7 @@ window.doServiceApproveRecharge=doServiceApproveRecharge;
 window.showReviewModal=showReviewModal;
 window.submitReview=submitReview;
 
-console.log('✅ QW电竞护航平台 v6.7 完整版已加载');
+console.log('✅ QW电竞护航平台 v6.8 完整版已加载');
 </script>
 </body>
 </html>
