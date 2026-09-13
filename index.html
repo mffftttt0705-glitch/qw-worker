@@ -546,7 +546,7 @@
                     </div>
                 </div>
             </div>
-            <div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v6.5</div>
+            <div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v6.6</div>
         </div>
     </div>
 
@@ -925,7 +925,6 @@ async function loadShopDetailContent(shopId, selectedCatId) {
             });
             catHtml += '</div></div>';
         }
-
         let prodHtml = '';
         if (products.length === 0) {
             prodHtml = '<div class="empty-state" style="padding:12px 0;"><p style="font-size:12px;">暂无商品</p></div>';
@@ -961,11 +960,9 @@ function closeShopDetail() {
 
 async function filterShopProductsByCat(shopId, catId) {
     const catContainer = document.getElementById('sdProductList');
-    // 高亮
     catContainer.querySelectorAll('.category-card-h').forEach(c => c.classList.remove('active'));
     const targetEl = catContainer.querySelector(`.category-card-h[data-cat="${catId}"]`);
     if (targetEl) targetEl.classList.add('active');
-
     try {
         const products = await apiRequest('/shops/' + shopId + '/products');
         const filtered = catId === 'all' ? products : products.filter(p => p.shop_category_id === catId);
@@ -989,14 +986,11 @@ async function filterShopProductsByCat(shopId, catId) {
             });
             prodHtml += '</div></div>';
         }
-        // 保留分类部分，只替换商品
         const catSection = catContainer.querySelector('.category-horizontal-scroll');
         if (catSection) {
             const catParent = catSection.parentElement;
-            const nextSiblings = [];
             let node = catParent.nextElementSibling;
-            while (node) { nextSiblings.push(node); node = node.nextElementSibling; }
-            nextSiblings.forEach(n => n.remove());
+            while (node) { const next = node.nextElementSibling; node.remove(); node = next; }
             const temp = document.createElement('div');
             temp.innerHTML = prodHtml;
             while (temp.firstChild) catParent.parentElement.appendChild(temp.firstChild);
@@ -1311,7 +1305,8 @@ async function renderPosts() {
             }
         } catch (e) { console.warn('加载帖子分类失败', e); }
 
-        let posts = await apiRequest('/posts');
+        const userParam = currentUser ? '?current_user=' + currentUser.id : '';
+        let posts = await apiRequest('/posts' + userParam);
         if (currentPostCategory && currentPostCategory !== 'all') posts = posts.filter(p => p.category_id === currentPostCategory);
         document.getElementById('postCount').textContent = posts.length + '个';
         if (posts.length === 0) { container.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><p>暂无帖子</p></div>'; return; }
@@ -2128,8 +2123,12 @@ window.approveHandler = function(userId) { confirmAction('审核通过', '确认
 async function doApproveHandler(userId) { try { await apiRequest('/admin/users/' + userId + '/approve', { method: 'PUT' }); toast('✅ 审核通过', 'success'); renderUsersListSub(); } catch (err) { toast(err.message, 'error'); } }
 window.toggleUserBan = function(userId) { confirmAction('确认操作', '确认更改此用户状态？', '确认', `doToggleUserBan('${userId}')`); };
 async function doToggleUserBan(userId) { try { await apiRequest('/admin/users/' + userId + '/ban', { method: 'PUT' }); toast('用户状态已更新', 'success'); renderUsersListSub(); } catch (err) { toast(err.message, 'error'); } }
-window.resetUserPassword = function(userId) { confirmAction('重置密码', '确认将用户密码重置为 123456？', '确认重置', `doResetPassword('${userId}')`); };
-async function doResetPassword(userId) { try { await apiRequest('/admin/users/' + userId + '/reset-password', { method: 'PUT' }); toast('密码已重置', 'success'); } catch (err) { toast(err.message, 'error'); } }
+window.resetUserPassword = function(userId) {
+    confirmAction('重置密码', '确认将用户密码重置为 123456？', '确认重置', `doResetPassword('${userId}')`);
+};
+async function doResetPassword(userId) {
+    try { await apiRequest('/admin/users/' + userId + '/reset-password', { method: 'PUT' }); toast('密码已重置', 'success'); } catch (err) { toast(err.message, 'error'); }
+}
 window.changeUsername = function(userId, currentName) {
     showCustomModal(`<h3>修改用户名</h3><p style="color:var(--text-muted);font-size:14px;">当前：<strong>${currentName}</strong></p><div class="form-group"><label>新用户名</label><input class="admin-form-control" id="newUsernameInput" /></div><div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">取消</button><button class="btn btn-primary" onclick="doChangeUsername('${userId}')">确认</button></div>`);
 };
@@ -2401,6 +2400,7 @@ async function doDeleteWithdraw(withdrawId) { try { await apiRequest('/admin/wit
 function renderSubAccount() {
     const container = document.getElementById('subAccountContent');
     if (!container) return;
+    const isAdmin = (currentUserRole || currentUser?.role) === 'admin';
     container.innerHTML = `
         <div class="admin-card">
             <div class="admin-card-title"><i class="fas fa-user"></i> 个人信息</div>
@@ -2418,6 +2418,7 @@ function renderSubAccount() {
                 <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
             </div>
         </div>
+        ${isAdmin ? `
         <div class="admin-card">
             <div class="admin-card-title"><i class="fas fa-info-circle"></i> 修改用户ID（管理员）</div>
             <div class="admin-form-group"><label>新用户ID（6位以上数字）</label><input class="admin-form-control" id="newUserIdInput" /></div>
@@ -2429,9 +2430,9 @@ function renderSubAccount() {
             <div class="admin-form-group"><label>排序</label><input class="admin-form-control" id="rechargeImgSort" type="number" value="0" /></div>
             <button class="btn btn-primary btn-sm" onclick="addRechargeImage()">添加图片</button>
             <div id="rechargeImgList" style="margin-top:10px;"></div>
-        </div>
+        </div>` : ''}
     `;
-    setTimeout(loadRechargeImgList, 100);
+    if (isAdmin) setTimeout(loadRechargeImgList, 100);
 }
 async function addRechargeImage() {
     const url = document.getElementById('rechargeImgUrl').value.trim();
@@ -3105,7 +3106,7 @@ window.serviceApproveRecharge = serviceApproveRecharge;
 window.serviceRejectRecharge = serviceRejectRecharge;
 window.doServiceApproveRecharge = doServiceApproveRecharge;
 
-console.log('✅ QW电竞护航平台 v6.5 已加载');
+console.log('✅ QW电竞护航平台 v6.6 已加载');
 </script>
 </body>
 </html>
