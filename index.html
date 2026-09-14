@@ -13,11 +13,50 @@
 <meta name="apple-mobile-web-app-title" content="QW电竞">
 <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="msapplication-TileColor" content="#1a6aff">
+<meta name="msapplication-TileColor" content="#0f1419">
 <meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 <style>
-:root{--bg-primary:#f0f2f5;--bg-secondary:#fff;--bg-card:#fff;--bg-card-hover:#f5f6f8;--bg-input:#fff;--text-primary:#1a1a2e;--text-secondary:#4a4a5a;--text-muted:#6a6a7a;--text-nav:#4a4a5a;--border-color:#d0d5dd;--border-light:rgba(0,0,0,0.06);--shadow:0 30px 80px rgba(0,0,0,0.15);--btn-primary-bg:linear-gradient(145deg,#1a6aff,#0044cc);--btn-primary-color:#fff;--toast-bg:#fff;--toast-border:#22c55e;--modal-bg:rgba(255,255,255,0.95);--bottom-nav-bg:rgba(255,255,255,0.95);--product-card-bg:#fff;--product-card-border:rgba(0,0,0,0.06);--price-color:#e8a800;--product-img-bg:linear-gradient(145deg,#e8ecf0,#d0d5dd);--product-img-icon:#6a6a7a;--product-title:#1a1a2e;--product-desc:#4a4a5a;--product-stock:#6a6a7a;--product-bottom-border:rgba(0,0,0,0.06);--admin-card-bg:#fff;--admin-card-border:rgba(0,0,0,0.06);--admin-card-shadow:0 4px 20px rgba(0,0,0,0.06);--admin-card-title:#1a1a2e;--post-bg:#fff;--post-border:rgba(0,0,0,0.06);--post-shadow:0 2px 12px rgba(0,0,0,0.06);}
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f7f9f9;
+    --bg-input: #f7f9f9;
+    --text-primary: #0f1419;
+    --text-secondary: #536471;
+    --text-muted: #536471;
+    --text-nav: #536471;
+    --border-color: #eff3f4;
+    --border-light: #eff3f4;
+    --shadow: 0 4px 20px rgba(0,0,0,0.06);
+    --btn-primary-bg: #0f1419;
+    --btn-primary-color: #ffffff;
+    --toast-bg: #0f1419;
+    --toast-border: #0f1419;
+    --modal-bg: #ffffff;
+    --bottom-nav-bg: rgba(255,255,255,0.92);
+    --product-card-bg: #ffffff;
+    --product-card-border: #eff3f4;
+    --price-color: #0f1419;
+    --product-img-bg: #f7f9f9;
+    --product-img-icon: #536471;
+    --product-title: #0f1419;
+    --product-desc: #536471;
+    --product-stock: #536471;
+    --product-bottom-border: #eff3f4;
+    --admin-card-bg: #ffffff;
+    --admin-card-border: #eff3f4;
+    --admin-card-shadow: none;
+    --admin-card-title: #0f1419;
+    --toast-text: #ffffff;
+    --toast-shadow: 0 4px 20px rgba(15,20,25,0.15);
+    --post-bg: #ffffff;
+    --post-border: #eff3f4;
+    --post-shadow: none;
+    --primary-color: #1d9bf0;
+    --gold-color: #1d9bf0;
+}
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Segoe UI','PingFang SC',Roboto,sans-serif;}
 html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hidden;background:var(--bg-primary);color:var(--text-primary);display:flex;justify-content:center;align-items:center;-webkit-tap-highlight-color:transparent;}
 .app-wrapper{max-width:480px;width:100%;height:100vh;height:100dvh;background:var(--bg-secondary);box-shadow:var(--shadow);overflow:hidden;position:relative;display:flex;flex-direction:column;}
@@ -30,8 +69,8 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text-nav);font-size:10px;cursor:pointer;padding:4px 8px;border-radius:30px;background:transparent;border:none;font-family:inherit;position:relative;min-width:44px;-webkit-tap-highlight-color:transparent;}
 .nav-item i{font-size:20px;color:var(--text-muted);}
 .nav-item.active{color:var(--text-primary);}
-.nav-item.active i{color:#3a7eff;}
-.nav-item .badge{position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;border-radius:50%;font-size:9px;padding:0 5px;min-width:16px;text-align:center;line-height:16px;}
+.nav-item.active i{color:#0f1419;}
+.nav-item .badge{position:absolute;top:-2px;right:-2px;background:#0f1419;color:#fff;border-radius:50%;font-size:9px;padding:0 5px;min-width:16px;text-align:center;line-height:16px;}
 .banner-carousel{position:relative;width:100%;border-radius:12px;overflow:hidden;margin-bottom:12px;background:var(--product-img-bg);aspect-ratio:16 / 6;}
 .banner-carousel .banner-track{display:flex;transition:transform 0.5s ease;height:100%;}
 .banner-carousel .banner-slide{min-width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-muted);background:var(--product-img-bg);}
@@ -50,14 +89,14 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .shop-entrance .shop-entry .entry-name{font-size:10px;color:var(--text-muted);text-align:center;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .shop-badges{display:flex;gap:2px;justify-content:center;margin-top:2px;flex-wrap:wrap;}
 .shop-badge{font-size:8px;padding:1px 5px;border-radius:8px;font-weight:600;white-space:nowrap;}
-.shop-badge.self{background:#f5c842;color:#0b0d10;}
-.shop-badge.rec{background:#ef4444;color:#fff;}
+.shop-badge.self{background:#0f1419;color:#ffffff;}
+.shop-badge.rec{background:#0f1419;color:#ffffff;}
 .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
 .product-card{display:flex;flex-direction:column;background:var(--product-card-bg);border-radius:12px;border:1px solid var(--product-card-border);overflow:hidden;position:relative;transition:all 0.2s;cursor:pointer;}
 .product-card:active{transform:scale(0.97);}
 .product-card .product-img{width:100%;aspect-ratio:1 / 1;background:var(--product-img-bg);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--product-img-icon);overflow:hidden;position:relative;}
 .product-card .product-img img{width:100%;height:100%;object-fit:cover;}
-.product-card .product-img .tag{position:absolute;top:6px;left:6px;background:#f5c842;color:#0b0d10;padding:1px 8px;border-radius:20px;font-size:9px;font-weight:600;}
+.product-card .product-img .tag{position:absolute;top:6px;left:6px;background:#0f1419;color:#ffffff;padding:1px 8px;border-radius:20px;font-size:9px;font-weight:600;}
 .product-card .product-body{flex:1;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;min-height:70px;}
 .product-card .product-title{font-size:13px;font-weight:600;color:var(--product-title);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px;}
 .product-card .product-desc{font-size:11px;color:var(--product-desc);margin-top:2px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;min-height:16px;}
@@ -69,7 +108,7 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .category-horizontal-scroll::-webkit-scrollbar{display:none;}
 .category-card-h{display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;background:var(--bg-card);border-radius:12px;border:1px solid var(--border-light);cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(0,0,0,0.04);flex-shrink:0;min-width:110px;}
 .category-card-h:active{transform:scale(0.96);}
-.category-card-h.active{border-color:#3a7eff;box-shadow:0 4px 12px rgba(58,126,255,0.25);background:linear-gradient(135deg,#f0f7ff,#e6f0ff);}
+.category-card-h.active{border-color:#0f1419;box-shadow:none;background:#f7f9f9;}
 .category-card-h .cat-icon-h{width:32px;height:32px;border-radius:8px;background:var(--product-img-bg);display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;flex-shrink:0;}
 .category-card-h .cat-icon-h img{width:100%;height:100%;object-fit:cover;}
 .category-card-h .cat-name-h{font-size:12px;font-weight:600;color:var(--text-primary);white-space:nowrap;}
@@ -93,7 +132,7 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .product-detail-modal .pd-body .pd-desc{font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px;}
 .product-detail-modal .pd-body .pd-stock{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
 .product-detail-modal .pd-footer{padding-top:12px;border-top:1px solid var(--border-color);flex-shrink:0;}
-.product-detail-modal .pd-footer .btn-block{width:100%;padding:12px;border-radius:30px;border:none;background:#1a6aff;color:#fff;font-weight:600;font-size:16px;cursor:pointer;}
+.product-detail-modal .pd-footer .btn-block{width:100%;padding:12px;border-radius:30px;border:none;background:#0f1419;color:#fff;font-weight:600;font-size:16px;cursor:pointer;}
 .post-card{background:var(--post-bg);border-radius:12px;border:1px solid var(--post-border);box-shadow:var(--post-shadow);padding:14px;margin-bottom:12px;}
 .post-card .post-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .post-card .post-avatar{width:40px;height:40px;border-radius:50%;background:var(--product-img-bg);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-muted);overflow:hidden;flex-shrink:0;}
@@ -107,7 +146,7 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .post-card .post-images .grid-3{grid-template-columns:1fr 1fr 1fr;}
 .post-card .post-actions{display:flex;gap:20px;padding-top:10px;border-top:1px solid var(--border-light);}
 .post-card .post-actions button{background:none;border:none;font-size:13px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:20px;}
-.post-card .post-actions button.liked{color:#ef4444;}
+.post-card .post-actions button.liked{color:#f91880;}
 .post-card .post-actions button i{font-size:16px;}
 .post-card .post-comments{margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light);}
 .post-card .post-comments .comment{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-light);}
@@ -118,10 +157,10 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .post-card .post-comments .comment-body .time{font-size:10px;color:var(--text-muted);margin-left:6px;}
 .post-card .post-comment-input{display:flex;gap:8px;margin-top:8px;}
 .post-card .post-comment-input input{flex:1;padding:6px 12px;border-radius:20px;border:1px solid var(--border-color);background:var(--bg-input);font-size:13px;outline:none;}
-.post-card .post-comment-input button{padding:6px 16px;border-radius:20px;border:none;background:#3a7eff;color:#fff;font-weight:500;cursor:pointer;font-size:13px;}
-.profile-card{background:linear-gradient(135deg,#1a1a2e,#2d2d44);border-radius:16px;padding:20px;color:#fff;margin-bottom:12px;position:relative;overflow:hidden;}
+.post-card .post-comment-input button{padding:6px 16px;border-radius:20px;border:none;background:#0f1419;color:#fff;font-weight:500;cursor:pointer;font-size:13px;}
+.profile-card{background:#0f1419;border-radius:16px;padding:20px;color:#fff;margin-bottom:12px;position:relative;overflow:hidden;}
 .profile-card .profile-top{display:flex;align-items:center;gap:14px;}
-.profile-card .profile-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;border:2px solid rgba(255,255,255,0.3);position:relative;}
+.profile-card .profile-avatar{width:56px;height:56px;border-radius:50%;background:#cfd9de;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#0f1419;flex-shrink:0;overflow:hidden;border:2px solid rgba(255,255,255,0.3);position:relative;}
 .profile-card .profile-avatar img{width:100%;height:100%;object-fit:cover;}
 .profile-card .profile-avatar .avatar-upload-btn{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:10px;text-align:center;padding:2px 0;cursor:pointer;opacity:0;}
 .profile-card .profile-info{flex:1;}
@@ -134,14 +173,14 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .profile-card .profile-stats .stat-item .label{font-size:11px;color:rgba(255,255,255,0.5);}
 .order-tabs{display:flex;gap:4px;background:var(--bg-card-hover);border-radius:30px;padding:4px;margin:8px 0 12px;}
 .order-tabs .tab-btn{flex:1;padding:6px 0;border:none;border-radius:30px;background:transparent;color:var(--text-muted);font-size:12px;font-weight:500;cursor:pointer;}
-.order-tabs .tab-btn.active{background:#fff;color:var(--text-primary);box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.order-tabs .tab-btn.active{background:#0f1419;color:#fff;box-shadow:none;}
 .more-functions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0;}
 .more-functions .func-item{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;background:var(--bg-card);border-radius:12px;border:1px solid var(--border-light);cursor:pointer;min-height:60px;}
-.more-functions .func-item .icon{font-size:20px;color:#3a7eff;margin-bottom:2px;}
+.more-functions .func-item .icon{font-size:20px;color:#0f1419;margin-bottom:2px;}
 .more-functions .func-item .label{font-size:10px;color:var(--text-secondary);text-align:center;font-weight:500;}
 .menu-list .menu-item{display:flex;align-items:center;justify-content:space-between;padding:12px 4px;border-bottom:1px solid var(--border-light);cursor:pointer;}
 .menu-list .menu-item .left{display:flex;align-items:center;gap:12px;}
-.menu-list .menu-item .left .icon{font-size:16px;color:#3a7eff;width:24px;text-align:center;}
+.menu-list .menu-item .left .icon{font-size:16px;color:#0f1419;width:24px;text-align:center;}
 .menu-list .menu-item .left .text{font-size:14px;color:var(--text-secondary);}
 .menu-list .menu-item .right{color:var(--text-muted);font-size:14px;}
 .admin-card{background:var(--admin-card-bg);border-radius:16px;padding:14px 12px;margin-bottom:10px;border:1px solid var(--admin-card-border);box-shadow:var(--admin-card-shadow);}
@@ -149,24 +188,24 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .admin-form-group{margin-bottom:10px;}
 .admin-form-group label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:4px;}
 .admin-form-control{width:100%;background:var(--bg-input);border:1px solid var(--border-color);border-radius:10px;padding:8px 12px;color:var(--text-primary);font-size:14px;outline:none;-webkit-appearance:none;appearance:none;}
-.btn-primary{background:var(--btn-primary-bg);border:none;color:var(--btn-primary-color);padding:8px 20px;border-radius:40px;font-weight:500;font-size:13px;cursor:pointer;box-shadow:0 4px 12px rgba(0,80,255,0.2);}
-.btn-outline{background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:8px 20px;border-radius:40px;font-size:13px;cursor:pointer;}
-.btn-success{background:#22c55e;color:#fff;border:none;padding:6px 16px;border-radius:30px;font-size:12px;cursor:pointer;}
-.btn-danger{background:#ef4444;color:#fff;border:none;padding:6px 16px;border-radius:30px;font-size:12px;cursor:pointer;}
-.btn-warning{background:#f59e0b;color:#0b0d10;border:none;padding:6px 16px;border-radius:30px;font-size:12px;cursor:pointer;}
-.btn-sm{padding:4px 14px;font-size:12px;}
-.btn-xs{padding:2px 10px;font-size:11px;}
+.btn-primary{background:#0f1419;border:none;color:#fff;padding:8px 20px;border-radius:9999px;font-weight:500;font-size:13px;cursor:pointer;box-shadow:none;}
+.btn-outline{background:#ffffff;border:1px solid #cfd9de;color:#0f1419;padding:8px 20px;border-radius:9999px;font-size:13px;cursor:pointer;}
+.btn-success{background:#0f1419;color:#fff;border:none;padding:6px 16px;border-radius:9999px;font-size:12px;cursor:pointer;}
+.btn-danger{background:#f4212e;color:#fff;border:none;padding:6px 16px;border-radius:9999px;font-size:12px;cursor:pointer;}
+.btn-warning{background:#ffd400;color:#0f1419;border:none;padding:6px 16px;border-radius:9999px;font-size:12px;cursor:pointer;}
+.btn-sm{padding:4px 14px;font-size:12px;border-radius:9999px;}
+.btn-xs{padding:2px 10px;font-size:11px;border-radius:9999px;}
 .btn-block{width:100%;justify-content:center;}
 .status-badge{font-size:11px;padding:2px 12px;border-radius:30px;display:inline-block;font-weight:500;}
-.status-pending{background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44;}
-.status-ongoing{background:#3b82f622;color:#3b82f6;border:1px solid #3b82f644;}
-.status-review{background:#a855f722;color:#a855f7;border:1px solid #a855f744;}
-.status-completed{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;}
-.status-canceled{background:#6b728022;color:#9ca3af;border:1px solid #6b728044;}
-.status-rejected{background:#ef444422;color:#ef4444;border:1px solid #ef444444;}
-.status-onsale{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;}
-.status-soldout{background:#6b728022;color:#9ca3af;border:1px solid #6b728044;}
-.status-hidden{background:#6b728022;color:#6b7280;border:1px solid #6b728044;}
+.status-pending{background:#fff8e1;color:#8a6d00;border:1px solid #fff3c4;}
+.status-ongoing{background:#e8f5fe;color:#0c7abf;border:1px solid #cceeff;}
+.status-review{background:#f3edff;color:#6b3fd4;border:1px solid #e2d4ff;}
+.status-completed{background:#e6f7ef;color:#00754a;border:1px solid #ccf0dd;}
+.status-canceled{background:#f7f9f9;color:#536471;border:1px solid #eff3f4;}
+.status-rejected{background:#fde8ea;color:#c81e2c;border:1px solid #f9cdd2;}
+.status-onsale{background:#e6f7ef;color:#00754a;border:1px solid #ccf0dd;}
+.status-soldout{background:#f7f9f9;color:#536471;border:1px solid #eff3f4;}
+.status-hidden{background:#f7f9f9;color:#536471;border:1px solid #eff3f4;}
 .empty-state{text-align:center;padding:30px 20px;color:var(--text-muted);}
 .empty-state i{font-size:36px;opacity:0.4;display:block;margin-bottom:10px;}
 .empty-state p{font-size:14px;}
@@ -175,11 +214,11 @@ table{width:100%;border-collapse:collapse;font-size:13px;}
 thead{border-bottom:2px solid var(--border-color);}
 th{padding:8px 6px;text-align:left;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;white-space:nowrap;}
 td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:middle;}
-.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--toast-bg);padding:12px 28px;border-radius:40px;z-index:99999;box-shadow:0 8px 30px rgba(0,0,0,0.1);border-left:4px solid var(--toast-border);color:var(--text-primary);font-size:14px;display:none;max-width:90%;text-align:center;}
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--toast-bg);padding:12px 28px;border-radius:40px;z-index:99999;box-shadow:var(--toast-shadow);border-left:4px solid var(--toast-border);color:var(--toast-text);font-size:14px;display:none;max-width:90%;text-align:center;}
 .toast.show{display:block;animation:fadeUp 0.3s ease;}
-.toast.error{border-left-color:#ef4444;}
-.toast.warning{border-left-color:#f59e0b;}
-.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);justify-content:center;align-items:center;z-index:99999;}
+.toast.error{border-left-color:#f4212e;}
+.toast.warning{border-left-color:#ffd400;}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);justify-content:center;align-items:center;z-index:99999;}
 .modal-overlay.active{display:flex;}
 .modal-box{background:var(--modal-bg);border:1px solid var(--border-color);border-radius:24px;padding:24px 20px;max-width:420px;width:90%;text-align:center;animation:fadeUp 0.25s ease;max-height:90vh;overflow-y:auto;}
 .modal-box h3{font-size:18px;color:var(--text-primary);margin-bottom:8px;}
@@ -193,15 +232,15 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .modal-box .detail-row .label{color:var(--text-muted);}
 .modal-box .detail-row .value{color:var(--text-primary);font-weight:500;}
 #authPage{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;padding:20px;text-align:center;background:var(--bg-primary);width:100%;max-width:480px;margin:0 auto;}
-#authPage .logo{font-size:32px;font-weight:700;background:linear-gradient(135deg,#f5c842,#dbaa2a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;}
-#authPage .logo i{font-size:40px;color:#f5c842;-webkit-text-fill-color:#f5c842;margin-right:10px;}
+#authPage .logo{font-size:32px;font-weight:700;background:linear-gradient(135deg,#0f1419,#272c30);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;}
+#authPage .logo i{font-size:40px;color:#0f1419;-webkit-text-fill-color:#0f1419;margin-right:10px;}
 #authPage .sub{color:var(--text-muted);font-size:14px;margin-bottom:30px;}
 #authPage .auth-box{width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;background:var(--bg-card);padding:32px 24px;border-radius:24px;border:1px solid var(--border-color);box-shadow:var(--shadow);}
 #authPage .auth-box input{width:100%;padding:14px;border-radius:60px;background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);font-size:16px;text-align:center;outline:none;}
 #authPage .auth-box .btn-row{display:flex;gap:10px;}
 #authPage .auth-box .btn-row button{flex:1;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer;}
 #authPage .auth-box .role-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--text-muted);}
-#authPage .auth-box .auth-error{color:#ef4444;font-size:13px;min-height:20px;}
+#authPage .auth-box .auth-error{color:#f4212e;font-size:13px;min-height:20px;}
 .sub-page{display:none;position:fixed;top:0;left:0;width:100%;max-width:480px;height:100vh;height:100dvh;background:var(--bg-secondary);z-index:2000;overflow-y:auto;padding:16px;left:50%;transform:translateX(-50%);}
 .sub-page.active{display:block;}
 .sub-page .sub-header{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--border-color);margin-bottom:16px;position:sticky;top:0;background:var(--bg-secondary);z-index:10;}
@@ -215,17 +254,17 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .chat-fullscreen .chat-header .chat-sub{font-size:12px;color:var(--text-muted);}
 .chat-fullscreen .chat-body{flex:1;overflow-y:auto;padding:12px 4px;display:flex;flex-direction:column;gap:4px;}
 .chat-fullscreen .chat-body .chat-bubble{max-width:80%;padding:10px 16px;border-radius:16px;word-break:break-word;font-size:14px;line-height:1.5;}
-.chat-fullscreen .chat-body .chat-bubble.me{background:#1a6aff;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
-.chat-fullscreen .chat-body .chat-bubble.other{background:var(--bg-card-hover);color:var(--text-primary);align-self:flex-start;border-bottom-left-radius:4px;border:1px solid var(--border-color);}
+.chat-fullscreen .chat-body .chat-bubble.me{background:#0f1419;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.chat-fullscreen .chat-body .chat-bubble.other{background:#f7f9f9;color:#0f1419;align-self:flex-start;border-bottom-left-radius:4px;border:1px solid #eff3f4;}
 .chat-fullscreen .chat-body .chat-bubble .time{font-size:10px;opacity:0.7;margin-top:4px;display:block;}
 .chat-fullscreen .chat-footer{display:flex;gap:10px;padding-top:12px;border-top:1px solid var(--border-color);flex-shrink:0;}
 .chat-fullscreen .chat-footer input{flex:1;padding:10px 16px;border-radius:30px;border:1px solid var(--border-color);background:var(--bg-input);font-size:14px;outline:none;min-height:44px;}
-.chat-fullscreen .chat-footer button{padding:10px 20px;border-radius:30px;border:none;background:#1a6aff;color:#fff;font-weight:600;cursor:pointer;min-height:44px;white-space:nowrap;}
+.chat-fullscreen .chat-footer button{padding:10px 20px;border-radius:30px;border:none;background:#0f1419;color:#fff;font-weight:600;cursor:pointer;min-height:44px;white-space:nowrap;}
 .chat-avatar{width:36px;height:36px;border-radius:50%;background:var(--product-img-bg);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-muted);overflow:hidden;flex-shrink:0;cursor:pointer;}
 .chat-avatar img{width:100%;height:100%;object-fit:cover;}
-.announce-modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);justify-content:center;align-items:center;z-index:100000;padding:20px;}
+.announce-modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);backdrop-filter:blur(8px);justify-content:center;align-items:center;z-index:100000;padding:20px;}
 .announce-modal-overlay.active{display:flex;}
-.announce-modal-box{background:var(--bg-secondary);border-radius:24px;max-width:400px;width:100%;max-height:80vh;overflow-y:auto;padding:24px 20px 20px;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.announce-modal-box{background:var(--bg-secondary);border-radius:24px;max-width:400px;width:100%;max-height:80vh;overflow-y:auto;padding:24px 20px 20px;box-shadow:0 20px 60px rgba(0,0,0,0.15);}
 .announce-modal-box .close-btn{float:right;background:none;border:none;font-size:22px;color:var(--text-muted);cursor:pointer;}
 .announce-modal-box .title{font-size:20px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .announce-modal-box .content{font-size:14px;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;}
@@ -233,7 +272,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .announce-modal-box .images img{max-width:80px;max-height:80px;border-radius:8px;border:1px solid var(--border-color);cursor:pointer;}
 .announce-modal-box .footer{margin-top:16px;padding-top:12px;border-top:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
 .announce-modal-box .footer label{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px;cursor:pointer;}
-.announce-modal-box .footer .close-modal-btn{padding:8px 24px;border-radius:30px;border:none;background:#1a6aff;color:#fff;font-weight:600;cursor:pointer;font-size:14px;}
+.announce-modal-box .footer .close-modal-btn{padding:8px 24px;border-radius:30px;border:none;background:#0f1419;color:#fff;font-weight:600;cursor:pointer;font-size:14px;}
 .inline-modal{display:none;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:14px;margin-bottom:12px;}
 .inline-modal.active{display:block;}
 .inline-modal .modal-title{display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:600;margin-bottom:10px;gap:8px;}
@@ -242,13 +281,13 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .contact-item .contact-avatar{width:44px;height:44px;border-radius:50%;background:var(--product-img-bg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--text-muted);overflow:hidden;flex-shrink:0;}
 .contact-item .contact-avatar img{width:100%;height:100%;object-fit:cover;}
 .contact-item .contact-body{flex:1;min-width:0;}
-.contact-item .unread-badge{background:#ef4444;color:#fff;border-radius:50%;font-size:10px;padding:0 6px;min-width:18px;text-align:center;line-height:18px;display:inline-block;margin-left:4px;}
-.user-filter{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;}
-.user-filter button{padding:4px 12px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;}
-.user-filter button.active{background:#3a7eff;color:#fff;border-color:#3a7eff;}
+.contact-item .unread-badge{background:#0f1419;color:#fff;border-radius:50%;font-size:10px;padding:0 6px;min-width:18px;text-align:center;line-height:18px;display:inline-block;margin-left:4px;}
+.user-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.user-filter button{padding:6px 14px;border-radius:9999px;border:1px solid #cfd9de;background:#ffffff;color:#0f1419;font-size:13px;font-weight:500;line-height:1.2;min-height:32px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.user-filter button.active{background:#0f1419;color:#ffffff;border-color:#0f1419;}
 .action-group{display:flex;gap:4px;flex-wrap:wrap;}
 .category-btn{padding:4px 14px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
-.category-btn.active{background:#3a7eff;color:#fff;border-color:#3a7eff;}
+.category-btn.active{background:#0f1419;color:#fff;border-color:#0f1419;}
 .post-actions-bar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
 .post-actions-bar button{padding:6px 16px;border-radius:20px;border:none;font-weight:500;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:4px;}
 .stat-card{background:var(--bg-card-hover);border-radius:12px;padding:12px;}
@@ -276,10 +315,10 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .up-title{font-size:16px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.4);}
 .up-banner-wrap{position:relative;width:100%;height:160px;margin-top:-60px;overflow:hidden;}
 .up-banner{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;}
-.up-banner-default{width:100%;height:100%;background:linear-gradient(135deg,#1a6aff,#6a3aff,#a855f7);}
+.up-banner-default{width:100%;height:100%;background:linear-gradient(135deg,#0f1419,#272c30,#0f1419);}
 .up-body{padding:0 16px 20px;}
 .up-avatar-wrap{margin-top:-40px;margin-bottom:10px;}
-.up-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a6aff,#0044cc);border:3px solid var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;overflow:hidden;position:relative;z-index:2;}
+.up-avatar{width:80px;height:80px;border-radius:50%;background:#cfd9de;border:3px solid var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#0f1419;overflow:hidden;position:relative;z-index:2;}
 .up-avatar img{width:100%;height:100%;object-fit:cover;}
 .up-name{font-size:20px;font-weight:700;margin-bottom:4px;}
 .up-id{font-size:12px;color:var(--text-muted);margin-bottom:8px;}
@@ -289,14 +328,15 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .up-stat-num{font-size:16px;font-weight:700;}
 .up-stat-label{font-size:11px;color:var(--text-muted);}
 .up-actions{display:flex;gap:8px;margin-bottom:16px;}
-.up-btn-msg{flex:1;padding:10px;border-radius:12px;border:none;background:linear-gradient(135deg,#1a6aff,#0044cc);color:#fff;font-weight:600;cursor:pointer;font-size:14px;}
+.up-btn-msg{flex:1;padding:10px;border-radius:12px;border:none;background:#0f1419;color:#fff;font-weight:600;cursor:pointer;font-size:14px;}
 .up-tabs{display:flex;gap:8px;border-bottom:1px solid var(--border-light);margin-bottom:12px;}
 .up-tab{flex:1;padding:10px;border:none;background:transparent;color:var(--text-muted);font-size:14px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;justify-content:center;gap:6px;}
-.up-tab.active{color:#3a7eff;border-bottom-color:#3a7eff;}
+.up-tab.active{color:#0f1419;border-bottom-color:#0f1419;background:transparent !important;}
 .up-post-list{padding-bottom:20px;}
 .shop-tab-bar{display:flex;gap:8px;margin:12px 0;}
 .shop-tab-btn{flex:1;padding:8px;border-radius:10px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;}
-.shop-tab-btn.active{background:#3a7eff;color:#fff;border-color:#3a7eff;}
+.shop-tab-btn.active{background:#0f1419;color:#fff;border-color:#0f1419;}
+.cat-tab-btn.active{background:#0f1419 !important;color:#fff !important;border-color:#0f1419 !important;}
 @media(max-width:420px){
 .view-container{padding:10px 12px 4px;}
 .bottom-nav{padding:4px 0 max(8px,env(safe-area-inset-bottom));min-height:48px;}
@@ -331,6 +371,71 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .chat-fullscreen{padding-top:env(safe-area-inset-top);}
 .user-profile-page{padding-top:env(safe-area-inset-top);}
 }
+
+/* X（Twitter）浅色风格微调 */
+body, html { background: #ffffff; color: #0f1419; }
+.app-wrapper { background: #ffffff; box-shadow: none; border-left: 1px solid #eff3f4; border-right: 1px solid #eff3f4; }
+.bottom-nav { border-top: 1px solid #eff3f4 !important; box-shadow: 0 -1px 8px rgba(0,0,0,0.03) !important; background: rgba(255,255,255,0.92) !important; }
+.nav-item i { color: #536471; transition: color 0.15s; }
+.nav-item { color: #536471; }
+.nav-item.active { color: #0f1419 !important; font-weight: 600; }
+.nav-item.active i { color: #0f1419 !important; }
+.btn-primary { background: #0f1419 !important; color: #ffffff !important; box-shadow: none !important; border-radius: 9999px !important; transition: background 0.15s; }
+.btn-primary:active { background: #272c30 !important; }
+.btn-success { background: #0f1419 !important; color: #ffffff !important; border-radius: 9999px !important; box-shadow: none !important; }
+.btn-success:active { background: #272c30 !important; }
+.btn-outline { border: 1px solid #cfd9de !important; color: #0f1419 !important; background: #ffffff !important; border-radius: 9999px !important; }
+.btn-outline:active { background: #f7f9f9 !important; }
+.btn-danger { background: #f4212e !important; color: #fff !important; border-radius: 9999px !important; }
+.btn-warning { background: #ffd400 !important; color: #0f1419 !important; border-radius: 9999px !important; }
+.admin-card, .post-card, .product-card { background: #ffffff !important; border: 1px solid #eff3f4 !important; box-shadow: none !important; transition: background 0.15s; }
+.admin-card:hover, .post-card:hover, .product-card:hover { background: #f7f9f9 !important; }
+.profile-card { background: #0f1419 !important; color: #fff !important; }
+.profile-avatar, .up-avatar { background: #cfd9de !important; color: #0f1419 !important; }
+.status-pending { background: #fff8e1 !important; color: #8a6d00 !important; border: 1px solid #fff3c4 !important; }
+.status-ongoing { background: #e8f5fe !important; color: #0c7abf !important; border: 1px solid #cceeff !important; }
+.status-review { background: #f3edff !important; color: #6b3fd4 !important; border: 1px solid #e2d4ff !important; }
+.status-completed { background: #e6f7ef !important; color: #00754a !important; border: 1px solid #ccf0dd !important; }
+.status-canceled, .status-hidden { background: #f7f9f9 !important; color: #536471 !important; border: 1px solid #eff3f4 !important; }
+.status-rejected { background: #fde8ea !important; color: #c81e2c !important; border: 1px solid #f9cdd2 !important; }
+.status-onsale { background: #e6f7ef !important; color: #00754a !important; border: 1px solid #ccf0dd !important; }
+.status-soldout { background: #f7f9f9 !important; color: #536471 !important; border: 1px solid #eff3f4 !important; }
+.admin-form-control, .modal-box input, .modal-box textarea, .modal-box select { background: #ffffff !important; border: 1px solid #cfd9de !important; color: #0f1419 !important; border-radius: 8px !important; }
+.admin-form-control:focus, .modal-box input:focus, .modal-box textarea:focus, .modal-box select:focus { border-color: #0f1419 !important; box-shadow: 0 0 0 3px rgba(15,20,25,0.08) !important; }
+.modal-box { background: #ffffff !important; border: 1px solid #eff3f4 !important; border-radius: 20px !important; }
+.user-filter button.active { background: #0f1419 !important; color: #ffffff !important; border-color: #0f1419 !important; }
+.category-btn.active, .sub-btn.active { background: #0f1419 !important; color: #ffffff !important; border-color: #0f1419 !important; }
+.category-card-h.active { border-color: #0f1419 !important; background: #f7f9f9 !important; }
+.post-actions button.liked { color: #f91880 !important; }
+.chat-bubble.me { background: #0f1419 !important; color: #ffffff !important; }
+.chat-bubble.other { background: #f7f9f9 !important; color: #0f1419 !important; border: 1px solid #eff3f4 !important; }
+.nav-item.active::after { content: ''; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #0f1419 !important; }
+.banner-dots .dot { background: rgba(255,255,255,0.6) !important; }
+.banner-dots .dot.active { background: #ffffff !important; }
+.product-price, #myBalance, #headerDiamond { color: #0f1419 !important; }
+.diamond-display { color: #0f1419 !important; }
+.btn-xs { border-radius: 9999px !important; }
+.btn-sm { border-radius: 9999px !important; }
+.nav-item .badge, .unread-badge { background: #0f1419 !important; color: #fff !important; }
+
+/* 所有激活态：黑色 */
+.user-filter button.active,
+.category-btn.active,
+.sub-btn.active,
+.cat-tab-btn.active,
+.shop-tab-btn.active,
+.up-tab.active {
+    background: #0f1419 !important;
+    color: #ffffff !important;
+    border-color: #0f1419 !important;
+}
+.category-card-h.active { border-color: #0f1419 !important; background: #f7f9f9 !important; }
+.nav-item.active i { color: #0f1419 !important; }
+.nav-item.active { color: #0f1419 !important; }
+.nav-item.active::after { background: #0f1419 !important; }
+.btn-primary, .btn-success { background: #0f1419 !important; color: #ffffff !important; }
+.nav-item .badge, .unread-badge { background: #0f1419 !important; color: #fff !important; }
+.admin-form-control:focus, .modal-box input:focus, .modal-box textarea:focus, .modal-box select:focus { border-color: #0f1419 !important; box-shadow: 0 0 0 3px rgba(15,20,25,0.08) !important; }
 </style>
 </head>
 <body>
@@ -343,8 +448,8 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 <input type="password" id="authPassword" placeholder="密码" />
 <div id="authError" class="auth-error"></div>
 <div class="btn-row">
-<button class="btn btn-success" onclick="doAuthLogin()" style="flex:1;background:#22c55e;color:#fff;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer">登录</button>
-<button class="btn btn-primary" onclick="doAuthRegister()" style="flex:1;background:linear-gradient(145deg,#1a6aff,#0044cc);color:#fff;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer">注册</button>
+<button class="btn btn-success" onclick="doAuthLogin()" style="flex:1;background:#0f1419;color:#fff;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer">登录</button>
+<button class="btn btn-primary" onclick="doAuthRegister()" style="flex:1;background:#0f1419;color:#fff;padding:12px;border-radius:60px;border:none;font-weight:600;cursor:pointer">注册</button>
 </div>
 <div class="role-row">
 <label><input type="radio" name="authRole" value="boss" checked> 老板</label>
@@ -386,7 +491,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 <button class="banner-arrow right" onclick="nextCategoryBanner()">›</button>
 </div>
 <div class="category-tabs" style="display:flex;gap:8px;margin:12px 0;">
-<button class="cat-tab-btn active" data-tab="product" onclick="switchCatTab('product')" style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--border-color);background:#3a7eff;color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-shopping-cart"></i> 商品分类</button>
+<button class="cat-tab-btn active" data-tab="product" onclick="switchCatTab('product')" style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--border-color);background:#0f1419;color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-shopping-cart"></i> 商品分类</button>
 <button class="cat-tab-btn" data-tab="shop" onclick="switchCatTab('shop')" style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-store"></i> 店铺分类</button>
 </div>
 <div id="catTabContent">
@@ -411,6 +516,9 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 <span style="font-size:12px;color:var(--text-muted);" id="postCount">0</span>
 </div>
 <div class="post-cat-tabs" id="postCatTabs" style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;"></div>
+<div style="margin-bottom:10px;">
+<input class="admin-form-control" id="postSearchInput" placeholder="搜索帖子内容..." oninput="searchPosts(this.value)" />
+</div>
 <div class="post-actions-bar">
 <button class="btn btn-primary" onclick="showCreatePost()"><i class="fas fa-plus"></i> 发帖</button>
 <button class="btn btn-outline btn-sm" onclick="refreshPosts()"><i class="fas fa-sync"></i> 刷新</button>
@@ -433,7 +541,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 <div class="profile-card" id="profileCard">
 <div id="profileBanner" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;overflow:hidden;">
 <img id="profileBannerImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;" />
-<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,rgba(26,26,46,0.85),rgba(45,45,68,0.9));"></div>
+<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,rgba(15,20,25,0.95),rgba(39,44,48,0.95));"></div>
 </div>
 <div style="position:relative;z-index:1;">
 <div class="profile-top" onclick="if(currentUser){viewUserProfile(currentUser.id)}else{showLoginModal()}">
@@ -471,17 +579,17 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 </div>
 
 <div style="display:flex;gap:10px;margin-bottom:10px;">
-<div class="admin-card" onclick="openRecharge()" style="flex:1;padding:14px 12px;border-left:4px solid #f5c842;margin-bottom:0;cursor:pointer;height:76px;display:flex;flex-direction:column;justify-content:center;">
+<div class="admin-card" onclick="openRecharge()" style="flex:1;padding:14px 12px;border-left:4px solid #0f1419;margin-bottom:0;cursor:pointer;height:76px;display:flex;flex-direction:column;justify-content:center;">
 <div style="display:flex;justify-content:space-between;align-items:center;">
 <span style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;"><i class="fas fa-gem"></i> 我的余额</span>
-<span style="font-size:16px;font-weight:700;color:#f5c842;" id="myBalance">0</span>
+<span style="font-size:16px;font-weight:700;color:#0f1419;" id="myBalance">0</span>
 </div>
 <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">点击充值 →</div>
 </div>
-<div class="admin-card" onclick="openWithdraw()" style="flex:1;padding:14px 12px;border-left:4px solid #22c55e;margin-bottom:0;cursor:pointer;height:76px;display:flex;flex-direction:column;justify-content:center;">
+<div class="admin-card" onclick="openWithdraw()" style="flex:1;padding:14px 12px;border-left:4px solid #0f1419;margin-bottom:0;cursor:pointer;height:76px;display:flex;flex-direction:column;justify-content:center;">
 <div style="display:flex;justify-content:space-between;align-items:center;">
 <span style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;"><i class="fas fa-coins"></i> 提现</span>
-<span style="font-size:16px;font-weight:700;color:#22c55e;">→</span>
+<span style="font-size:16px;font-weight:700;color:#0f1419;">→</span>
 </div>
 <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">1元=10红钻</div>
 </div>
@@ -495,16 +603,16 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 <div class="admin-card" style="padding:4px 12px;">
 <div class="menu-list">
 <div class="menu-item" onclick="navigateTo('messages')">
-<div class="left"><i class="fas fa-headset icon" style="color:#3a7eff;"></i><span class="text">联系客服</span></div>
+<div class="left"><i class="fas fa-headset icon" style="color:#0f1419;"></i><span class="text">联系客服</span></div>
 <div class="right"><i class="fas fa-chevron-right"></i></div>
 </div>
 <div class="menu-item" onclick="showLoginModal()">
-<div class="left"><i class="fas fa-sign-in-alt icon" style="color:#22c55e;"></i><span class="text">账号设置</span></div>
+<div class="left"><i class="fas fa-sign-in-alt icon" style="color:#0f1419;"></i><span class="text">账号设置</span></div>
 <div class="right"><i class="fas fa-chevron-right"></i></div>
 </div>
 </div>
 </div>
-<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.0</div>
+<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.2</div>
 </div>
 </div>
 <div class="bottom-nav" id="bottomNav"></div>
@@ -524,7 +632,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 <div class="pd-stock" id="pdStock">库存：0</div>
 </div>
 <div class="pd-footer">
-<button class="btn-block" onclick="buyFromDetail()"><i class="fas fa-shopping-cart"></i> 立即购买</button>
+<button class="btn-block" onclick="buyFromDetail()" style="background:#0f1419;"><i class="fas fa-shopping-cart"></i> 立即购买</button>
 </div>
 </div>
 
@@ -612,7 +720,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 <div class="chat-body" id="fullscreenChatBody"></div>
 <div class="chat-footer">
 <input type="text" id="fullscreenChatInput" placeholder="输入消息..." />
-<button onclick="sendFullscreenMessage()"><i class="fas fa-paper-plane"></i> 发送</button>
+<button onclick="sendFullscreenMessage()" style="background:#0f1419;"><i class="fas fa-paper-plane"></i> 发送</button>
 </div>
 </div>
 
@@ -661,6 +769,7 @@ let rechargeImages=[];
 let rechargeImgIndex=0;
 let _likingPostIds=new Set();
 let currentShopTab='products';
+let allPostsCache=[];
 
 /* ============================================================
    工具函数
@@ -959,7 +1068,7 @@ async function loadShopReviews(shopId){
             </div>
             <div style="flex:1;">
               <strong>${r.username||'匿名'}</strong>
-              <div style="color:#f5c842;font-size:14px;">${stars}</div>
+              <div style="color:#0f1419;font-size:14px;">${stars}</div>
             </div>
             <span style="font-size:11px;color:var(--text-muted);">${formatTime(r.created_at)}</span>
           </div>
@@ -1210,7 +1319,7 @@ function switchCatTab(tab){
   document.querySelectorAll('.cat-tab-btn').forEach(btn=>{
     const isActive=btn.dataset.tab===tab;
     btn.classList.toggle('active',isActive);
-    btn.style.background=isActive?'#3a7eff':'transparent';
+    btn.style.background=isActive?'#0f1419':'transparent';
     btn.style.color=isActive?'#fff':'var(--text-muted)';
   });
   document.getElementById('catTabProduct').style.display=tab==='product'?'block':'none';
@@ -1359,70 +1468,127 @@ async function doBuyWithHandler(productId) {
 }
 
 /* ============================================================
-   帖子系统
+   帖子系统（带搜索 + 缓存）
 ============================================================ */
-async function renderPosts(){
-  const container=document.getElementById('postList');
-  if(!container)return;
-  try{
-    try{
-      const cats=await apiRequest('/post-categories');
-      const tabsContainer=document.getElementById('postCatTabs');
-      if(tabsContainer){
-        let tabsHtml=`<button class="category-btn ${!currentPostCategory||currentPostCategory==='all'?'active':''}" onclick="filterPostCategory('all')">全部</button>`;
-        cats.forEach(c=>{
-          const iconHtml=c.icon?(c.icon.startsWith('http')?`<img src="${c.icon}" style="width:16px;height:16px;object-fit:cover;border-radius:4px;" />`:`<i class="${c.icon}"></i>`):'<i class="fas fa-edit"></i>';
-          tabsHtml+=`<button class="category-btn ${currentPostCategory===c.id?'active':''}" onclick="filterPostCategory('${c.id}')">${iconHtml} ${c.name}</button>`;
-        });
-        tabsContainer.innerHTML=tabsHtml;
-      }
-    }catch(e){console.warn('加载帖子分类失败',e);}
+async function renderPosts() {
+    const container = document.getElementById('postList');
+    if (!container) return;
+    try {
+        try {
+            const cats = await apiRequest('/post-categories');
+            const tabsContainer = document.getElementById('postCatTabs');
+            if (tabsContainer) {
+                let tabsHtml = `<button class="category-btn ${!currentPostCategory || currentPostCategory === 'all' ? 'active' : ''}" onclick="filterPostCategory('all')">全部</button>`;
+                cats.forEach(c => {
+                    const iconHtml = c.icon ? (c.icon.startsWith('http') ? `<img src="${c.icon}" style="width:16px;height:16px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:2px;" />` : `<i class="${c.icon}"></i>`) : '<i class="fas fa-edit"></i>';
+                    tabsHtml += `<button class="category-btn ${currentPostCategory === c.id ? 'active' : ''}" onclick="filterPostCategory('${c.id}')">${iconHtml} ${c.name}</button>`;
+                });
+                tabsContainer.innerHTML = tabsHtml;
+            }
+        } catch (e) {}
 
-    const userParam=currentUser?'?current_user='+currentUser.id:'';
-    let posts=await apiRequest('/posts'+userParam);
-    if(currentPostCategory&&currentPostCategory!=='all')posts=posts.filter(p=>p.category_id===currentPostCategory);
-    document.getElementById('postCount').textContent=posts.length+'个';
-    if(posts.length===0){
-      container.innerHTML='<div class="empty-state"><i class="fas fa-newspaper"></i><p>暂无帖子</p></div>';
-      return;
+        const userParam = currentUser ? '?current_user=' + currentUser.id : '';
+        let posts = await apiRequest('/posts' + userParam);
+        allPostsCache = posts;
+
+        if (currentPostCategory && currentPostCategory !== 'all') {
+            posts = posts.filter(p => p.category_id === currentPostCategory);
+        }
+
+        const searchKw = (document.getElementById('postSearchInput')?.value || '').trim().toLowerCase();
+        if (searchKw) {
+            posts = posts.filter(p =>
+                (p.content || '').toLowerCase().includes(searchKw) ||
+                (p.username || '').toLowerCase().includes(searchKw)
+            );
+        }
+
+        document.getElementById('postCount').textContent = posts.length + '个';
+        renderPostsHtml(posts);
+    } catch (err) {
+        container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p></div>';
     }
-    let html='';
-    for(const post of posts){
-      const avatarUrl=post.avatar||'';
-      let images=[];
-      try{images=post.images?JSON.parse(post.images):[];}catch(e){images=[];}
-      const isLiked=post.is_liked||false;
-      const isOwner=currentUser&&post.user_id===currentUser.id;
-      let imagesHtml='';
-      if(images.length>0){
-        const gridClass=images.length===1?'':images.length===2?'grid-2':'grid-3';
-        imagesHtml=`<div class="post-images ${gridClass}">${images.map(img=>`<img src="${img}" onclick="event.stopPropagation();showImgPreview('${img}')" />`).join('')}</div>`;
-      }
-      html+=`
-        <div class="post-card" id="post-${post.id}">
-          <div class="post-header">
-            <div class="post-avatar" onclick="event.stopPropagation();viewUserProfile('${post.user_id}')" style="cursor:pointer;">${avatarUrl?`<img src="${avatarUrl}" />`:(post.username?post.username.charAt(0).toUpperCase():'?')}</div>
-            <span class="post-username" onclick="viewUserProfile('${post.user_id}')" style="cursor:pointer;">${post.username||'未知用户'}</span>
-            <span class="post-time">${formatTime(post.created_at)}</span>
-            ${isOwner?`<button class="btn btn-danger btn-xs" onclick="deletePost('${post.id}')">删除</button>`:''}
-          </div>
-          <div class="post-content">${post.content}</div>
-          ${imagesHtml}
-          <div class="post-actions">
-            <button onclick="likePost('${post.id}')" class="${isLiked?'liked':''}"><i class="fas fa-heart"></i> <span id="like-count-${post.id}">${post.likes||0}</span></button>
-            <button onclick="toggleComments('${post.id}')"><i class="fas fa-comment"></i> <span id="comment-count-${post.id}">${post.comments_count||0}</span></button>
-          </div>
-          <div class="post-comments" id="comments-${post.id}" style="display:none;">
-            <div id="comments-list-${post.id}"></div>
-            ${currentUser?`<div class="post-comment-input"><input type="text" id="comment-input-${post.id}" placeholder="写下你的评论..." /><button onclick="submitComment('${post.id}')">发送</button></div>`:`<p style="font-size:13px;color:var(--text-muted);padding:6px 0;">请登录后评论</p>`}
-          </div>
-        </div>`;
-    }
-    container.innerHTML=html;
-  }catch(err){
-    container.innerHTML='<div class="empty-state"><p>加载失败: '+err.message+'</p></div>';
-  }
 }
+
+function searchPosts(keyword) {
+    const kw = (keyword || '').trim().toLowerCase();
+    const container = document.getElementById('postList');
+    if (!container) return;
+
+    if (!kw) {
+        renderPosts();
+        return;
+    }
+
+    if (!allPostsCache || allPostsCache.length === 0) {
+        renderPosts().then(() => searchPosts(kw));
+        return;
+    }
+
+    let filtered = allPostsCache;
+    if (currentPostCategory && currentPostCategory !== 'all') {
+        filtered = filtered.filter(p => p.category_id === currentPostCategory);
+    }
+    filtered = filtered.filter(p =>
+        (p.content || '').toLowerCase().includes(kw) ||
+        (p.username || '').toLowerCase().includes(kw)
+    );
+
+    document.getElementById('postCount').textContent = filtered.length + '个';
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>未找到相关帖子</p></div>';
+        return;
+    }
+
+    renderPostsHtml(filtered);
+}
+
+function renderPostsHtml(posts) {
+    const container = document.getElementById('postList');
+    if (!container) return;
+
+    if (posts.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><p>暂无帖子</p></div>';
+        return;
+    }
+
+    let html = '';
+    for (const post of posts) {
+        const avatarUrl = post.avatar || '';
+        let images = [];
+        try { images = post.images ? JSON.parse(post.images) : []; } catch (e) { images = []; }
+        const isLiked = post.is_liked || false;
+        const isOwner = currentUser && post.user_id === currentUser.id;
+        let imagesHtml = '';
+        if (images.length > 0) {
+            const gridClass = images.length === 1 ? '' : images.length === 2 ? 'grid-2' : 'grid-3';
+            imagesHtml = `<div class="post-images ${gridClass}">${images.map(img => `<img src="${img}" onclick="event.stopPropagation();showImgPreview('${img}')" />`).join('')}</div>`;
+        }
+        html += `
+            <div class="post-card" id="post-${post.id}">
+                <div class="post-header">
+                    <div class="post-avatar" onclick="event.stopPropagation();viewUserProfile('${post.user_id}')" style="cursor:pointer;">${avatarUrl ? `<img src="${avatarUrl}" />` : (post.username ? post.username.charAt(0).toUpperCase() : '?')}</div>
+                    <span class="post-username" onclick="viewUserProfile('${post.user_id}')" style="cursor:pointer;">${post.username || '未知用户'}</span>
+                    <span class="post-time">${formatTime(post.created_at)}</span>
+                    ${isOwner ? `<button class="btn btn-danger btn-xs" onclick="deletePost('${post.id}')">删除</button>` : ''}
+                </div>
+                <div class="post-content">${post.content}</div>
+                ${imagesHtml}
+                <div class="post-actions">
+                    <button onclick="likePost('${post.id}')" class="${isLiked ? 'liked' : ''}"><i class="fas fa-heart"></i> <span id="like-count-${post.id}">${post.likes_count || post.likes || 0}</span></button>
+                    <button onclick="toggleComments('${post.id}')"><i class="fas fa-comment"></i> <span id="comment-count-${post.id}">${post.comments_count || 0}</span></button>
+                </div>
+                <div class="post-comments" id="comments-${post.id}" style="display:none;">
+                    <div id="comments-list-${post.id}"></div>
+                    ${currentUser ? `<div class="post-comment-input"><input type="text" id="comment-input-${post.id}" placeholder="写下你的评论..." /><button onclick="submitComment('${post.id}')">发送</button></div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
+
 function filterPostCategory(catId){currentPostCategory=catId;renderPosts();}
 function refreshPosts(){renderPosts();toast('已刷新','success');}
 
@@ -1497,7 +1663,7 @@ async function loadComments(postId){
           <span class="time">${formatTime(c.created_at)}</span>
         </div>
       </div>`).join('');
-  }catch(err){container.innerHTML='<p style="font-size:13px;color:#ef4444;">加载失败</p>';}
+  }catch(err){container.innerHTML='<p style="font-size:13px;color:#f4212e;">加载失败</p>';}
 }
 async function submitComment(postId){
   if(!currentUser){toast('请先登录','warning');return;}
@@ -1746,8 +1912,8 @@ async function viewUserProfile(userId){
     document.getElementById('upId').textContent='ID: '+user.id;
     document.getElementById('upDiamond').textContent=user.diamond||0;
     document.getElementById('upLevel').textContent='LV'+(user.level||1);
-    let badgesHtml=`<span class="shop-badge" style="background:#3a7eff22;color:#3a7eff;">${roleMap[user.role]||user.role}</span>`;
-    if(user.status==='banned')badgesHtml+='<span class="shop-badge" style="background:#ef444422;color:#ef4444;">已封禁</span>';
+    let badgesHtml=`<span class="shop-badge" style="background:#e8f5fe;color:#0c7abf;">${roleMap[user.role]||user.role}</span>`;
+    if(user.status==='banned')badgesHtml+='<span class="shop-badge" style="background:#fde8ea;color:#c81e2c;">已封禁</span>';
     document.getElementById('upBadges').innerHTML=badgesHtml;
     if(user.avatar){
       document.getElementById('upAvatarImg').src=user.avatar;
@@ -1921,7 +2087,7 @@ function showReviewModal(orderId){
     </div>`);
   let rating=5;
   const stars=document.querySelectorAll('#reviewStars span');
-  function paint(n){stars.forEach((s,i)=>s.style.color=i<n?'#f5c842':'#ddd');}
+  function paint(n){stars.forEach((s,i)=>s.style.color=i<n?'#0f1419':'#ddd');}
   paint(5);
   stars.forEach(s=>s.onclick=()=>{rating=parseInt(s.dataset.star);document.getElementById('reviewRating').value=rating;paint(rating);});
 }
@@ -1963,7 +2129,7 @@ async function openRecharge(){
       </div>
       <input class="admin-form-control" id="rechargeAmount" type="number" placeholder="自定义金额" min="1" />
     </div>
-    <div style="text-align:center;margin:8px 0;"><span style="font-size:20px;font-weight:700;color:#f5c842;" id="rechargePreview">0 红钻</span></div>
+    <div style="text-align:center;margin:8px 0;"><span style="font-size:20px;font-weight:700;color:#0f1419;" id="rechargePreview">0 红钻</span></div>
     <div id="rechargeImagesArea" style="margin:12px 0;"></div>
     <div class="btn-row">
       <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
@@ -1986,7 +2152,7 @@ function renderRechargeImages(){
   rechargeImgIndex=0;
   const images=rechargeImages.map(r=>r.image_url);
   area.innerHTML=`
-    <div style="position:relative;width:100%;border-radius:12px;overflow:hidden;background:#f0f2f5;aspect-ratio:1/1;">
+    <div style="position:relative;width:100%;border-radius:12px;overflow:hidden;background:#f7f9f9;aspect-ratio:1/1;">
       <div style="display:flex;transition:transform 0.3s;height:100%;" id="rechargeImgTrack">
         ${images.map(img=>`<div style="min-width:100%;height:100%;"><img src="${img}" style="width:100%;height:100%;object-fit:contain;background:#fff;" /></div>`).join('')}
       </div>
@@ -2500,8 +2666,8 @@ async function renderSubShops(){
         <div class="admin-form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="shopLogo" /></div>
         <div class="admin-form-group"><label>店铺背景图URL</label><input class="admin-form-control" id="shopBanner" /></div>
         <div class="admin-form-group"><label>所属主分类</label><select class="admin-form-control" id="shopCategory"><option value="">-- 请选择分类 --</option>${mainCats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
-        <div class="admin-form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="shopIsSelf" style="width:20px;height:20px;" /><label style="margin:0;font-size:14px;"><i class="fas fa-trophy"></i> 自营</label></div>
-        <div class="admin-form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="shopIsRecommend" checked style="width:20px;height:20px;" /><label style="margin:0;font-size:14px;"><i class="fas fa-fire"></i> 推荐</label></div>
+        <div class="admin-form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="shopIsSelf" style="width:20px;height:20px;accent-color:#0f1419;" /><label style="margin:0;font-size:14px;"><i class="fas fa-trophy"></i> 自营</label></div>
+        <div class="admin-form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="shopIsRecommend" checked style="width:20px;height:20px;accent-color:#0f1419;" /><label style="margin:0;font-size:14px;"><i class="fas fa-fire"></i> 推荐</label></div>
         <button class="btn btn-success" onclick="createShop()">创建店铺</button>
       </div>
       <div class="inline-modal" id="addShopCategoryModal">
@@ -2664,15 +2830,21 @@ async function editShop(shopId){
       <div class="form-group"><label>店铺背景图URL</label><input class="admin-form-control" id="editShopBanner" value="${shop.banner||''}" /></div>
       <div class="form-group"><label>所属分类</label><select class="admin-form-control" id="editShopCategory">${catOptions}</select></div>
       <div class="form-group"><label>店铺拥有者</label><select class="admin-form-control" id="editShopOwner"><option value="">-- 不更改 --</option></select></div>
-      <div class="form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="editShopIsSelf" ${Number(shop.is_self)===1?'checked':''} style="width:20px;height:20px;" /><label style="margin:0;font-size:14px;"><i class="fas fa-trophy"></i> 自营</label></div>
-      <div class="form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="editShopIsRecommend" ${Number(shop.is_recommend)===1?'checked':''} style="width:20px;height:20px;" /><label style="margin:0;font-size:14px;"><i class="fas fa-fire"></i> 推荐</label></div>
+      <div class="form-group" style="display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" id="editShopIsSelf" ${Number(shop.is_self) === 1 ? 'checked' : ''} style="width:20px;height:20px;accent-color:#0f1419;" />
+        <label style="margin:0;font-size:14px;">自营店铺</label>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" id="editShopIsRecommend" ${Number(shop.is_recommend) === 1 ? 'checked' : ''} style="width:20px;height:20px;accent-color:#0f1419;" />
+        <label style="margin:0;font-size:14px;">推荐店铺</label>
+      </div>
       <div class="btn-row">
         <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
         <button class="btn btn-success" onclick="doEditShop('${shopId}')">保存</button>
       </div>`);
     try {
       const allUsers = await apiRequest('/admin/users');
-      const ownerCandidates = allUsers.filter(u => ['dispatcher', 'service', 'boss'].includes(u.role));
+      const ownerCandidates = allUsers.filter(u => ['admin', 'dispatcher', 'service'].includes(u.role));
       const ownerSel = document.getElementById('editShopOwner');
       ownerCandidates.forEach(u => {
         ownerSel.innerHTML += `<option value="${u.id}" ${shop.owner_id === u.id ? 'selected' : ''}>${u.username} (${u.role})</option>`;
@@ -2686,14 +2858,18 @@ async function doEditShop(shopId){
   const logo=document.getElementById('editShopLogo').value.trim();
   const banner=document.getElementById('editShopBanner').value.trim();
   const category_id=document.getElementById('editShopCategory').value||null;
-  const is_self=document.getElementById('editShopIsSelf').checked;
-  const is_recommend=document.getElementById('editShopIsRecommend').checked;
+  const is_self=document.getElementById('editShopIsSelf').checked ? 1 : 0;
+  const is_recommend=document.getElementById('editShopIsRecommend').checked ? 1 : 0;
   if(!name)return toast('请输入店铺名称','warning');
   try{
     await apiRequest('/shops/'+shopId,{method:'PUT',body:JSON.stringify({name,description,logo,banner,category_id,is_self,is_recommend})});
     const newOwnerId = document.getElementById('editShopOwner')?.value;
     if (newOwnerId) {
-      await apiRequest('/admin/shops/' + shopId + '/owner', { method: 'PUT', body: JSON.stringify({ new_owner_id: newOwnerId }) });
+      try {
+        await apiRequest('/admin/shops/' + shopId + '/owner', { method: 'PUT', body: JSON.stringify({ new_owner_id: newOwnerId }) });
+      } catch (e) {
+        if (e.message && !e.message.includes('相同')) toast('拥有者更新: ' + e.message, 'warning');
+      }
     }
     closeCustomModal();
     toast('店铺已更新','success');
@@ -2774,7 +2950,7 @@ function previewAnnounceImagesSub(event){
 function renderAnnounceImagePreviewSub(){
   const container=document.getElementById('announceImagePreviewSub');
   if(!container)return;
-  container.innerHTML=announceImages.map((img,i)=>`<div style="position:relative;display:inline-block;margin-right:8px;"><img src="${img}" style="max-width:60px;max-height:60px;border-radius:8px;" /><button onclick="removeAnnounceImageSub(${i})" style="position:absolute;top:-6px;right:-6px;background:#ef4444;border:none;color:#fff;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;">×</button></div>`).join('');
+  container.innerHTML=announceImages.map((img,i)=>`<div style="position:relative;display:inline-block;margin-right:8px;"><img src="${img}" style="max-width:60px;max-height:60px;border-radius:8px;" /><button onclick="removeAnnounceImageSub(${i})" style="position:absolute;top:-6px;right:-6px;background:#f4212e;border:none;color:#fff;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;">×</button></div>`).join('');
 }
 function removeAnnounceImageSub(index){announceImages.splice(index,1);renderAnnounceImagePreviewSub();}
 async function saveAnnounceSub(){
@@ -2821,7 +2997,7 @@ window.deleteWithdraw=function(withdrawId){confirmAction('确认删除','确认�
 async function doDeleteWithdraw(withdrawId){try{await apiRequest('/admin/withdrawals/'+withdrawId,{method:'DELETE'});toast('已删除','success');renderSubWithdrawals();}catch(err){toast(err.message,'error');}}
 
 /* ============================================================
-   子页面-账户设置（所有人可改ID）
+   子页面-账户设置
 ============================================================ */
 function renderSubAccount() {
   const container = document.getElementById('subAccountContent');
@@ -2851,7 +3027,7 @@ function renderSubAccount() {
       <button class="btn btn-warning btn-sm" onclick="changeUserId()"><i class="fas fa-edit"></i> 修改ID</button>
     </div>
     ${isAdmin ? `
-    <div class="admin-card" style="border-left:4px solid #3a7eff;">
+    <div class="admin-card" style="border-left:4px solid #0f1419;">
       <div class="admin-card-title"><i class="fas fa-image"></i> 充值图片管理（管理员）</div>
       <div class="admin-form-group"><label>充值图片URL</label><input class="admin-form-control" id="rechargeImgUrl" /></div>
       <div class="admin-form-group"><label>排序</label><input class="admin-form-control" id="rechargeImgSort" type="number" value="0" /></div>
@@ -2922,7 +3098,7 @@ async function changeUserId() {
 }
 async function doChangeUserId(newId) {
   try {
-    await apiRequest('/admin/user-id', {
+    await apiRequest('/user-id', {
       method: 'PUT',
       body: JSON.stringify({ targetUserId: currentUser.id, newId: newId })
     });
@@ -3311,7 +3487,7 @@ async function loadMyShopProducts() {
   try {
     const products = await apiRequest('/my-shop/products');
     if (products.length === 0) { c.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">暂无商品</p>'; return; }
-    c.innerHTML = products.map(p => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);"><span>${p.title}</span><span style="color:#f5c842;">${p.price} 红钻</span></div>`).join('');
+    c.innerHTML = products.map(p => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);"><span>${p.title}</span><span style="color:#0f1419;">${p.price} 红钻</span></div>`).join('');
   } catch (err) { c.innerHTML = '<p>加载失败</p>'; }
 }
 
@@ -3416,7 +3592,7 @@ async function renderSubHall() {
               <div style="font-size:15px;font-weight:600;margin-bottom:4px;">${o.title}</div>
               <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">${o.game || '暗区突围'} · 老板：${o.boss_name || '未知'}</div>
               ${o.description ? `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px;">${o.description}</div>` : ''}
-              <div style="font-size:16px;font-weight:700;color:#f5c842;">${o.price} 红钻</div>
+              <div style="font-size:16px;font-weight:700;color:#0f1419;">${o.price} 红钻</div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${formatTime(o.created_at)}</div>
             </div>
             <button class="btn btn-success btn-sm" onclick="confirmHallTake('${o.id}')" style="white-space:nowrap;">
@@ -3580,7 +3756,7 @@ function showLoginModal(){
     <h3><i class="fas fa-sign-in-alt"></i> 登录</h3>
     <div class="form-group"><label>用户名</label><input class="admin-form-control" id="loginUsername" /></div>
     <div class="form-group"><label>密码</label><input class="admin-form-control" id="loginPassword" type="password" /></div>
-    <div id="loginError" style="color:#ef4444;font-size:13px;min-height:20px;"></div>
+    <div id="loginError" style="color:#f4212e;font-size:13px;min-height:20px;"></div>
     <div class="btn-row">
       <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
       <button class="btn btn-success" onclick="doLogin()">登录</button>
@@ -3731,6 +3907,7 @@ window.showLoginModal=showLoginModal;
 window.logout=logout;
 window.renderPosts=renderPosts;
 window.refreshPosts=refreshPosts;
+window.searchPosts=searchPosts;
 window.showCreatePost=showCreatePost;
 window.submitPost=submitPost;
 window.likePost=likePost;
@@ -3889,7 +4066,7 @@ window.doServiceApproveRecharge=doServiceApproveRecharge;
 window.showReviewModal=showReviewModal;
 window.submitReview=submitReview;
 
-console.log('QW电竞护航平台 v7.0 完整版已加载');
+console.log('QW电竞护航平台 v7.2 已加载');
 </script>
 </body>
 </html>
