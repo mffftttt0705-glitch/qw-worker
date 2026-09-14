@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v7.2)
-//  更新：拥有者角色限制 / user-id 需登录区 / 申请人角色校验
+//  QW电竞 - 完整后端 API (v7.3)
+//  更新：店铺分类主/子支持 / owner 显式返回 / 允许一人多店
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -157,7 +157,7 @@ async function handleAdminDeleteUser(env, targetUserId) {
 }
 
 // ============================================================
-//  修改用户ID（允许本人 + 管理员）
+//  修改用户ID
 // ============================================================
 async function handleChangeUserId(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -628,7 +628,7 @@ async function handleGetShopDetail(env, shopId) {
   shop.is_self = Number(shop.is_self) || 0;
   shop.is_recommend = Number(shop.is_recommend) || 0;
   shop.follow_count = Number(shop.follow_count) || 0;
-  shop.sort_order = Number(shop.sort_order) || 0;
+  shop.owner_id = shop.owner_id || '';
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM products WHERE shop_id = ? AND hidden = 0', [shopId]);
   shop.productCount = countResult.results?.[0]?.count || 0;
   return jsonResponse(shop);
@@ -654,23 +654,51 @@ async function handleCreateShopCategory(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
-  if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
-  const { shop_id, name, image_url } = body;
+  if (!user || (user.role !== 'admin' && user.role !== 'dispatcher' && user.role !== 'service')) {
+    return errorResponse('权限不足', 403);
+  }
+  const { shop_id, name, image_url, parent_id } = body;
   if (!shop_id) return errorResponse('请选择店铺');
   if (!name) return errorResponse('请输入分类名称');
   const id = generateId();
-  await runDB(env, 'INSERT INTO shop_categories (id, shop_id, name, image_url, sort_order, created_at) VALUES (?, ?, ?, ?, 0, ?)', [id, shop_id, name, image_url || '', new Date().toISOString()]);
-  return jsonResponse({ success: true, id, message: '店铺分类创建成功' });
+  try {
+    await runDB(env,
+      'INSERT INTO shop_categories (id, shop_id, name, image_url, sort_order, parent_id, created_at) VALUES (?, ?, ?, ?, 0, ?, ?)',
+      [id, shop_id, name, image_url || '', parent_id || null, new Date().toISOString()]
+    );
+  } catch (e) {
+    await runDB(env,
+      'INSERT INTO shop_categories (id, shop_id, name, image_url, sort_order, created_at) VALUES (?, ?, ?, ?, 0, ?)',
+      [id, shop_id, name, image_url || '', new Date().toISOString()]
+    );
+  }
+  return jsonResponse({ success: true, id, message: parent_id ? '子分类创建成功' : '分类创建成功' });
 }
 
 async function handleUpdateShopCategory(env, authHeader, catId, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
-  if (user.role !== 'admin') return errorResponse('权限不足', 403);
-  const { name, image_url } = body;
-  if (!name) return errorResponse('请输入分类名称');
-  await runDB(env, 'UPDATE shop_categories SET name = ?, image_url = ? WHERE id = ?', [name, image_url || '', catId]);
+  if (!user) return errorResponse('用户不存在', 404);
+  if (user.role !== 'admin' && user.role !== 'dispatcher' && user.role !== 'service') {
+    return errorResponse('权限不足', 403);
+  }
+  const { name, image_url, sort_order, parent_id } = body;
+  let sql = 'UPDATE shop_categories SET ';
+  const params = [];
+  const updates = [];
+  if (name !== undefined) { updates.push('name = ?'); params.push(name); }
+  if (image_url !== undefined) { updates.push('image_url = ?'); params.push(image_url || ''); }
+  if (sort_order !== undefined) { updates.push('sort_order = ?'); params.push(sort_order || 0); }
+  if (parent_id !== undefined) { updates.push('parent_id = ?'); params.push(parent_id || null); }
+  if (updates.length === 0) return errorResponse('没有要更新的字段');
+  sql += updates.join(', ') + ' WHERE id = ?';
+  params.push(catId);
+  try {
+    await runDB(env, sql, params);
+  } catch (e) {
+    return errorResponse('更新失败: ' + e.message, 500);
+  }
   return jsonResponse({ success: true, message: '已更新' });
 }
 
@@ -678,7 +706,7 @@ async function handleDeleteShopCategory(env, authHeader, categoryId) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
-  if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
+  if (!user || (user.role !== 'admin' && user.role !== 'dispatcher' && user.role !== 'service')) return errorResponse('权限不足', 403);
   await runDB(env, 'DELETE FROM shop_categories WHERE id = ?', [categoryId]);
   return jsonResponse({ success: true, message: '店铺分类已删除' });
 }
@@ -866,7 +894,6 @@ async function handleApproveShopApplication(env, authHeader, appId) {
   const app = appResult.results?.[0];
   if (!app || app.status !== 'pending') return errorResponse('申请不存在或已处理');
 
-  // 检查申请人角色
   const applicant = await getUserById(env, app.applicant_id);
   if (!applicant || !['admin', 'dispatcher', 'service'].includes(applicant.role)) {
     return errorResponse('申请人角色不允许创建店铺');
@@ -905,15 +932,11 @@ async function handleChangeShopOwner(env, authHeader, shopId, body) {
   if (!new_owner_id) return errorResponse('请选择新拥有者');
   const u = await getUserById(env, new_owner_id);
   if (!u) return errorResponse('用户不存在');
-  // ✅ 只允许指定 admin / service / dispatcher 为拥有者
   if (!['admin', 'service', 'dispatcher'].includes(u.role)) {
     return errorResponse('拥有者只能是管理员/客服/派单员');
   }
-  // 检查该用户是否已是其他店铺拥有者
-  const existing = await queryDB(env, 'SELECT * FROM shops WHERE owner_id = ? AND id != ?', [new_owner_id, shopId]);
-  if (existing.results && existing.results.length > 0) return errorResponse('该用户已拥有其他店铺');
   await runDB(env, 'UPDATE shops SET owner_id = ? WHERE id = ?', [new_owner_id, shopId]);
-  return jsonResponse({ success: true, message: '拥有者已更换' });
+  return jsonResponse({ success: true, message: '拥有者已更新' });
 }
 // ============================================================
 //  订单
@@ -954,7 +977,6 @@ async function handleGetMyOrders(env, authHeader) {
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
 
-  // 管理员：看全部订单
   if (user.role === 'admin') {
     const result = await queryDB(env,
       `SELECT o.*, b.username as boss_name, h.username as handler_name
@@ -1709,6 +1731,14 @@ export async function onRequest(context) {
     if (path === '/api/service/users' && method === 'GET') return await handleGetUsersForService(env, authHeader);
     if (path === '/api/service/gift' && method === 'POST') return await handleServiceGift(env, authHeader, body);
 
+    // 店铺分类（允许 service/dispatcher）
+    if (path === '/api/shop-categories' && method === 'POST') return await handleCreateShopCategory(env, authHeader, body);
+    if (path.startsWith('/api/shop-categories/')) {
+      const catId = path.replace('/api/shop-categories/', '');
+      if (method === 'PUT') return await handleUpdateShopCategory(env, authHeader, catId, body);
+      if (method === 'DELETE') return await handleDeleteShopCategory(env, authHeader, catId);
+    }
+
     // 关注店铺
     if (path.startsWith('/api/shops/') && path.endsWith('/follow') && method === 'POST') {
       return await handleFollowShop(env, authHeader, path.replace('/api/shops/', '').replace('/follow', ''));
@@ -1765,12 +1795,6 @@ export async function onRequest(context) {
           if (shopId.endsWith('/owner') && method === 'PUT') return await handleChangeShopOwner(env, authHeader, shopId.replace('/owner', ''), body);
           if (method === 'PUT') return await handleUpdateShop(env, authHeader, shopId, body);
           if (method === 'DELETE') return await handleDeleteShop(env, authHeader, shopId);
-        }
-        if (path === '/api/shop-categories' && method === 'POST') return await handleCreateShopCategory(env, authHeader, body);
-        if (path.startsWith('/api/shop-categories/')) {
-          const catId = path.replace('/api/shop-categories/', '');
-          if (method === 'PUT') return await handleUpdateShopCategory(env, authHeader, catId, body);
-          if (method === 'DELETE') return await handleDeleteShopCategory(env, authHeader, catId);
         }
         if (path === '/api/admin/shop-applications' && method === 'GET') return await handleGetAllShopApplications(env, authHeader);
         if (path.startsWith('/api/admin/shop-applications/')) {
