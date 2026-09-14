@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v7.0)
-//  更新：管理员订单管理 / 本人修改ID / 订单关联用户名 / 订单聊天 / 接单大厅
+//  QW电竞 - 完整后端 API (v7.2)
+//  更新：拥有者角色限制 / user-id 需登录区 / 申请人角色校验
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -866,6 +866,12 @@ async function handleApproveShopApplication(env, authHeader, appId) {
   const app = appResult.results?.[0];
   if (!app || app.status !== 'pending') return errorResponse('申请不存在或已处理');
 
+  // 检查申请人角色
+  const applicant = await getUserById(env, app.applicant_id);
+  if (!applicant || !['admin', 'dispatcher', 'service'].includes(applicant.role)) {
+    return errorResponse('申请人角色不允许创建店铺');
+  }
+
   const countResult = await queryDB(env, 'SELECT COUNT(*) as c FROM shops');
   const count = countResult.results?.[0]?.c || 0;
   const shopId = 'a' + String(100000 + count + 1);
@@ -899,6 +905,13 @@ async function handleChangeShopOwner(env, authHeader, shopId, body) {
   if (!new_owner_id) return errorResponse('请选择新拥有者');
   const u = await getUserById(env, new_owner_id);
   if (!u) return errorResponse('用户不存在');
+  // ✅ 只允许指定 admin / service / dispatcher 为拥有者
+  if (!['admin', 'service', 'dispatcher'].includes(u.role)) {
+    return errorResponse('拥有者只能是管理员/客服/派单员');
+  }
+  // 检查该用户是否已是其他店铺拥有者
+  const existing = await queryDB(env, 'SELECT * FROM shops WHERE owner_id = ? AND id != ?', [new_owner_id, shopId]);
+  if (existing.results && existing.results.length > 0) return errorResponse('该用户已拥有其他店铺');
   await runDB(env, 'UPDATE shops SET owner_id = ? WHERE id = ?', [new_owner_id, shopId]);
   return jsonResponse({ success: true, message: '拥有者已更换' });
 }
@@ -935,9 +948,6 @@ async function handleBuyProduct(env, authHeader, body) {
   return jsonResponse({ orderId, message: '购买成功' });
 }
 
-// ============================================================
-//  我的订单（管理员看全部）
-// ============================================================
 async function handleGetMyOrders(env, authHeader) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -1355,7 +1365,6 @@ async function handleGetMessages(env, authHeader, body) {
   if (!user) return errorResponse('用户不存在', 404);
   const { contactId, type, orderId } = body;
 
-  // 订单聊天走单独逻辑
   if (type === 'order' && orderId) {
     const o = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
     const order = o.results && o.results[0];
@@ -1375,7 +1384,6 @@ async function handleGetMessages(env, authHeader, body) {
     return jsonResponse(formatted);
   }
 
-  // 普通联系人聊天
   if (!contactId) return errorResponse('请选择联系人');
   const contact = await getUserById(env, contactId);
   if (!contact) return errorResponse('联系人不存在', 404);
@@ -1663,6 +1671,7 @@ export async function onRequest(context) {
 
     // 需登录
     if (path === '/api/me' && method === 'GET') return await handleGetMe(env, authHeader);
+    if (path === '/api/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
     if (path === '/api/user/avatar' && method === 'POST') return await handleUploadAvatar(env, authHeader, body);
     if (path === '/api/user/name' && method === 'PUT') return await handleChangeName(env, authHeader, body);
     if (path === '/api/user/banner' && method === 'PUT') return await handleSetBanner(env, authHeader, body);
