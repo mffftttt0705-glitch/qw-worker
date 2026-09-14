@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="msapplication-TileColor" content="#1a6aff">
-<meta name="msapplication-TileImage" href="/icons/icon-144x144.png">
+<meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 <style>
 :root{--bg-primary:#f0f2f5;--bg-secondary:#fff;--bg-card:#fff;--bg-card-hover:#f5f6f8;--bg-input:#fff;--text-primary:#1a1a2e;--text-secondary:#4a4a5a;--text-muted:#6a6a7a;--text-nav:#4a4a5a;--border-color:#d0d5dd;--border-light:rgba(0,0,0,0.06);--shadow:0 30px 80px rgba(0,0,0,0.15);--btn-primary-bg:linear-gradient(145deg,#1a6aff,#0044cc);--btn-primary-color:#fff;--toast-bg:#fff;--toast-border:#22c55e;--modal-bg:rgba(255,255,255,0.95);--bottom-nav-bg:rgba(255,255,255,0.95);--product-card-bg:#fff;--product-card-border:rgba(0,0,0,0.06);--price-color:#e8a800;--product-img-bg:linear-gradient(145deg,#e8ecf0,#d0d5dd);--product-img-icon:#6a6a7a;--product-title:#1a1a2e;--product-desc:#4a4a5a;--product-stock:#6a6a7a;--product-bottom-border:rgba(0,0,0,0.06);--admin-card-bg:#fff;--admin-card-border:rgba(0,0,0,0.06);--admin-card-shadow:0 4px 20px rgba(0,0,0,0.06);--admin-card-title:#1a1a2e;--post-bg:#fff;--post-border:rgba(0,0,0,0.06);--post-shadow:0 2px 12px rgba(0,0,0,0.06);}
@@ -504,7 +504,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 </div>
 </div>
 </div>
-<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v6.8</div>
+<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v6.9</div>
 </div>
 </div>
 <div class="bottom-nav" id="bottomNav"></div>
@@ -599,6 +599,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 <div class="sub-page" id="subPageBanners"><div class="sub-header"><button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button><span class="title">📸 广告管理</span></div><div id="subBannersContent"></div></div>
 <div class="sub-page" id="subPageIcons"><div class="sub-header"><button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button><span class="title">🎨 图标管理</span></div><div id="subIconsContent"></div></div>
 <div class="sub-page" id="subPageMyShop"><div class="sub-header"><button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button><span class="title">🏪 我的店铺</span></div><div id="subMyShopContent"></div></div>
+<div class="sub-page" id="subPageHall"><div class="sub-header"><button class="back-btn" onclick="closeSubPage()"><i class="fas fa-arrow-left"></i></button><span class="title">🎯 接单大厅</span></div><div id="subHallContent"></div></div>
 
 <div class="chat-fullscreen" id="chatFullscreen">
 <div class="chat-header">
@@ -828,7 +829,7 @@ function openSubPage(page){
     'recharges':'subPageRecharges','shops':'subPageShops','announce':'subPageAnnounce',
     'withdrawals':'subPageWithdrawals','account':'subPageAccount','service':'subPageService',
     'dispatcher':'subPageDispatcher','categories':'subPageCategories',
-    'banners':'subPageBanners','icons':'subPageIcons','myshop':'subPageMyShop'
+    'banners':'subPageBanners','icons':'subPageIcons','myshop':'subPageMyShop','hall':'subPageHall'
   };
   const containerId=pageMap[page];
   if(!containerId)return;
@@ -849,6 +850,7 @@ function openSubPage(page){
     case 'banners':renderSubBanners();break;
     case 'icons':renderSubIcons();break;
     case 'myshop':renderSubMyShop();break;
+    case 'hall':renderSubHall();break;
   }
 }
 function closeSubPage(){
@@ -1334,17 +1336,27 @@ async function showBuyWithHandler(productId){
       </div>`);
   }catch(err){toast(err.message,'error');}
 }
-async function doBuyWithHandler(productId){
-  const handlerId=document.getElementById('buyHandlerSelect').value;
+async function doBuyWithHandler(productId) {
+  const handlerId = document.getElementById('buyHandlerSelect').value;
   closeCustomModal();
-  try{
-    const data=await apiRequest('/orders/buy',{method:'POST',body:JSON.stringify({productId,assignedHandlerId:handlerId||null})});
-    toast('购买成功！订单号：'+data.orderId,'success');
+  try {
+    const data = await apiRequest('/orders/buy', {
+      method: 'POST',
+      body: JSON.stringify({ productId, assignedHandlerId: handlerId || null })
+    });
+    toast('购买成功！订单号：' + data.orderId, 'success');
+    // 刷新用户信息
+    try {
+      const user = await apiRequest('/me');
+      currentUser = { ...currentUser, ...user };
+    } catch (e) {}
     renderHomePage();
     renderCategoryPage();
     renderMyPage();
     updateBadges();
-  }catch(err){toast(err.message,'error');}
+  } catch (err) {
+    toast(err.message, 'error');
+  }
 }
 
 /* ============================================================
@@ -1682,6 +1694,7 @@ function renderMoreFunctions(){
   }else if(role==='handler'){
     items=[
       {icon:'fa-gamepad',label:'打手工作台',action:"openSubPage('orders')"},
+      {icon:'fa-bullseye',label:'接单大厅',action:"openSubPage('hall')"},
       {icon:'fa-money-bill',label:'提现',action:"openWithdraw()"},
       {icon:'fa-cog',label:'账户设置',action:"openSubPage('account')"}
     ];
@@ -1858,13 +1871,36 @@ async function doRequestRefund(orderId){
   }catch(err){toast(err.message,'error');}
 }
 
-window.viewOrderDetail=function(orderId){
-  apiRequest('/orders/'+orderId).then(order=>{
-    let messages=[];
-    try{messages=typeof order.messages==='string'?JSON.parse(order.messages):(order.messages||[]);}catch(e){}
-    const messagesHtml=messages.length>0?messages.map(msg=>`<div><strong>${msg.sender}:</strong> ${msg.content}</div>`).join(''):'暂无消息';
-    showCustomModal(`<h3>订单详情</h3><div style="margin:12px 0;text-align:left;"><div class="detail-row"><span class="label">订单号</span><span class="value">${order.id}</span></div><div class="detail-row"><span class="label">标题</span><span class="value">${order.title}</span></div><div class="detail-row"><span class="label">价格</span><span class="value">${order.price} 红钻</span></div><div class="detail-row"><span class="label">状态</span><span class="value">${statusText(order.status)}</span></div></div><div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>`);
-  }).catch(err=>toast(err.message,'error'));
+window.viewOrderDetail = function(orderId) {
+  apiRequest('/orders/' + orderId).then(order => {
+    let messages = [];
+    try { messages = typeof order.messages === 'string' ? JSON.parse(order.messages) : (order.messages || []); } catch (e) {}
+    const messagesHtml = messages.length > 0
+      ? messages.map(msg => `<div><strong>${msg.sender}:</strong> ${msg.content} <span style="font-size:11px;color:var(--text-muted);">${msg.time || ''}</span></div>`).join('')
+      : '暂无消息';
+    showCustomModal(`
+      <h3><i class="fas fa-info-circle"></i> 订单详情</h3>
+      <div style="margin:12px 0;text-align:left;">
+        <div class="detail-row"><span class="label">订单号</span><span class="value">${order.id}</span></div>
+        <div class="detail-row"><span class="label">游戏</span><span class="value">${order.game || '暗区突围'}</span></div>
+        <div class="detail-row"><span class="label">标题</span><span class="value">${order.title}</span></div>
+        <div class="detail-row"><span class="label">价格</span><span class="value">${order.price} 红钻</span></div>
+        <div class="detail-row"><span class="label">状态</span><span class="value"><span class="status-badge ${statusClass(order.status)}">${statusText(order.status)}</span></span></div>
+        <div class="detail-row"><span class="label">老板</span><span class="value">${order.boss_name || '未知'} (${order.boss_id || '-'})</span></div>
+        <div class="detail-row"><span class="label">打手</span><span class="value">${order.handler_name ? order.handler_name + ' (' + (order.handler_id || '-') + ')' : '未指派'}</span></div>
+        <div class="detail-row"><span class="label">创建时间</span><span class="value">${order.created_at || '-'}</span></div>
+        ${order.start_time ? `<div class="detail-row"><span class="label">开始时间</span><span class="value">${order.start_time}</span></div>` : ''}
+        ${order.end_time ? `<div class="detail-row"><span class="label">结束时间</span><span class="value">${order.end_time}</span></div>` : ''}
+        ${order.settled ? `<div class="detail-row"><span class="label">结算金额</span><span class="value">${order.settled_amount || order.price} 红钻</span></div>` : ''}
+        ${order.refund_reason ? `<div class="detail-row"><span class="label">退款原因</span><span class="value">${order.refund_reason}</span></div>` : ''}
+      </div>
+      <div style="border-top:1px solid var(--border-color);padding-top:12px;text-align:left;">
+        <div style="font-weight:600;margin-bottom:8px;">聊天记录</div>
+        <div style="max-height:200px;overflow-y:auto;font-size:13px;background:var(--bg-input);padding:8px;border-radius:8px;">${messagesHtml}</div>
+      </div>
+      <div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">关闭</button></div>
+    `);
+  }).catch(err => toast(err.message, 'error'));
 };
 
 /* ============================================================
@@ -3160,6 +3196,58 @@ async function renderSubIcons(){
 }
 
 /* ============================================================
+   接单大厅
+============================================================ */
+async function renderSubHall() {
+  const container = document.getElementById('subHallContent');
+  if (!container) return;
+  container.innerHTML = '<div class="empty-state"><p>加载中...</p></div>';
+  try {
+    const orders = await apiRequest('/handler/pending-orders');
+    if (orders.length === 0) {
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无可接订单</p></div>';
+      return;
+    }
+    let html = '';
+    for (const o of orders) {
+      html += `
+        <div class="admin-card" style="padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:600;margin-bottom:4px;">${o.title}</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">${o.game || '暗区突围'} · 老板：${o.boss_name || '未知'}</div>
+              ${o.description ? `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px;">${o.description}</div>` : ''}
+              <div style="font-size:16px;font-weight:700;color:#f5c842;">${o.price} 红钻</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${formatTime(o.created_at)}</div>
+            </div>
+            <button class="btn btn-success btn-sm" onclick="confirmHallTake('${o.id}')" style="white-space:nowrap;">
+              <i class="fas fa-hand-paper"></i> 接单
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p></div>';
+  }
+}
+
+function confirmHallTake(orderId) {
+  confirmAction('确认接单', '确认接取此订单？', '确认接单', `doHallTake('${orderId}')`);
+}
+
+async function doHallTake(orderId) {
+  try {
+    await apiRequest('/orders/' + orderId + '/take', { method: 'PUT' });
+    toast('接单成功', 'success');
+    renderSubHall();
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+/* ============================================================
    我的店铺
 ============================================================ */
 async function renderSubMyShop() {
@@ -3362,32 +3450,41 @@ async function openChat(id,username,type='contact'){
   document.getElementById('fullscreenChatRole').textContent=type==='order'?'📋 订单聊天':'在线';
   await loadFullscreenMessages();
 }
-async function loadFullscreenMessages(){
-  const body=document.getElementById('fullscreenChatBody');
-  body.innerHTML='<div class="empty-state"><p>加载中...</p></div>';
-  try{
-    const messages=await apiRequest('/messages/history',{method:'POST',body:JSON.stringify({contactId:fullscreenContactId})});
-    if(messages.length===0){
-      body.innerHTML='<div class="empty-state"><i class="fas fa-comment-dots"></i><p>暂无消息</p></div>';
+async function loadFullscreenMessages() {
+  const body = document.getElementById('fullscreenChatBody');
+  body.innerHTML = '<div class="empty-state"><p>加载中...</p></div>';
+  try {
+    const payload = { contactId: fullscreenContactId };
+    if (fullscreenChatType === 'order' && fullscreenOrderId) {
+      payload.type = 'order';
+      payload.orderId = fullscreenOrderId;
+    }
+    const messages = await apiRequest('/messages/history', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if (messages.length === 0) {
+      body.innerHTML = '<div class="empty-state"><i class="fas fa-comment-dots"></i><p>暂无消息</p></div>';
       return;
     }
-    let html='';
-    messages.forEach(m=>{
-      const isMe=m.sender_id===currentUser.id;
-      const senderAvatar=m.sender_avatar||'';
-      const avatarHtml=senderAvatar?`<img src="${senderAvatar}" style="width:100%;height:100%;object-fit:cover;" />`:(m.sender_name?m.sender_name.charAt(0).toUpperCase():'?');
-      html+=`
-        <div style="display:flex;justify-content:${isMe?'flex-end':'flex-start'};align-items:flex-start;gap:8px;">
-          ${!isMe?`<div class="chat-avatar" onclick="viewUserProfile('${m.sender_id}')">${avatarHtml}</div>`:''}
-          <div class="chat-bubble ${isMe?'me':'other'}">${m.content}<span class="time">${new Date(m.created_at).toLocaleTimeString()}</span></div>
-          ${isMe?`<div class="chat-avatar" onclick="viewUserProfile('${m.sender_id}')">${avatarHtml}</div>`:''}
-        </div>`;
+    let html = '';
+    messages.forEach(m => {
+      const isMe = m.sender_id === currentUser.id;
+      const senderAvatar = m.sender_avatar || '';
+      const avatarHtml = senderAvatar
+        ? `<img src="${senderAvatar}" style="width:100%;height:100%;object-fit:cover;" />`
+        : (m.sender_name ? m.sender_name.charAt(0).toUpperCase() : '?');
+      html += `<div style="display:flex;justify-content:${isMe ? 'flex-end' : 'flex-start'};align-items:flex-start;gap:8px;">
+        ${!isMe ? `<div class="chat-avatar">${avatarHtml}</div>` : ''}
+        <div class="chat-bubble ${isMe ? 'me' : 'other'}">${m.content}<span class="time">${new Date(m.created_at).toLocaleTimeString()}</span></div>
+        ${isMe ? `<div class="chat-avatar">${avatarHtml}</div>` : ''}
+      </div>`;
     });
-    body.innerHTML=html;
-    body.scrollTop=body.scrollHeight;
+    body.innerHTML = html;
+    body.scrollTop = body.scrollHeight;
     updateBadges();
-  }catch(err){
-    body.innerHTML=`<div class="empty-state"><p>加载失败: ${err.message}</p></div>`;
+  } catch (err) {
+    body.innerHTML = `<div class="empty-state"><p>加载失败: ${err.message}</p></div>`;
   }
 }
 async function sendFullscreenMessage(){
@@ -3671,6 +3768,9 @@ window.doInviteHandler=doInviteHandler;
 window.approveShopApp=approveShopApp;
 window.doApproveShopApp=doApproveShopApp;
 window.rejectShopApp=rejectShopApp;
+window.renderSubHall=renderSubHall;
+window.confirmHallTake=confirmHallTake;
+window.doHallTake=doHallTake;
 window.closeUserProfile=closeUserProfile;
 window.userProfileMore=userProfileMore;
 window.userProfileSendMsg=userProfileSendMsg;
@@ -3732,7 +3832,7 @@ window.doServiceApproveRecharge=doServiceApproveRecharge;
 window.showReviewModal=showReviewModal;
 window.submitReview=submitReview;
 
-console.log('✅ QW电竞护航平台 v6.8 完整版已加载');
+console.log('✅ QW电竞护航平台 v6.9 完整版已加载');
 </script>
 </body>
 </html>
