@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v6.9)
-//  更新：购买不×10 / 订单聊天 / 订单关联用户名 / 打手接单大厅
+//  QW电竞 - 完整后端 API (v7.0)
+//  更新：管理员订单管理 / 本人修改ID / 订单关联用户名 / 订单聊天 / 接单大厅
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -156,17 +156,24 @@ async function handleAdminDeleteUser(env, targetUserId) {
   return jsonResponse({ success: true, message: '用户已删除' });
 }
 
+// ============================================================
+//  修改用户ID（允许本人 + 管理员）
+// ============================================================
 async function handleChangeUserId(env, authHeader, body) {
-  const adminId = verifyAndGetUserId(authHeader);
-  if (!adminId) return errorResponse('请先登录', 401);
-  const admin = await getUserById(env, adminId);
-  if (!admin || admin.role !== 'admin') return errorResponse('权限不足', 403);
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user) return errorResponse('用户不存在', 404);
 
   const { targetUserId, newId } = body;
-  if (!targetUserId || !newId) return errorResponse('请提供用户ID和新ID');
+  if (!targetUserId || !newId) return errorResponse('请提供新ID');
   if (!/^\d+$/.test(newId)) return errorResponse('ID必须为数字');
   if (newId.length < 6) return errorResponse('ID至少6位');
   if (newId === targetUserId) return errorResponse('新ID与当前ID相同');
+
+  const isSelf = targetUserId === userId;
+  const isAdmin = user.role === 'admin';
+  if (!isSelf && !isAdmin) return errorResponse('只能修改自己的ID', 403);
 
   const existing = await queryDB(env, 'SELECT * FROM users WHERE id = ?', [newId]);
   if (existing.results && existing.results.length > 0) return errorResponse('该ID已被使用');
@@ -181,11 +188,16 @@ async function handleChangeUserId(env, authHeader, body) {
 
   try {
     await runDB(env, 'UPDATE users SET username = ? WHERE id = ?', [tmpUsername, targetUserId]);
+
     await runDB(env,
       `INSERT INTO users (id, username, password, role, diamond, balance, status, banner, avatar, club_prefix, level, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [newId, finalUsername, oldUser.password, oldUser.role, oldUser.diamond || 0, oldUser.balance || 0, oldUser.status || 'active', oldUser.banner || '', oldUser.avatar || '', oldUser.club_prefix || '', oldUser.level || 1, oldUser.created_at || new Date().toISOString()]
+      [newId, finalUsername, oldUser.password, oldUser.role,
+       oldUser.diamond || 0, oldUser.balance || 0, oldUser.status || 'active',
+       oldUser.banner || '', oldUser.avatar || '', oldUser.club_prefix || '',
+       oldUser.level || 1, oldUser.created_at || new Date().toISOString()]
     );
+
     const tables = [
       ['orders', 'boss_id'], ['orders', 'handler_id'],
       ['messages', 'sender_id'], ['messages', 'receiver_id'],
@@ -198,13 +210,14 @@ async function handleChangeUserId(env, authHeader, body) {
     for (const [t, col] of tables) {
       try { await runDB(env, `UPDATE ${t} SET ${col} = ? WHERE ${col} = ?`, [newId, targetUserId]); } catch (e) {}
     }
+
     await runDB(env, 'DELETE FROM users WHERE id = ?', [targetUserId]);
   } catch (err) {
     try { await runDB(env, 'UPDATE users SET username = ? WHERE id = ?', [oldUser.username, targetUserId]); } catch (e) {}
     return errorResponse('修改失败: ' + err.message, 500);
   }
 
-  return jsonResponse({ success: true, message: '用户ID已修改，请重新登录' });
+  return jsonResponse({ success: true, message: 'ID已修改，请重新登录' });
 }
 
 // ============================================================
@@ -369,7 +382,7 @@ async function handleCreatePostCategory(env, authHeader, body) {
   const { name, icon, sort_order } = body;
   if (!name) return errorResponse('请输入分类名称');
   const id = generateId();
-  await runDB(env, 'INSERT INTO post_categories (id, name, icon, sort_order, created_at) VALUES (?, ?, ?, ?, ?)', [id, name, icon || '📝', sort_order || 0, new Date().toISOString()]);
+  await runDB(env, 'INSERT INTO post_categories (id, name, icon, sort_order, created_at) VALUES (?, ?, ?, ?, ?)', [id, name, icon || '', sort_order || 0, new Date().toISOString()]);
   return jsonResponse({ success: true, id, message: '分类已创建' });
 }
 async function handleUpdatePostCategory(env, authHeader, catId, body) {
@@ -905,7 +918,6 @@ async function handleBuyProduct(env, authHeader, body) {
   const sold = product.sold || 0;
   if (product.quantity <= sold) return errorResponse('库存不足');
 
-  // ✅ 修复：直接用商品价格作为红钻消耗（不再乘10）
   const diamondCost = Number(product.price);
   if ((user.diamond || 0) < diamondCost) {
     return errorResponse(`红钻不足，需要 ${diamondCost} 红钻，当前仅有 ${user.diamond || 0} 红钻`);
@@ -916,26 +928,43 @@ async function handleBuyProduct(env, authHeader, body) {
     `INSERT INTO orders (id, product_id, boss_id, status, price, game, title, description, messages, handler_id)
      VALUES (?, ?, ?, "pending", ?, ?, ?, ?, ?, ?)`,
     [orderId, productId, userId, product.price, product.game, product.title, product.desc || '',
-     JSON.stringify([{ sender: 'system', content: '🎉 订单已创建', time: new Date().toISOString() }]),
+     JSON.stringify([{ sender: 'system', content: '订单已创建', time: new Date().toISOString() }]),
      assignedHandlerId || null]
   );
   await runDB(env, 'UPDATE products SET sold = sold + 1 WHERE id = ?', [productId]);
   return jsonResponse({ orderId, message: '购买成功' });
 }
 
+// ============================================================
+//  我的订单（管理员看全部）
+// ============================================================
 async function handleGetMyOrders(env, authHeader) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
-  let sql = '';
-  if (user.role === 'boss' || user.role === 'service' || user.role === 'admin' || user.role === 'dispatcher') {
-    sql = `SELECT o.*, b.username as boss_name, h.username as handler_name
-           FROM orders o
-           LEFT JOIN users b ON o.boss_id = b.id
-           LEFT JOIN users h ON o.handler_id = h.id
-           WHERE o.boss_id = ? ORDER BY o.created_at DESC`;
-  } else if (user.role === 'handler') {
+
+  // 管理员：看全部订单
+  if (user.role === 'admin') {
+    const result = await queryDB(env,
+      `SELECT o.*, b.username as boss_name, h.username as handler_name
+       FROM orders o
+       LEFT JOIN users b ON o.boss_id = b.id
+       LEFT JOIN users h ON o.handler_id = h.id
+       ORDER BY o.created_at DESC`);
+    return jsonResponse(result.results || []);
+  }
+
+  if (user.role === 'boss' || user.role === 'service' || user.role === 'dispatcher') {
+    const result = await queryDB(env,
+      `SELECT o.*, b.username as boss_name, h.username as handler_name
+       FROM orders o
+       LEFT JOIN users b ON o.boss_id = b.id
+       LEFT JOIN users h ON o.handler_id = h.id
+       WHERE o.boss_id = ? ORDER BY o.created_at DESC`, [userId]);
+    return jsonResponse(result.results || []);
+  }
+  if (user.role === 'handler') {
     const pendingResult = await queryDB(env,
       `SELECT o.*, b.username as boss_name, h.username as handler_name
        FROM orders o
@@ -943,7 +972,7 @@ async function handleGetMyOrders(env, authHeader) {
        LEFT JOIN users h ON o.handler_id = h.id
        WHERE o.status = 'pending' ORDER BY o.created_at DESC`);
     const myResult = await queryDB(env,
-      `SELECT o.*, b.username as boss_name, h.username as handler_name
+      `SELECT o.*, b.username as boss_name, h.username AS handler_name
        FROM orders o
        LEFT JOIN users b ON o.boss_id = b.id
        LEFT JOIN users h ON o.handler_id = h.id
@@ -951,11 +980,8 @@ async function handleGetMyOrders(env, authHeader) {
     const all = [...(pendingResult.results || []), ...(myResult.results || [])];
     const seen = new Set();
     return jsonResponse(all.filter(o => { if (seen.has(o.id)) return false; seen.add(o.id); return true; }));
-  } else {
-    return errorResponse('无权查看', 403);
   }
-  const result = await queryDB(env, sql, [userId]);
-  return jsonResponse(result.results || []);
+  return errorResponse('无权查看', 403);
 }
 
 async function handleGetOrderDetail(env, authHeader, orderId) {
@@ -1037,6 +1063,30 @@ async function handleRefundRequest(env, authHeader, orderId, body) {
 }
 
 // ============================================================
+//  管理员订单操作
+// ============================================================
+async function handleAdminConfirm(env, orderId) {
+  const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
+  if (!result.results || result.results.length === 0) return errorResponse('订单不存在', 404);
+  await runDB(env, 'UPDATE orders SET status = "completed", end_time = ? WHERE id = ?',
+    [new Date().toISOString(), orderId]);
+  return jsonResponse({ message: '验收通过' });
+}
+
+async function handleAdminForceComplete(env, orderId) {
+  const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
+  if (!result.results || result.results.length === 0) return errorResponse('订单不存在', 404);
+  await runDB(env, 'UPDATE orders SET status = "completed", end_time = ? WHERE id = ?',
+    [new Date().toISOString(), orderId]);
+  return jsonResponse({ message: '强制完成成功' });
+}
+
+async function handleAdminDeleteOrder(env, orderId) {
+  await runDB(env, 'DELETE FROM orders WHERE id = ?', [orderId]);
+  return jsonResponse({ success: true, message: '已删除' });
+}
+
+// ============================================================
 //  派单
 // ============================================================
 async function handleDispatcherPublish(env, authHeader, body) {
@@ -1053,12 +1103,12 @@ async function handleDispatcherPublish(env, authHeader, body) {
   const orderId = generateId();
   let status = 'pending';
   let handlerId = assignedHandlerId || null;
-  let messages = JSON.stringify([{ sender: 'system', content: `📋 派单员发布订单：${title}`, time: new Date().toISOString() }]);
+  let messages = JSON.stringify([{ sender: 'system', content: `派单员发布订单：${title}`, time: new Date().toISOString() }]);
   if (handlerId) {
     const handlerCheck = await queryDB(env, 'SELECT * FROM users WHERE id = ? AND role = "handler" AND status = "active"', [handlerId]);
     if (handlerCheck.results && handlerCheck.results.length > 0) {
       status = 'ongoing';
-      messages = JSON.stringify([{ sender: 'system', content: `📋 派单员发布订单：${title}，已指派打手`, time: new Date().toISOString() }]);
+      messages = JSON.stringify([{ sender: 'system', content: `派单员发布订单：${title}，已指派打手`, time: new Date().toISOString() }]);
     } else handlerId = null;
   }
   await runDB(env,
@@ -1305,7 +1355,7 @@ async function handleGetMessages(env, authHeader, body) {
   if (!user) return errorResponse('用户不存在', 404);
   const { contactId, type, orderId } = body;
 
-  // ✅ 订单聊天走单独逻辑
+  // 订单聊天走单独逻辑
   if (type === 'order' && orderId) {
     const o = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
     const order = o.results && o.results[0];
@@ -1512,7 +1562,7 @@ async function handleClaimMail(env, authHeader, mailId) {
 }
 
 // ============================================================
-//  管理员订单
+//  管理员订单列表
 // ============================================================
 async function handleAdminGetOrders(env) {
   const result = await queryDB(env, 'SELECT * FROM orders ORDER BY created_at DESC');
@@ -1524,10 +1574,6 @@ async function handleAdminCancelOrder(env, orderId) {
   await runDB(env, 'UPDATE orders SET status = "canceled" WHERE id = ?', [orderId]);
   if (order && order.boss_id) await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [order.price, order.boss_id]);
   return jsonResponse({ message: '已取消' });
-}
-async function handleAdminDeleteOrder(env, orderId) {
-  await runDB(env, 'DELETE FROM orders WHERE id = ?', [orderId]);
-  return jsonResponse({ success: true, message: '已删除' });
 }
 
 // ============================================================
@@ -1636,7 +1682,7 @@ export async function onRequest(context) {
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
 
-    // ✅ 打手接单大厅
+    // 打手接单大厅
     if (path === '/api/handler/pending-orders' && method === 'GET') return await handleGetPendingOrders(env, authHeader);
 
     // 我的店铺
@@ -1660,6 +1706,15 @@ export async function onRequest(context) {
     }
     if (path.startsWith('/api/shops/') && path.endsWith('/follow-status') && method === 'GET') {
       return await handleGetFollowStatus(env, authHeader, path.replace('/api/shops/', '').replace('/follow-status', ''));
+    }
+
+    // 管理员订单操作（必须在 /api/orders/ 通配前）
+    if (path.startsWith('/api/admin/orders/')) {
+      const oId = path.replace('/api/admin/orders/', '');
+      if (oId.endsWith('/confirm') && method === 'PUT') return await handleAdminConfirm(env, oId.replace('/confirm', ''));
+      if (oId.endsWith('/force-complete') && method === 'PUT') return await handleAdminForceComplete(env, oId.replace('/force-complete', ''));
+      if (oId.endsWith('/cancel') && method === 'PUT') return await handleAdminCancelOrder(env, oId.replace('/cancel', ''));
+      if (method === 'DELETE') return await handleAdminDeleteOrder(env, oId);
     }
 
     // 订单带参数
@@ -1766,11 +1821,6 @@ export async function onRequest(context) {
           if (method === 'DELETE') return await handleAdminDeleteWithdraw(env, authHeader, wId);
         }
         if (path === '/api/admin/orders' && method === 'GET') return await handleAdminGetOrders(env);
-        if (path.startsWith('/api/admin/orders/')) {
-          const oId = path.replace('/api/admin/orders/', '');
-          if (oId.endsWith('/cancel') && method === 'PUT') return await handleAdminCancelOrder(env, oId.replace('/cancel', ''));
-          if (method === 'DELETE') return await handleAdminDeleteOrder(env, oId);
-        }
         if (path === '/api/admin/recharges' && method === 'GET') return await handleAdminGetRecharges(env);
         if (path.startsWith('/api/admin/recharges/')) {
           const rId = path.replace('/api/admin/recharges/', '');
