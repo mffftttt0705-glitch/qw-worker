@@ -38,7 +38,7 @@
     --bottom-nav-bg: rgba(255,255,255,0.92);
     --product-card-bg: #ffffff;
     --product-card-border: #eff3f4;
-    --price-color: #0f1419;
+    --price-color: #f4212e;
     --product-img-bg: #f7f9f9;
     --product-img-icon: #536471;
     --product-title: #0f1419;
@@ -54,8 +54,8 @@
     --post-bg: #ffffff;
     --post-border: #eff3f4;
     --post-shadow: none;
-    --primary-color: #1d9bf0;
-    --gold-color: #1d9bf0;
+    --primary-color: #0f1419;
+    --gold-color: #d4af37;
 }
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Segoe UI','PingFang SC',Roboto,sans-serif;}
 html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hidden;background:var(--bg-primary);color:var(--text-primary);display:flex;justify-content:center;align-items:center;-webkit-tap-highlight-color:transparent;}
@@ -89,8 +89,8 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .shop-entrance .shop-entry .entry-name{font-size:10px;color:var(--text-muted);text-align:center;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .shop-badges{display:flex;gap:2px;justify-content:center;margin-top:2px;flex-wrap:wrap;}
 .shop-badge{font-size:8px;padding:1px 5px;border-radius:8px;font-weight:600;white-space:nowrap;}
-.shop-badge.self{background:#0f1419;color:#ffffff;}
-.shop-badge.rec{background:#0f1419;color:#ffffff;}
+.shop-badge.self{background:linear-gradient(135deg,#0f1419 0%,#1a1a1a 40%,#d4af37 100%);color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,0.5);font-weight:700;}
+.shop-badge.rec{background:#f4212e;color:#ffffff;font-weight:700;}
 .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
 .product-card{display:flex;flex-direction:column;background:var(--product-card-bg);border-radius:12px;border:1px solid var(--product-card-border);overflow:hidden;position:relative;transition:all 0.2s;cursor:pointer;}
 .product-card:active{transform:scale(0.97);}
@@ -102,7 +102,7 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .product-card .product-desc{font-size:11px;color:var(--product-desc);margin-top:2px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;min-height:16px;}
 .product-card .product-stock{font-size:10px;color:var(--product-stock);margin-top:2px;}
 .product-card .product-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid var(--product-bottom-border);}
-.product-card .product-price{font-size:15px;font-weight:700;color:var(--price-color);}
+.product-card .product-price{font-size:15px;font-weight:700;color:#f4212e;}
 .product-card .product-shop{font-size:10px;color:var(--text-muted);}
 .category-horizontal-scroll{display:flex;gap:10px;overflow-x:auto;padding:10px 0;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;}
 .category-horizontal-scroll::-webkit-scrollbar{display:none;}
@@ -126,7 +126,7 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .product-detail-modal .pd-body{flex:1;overflow-y:auto;padding:12px 0;}
 .product-detail-modal .pd-body .pd-image{width:100%;aspect-ratio:1 / 1;background:var(--product-img-bg);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:48px;color:var(--product-img-icon);margin-bottom:12px;}
 .product-detail-modal .pd-body .pd-image img{width:100%;height:100%;object-fit:cover;}
-.product-detail-modal .pd-body .pd-price{font-size:24px;font-weight:700;color:var(--price-color);margin-bottom:4px;}
+.product-detail-modal .pd-body .pd-price{font-size:24px;font-weight:700;color:#f4212e;margin-bottom:4px;}
 .product-detail-modal .pd-body .pd-title{font-size:18px;font-weight:600;margin-bottom:4px;}
 .product-detail-modal .pd-body .pd-shop{font-size:13px;color:var(--text-muted);margin-bottom:8px;}
 .product-detail-modal .pd-body .pd-desc{font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px;}
@@ -337,6 +337,20 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .shop-tab-btn{flex:1;padding:8px;border-radius:10px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;}
 .shop-tab-btn.active{background:#0f1419;color:#fff;border-color:#0f1419;}
 .cat-tab-btn.active{background:#0f1419 !important;color:#fff !important;border-color:#0f1419 !important;}
+
+/* 店铺分类主分类/子分类样式 */
+.shop-main-cat-wrap{display:flex;flex-direction:column;gap:4px;}
+.shop-main-cat{display:flex;align-items:center;gap:6px;background:#f7f9f9;padding:6px 10px;border-radius:10px;cursor:pointer;border:1px solid #eff3f4;transition:all 0.15s;}
+.shop-main-cat:hover{background:#eff3f4;}
+
+/* 红钻/价格/余额红色 */
+.diamond-display{color:#f4212e !important;}
+.diamond-display i.fa-gem{color:#f4212e !important;}
+.product-price{color:#f4212e !important;font-weight:700;}
+#myBalance{color:#f4212e !important;font-weight:700;}
+#headerDiamond{color:#f4212e !important;}
+#profileBalance{color:#f4212e !important;font-weight:700;}
+
 @media(max-width:420px){
 .view-container{padding:10px 12px 4px;}
 .bottom-nav{padding:4px 0 max(8px,env(safe-area-inset-bottom));min-height:48px;}
@@ -371,71 +385,6 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .chat-fullscreen{padding-top:env(safe-area-inset-top);}
 .user-profile-page{padding-top:env(safe-area-inset-top);}
 }
-
-/* X（Twitter）浅色风格微调 */
-body, html { background: #ffffff; color: #0f1419; }
-.app-wrapper { background: #ffffff; box-shadow: none; border-left: 1px solid #eff3f4; border-right: 1px solid #eff3f4; }
-.bottom-nav { border-top: 1px solid #eff3f4 !important; box-shadow: 0 -1px 8px rgba(0,0,0,0.03) !important; background: rgba(255,255,255,0.92) !important; }
-.nav-item i { color: #536471; transition: color 0.15s; }
-.nav-item { color: #536471; }
-.nav-item.active { color: #0f1419 !important; font-weight: 600; }
-.nav-item.active i { color: #0f1419 !important; }
-.btn-primary { background: #0f1419 !important; color: #ffffff !important; box-shadow: none !important; border-radius: 9999px !important; transition: background 0.15s; }
-.btn-primary:active { background: #272c30 !important; }
-.btn-success { background: #0f1419 !important; color: #ffffff !important; border-radius: 9999px !important; box-shadow: none !important; }
-.btn-success:active { background: #272c30 !important; }
-.btn-outline { border: 1px solid #cfd9de !important; color: #0f1419 !important; background: #ffffff !important; border-radius: 9999px !important; }
-.btn-outline:active { background: #f7f9f9 !important; }
-.btn-danger { background: #f4212e !important; color: #fff !important; border-radius: 9999px !important; }
-.btn-warning { background: #ffd400 !important; color: #0f1419 !important; border-radius: 9999px !important; }
-.admin-card, .post-card, .product-card { background: #ffffff !important; border: 1px solid #eff3f4 !important; box-shadow: none !important; transition: background 0.15s; }
-.admin-card:hover, .post-card:hover, .product-card:hover { background: #f7f9f9 !important; }
-.profile-card { background: #0f1419 !important; color: #fff !important; }
-.profile-avatar, .up-avatar { background: #cfd9de !important; color: #0f1419 !important; }
-.status-pending { background: #fff8e1 !important; color: #8a6d00 !important; border: 1px solid #fff3c4 !important; }
-.status-ongoing { background: #e8f5fe !important; color: #0c7abf !important; border: 1px solid #cceeff !important; }
-.status-review { background: #f3edff !important; color: #6b3fd4 !important; border: 1px solid #e2d4ff !important; }
-.status-completed { background: #e6f7ef !important; color: #00754a !important; border: 1px solid #ccf0dd !important; }
-.status-canceled, .status-hidden { background: #f7f9f9 !important; color: #536471 !important; border: 1px solid #eff3f4 !important; }
-.status-rejected { background: #fde8ea !important; color: #c81e2c !important; border: 1px solid #f9cdd2 !important; }
-.status-onsale { background: #e6f7ef !important; color: #00754a !important; border: 1px solid #ccf0dd !important; }
-.status-soldout { background: #f7f9f9 !important; color: #536471 !important; border: 1px solid #eff3f4 !important; }
-.admin-form-control, .modal-box input, .modal-box textarea, .modal-box select { background: #ffffff !important; border: 1px solid #cfd9de !important; color: #0f1419 !important; border-radius: 8px !important; }
-.admin-form-control:focus, .modal-box input:focus, .modal-box textarea:focus, .modal-box select:focus { border-color: #0f1419 !important; box-shadow: 0 0 0 3px rgba(15,20,25,0.08) !important; }
-.modal-box { background: #ffffff !important; border: 1px solid #eff3f4 !important; border-radius: 20px !important; }
-.user-filter button.active { background: #0f1419 !important; color: #ffffff !important; border-color: #0f1419 !important; }
-.category-btn.active, .sub-btn.active { background: #0f1419 !important; color: #ffffff !important; border-color: #0f1419 !important; }
-.category-card-h.active { border-color: #0f1419 !important; background: #f7f9f9 !important; }
-.post-actions button.liked { color: #f91880 !important; }
-.chat-bubble.me { background: #0f1419 !important; color: #ffffff !important; }
-.chat-bubble.other { background: #f7f9f9 !important; color: #0f1419 !important; border: 1px solid #eff3f4 !important; }
-.nav-item.active::after { content: ''; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #0f1419 !important; }
-.banner-dots .dot { background: rgba(255,255,255,0.6) !important; }
-.banner-dots .dot.active { background: #ffffff !important; }
-.product-price, #myBalance, #headerDiamond { color: #0f1419 !important; }
-.diamond-display { color: #0f1419 !important; }
-.btn-xs { border-radius: 9999px !important; }
-.btn-sm { border-radius: 9999px !important; }
-.nav-item .badge, .unread-badge { background: #0f1419 !important; color: #fff !important; }
-
-/* 所有激活态：黑色 */
-.user-filter button.active,
-.category-btn.active,
-.sub-btn.active,
-.cat-tab-btn.active,
-.shop-tab-btn.active,
-.up-tab.active {
-    background: #0f1419 !important;
-    color: #ffffff !important;
-    border-color: #0f1419 !important;
-}
-.category-card-h.active { border-color: #0f1419 !important; background: #f7f9f9 !important; }
-.nav-item.active i { color: #0f1419 !important; }
-.nav-item.active { color: #0f1419 !important; }
-.nav-item.active::after { background: #0f1419 !important; }
-.btn-primary, .btn-success { background: #0f1419 !important; color: #ffffff !important; }
-.nav-item .badge, .unread-badge { background: #0f1419 !important; color: #fff !important; }
-.admin-form-control:focus, .modal-box input:focus, .modal-box textarea:focus, .modal-box select:focus { border-color: #0f1419 !important; box-shadow: 0 0 0 3px rgba(15,20,25,0.08) !important; }
 </style>
 </head>
 <body>
@@ -579,10 +528,10 @@ body, html { background: #ffffff; color: #0f1419; }
 </div>
 
 <div style="display:flex;gap:10px;margin-bottom:10px;">
-<div class="admin-card" onclick="openRecharge()" style="flex:1;padding:14px 12px;border-left:4px solid #0f1419;margin-bottom:0;cursor:pointer;height:76px;display:flex;flex-direction:column;justify-content:center;">
+<div class="admin-card" onclick="openRecharge()" style="flex:1;padding:14px 12px;border-left:4px solid #f4212e;margin-bottom:0;cursor:pointer;height:76px;display:flex;flex-direction:column;justify-content:center;">
 <div style="display:flex;justify-content:space-between;align-items:center;">
-<span style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;"><i class="fas fa-gem"></i> 我的余额</span>
-<span style="font-size:16px;font-weight:700;color:#0f1419;" id="myBalance">0</span>
+<span style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;"><i class="fas fa-gem" style="color:#f4212e;"></i> 我的余额</span>
+<span style="font-size:16px;font-weight:700;color:#f4212e;" id="myBalance">0</span>
 </div>
 <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">点击充值 →</div>
 </div>
@@ -612,7 +561,7 @@ body, html { background: #ffffff; color: #0f1419; }
 </div>
 </div>
 </div>
-<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.2</div>
+<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.3</div>
 </div>
 </div>
 <div class="bottom-nav" id="bottomNav"></div>
@@ -999,13 +948,17 @@ async function loadShopDetailContent(shopId,selectedCatId){
     const cats=await apiRequest('/shops/'+shopId+'/categories');
     const products=await apiRequest('/shops/'+shopId+'/products');
     const tabHtml=`<div class="shop-tab-bar"><button class="shop-tab-btn active" data-tab="products" onclick="switchShopTab('${shopId}','products')">商品</button><button class="shop-tab-btn" data-tab="reviews" onclick="switchShopTab('${shopId}','reviews')">评价</button></div>`;
+    // 只显示主分类
+    const mainCats=cats.filter(c=>!c.parent_id);
+    const subCats=cats.filter(c=>c.parent_id);
     let catHtml='';
-    if(cats.length>0){
+    if(mainCats.length>0){
       catHtml='<div style="margin:10px 0;"><div style="font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><i class="fas fa-tags"></i> 店铺分类</div><div class="category-horizontal-scroll">';
       catHtml+=`<div class="category-card-h ${!selectedCatId||selectedCatId==='all'?'active':''}" onclick="filterShopProductsByCat('${shopId}','all')" data-cat="all"><div class="cat-icon-h"><i class="fas fa-box"></i></div><div class="cat-name-h">全部</div></div>`;
-      cats.forEach(c=>{
+      mainCats.forEach(c=>{
+        const children=subCats.filter(sc=>sc.parent_id===c.id);
         const iconHtml=c.image_url?`<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;" />`:'<i class="fas fa-tags"></i>';
-        catHtml+=`<div class="category-card-h ${selectedCatId===c.id?'active':''}" onclick="filterShopProductsByCat('${shopId}','${c.id}')" data-cat="${c.id}"><div class="cat-icon-h">${iconHtml}</div><div class="cat-name-h">${c.name}</div></div>`;
+        catHtml+=`<div class="category-card-h ${selectedCatId===c.id?'active':''}" onclick="filterShopProductsByCat('${shopId}','${c.id}')" data-cat="${c.id}"><div class="cat-icon-h">${iconHtml}</div><div class="cat-name-h">${c.name}${children.length>0?' ('+children.length+')':''}</div></div>`;
       });
       catHtml+='</div></div>';
     }
@@ -1023,7 +976,7 @@ async function loadShopDetailContent(shopId,selectedCatId){
               <div class="product-title">${p.title}</div>
               <div class="product-desc">${p.description||''}</div>
               <div class="product-stock">剩余 ${remaining}</div>
-              <div class="product-bottom"><span class="product-price">${p.price} 红钻</span></div>
+              <div class="product-bottom"><span class="product-price">${p.price} <i class="fas fa-gem" style="color:#f4212e;font-size:0.9em;"></i></span></div>
             </div>
           </div>`;
       });
@@ -1096,7 +1049,13 @@ async function filterShopProductsByCat(shopId,catId){
   if(targetEl)targetEl.classList.add('active');
   try{
     const products=await apiRequest('/shops/'+shopId+'/products');
-    const filtered=catId==='all'?products:products.filter(p=>p.shop_category_id===catId);
+    const cats=await apiRequest('/shops/'+shopId+'/categories');
+    // 支持主分类 + 子分类联动
+    let filtered=products;
+    if(catId!=='all'){
+      const subIds=cats.filter(c=>c.parent_id===catId).map(c=>c.id);
+      filtered=products.filter(p=>p.shop_category_id===catId||subIds.includes(p.shop_category_id));
+    }
     let prodHtml='';
     if(filtered.length===0){
       prodHtml='<div class="empty-state" style="padding:12px 0;"><p style="font-size:12px;">该分类下暂无商品</p></div>';
@@ -1110,7 +1069,7 @@ async function filterShopProductsByCat(shopId,catId){
             <div class="product-body">
               <div class="product-title">${p.title}</div>
               <div class="product-stock">剩余 ${remaining}</div>
-              <div class="product-bottom"><span class="product-price">${p.price} 红钻</span></div>
+              <div class="product-bottom"><span class="product-price">${p.price} <i class="fas fa-gem" style="color:#f4212e;font-size:0.9em;"></i></span></div>
             </div>
           </div>`;
       });
@@ -1249,7 +1208,7 @@ function renderHomeProducts(products){
           <div class="product-desc">${p.description||''}</div>
           <div class="product-stock">剩余 ${remaining}</div>
           <div class="product-bottom">
-            <span class="product-price">${p.price} 红钻</span>
+            <span class="product-price">${p.price} <i class="fas fa-gem" style="color:#f4212e;font-size:0.9em;"></i></span>
             ${remaining>0?(currentUser?`<button class="btn btn-success btn-sm" onclick="event.stopPropagation();showBuyWithHandler('${p.id}')">购买</button>`:`<button class="btn btn-success btn-sm" onclick="event.stopPropagation();toast('请先登录','warning')">购买</button>`):'<span class="status-badge status-soldout">已售罄</span>'}
           </div>
           <div class="product-shop">${p.shop_name||''}</div>
@@ -1362,7 +1321,7 @@ async function renderCategoryProducts(categoryId){
           <div class="product-desc">${p.description||''}</div>
           <div class="product-stock">剩余 ${remaining}</div>
           <div class="product-bottom">
-            <span class="product-price">${p.price} 红钻</span>
+            <span class="product-price">${p.price} <i class="fas fa-gem" style="color:#f4212e;font-size:0.9em;"></i></span>
             ${remaining>0?(currentUser?`<button class="btn btn-success btn-sm" onclick="event.stopPropagation();showBuyWithHandler('${p.id}')">购买</button>`:`<button class="btn btn-success btn-sm" onclick="event.stopPropagation();toast('请先登录','warning')">购买</button>`):'<span class="status-badge status-soldout">已售罄</span>'}
           </div>
           <div class="product-shop">${p.shop_name||''}</div>
@@ -1387,7 +1346,7 @@ async function handleCatSearch(keyword){
     const filtered=products.filter(p=>(p.title||'').toLowerCase().includes(kw));
     let html=filtered.length===0
       ?'<div class="empty-state"><i class="fas fa-search"></i><p>未找到相关商品</p></div>'
-      :'<div class="product-grid">'+filtered.map(p=>`<div class="product-card" onclick="openProductDetail('${p.id}')"><div class="product-img">${p.image?`<img src="${p.image}" />`:'<i class="fas fa-tags"></i>'}</div><div class="product-body"><div class="product-title">${p.title}</div><div class="product-bottom"><span class="product-price">${p.price} 红钻</span></div></div></div>`).join('')+'</div>';
+      :'<div class="product-grid">'+filtered.map(p=>`<div class="product-card" onclick="openProductDetail('${p.id}')"><div class="product-img">${p.image?`<img src="${p.image}" />`:'<i class="fas fa-tags"></i>'}</div><div class="product-body"><div class="product-title">${p.title}</div><div class="product-bottom"><span class="product-price">${p.price} <i class="fas fa-gem" style="color:#f4212e;font-size:0.9em;"></i></span></div></div></div>`).join('')+'</div>';
     productList.innerHTML=html;
   }catch(err){console.error(err);}
   try{
@@ -1408,7 +1367,7 @@ async function openProductDetail(productId){
   try{
     const product=await apiRequest('/products/'+productId);
     document.getElementById('pdTitle').textContent=product.title||'商品详情';
-    document.getElementById('pdPrice').textContent=(product.price||0)+' 红钻';
+    document.getElementById('pdPrice').innerHTML=(product.price||0)+' <i class="fas fa-gem" style="color:#f4212e;font-size:0.9em;"></i>';
     document.getElementById('pdName').textContent=product.title||'';
     document.getElementById('pdShop').textContent='店铺：'+(product.shop_name||'未知');
     document.getElementById('pdDesc').textContent=product.detail_desc||product.description||'暂无描述';
@@ -1468,7 +1427,7 @@ async function doBuyWithHandler(productId) {
 }
 
 /* ============================================================
-   帖子系统（带搜索 + 缓存）
+   帖子系统
 ============================================================ */
 async function renderPosts() {
     const container = document.getElementById('postList');
@@ -1730,7 +1689,7 @@ async function renderMyPage(){
     document.getElementById('profileName').textContent='未登录';
     document.getElementById('profileId').textContent='用户ID：登录后查看';
     document.getElementById('profileBalance').textContent='0 红钻';
-    document.getElementById('myBalance').textContent='0 红钻';
+    document.getElementById('myBalance').textContent='0';
     document.getElementById('profilePosts').textContent='0';
     document.getElementById('profileCoupons').textContent='0';
     document.getElementById('profileAvatarText').textContent='?';
@@ -1740,7 +1699,7 @@ async function renderMyPage(){
   document.getElementById('profileName').innerHTML=currentUser.username+` <span class="level">LV${currentUser.level||1}</span>`;
   document.getElementById('profileId').textContent='用户ID：'+(currentUser.id||'--');
   document.getElementById('profileBalance').textContent=(currentUser.diamond||0)+' 红钻';
-  document.getElementById('myBalance').textContent=(currentUser.diamond||0)+' 红钻';
+  document.getElementById('myBalance').textContent=(currentUser.diamond||0);
   const avatarText=currentUser.username?currentUser.username.substring(0,2).toUpperCase():'QW';
   document.getElementById('profileAvatarText').textContent=avatarText;
   if(currentUser.avatar){
@@ -1763,7 +1722,7 @@ async function renderMyPage(){
     document.getElementById('profileName').innerHTML=user.username+` <span class="level">LV${user.level||1}</span>`;
     document.getElementById('profileId').textContent='用户ID：'+(user.id||'--');
     document.getElementById('profileBalance').textContent=(user.diamond||0)+' 红钻';
-    document.getElementById('myBalance').textContent=(user.diamond||0)+' 红钻';
+    document.getElementById('myBalance').textContent=(user.diamond||0);
     if(user.avatar){
       document.getElementById('profileAvatarImg').src=user.avatar;
       document.getElementById('profileAvatarImg').style.display='block';
@@ -2115,7 +2074,7 @@ async function openRecharge(){
   if(!currentUser){toast('请先登录','warning');return;}
   try{const imgs=await apiRequest('/recharge-images');rechargeImages=imgs||[];}catch(e){rechargeImages=[];}
   showCustomModal(`
-    <h3><i class="fas fa-gem"></i> 充值红钻</h3>
+    <h3><i class="fas fa-gem" style="color:#f4212e;"></i> 充值红钻</h3>
     <p style="color:var(--text-muted);font-size:13px;">1元 = 10红钻</p>
     <div class="form-group" style="margin-top:12px;">
       <label>选择充值金额</label>
@@ -2129,7 +2088,7 @@ async function openRecharge(){
       </div>
       <input class="admin-form-control" id="rechargeAmount" type="number" placeholder="自定义金额" min="1" />
     </div>
-    <div style="text-align:center;margin:8px 0;"><span style="font-size:20px;font-weight:700;color:#0f1419;" id="rechargePreview">0 红钻</span></div>
+    <div style="text-align:center;margin:8px 0;"><span style="font-size:20px;font-weight:700;color:#f4212e;" id="rechargePreview">0 红钻</span></div>
     <div id="rechargeImagesArea" style="margin:12px 0;"></div>
     <div class="btn-row">
       <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
@@ -2196,7 +2155,7 @@ async function doWithdrawSubmit(){
   }catch(err){toast(err.message,'error');}
 }
 /* ============================================================
-   子页面-订单（管理员按钮版）
+   子页面-订单
 ============================================================ */
 async function renderSubOrders() {
   const container = document.getElementById('subOrdersContent');
@@ -2342,8 +2301,16 @@ async function loadShopCategorySelect(){
     const categories=await apiRequest('/shops/'+shopId+'/categories')||[];
     const sel=document.getElementById('prodShopCategory');
     if(!sel)return;
-    sel.innerHTML='<option value="">-- 请选择店铺分类 --</option>';
-    categories.forEach(c=>{sel.innerHTML+=`<option value="${c.id}">${c.name}</option>`;});
+    const mainCats=categories.filter(c=>!c.parent_id);
+    const subCats=categories.filter(c=>c.parent_id);
+    let html='<option value="">-- 请选择店铺分类 --</option>';
+    mainCats.forEach(c=>{
+      html+=`<option value="${c.id}">${c.name}</option>`;
+      subCats.filter(sc=>sc.parent_id===c.id).forEach(sc=>{
+        html+=`<option value="${sc.id}">　└ ${sc.name}</option>`;
+      });
+    });
+    sel.innerHTML=html;
   }catch(err){}
 }
 async function loadShopCategoriesForProduct(){await loadShopCategorySelect();}
@@ -2440,7 +2407,14 @@ window.openEditProduct=async function(productId){
     if(p.shop_id){
       try{
         const shopCats=await apiRequest('/shops/'+p.shop_id+'/categories');
-        shopCatOptions='<option value="">-- 请选择店铺分类 --</option>'+shopCats.map(c=>`<option value="${c.id}" ${p.shop_category_id===c.id?'selected':''}>${c.name}</option>`).join('');
+        const mainSC=shopCats.filter(c=>!c.parent_id);
+        const subSC=shopCats.filter(c=>c.parent_id);
+        mainSC.forEach(c=>{
+          shopCatOptions+=`<option value="${c.id}" ${p.shop_category_id===c.id?'selected':''}>${c.name}</option>`;
+          subSC.filter(sc=>sc.parent_id===c.id).forEach(sc=>{
+            shopCatOptions+=`<option value="${sc.id}" ${p.shop_category_id===sc.id?'selected':''}>　└ ${sc.name}</option>`;
+          });
+        });
       }catch(e){}
     }
     showCustomModal(`
@@ -2478,7 +2452,16 @@ async function loadEditShopCats(){
   if(!shopId){sel.innerHTML='<option value="">-- 请先选择店铺 --</option>';return;}
   try{
     const cats=await apiRequest('/shops/'+shopId+'/categories');
-    sel.innerHTML='<option value="">-- 请选择店铺分类 --</option>'+cats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    const mainSC=cats.filter(c=>!c.parent_id);
+    const subSC=cats.filter(c=>c.parent_id);
+    let html='<option value="">-- 请选择店铺分类 --</option>';
+    mainSC.forEach(c=>{
+      html+=`<option value="${c.id}">${c.name}</option>`;
+      subSC.filter(sc=>sc.parent_id===c.id).forEach(sc=>{
+        html+=`<option value="${sc.id}">　└ ${sc.name}</option>`;
+      });
+    });
+    sel.innerHTML=html;
   }catch(err){}
 }
 window.doEditProduct=async function(productId){
@@ -2657,7 +2640,6 @@ async function renderSubShops(){
     container.innerHTML=`
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
         <button class="btn btn-primary" onclick="toggleInlineModal('addShop')"><i class="fas fa-plus"></i> 创建店铺</button>
-        <button class="btn btn-outline" onclick="toggleInlineModal('addShopCategory')"><i class="fas fa-tags"></i> 添加店铺分类</button>
       </div>
       <div class="inline-modal" id="addShopModal">
         <div class="modal-title"><span><i class="fas fa-store"></i> 创建店铺</span><button class="close-btn" onclick="toggleInlineModal('addShop')">✕</button></div>
@@ -2666,16 +2648,9 @@ async function renderSubShops(){
         <div class="admin-form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="shopLogo" /></div>
         <div class="admin-form-group"><label>店铺背景图URL</label><input class="admin-form-control" id="shopBanner" /></div>
         <div class="admin-form-group"><label>所属主分类</label><select class="admin-form-control" id="shopCategory"><option value="">-- 请选择分类 --</option>${mainCats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
-        <div class="admin-form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="shopIsSelf" style="width:20px;height:20px;accent-color:#0f1419;" /><label style="margin:0;font-size:14px;"><i class="fas fa-trophy"></i> 自营</label></div>
-        <div class="admin-form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="shopIsRecommend" checked style="width:20px;height:20px;accent-color:#0f1419;" /><label style="margin:0;font-size:14px;"><i class="fas fa-fire"></i> 推荐</label></div>
+        <div class="admin-form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="shopIsSelf" style="width:20px;height:20px;accent-color:#d4af37;" /><label style="margin:0;font-size:14px;"><i class="fas fa-trophy"></i> 自营</label></div>
+        <div class="admin-form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="shopIsRecommend" checked style="width:20px;height:20px;accent-color:#f4212e;" /><label style="margin:0;font-size:14px;"><i class="fas fa-fire"></i> 推荐</label></div>
         <button class="btn btn-success" onclick="createShop()">创建店铺</button>
-      </div>
-      <div class="inline-modal" id="addShopCategoryModal">
-        <div class="modal-title"><span><i class="fas fa-tags"></i> 添加店铺分类</span><button class="close-btn" onclick="toggleInlineModal('addShopCategory')">✕</button></div>
-        <div class="admin-form-group"><label>选择店铺</label><select class="admin-form-control" id="shopCategorySelect"><option value="">-- 请选择店铺 --</option>${shops.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-        <div class="admin-form-group"><label>分类名称</label><input class="admin-form-control" id="shopCategoryName" /></div>
-        <div class="admin-form-group"><label>分类图标URL（可选）</label><input class="admin-form-control" id="shopCategoryImage" /></div>
-        <button class="btn btn-success" onclick="createShopCategory()">添加分类</button>
       </div>
       <div class="admin-card"><div class="admin-card-title"><i class="fas fa-store"></i> 店铺列表</div><div id="shopList"></div></div>`;
     const shopList=document.getElementById('shopList');
@@ -2695,17 +2670,52 @@ async function renderSubShops(){
       shopHtml+='</tbody></table></div>';
       shopList.innerHTML=shopHtml;
     }
+
+    // 店铺分类（主/子）
     try{
       let allShopCatsHtml='';
       for(const s of shops){
         const cats=await apiRequest('/shops/'+s.id+'/categories');
-        if(cats.length===0)continue;
-        allShopCatsHtml+=`<div style="margin-top:12px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;">${s.name} 的分类：</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${cats.map(c=>`<div style="display:flex;align-items:center;gap:6px;background:var(--bg-card-hover);padding:6px 10px;border-radius:10px;"><div style="width:24px;height:24px;border-radius:6px;background:var(--product-img-bg);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:12px;">${c.image_url?`<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;" />`:'<i class="fas fa-tags"></i>'}</div><span style="font-size:12px;">${c.name}</span><button class="btn btn-primary btn-xs" onclick="editShopCategory('${c.id}','${(c.name||'').replace(/'/g,"\\'")}','${(c.image_url||'').replace(/'/g,"\\'")}')" style="padding:0 6px;font-size:10px;">改</button><button class="btn btn-danger btn-xs" onclick="deleteShopCategory('${c.id}')" style="padding:0 6px;font-size:10px;">×</button></div>`).join('')}</div></div>`;
+        const mainCats2=cats.filter(c=>!c.parent_id);
+        const subCats2=cats.filter(c=>c.parent_id);
+        allShopCatsHtml+=`
+          <div style="margin-top:16px;border-top:1px solid var(--border-light);padding-top:12px;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${s.name} 的分类：</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              ${mainCats2.map(c=>{
+                const children=subCats2.filter(sc=>sc.parent_id===c.id);
+                const iconHtml=c.image_url?`<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;" />`:'<i class="fas fa-tag"></i>';
+                return `
+                  <div class="shop-main-cat-wrap">
+                    <div class="shop-main-cat" onclick="toggleShopSubCats('${s.id}','${c.id}')">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:12px;color:#0f1419;">${iconHtml}</div>
+                      <span style="font-size:12px;font-weight:600;">${c.name}</span>
+                      <span style="font-size:10px;color:#536471;">(${children.length})</span>
+                      <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();editShopCategory('${c.id}','${(c.name||'').replace(/'/g,"\\'")}','${(c.image_url||'').replace(/'/g,"\\'")}')" style="padding:0 6px;font-size:10px;">改</button>
+                      <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteShopCategory('${c.id}')" style="padding:0 6px;font-size:10px;">×</button>
+                    </div>
+                    <div class="shop-sub-cat-list" id="subcats-${s.id}-${c.id}" style="display:none;padding-left:16px;gap:4px;flex-direction:column;">
+                      ${children.map(sc=>`
+                        <div style="display:flex;align-items:center;gap:6px;background:#fff;padding:4px 8px;border-radius:8px;border:1px solid #eff3f4;">
+                          <span style="font-size:11px;">├─ ${sc.name}</span>
+                          <button class="btn btn-primary btn-xs" onclick="editShopCategory('${sc.id}','${(sc.name||'').replace(/'/g,"\\'")}','${(sc.image_url||'').replace(/'/g,"\\'")}')" style="padding:0 6px;font-size:10px;">改</button>
+                          <button class="btn btn-danger btn-xs" onclick="deleteShopCategory('${sc.id}')" style="padding:0 6px;font-size:10px;">×</button>
+                        </div>
+                      `).join('')}
+                      <button class="btn btn-outline btn-xs" onclick="addShopSubCategory('${s.id}','${c.id}')" style="font-size:10px;">+ 添加子分类</button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            <button class="btn btn-outline btn-xs" onclick="addShopMainCategory('${s.id}')" style="margin-top:8px;font-size:11px;">+ 添加主分类</button>
+          </div>
+        `;
       }
       if(allShopCatsHtml){
         const catSection=document.createElement('div');
         catSection.className='admin-card';
-        catSection.innerHTML=`<div class="admin-card-title"><i class="fas fa-tags"></i> 店铺分类列表</div>${allShopCatsHtml}`;
+        catSection.innerHTML=`<div class="admin-card-title"><i class="fas fa-tags"></i> 店铺分类（主/子）</div>${allShopCatsHtml}`;
         container.appendChild(catSection);
       }
     }catch(err){}
@@ -2741,6 +2751,52 @@ async function renderSubShops(){
   }catch(err){container.innerHTML='<div class="empty-state"><p>加载失败</p></div>';}
 }
 
+function toggleShopSubCats(shopId, catId) {
+    const el = document.getElementById(`subcats-${shopId}-${catId}`);
+    if (!el) return;
+    el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+}
+
+async function addShopMainCategory(shopId) {
+    showCustomModal(`
+        <h3>添加主分类</h3>
+        <div class="form-group"><label>店铺ID</label><input class="admin-form-control" value="${shopId}" disabled /></div>
+        <div class="form-group"><label>分类名称</label><input class="admin-form-control" id="newMainCatName" /></div>
+        <div class="form-group"><label>图标URL（可选）</label><input class="admin-form-control" id="newMainCatImage" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doAddShopCat('${shopId}', null)">添加</button>
+        </div>
+    `);
+}
+
+async function addShopSubCategory(shopId, parentId) {
+    showCustomModal(`
+        <h3>添加子分类</h3>
+        <div class="form-group"><label>子分类名称</label><input class="admin-form-control" id="newMainCatName" /></div>
+        <div class="form-group"><label>图标URL（可选）</label><input class="admin-form-control" id="newMainCatImage" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doAddShopCat('${shopId}', '${parentId}')">添加</button>
+        </div>
+    `);
+}
+
+async function doAddShopCat(shopId, parentId) {
+    const name = document.getElementById('newMainCatName').value.trim();
+    const image_url = document.getElementById('newMainCatImage').value.trim();
+    if (!name) return toast('请输入分类名称', 'warning');
+    try {
+        await apiRequest('/shop-categories', {
+            method: 'POST',
+            body: JSON.stringify({ shop_id: shopId, name, image_url, parent_id: parentId })
+        });
+        closeCustomModal();
+        toast('已添加', 'success');
+        renderSubShops();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
 async function approveShopApp(appId) {
   confirmAction('确认通过', '确认通过此店铺申请？', '通过', `doApproveShopApp('${appId}')`);
 }
@@ -2761,20 +2817,30 @@ async function rejectShopApp(appId) {
   } catch (err) { toast(err.message, 'error'); }
 }
 
-function editShopCategory(catId,name,imageUrl){
-  showCustomModal(`<h3><i class="fas fa-edit"></i> 编辑店铺分类</h3><div class="form-group"><label>分类名称</label><input class="admin-form-control" id="editShopCatName" value="${name}" /></div><div class="form-group"><label>分类图标URL</label><input class="admin-form-control" id="editShopCatImage" value="${imageUrl}" /></div><div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">取消</button><button class="btn btn-success" onclick="doEditShopCategory('${catId}')">保存</button></div>`);
+function editShopCategory(catId, name, imageUrl) {
+    showCustomModal(`
+        <h3>编辑店铺分类</h3>
+        <div class="form-group"><label>分类名称</label><input class="admin-form-control" id="editShopCatName" value="${name}" /></div>
+        <div class="form-group"><label>分类图标URL</label><input class="admin-form-control" id="editShopCatImage" value="${imageUrl}" /></div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doEditShopCategory('${catId}')">保存</button>
+        </div>
+    `);
 }
-async function doEditShopCategory(catId){
-  const name=document.getElementById('editShopCatName').value.trim();
-  const image_url=document.getElementById('editShopCatImage').value.trim();
-  if(!name)return toast('请输入分类名称','warning');
-  try{
-    await apiRequest('/shop-categories/'+catId,{method:'PUT',body:JSON.stringify({name,image_url})});
-    closeCustomModal();
-    toast('已更新','success');
-    renderSubShops();
-  }catch(err){toast(err.message,'error');}
+
+async function doEditShopCategory(catId) {
+    const name = document.getElementById('editShopCatName').value.trim();
+    const image_url = document.getElementById('editShopCatImage').value.trim();
+    if (!name) return toast('请输入分类名称', 'warning');
+    try {
+        await apiRequest('/shop-categories/' + catId, { method: 'PUT', body: JSON.stringify({ name, image_url }) });
+        closeCustomModal();
+        toast('已更新', 'success');
+        renderSubShops();
+    } catch (err) { toast(err.message, 'error'); }
 }
+
 async function updateShopSort(shopId,sortValue){
   try{await apiRequest('/shops/'+shopId+'/sort',{method:'PUT',body:JSON.stringify({sort_order:parseInt(sortValue)||0})});toast('排序已更新','success');}
   catch(err){toast(err.message,'error');}
@@ -2797,85 +2863,91 @@ async function createShop(){
     renderHomePage();
   }catch(err){toast(err.message,'error');}
 }
-async function createShopCategory(){
-  const shop_id=document.getElementById('shopCategorySelect').value;
-  const name=document.getElementById('shopCategoryName').value.trim();
-  const image_url=document.getElementById('shopCategoryImage')?.value.trim()||'';
-  if(!shop_id)return toast('请选择店铺','warning');
-  if(!name)return toast('请输入分类名称','warning');
-  try{
-    await apiRequest('/shop-categories',{method:'POST',body:JSON.stringify({shop_id,name,image_url})});
-    toast('店铺分类添加成功','success');
-    toggleInlineModal('addShopCategory');
-    renderSubShops();
-  }catch(err){toast(err.message,'error');}
-}
 async function deleteShopCategory(catId){
   if(!confirm('确认删除该店铺分类？'))return;
   try{await apiRequest('/shop-categories/'+catId,{method:'DELETE'});toast('已删除','success');renderSubShops();}
   catch(err){toast(err.message,'error');}
 }
-async function editShop(shopId){
-  try{
-    const shop=await apiRequest('/shops/'+shopId);
-    const categories=await apiRequest('/categories');
-    const mainCats=categories.filter(c=>!c.parent_id);
-    let catOptions='<option value="">-- 请选择分类 --</option>';
-    mainCats.forEach(c=>{catOptions+=`<option value="${c.id}" ${shop.category_id===c.id?'selected':''}>${c.name}</option>`;});
-    showCustomModal(`
-      <h3>编辑店铺</h3>
-      <div class="form-group"><label>店铺名称</label><input class="admin-form-control" id="editShopName" value="${shop.name||''}" /></div>
-      <div class="form-group"><label>店铺简介</label><textarea class="admin-form-control" id="editShopDesc" rows="2">${shop.description||''}</textarea></div>
-      <div class="form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="editShopLogo" value="${shop.logo||''}" /></div>
-      <div class="form-group"><label>店铺背景图URL</label><input class="admin-form-control" id="editShopBanner" value="${shop.banner||''}" /></div>
-      <div class="form-group"><label>所属分类</label><select class="admin-form-control" id="editShopCategory">${catOptions}</select></div>
-      <div class="form-group"><label>店铺拥有者</label><select class="admin-form-control" id="editShopOwner"><option value="">-- 不更改 --</option></select></div>
-      <div class="form-group" style="display:flex;align-items:center;gap:6px;">
-        <input type="checkbox" id="editShopIsSelf" ${Number(shop.is_self) === 1 ? 'checked' : ''} style="width:20px;height:20px;accent-color:#0f1419;" />
-        <label style="margin:0;font-size:14px;">自营店铺</label>
-      </div>
-      <div class="form-group" style="display:flex;align-items:center;gap:6px;">
-        <input type="checkbox" id="editShopIsRecommend" ${Number(shop.is_recommend) === 1 ? 'checked' : ''} style="width:20px;height:20px;accent-color:#0f1419;" />
-        <label style="margin:0;font-size:14px;">推荐店铺</label>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-        <button class="btn btn-success" onclick="doEditShop('${shopId}')">保存</button>
-      </div>`);
+async function editShop(shopId) {
     try {
-      const allUsers = await apiRequest('/admin/users');
-      const ownerCandidates = allUsers.filter(u => ['admin', 'dispatcher', 'service'].includes(u.role));
-      const ownerSel = document.getElementById('editShopOwner');
-      ownerCandidates.forEach(u => {
-        ownerSel.innerHTML += `<option value="${u.id}" ${shop.owner_id === u.id ? 'selected' : ''}>${u.username} (${u.role})</option>`;
-      });
-    } catch (e) {}
-  }catch(err){toast(err.message,'error');}
+        const shop = await apiRequest('/shops/' + shopId);
+        const categories = await apiRequest('/categories');
+        const mainCats = categories.filter(c => !c.parent_id);
+        let catOptions = '<option value="">-- 请选择分类 --</option>';
+        mainCats.forEach(c => {
+            catOptions += `<option value="${c.id}" ${shop.category_id === c.id ? 'selected' : ''}>${c.name}</option>`;
+        });
+
+        const allUsers = await apiRequest('/admin/users');
+        const ownerCandidates = allUsers.filter(u => ['admin', 'dispatcher', 'service'].includes(u.role));
+        let ownerOptions = '<option value="">-- 不更改 --</option>';
+        ownerCandidates.forEach(u => {
+            const isCurrent = u.id === shop.owner_id;
+            ownerOptions += `<option value="${u.id}" ${isCurrent ? 'selected' : ''}>${u.username} (${u.role})${isCurrent ? ' ← 当前' : ''}</option>`;
+        });
+
+        showCustomModal(`
+            <h3>编辑店铺</h3>
+            <div class="form-group"><label>店铺名称</label><input class="admin-form-control" id="editShopName" value="${shop.name || ''}" /></div>
+            <div class="form-group"><label>店铺简介</label><textarea class="admin-form-control" id="editShopDesc" rows="2">${shop.description || ''}</textarea></div>
+            <div class="form-group"><label>店铺Logo URL</label><input class="admin-form-control" id="editShopLogo" value="${shop.logo || ''}" /></div>
+            <div class="form-group"><label>店铺背景图URL</label><input class="admin-form-control" id="editShopBanner" value="${shop.banner || ''}" /></div>
+            <div class="form-group"><label>所属分类</label><select class="admin-form-control" id="editShopCategory">${catOptions}</select></div>
+            <div class="form-group"><label>店铺拥有者</label>
+                <select class="admin-form-control" id="editShopOwner">${ownerOptions}</select>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">当前拥有者：${shop.owner_id || '无'}</div>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" id="editShopIsSelf" ${Number(shop.is_self) === 1 ? 'checked' : ''} style="width:20px;height:20px;accent-color:#d4af37;" />
+                <label style="margin:0;font-size:14px;">自营店铺</label>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" id="editShopIsRecommend" ${Number(shop.is_recommend) === 1 ? 'checked' : ''} style="width:20px;height:20px;accent-color:#f4212e;" />
+                <label style="margin:0;font-size:14px;">推荐店铺</label>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doEditShop('${shopId}')">保存</button>
+            </div>
+        `);
+    } catch (err) { toast(err.message, 'error'); }
 }
-async function doEditShop(shopId){
-  const name=document.getElementById('editShopName').value.trim();
-  const description=document.getElementById('editShopDesc').value.trim();
-  const logo=document.getElementById('editShopLogo').value.trim();
-  const banner=document.getElementById('editShopBanner').value.trim();
-  const category_id=document.getElementById('editShopCategory').value||null;
-  const is_self=document.getElementById('editShopIsSelf').checked ? 1 : 0;
-  const is_recommend=document.getElementById('editShopIsRecommend').checked ? 1 : 0;
-  if(!name)return toast('请输入店铺名称','warning');
-  try{
-    await apiRequest('/shops/'+shopId,{method:'PUT',body:JSON.stringify({name,description,logo,banner,category_id,is_self,is_recommend})});
-    const newOwnerId = document.getElementById('editShopOwner')?.value;
-    if (newOwnerId) {
-      try {
-        await apiRequest('/admin/shops/' + shopId + '/owner', { method: 'PUT', body: JSON.stringify({ new_owner_id: newOwnerId }) });
-      } catch (e) {
-        if (e.message && !e.message.includes('相同')) toast('拥有者更新: ' + e.message, 'warning');
-      }
+
+async function doEditShop(shopId) {
+    const name = document.getElementById('editShopName').value.trim();
+    const description = document.getElementById('editShopDesc').value.trim();
+    const logo = document.getElementById('editShopLogo').value.trim();
+    const banner = document.getElementById('editShopBanner').value.trim();
+    const category_id = document.getElementById('editShopCategory').value || null;
+    const is_self = document.getElementById('editShopIsSelf').checked ? 1 : 0;
+    const is_recommend = document.getElementById('editShopIsRecommend').checked ? 1 : 0;
+    const newOwnerId = document.getElementById('editShopOwner').value;
+    if (!name) return toast('请输入店铺名称', 'warning');
+
+    try {
+        await apiRequest('/shops/' + shopId, {
+            method: 'PUT',
+            body: JSON.stringify({ name, description, logo, banner, category_id, is_self, is_recommend })
+        });
+    } catch (err) {
+        return toast('店铺信息保存失败: ' + err.message, 'error');
     }
+
+    if (newOwnerId) {
+        try {
+            await apiRequest('/admin/shops/' + shopId + '/owner', {
+                method: 'PUT',
+                body: JSON.stringify({ new_owner_id: newOwnerId })
+            });
+        } catch (err) {
+            toast('拥有者更新失败: ' + err.message, 'warning');
+        }
+    }
+
     closeCustomModal();
-    toast('店铺已更新','success');
+    toast('店铺已更新', 'success');
     renderSubShops();
     renderHomePage();
-  }catch(err){toast(err.message,'error');}
 }
 async function toggleShop(shopId){
   try{await apiRequest('/shops/'+shopId+'/toggle',{method:'PUT'});toast('已更新','success');renderSubShops();}
@@ -3009,7 +3081,7 @@ function renderSubAccount() {
       <div class="info-row"><span class="label">用户名</span><span class="value">${currentUser?.username || '-'}</span></div>
       <div class="info-row"><span class="label">用户ID</span><span class="value">${currentUser?.id || '-'}</span></div>
       <div class="info-row"><span class="label">角色</span><span class="value">${currentUser?.role || '-'}</span></div>
-      <div class="info-row"><span class="label">红钻</span><span class="value">${currentUser?.diamond || 0}</span></div>
+      <div class="info-row"><span class="label">红钻</span><span class="value" style="color:#f4212e;font-weight:700;">${currentUser?.diamond || 0}</span></div>
     </div>
     <div class="admin-card">
       <div class="admin-card-title"><i class="fas fa-cog"></i> 账户设置</div>
@@ -3487,7 +3559,7 @@ async function loadMyShopProducts() {
   try {
     const products = await apiRequest('/my-shop/products');
     if (products.length === 0) { c.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">暂无商品</p>'; return; }
-    c.innerHTML = products.map(p => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);"><span>${p.title}</span><span style="color:#0f1419;">${p.price} 红钻</span></div>`).join('');
+    c.innerHTML = products.map(p => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);"><span>${p.title}</span><span style="color:#f4212e;font-weight:700;">${p.price} <i class="fas fa-gem" style="font-size:0.9em;"></i></span></div>`).join('');
   } catch (err) { c.innerHTML = '<p>加载失败</p>'; }
 }
 
@@ -3592,7 +3664,7 @@ async function renderSubHall() {
               <div style="font-size:15px;font-weight:600;margin-bottom:4px;">${o.title}</div>
               <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">${o.game || '暗区突围'} · 老板：${o.boss_name || '未知'}</div>
               ${o.description ? `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px;">${o.description}</div>` : ''}
-              <div style="font-size:16px;font-weight:700;color:#0f1419;">${o.price} 红钻</div>
+              <div style="font-size:16px;font-weight:700;color:#f4212e;">${o.price} <i class="fas fa-gem" style="font-size:0.9em;"></i></div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${formatTime(o.created_at)}</div>
             </div>
             <button class="btn btn-success btn-sm" onclick="confirmHallTake('${o.id}')" style="white-space:nowrap;">
@@ -3922,13 +3994,16 @@ window.loadContacts=loadContacts;
 window.viewUserProfile=viewUserProfile;
 window.toggleInlineModal=toggleInlineModal;
 window.createShop=createShop;
-window.createShopCategory=createShopCategory;
 window.editShop=editShop;
 window.toggleShop=toggleShop;
 window.confirmDeleteShop=confirmDeleteShop;
 window.deleteShopCategory=deleteShopCategory;
 window.editShopCategory=editShopCategory;
 window.updateShopSort=updateShopSort;
+window.toggleShopSubCats=toggleShopSubCats;
+window.addShopMainCategory=addShopMainCategory;
+window.addShopSubCategory=addShopSubCategory;
+window.doAddShopCat=doAddShopCat;
 window.shelfProduct=shelfProduct;
 window.loadProdSubCategories=loadProdSubCategories;
 window.confirmUnshelf=confirmUnshelf;
@@ -4066,7 +4141,7 @@ window.doServiceApproveRecharge=doServiceApproveRecharge;
 window.showReviewModal=showReviewModal;
 window.submitReview=submitReview;
 
-console.log('QW电竞护航平台 v7.2 已加载');
+console.log('QW电竞护航平台 v7.3 已加载');
 </script>
 </body>
 </html>
