@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v6.8)
-//  更新：我的店铺系统 / 用户管理字段保护 / 帖子严格过滤
+//  QW电竞 - 完整后端 API (v6.9)
+//  更新：购买不×10 / 订单聊天 / 订单关联用户名 / 打手接单大厅
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -889,7 +889,6 @@ async function handleChangeShopOwner(env, authHeader, shopId, body) {
   await runDB(env, 'UPDATE shops SET owner_id = ? WHERE id = ?', [new_owner_id, shopId]);
   return jsonResponse({ success: true, message: '拥有者已更换' });
 }
-
 // ============================================================
 //  订单
 // ============================================================
@@ -905,8 +904,12 @@ async function handleBuyProduct(env, authHeader, body) {
   if (!product) return errorResponse('商品不存在', 404);
   const sold = product.sold || 0;
   if (product.quantity <= sold) return errorResponse('库存不足');
-  const diamondCost = product.price * 10;
-  if (user.diamond < diamondCost) return errorResponse('红钻不足，请先充值');
+
+  // ✅ 修复：直接用商品价格作为红钻消耗（不再乘10）
+  const diamondCost = Number(product.price);
+  if ((user.diamond || 0) < diamondCost) {
+    return errorResponse(`红钻不足，需要 ${diamondCost} 红钻，当前仅有 ${user.diamond || 0} 红钻`);
+  }
   await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [diamondCost, userId]);
   const orderId = generateId();
   await runDB(env,
@@ -914,10 +917,12 @@ async function handleBuyProduct(env, authHeader, body) {
      VALUES (?, ?, ?, "pending", ?, ?, ?, ?, ?, ?)`,
     [orderId, productId, userId, product.price, product.game, product.title, product.desc || '',
      JSON.stringify([{ sender: 'system', content: '🎉 订单已创建', time: new Date().toISOString() }]),
-     assignedHandlerId || null]);
+     assignedHandlerId || null]
+  );
   await runDB(env, 'UPDATE products SET sold = sold + 1 WHERE id = ?', [productId]);
   return jsonResponse({ orderId, message: '购买成功' });
 }
+
 async function handleGetMyOrders(env, authHeader) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -925,28 +930,53 @@ async function handleGetMyOrders(env, authHeader) {
   if (!user) return errorResponse('用户不存在', 404);
   let sql = '';
   if (user.role === 'boss' || user.role === 'service' || user.role === 'admin' || user.role === 'dispatcher') {
-    sql = 'SELECT * FROM orders WHERE boss_id = ? ORDER BY created_at DESC';
+    sql = `SELECT o.*, b.username as boss_name, h.username as handler_name
+           FROM orders o
+           LEFT JOIN users b ON o.boss_id = b.id
+           LEFT JOIN users h ON o.handler_id = h.id
+           WHERE o.boss_id = ? ORDER BY o.created_at DESC`;
   } else if (user.role === 'handler') {
-    const pendingResult = await queryDB(env, 'SELECT * FROM orders WHERE status = "pending" ORDER BY created_at DESC');
-    const myResult = await queryDB(env, 'SELECT * FROM orders WHERE handler_id = ? ORDER BY created_at DESC', [userId]);
+    const pendingResult = await queryDB(env,
+      `SELECT o.*, b.username as boss_name, h.username as handler_name
+       FROM orders o
+       LEFT JOIN users b ON o.boss_id = b.id
+       LEFT JOIN users h ON o.handler_id = h.id
+       WHERE o.status = 'pending' ORDER BY o.created_at DESC`);
+    const myResult = await queryDB(env,
+      `SELECT o.*, b.username as boss_name, h.username as handler_name
+       FROM orders o
+       LEFT JOIN users b ON o.boss_id = b.id
+       LEFT JOIN users h ON o.handler_id = h.id
+       WHERE o.handler_id = ? ORDER BY o.created_at DESC`, [userId]);
     const all = [...(pendingResult.results || []), ...(myResult.results || [])];
     const seen = new Set();
     return jsonResponse(all.filter(o => { if (seen.has(o.id)) return false; seen.add(o.id); return true; }));
-  } else return errorResponse('无权查看', 403);
+  } else {
+    return errorResponse('无权查看', 403);
+  }
   const result = await queryDB(env, sql, [userId]);
   return jsonResponse(result.results || []);
 }
+
 async function handleGetOrderDetail(env, authHeader, orderId) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
-  const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
-  const order = (result.results && result.results[0]) || null;
+  const result = await queryDB(env,
+    `SELECT o.*, b.username as boss_name, h.username as handler_name
+     FROM orders o
+     LEFT JOIN users b ON o.boss_id = b.id
+     LEFT JOIN users h ON o.handler_id = h.id
+     WHERE o.id = ?`, [orderId]);
+  const order = result.results && result.results[0];
   if (!order) return errorResponse('订单不存在', 404);
-  if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin' && user.role !== 'service') return errorResponse('无权查看', 403);
+  if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin' && user.role !== 'service') {
+    return errorResponse('无权查看', 403);
+  }
   return jsonResponse(order);
 }
+
 async function handleTakeOrder(env, authHeader, orderId) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -1093,6 +1123,23 @@ async function handleSendChat(env, authHeader, orderId, body) {
   messages.push({ sender, content, time: new Date().toISOString() });
   await runDB(env, 'UPDATE orders SET messages = ? WHERE id = ?', [JSON.stringify(messages), orderId]);
   return jsonResponse({ message: '发送成功' });
+}
+
+// ============================================================
+//  打手接单大厅
+// ============================================================
+async function handleGetPendingOrders(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || user.role !== 'handler') return errorResponse('只有打手可查看', 403);
+  const result = await queryDB(env,
+    `SELECT o.*, b.username as boss_name
+     FROM orders o
+     LEFT JOIN users b ON o.boss_id = b.id
+     WHERE o.status = 'pending'
+     ORDER BY o.created_at DESC`);
+  return jsonResponse(result.results || []);
 }
 
 // ============================================================
@@ -1256,7 +1303,29 @@ async function handleGetMessages(env, authHeader, body) {
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
-  const { contactId } = body;
+  const { contactId, type, orderId } = body;
+
+  // ✅ 订单聊天走单独逻辑
+  if (type === 'order' && orderId) {
+    const o = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
+    const order = o.results && o.results[0];
+    if (!order) return errorResponse('订单不存在', 404);
+    if (order.boss_id !== userId && order.handler_id !== userId && user.role !== 'admin' && user.role !== 'service') {
+      return errorResponse('无权查看', 403);
+    }
+    let messages = [];
+    try { messages = JSON.parse(order.messages || '[]'); } catch (e) {}
+    const formatted = messages.map(m => ({
+      id: generateId(),
+      sender_id: m.sender === 'boss' ? order.boss_id : (m.sender === 'handler' ? order.handler_id : 'system'),
+      sender_name: m.sender,
+      content: m.content,
+      created_at: m.time || new Date().toISOString()
+    }));
+    return jsonResponse(formatted);
+  }
+
+  // 普通联系人聊天
   if (!contactId) return errorResponse('请选择联系人');
   const contact = await getUserById(env, contactId);
   if (!contact) return errorResponse('联系人不存在', 404);
@@ -1265,7 +1334,9 @@ async function handleGetMessages(env, authHeader, body) {
      FROM messages m
      LEFT JOIN users u ON m.sender_id = u.id
      WHERE (m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?)
-     ORDER BY m.created_at ASC`, [userId, contactId, contactId, userId]);
+     ORDER BY m.created_at ASC`,
+    [userId, contactId, contactId, userId]
+  );
   await runDB(env, 'UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?', [contactId, userId]);
   await runDB(env, 'UPDATE message_contacts SET unread_count = 0 WHERE user_id = ? AND contact_id = ?', [userId, contactId]);
   return jsonResponse(result.results || []);
@@ -1564,6 +1635,9 @@ export async function onRequest(context) {
     if (path === '/api/messages/contacts' && method === 'GET') return await handleGetContacts(env, authHeader);
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
+
+    // ✅ 打手接单大厅
+    if (path === '/api/handler/pending-orders' && method === 'GET') return await handleGetPendingOrders(env, authHeader);
 
     // 我的店铺
     if (path === '/api/my-shop' && method === 'GET') return await handleMyShop(env, authHeader);
