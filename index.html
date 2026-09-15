@@ -337,20 +337,15 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .shop-tab-btn{flex:1;padding:8px;border-radius:10px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;}
 .shop-tab-btn.active{background:#0f1419;color:#fff;border-color:#0f1419;}
 .cat-tab-btn.active{background:#0f1419 !important;color:#fff !important;border-color:#0f1419 !important;}
-
-/* 店铺分类主分类/子分类样式 */
 .shop-main-cat-wrap{display:flex;flex-direction:column;gap:4px;}
 .shop-main-cat{display:flex;align-items:center;gap:6px;background:#f7f9f9;padding:6px 10px;border-radius:10px;cursor:pointer;border:1px solid #eff3f4;transition:all 0.15s;}
 .shop-main-cat:hover{background:#eff3f4;}
-
-/* 红钻/价格/余额红色 */
 .diamond-display{color:#f4212e !important;}
 .diamond-display i.fa-gem{color:#f4212e !important;}
 .product-price{color:#f4212e !important;font-weight:700;}
 #myBalance{color:#f4212e !important;font-weight:700;}
 #headerDiamond{color:#f4212e !important;}
 #profileBalance{color:#f4212e !important;font-weight:700;}
-
 @media(max-width:420px){
 .view-container{padding:10px 12px 4px;}
 .bottom-nav{padding:4px 0 max(8px,env(safe-area-inset-bottom));min-height:48px;}
@@ -561,7 +556,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 </div>
 </div>
 </div>
-<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.3</div>
+<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.4</div>
 </div>
 </div>
 <div class="bottom-nav" id="bottomNav"></div>
@@ -791,6 +786,44 @@ function formatTime(timeStr){
 }
 
 /* ============================================================
+   临时上传测试（测完删除按钮即可，函数保留）
+============================================================ */
+function testUpload() {
+    if (!currentUser) { toast('请先登录', 'warning'); return; }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+        toast('上传中...', 'warning');
+        const fd = new FormData();
+        fd.append('file', file);
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { Authorization: token },
+                body: fd
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || '上传失败');
+            toast('上传成功！', 'success');
+            showCustomModal(`
+                <h3>上传成功</h3>
+                <div style="font-size:12px;color:#536471;word-break:break-all;margin:10px 0;">${data.url}</div>
+                <img src="${data.url}" style="max-width:100%;border-radius:10px;margin-top:8px;" onerror="this.style.display='none'" />
+                <div class="btn-row" style="margin-top:12px;">
+                    <button class="btn btn-outline" onclick="closeCustomModal()">关闭</button>
+                </div>
+            `);
+        } catch (err) {
+            toast('上传失败: ' + err.message, 'error');
+        }
+    };
+    input.click();
+}
+
+/* ============================================================
    公告
 ============================================================ */
 let announceData=null;
@@ -948,7 +981,6 @@ async function loadShopDetailContent(shopId,selectedCatId){
     const cats=await apiRequest('/shops/'+shopId+'/categories');
     const products=await apiRequest('/shops/'+shopId+'/products');
     const tabHtml=`<div class="shop-tab-bar"><button class="shop-tab-btn active" data-tab="products" onclick="switchShopTab('${shopId}','products')">商品</button><button class="shop-tab-btn" data-tab="reviews" onclick="switchShopTab('${shopId}','reviews')">评价</button></div>`;
-    // 只显示主分类
     const mainCats=cats.filter(c=>!c.parent_id);
     const subCats=cats.filter(c=>c.parent_id);
     let catHtml='';
@@ -1050,7 +1082,6 @@ async function filterShopProductsByCat(shopId,catId){
   try{
     const products=await apiRequest('/shops/'+shopId+'/products');
     const cats=await apiRequest('/shops/'+shopId+'/categories');
-    // 支持主分类 + 子分类联动
     let filtered=products;
     if(catId!=='all'){
       const subIds=cats.filter(c=>c.parent_id===catId).map(c=>c.id);
@@ -1786,6 +1817,7 @@ function renderMoreFunctions(){
   let items=[];
   if(role==='admin'){
     items=[
+      {icon:'fa-flask',label:'上传测试',action:"testUpload()"},
       {icon:'fa-clipboard-list',label:'订单管理',action:"openSubPage('orders')"},
       {icon:'fa-box',label:'商品管理',action:"openSubPage('products')"},
       {icon:'fa-users',label:'用户管理',action:"openSubPage('users')"},
@@ -3973,6 +4005,7 @@ window.doBuyWithHandler=doBuyWithHandler;
 window.filterProductsByCategory=filterProductsByCategory;
 window.filterMyOrders=filterMyOrders;
 window.uploadAvatar=uploadAvatar;
+window.testUpload=testUpload;
 window.openRecharge=openRecharge;
 window.openWithdraw=openWithdraw;
 window.showLoginModal=showLoginModal;
@@ -4141,7 +4174,7 @@ window.doServiceApproveRecharge=doServiceApproveRecharge;
 window.showReviewModal=showReviewModal;
 window.submitReview=submitReview;
 
-console.log('QW电竞护航平台 v7.3 已加载');
+console.log('QW电竞护航平台 v7.4 已加载');
 </script>
 </body>
 </html>
