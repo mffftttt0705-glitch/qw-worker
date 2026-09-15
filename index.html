@@ -283,9 +283,37 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .contact-item .contact-avatar img{width:100%;height:100%;object-fit:cover;}
 .contact-item .contact-body{flex:1;min-width:0;}
 .contact-item .unread-badge{background:#0f1419;color:#fff;border-radius:50%;font-size:10px;padding:0 6px;min-width:18px;text-align:center;line-height:18px;display:inline-block;margin-left:4px;}
-.user-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.user-filter button{padding:6px 14px;border-radius:9999px;border:1px solid #cfd9de;background:#ffffff;color:#0f1419;font-size:13px;font-weight:500;line-height:1.2;min-height:32px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
-.user-filter button.active{background:#0f1419;color:#ffffff;border-color:#0f1419;}
+/* 修复4：用户管理“全部”标签统一比例 */
+.user-filter {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    align-items: center;
+}
+.user-filter button {
+    padding: 7px 16px !important;
+    border-radius: 9999px !important;
+    border: 1px solid #cfd9de !important;
+    background: #ffffff !important;
+    color: #0f1419 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    min-height: 34px !important;
+    height: auto !important;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.user-filter button.active {
+    background: #0f1419 !important;
+    color: #ffffff !important;
+    border-color: #0f1419 !important;
+}
 .action-group{display:flex;gap:4px;flex-wrap:wrap;}
 .category-btn{padding:4px 14px;border-radius:20px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
 .category-btn.active{background:#0f1419;color:#fff;border-color:#0f1419;}
@@ -557,7 +585,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 </div>
 </div>
 </div>
-<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.6</div>
+<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.7</div>
 </div>
 </div>
 <div class="bottom-nav" id="bottomNav"></div>
@@ -2754,38 +2782,44 @@ async function renderSubShops(){
       shopList.innerHTML=shopHtml;
     }
 
-    // 店铺分类（主/子）
-    try{
-      let allShopCatsHtml='';
-      for(const s of shops){
-        const cats=await apiRequest('/shops/'+s.id+'/categories');
-        const mainCats2=cats.filter(c=>!c.parent_id);
-        const subCats2=cats.filter(c=>c.parent_id);
-        allShopCatsHtml+=`
+    // ============================================================
+    // 修复2：店铺分类（主/子）—— 主分类点击展开子分类
+    // ============================================================
+    try {
+      let allShopCatsHtml = '';
+      for (const s of shops) {
+        const cats = await apiRequest('/shops/' + s.id + '/categories');
+        if (cats.length === 0) continue;
+        const mainCats2 = cats.filter(c => !c.parent_id);
+        const subCats2 = cats.filter(c => c.parent_id);
+
+        allShopCatsHtml += `
           <div style="margin-top:16px;border-top:1px solid var(--border-light);padding-top:12px;">
             <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${s.name} 的分类：</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              ${mainCats2.map(c=>{
-                const children=subCats2.filter(sc=>sc.parent_id===c.id);
-                const iconHtml=c.image_url?`<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;" />`:'<i class="fas fa-tag"></i>';
+              ${mainCats2.map(c => {
+                const children = subCats2.filter(sc => sc.parent_id === c.id);
+                const iconHtml = c.image_url ? `<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" />` : '<i class="fas fa-tag"></i>';
                 return `
-                  <div class="shop-main-cat-wrap">
-                    <div class="shop-main-cat" onclick="toggleShopSubCats('${s.id}','${c.id}')">
-                      <div style="width:24px;height:24px;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:12px;color:#0f1419;">${iconHtml}</div>
-                      <span style="font-size:12px;font-weight:600;">${c.name}</span>
+                  <div style="display:flex;flex-direction:column;gap:4px;min-width:120px;">
+                    <div onclick="toggleShopSubCats('${s.id}','${c.id}')" style="display:flex;align-items:center;gap:6px;background:#f7f9f9;padding:6px 10px;border-radius:10px;cursor:pointer;border:1px solid #eff3f4;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:12px;">
+                        ${iconHtml}
+                      </div>
+                      <span style="font-size:12px;font-weight:600;flex:1;">${c.name}</span>
                       <span style="font-size:10px;color:#536471;">(${children.length})</span>
-                      <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();editShopCategory('${c.id}','${(c.name||'').replace(/'/g,"\\'")}','${(c.image_url||'').replace(/'/g,"\\'")}')" style="padding:0 6px;font-size:10px;">改</button>
+                      <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();editShopCategory('${c.id}', '${(c.name || '').replace(/'/g, "\\'")}', '${(c.image_url || '').replace(/'/g, "\\'")}')" style="padding:0 6px;font-size:10px;">改</button>
                       <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteShopCategory('${c.id}')" style="padding:0 6px;font-size:10px;">×</button>
                     </div>
-                    <div class="shop-sub-cat-list" id="subcats-${s.id}-${c.id}" style="display:none;padding-left:16px;gap:4px;flex-direction:column;">
-                      ${children.map(sc=>`
+                    <div id="subcats-${s.id}-${c.id}" style="display:none;padding-left:16px;flex-direction:column;gap:4px;">
+                      ${children.map(sc => `
                         <div style="display:flex;align-items:center;gap:6px;background:#fff;padding:4px 8px;border-radius:8px;border:1px solid #eff3f4;">
-                          <span style="font-size:11px;">├─ ${sc.name}</span>
-                          <button class="btn btn-primary btn-xs" onclick="editShopCategory('${sc.id}','${(sc.name||'').replace(/'/g,"\\'")}','${(sc.image_url||'').replace(/'/g,"\\'")}')" style="padding:0 6px;font-size:10px;">改</button>
+                          <span style="font-size:11px;flex:1;">├─ ${sc.name}</span>
+                          <button class="btn btn-primary btn-xs" onclick="editShopCategory('${sc.id}', '${(sc.name || '').replace(/'/g, "\\'")}', '${(sc.image_url || '').replace(/'/g, "\\'")}')" style="padding:0 6px;font-size:10px;">改</button>
                           <button class="btn btn-danger btn-xs" onclick="deleteShopCategory('${sc.id}')" style="padding:0 6px;font-size:10px;">×</button>
                         </div>
                       `).join('')}
-                      <button class="btn btn-outline btn-xs" onclick="addShopSubCategory('${s.id}','${c.id}')" style="font-size:10px;">+ 添加子分类</button>
+                      <button class="btn btn-outline btn-xs" onclick="addShopSubCategory('${s.id}','${c.id}')" style="font-size:10px;width:fit-content;">+ 添加子分类</button>
                     </div>
                   </div>
                 `;
@@ -2795,13 +2829,13 @@ async function renderSubShops(){
           </div>
         `;
       }
-      if(allShopCatsHtml){
-        const catSection=document.createElement('div');
-        catSection.className='admin-card';
-        catSection.innerHTML=`<div class="admin-card-title"><i class="fas fa-tags"></i> 店铺分类（主/子）</div>${allShopCatsHtml}`;
+      if (allShopCatsHtml) {
+        const catSection = document.createElement('div');
+        catSection.className = 'admin-card';
+        catSection.innerHTML = `<div class="admin-card-title"><i class="fas fa-tags"></i> 店铺分类（主/子）</div>${allShopCatsHtml}`;
         container.appendChild(catSection);
       }
-    }catch(err){}
+    } catch (err) { console.error(err); }
 
     // 店铺申请审核区
     let appSection = document.getElementById('shopAppSection');
@@ -2832,7 +2866,6 @@ async function renderSubShops(){
       }
     } catch (e) {}
 
-    // 绑定上传按钮（创建店铺）
     setTimeout(() => {
       bindUploadBtn('shopLogo', 'image/*');
       bindUploadBtn('shopBanner', 'image/*');
@@ -2840,54 +2873,58 @@ async function renderSubShops(){
   }catch(err){container.innerHTML='<div class="empty-state"><p>加载失败</p></div>';}
 }
 
+// 修复2辅助函数：切换子分类显示
 function toggleShopSubCats(shopId, catId) {
-    const el = document.getElementById(`subcats-${shopId}-${catId}`);
-    if (!el) return;
-    el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+  const el = document.getElementById(`subcats-${shopId}-${catId}`);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
 }
 
+// 修复2辅助函数：添加主分类
 async function addShopMainCategory(shopId) {
-    showCustomModal(`
-        <h3>添加主分类</h3>
-        <div class="form-group"><label>店铺ID</label><input class="admin-form-control" value="${shopId}" disabled /></div>
-        <div class="form-group"><label>分类名称</label><input class="admin-form-control" id="newMainCatName" /></div>
-        <div class="form-group"><label>图标URL（可选）</label><input class="admin-form-control" id="newMainCatImage" /></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="doAddShopCat('${shopId}', null)">添加</button>
-        </div>
-    `);
-    document.getElementById('customModal').classList.add('active');
-    setTimeout(() => bindUploadBtn('newMainCatImage', 'image/*'), 50);
+  showCustomModal(`
+    <h3>添加主分类</h3>
+    <div class="form-group"><label>店铺ID</label><input class="admin-form-control" value="${shopId}" disabled /></div>
+    <div class="form-group"><label>分类名称</label><input class="admin-form-control" id="newMainCatName" /></div>
+    <div class="form-group"><label>图标URL（可选）</label><input class="admin-form-control" id="newMainCatImage" /></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+      <button class="btn btn-success" onclick="doAddShopCat('${shopId}', null)">添加</button>
+    </div>
+  `);
+  document.getElementById('customModal').classList.add('active');
+  setTimeout(() => bindUploadBtn('newMainCatImage', 'image/*'), 50);
 }
 
+// 修复2辅助函数：添加子分类
 async function addShopSubCategory(shopId, parentId) {
-    showCustomModal(`
-        <h3>添加子分类</h3>
-        <div class="form-group"><label>子分类名称</label><input class="admin-form-control" id="newMainCatName" /></div>
-        <div class="form-group"><label>图标URL（可选）</label><input class="admin-form-control" id="newMainCatImage" /></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="doAddShopCat('${shopId}', '${parentId}')">添加</button>
-        </div>
-    `);
-    document.getElementById('customModal').classList.add('active');
-    setTimeout(() => bindUploadBtn('newMainCatImage', 'image/*'), 50);
+  showCustomModal(`
+    <h3>添加子分类</h3>
+    <div class="form-group"><label>子分类名称</label><input class="admin-form-control" id="newMainCatName" /></div>
+    <div class="form-group"><label>图标URL（可选）</label><input class="admin-form-control" id="newMainCatImage" /></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+      <button class="btn btn-success" onclick="doAddShopCat('${shopId}', '${parentId}')">添加</button>
+    </div>
+  `);
+  document.getElementById('customModal').classList.add('active');
+  setTimeout(() => bindUploadBtn('newMainCatImage', 'image/*'), 50);
 }
 
+// 修复2辅助函数：提交添加店铺分类
 async function doAddShopCat(shopId, parentId) {
-    const name = document.getElementById('newMainCatName').value.trim();
-    const image_url = document.getElementById('newMainCatImage').value.trim();
-    if (!name) return toast('请输入分类名称', 'warning');
-    try {
-        await apiRequest('/shop-categories', {
-            method: 'POST',
-            body: JSON.stringify({ shop_id: shopId, name, image_url, parent_id: parentId })
-        });
-        closeCustomModal();
-        toast('已添加', 'success');
-        renderSubShops();
-    } catch (err) { toast(err.message, 'error'); }
+  const name = document.getElementById('newMainCatName').value.trim();
+  const image_url = document.getElementById('newMainCatImage').value.trim();
+  if (!name) return toast('请输入分类名称', 'warning');
+  try {
+    await apiRequest('/shop-categories', {
+      method: 'POST',
+      body: JSON.stringify({ shop_id: shopId, name, image_url, parent_id: parentId })
+    });
+    closeCustomModal();
+    toast('已添加', 'success');
+    renderSubShops();
+  } catch (err) { toast(err.message, 'error'); }
 }
 
 async function approveShopApp(appId) {
@@ -2911,29 +2948,29 @@ async function rejectShopApp(appId) {
 }
 
 function editShopCategory(catId, name, imageUrl) {
-    showCustomModal(`
-        <h3>编辑店铺分类</h3>
-        <div class="form-group"><label>分类名称</label><input class="admin-form-control" id="editShopCatName" value="${name}" /></div>
-        <div class="form-group"><label>分类图标URL</label><input class="admin-form-control" id="editShopCatImage" value="${imageUrl}" /></div>
-        <div class="btn-row">
-            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-            <button class="btn btn-success" onclick="doEditShopCategory('${catId}')">保存</button>
-        </div>
-    `);
-    document.getElementById('customModal').classList.add('active');
-    setTimeout(() => bindUploadBtn('editShopCatImage', 'image/*'), 50);
+  showCustomModal(`
+    <h3>编辑店铺分类</h3>
+    <div class="form-group"><label>分类名称</label><input class="admin-form-control" id="editShopCatName" value="${name}" /></div>
+    <div class="form-group"><label>分类图标URL</label><input class="admin-form-control" id="editShopCatImage" value="${imageUrl}" /></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+      <button class="btn btn-success" onclick="doEditShopCategory('${catId}')">保存</button>
+    </div>
+  `);
+  document.getElementById('customModal').classList.add('active');
+  setTimeout(() => bindUploadBtn('editShopCatImage', 'image/*'), 50);
 }
 
 async function doEditShopCategory(catId) {
-    const name = document.getElementById('editShopCatName').value.trim();
-    const image_url = document.getElementById('editShopCatImage').value.trim();
-    if (!name) return toast('请输入分类名称', 'warning');
-    try {
-        await apiRequest('/shop-categories/' + catId, { method: 'PUT', body: JSON.stringify({ name, image_url }) });
-        closeCustomModal();
-        toast('已更新', 'success');
-        renderSubShops();
-    } catch (err) { toast(err.message, 'error'); }
+  const name = document.getElementById('editShopCatName').value.trim();
+  const image_url = document.getElementById('editShopCatImage').value.trim();
+  if (!name) return toast('请输入分类名称', 'warning');
+  try {
+    await apiRequest('/shop-categories/' + catId, { method: 'PUT', body: JSON.stringify({ name, image_url }) });
+    closeCustomModal();
+    toast('已更新', 'success');
+    renderSubShops();
+  } catch (err) { toast(err.message, 'error'); }
 }
 
 async function updateShopSort(shopId,sortValue){
@@ -2963,6 +3000,10 @@ async function deleteShopCategory(catId){
   try{await apiRequest('/shop-categories/'+catId,{method:'DELETE'});toast('已删除','success');renderSubShops();}
   catch(err){toast(err.message,'error');}
 }
+
+// ============================================================
+// 修复1：editShop —— 拥有者下拉正确选中当前拥有者
+// ============================================================
 async function editShop(shopId) {
     try {
         const shop = await apiRequest('/shops/' + shopId);
@@ -2973,12 +3014,13 @@ async function editShop(shopId) {
             catOptions += `<option value="${c.id}" ${shop.category_id === c.id ? 'selected' : ''}>${c.name}</option>`;
         });
 
+        // 加载拥有者候选
         const allUsers = await apiRequest('/admin/users');
         const ownerCandidates = allUsers.filter(u => ['admin', 'dispatcher', 'service'].includes(u.role));
-        let ownerOptions = '<option value="">-- 不更改 --</option>';
+        let ownerOptions = '<option value="">-- 选择拥有者 --</option>';
         ownerCandidates.forEach(u => {
-            const isCurrent = u.id === shop.owner_id;
-            ownerOptions += `<option value="${u.id}" ${isCurrent ? 'selected' : ''}>${u.username} (${u.role})${isCurrent ? ' ← 当前' : ''}</option>`;
+            const isCurrent = String(u.id) === String(shop.owner_id);
+            ownerOptions += `<option value="${u.id}" ${isCurrent ? 'selected' : ''}>${u.username} (${u.role})${isCurrent ? ' ← 当前拥有者' : ''}</option>`;
         });
 
         showCustomModal(`
@@ -2990,7 +3032,7 @@ async function editShop(shopId) {
             <div class="form-group"><label>所属分类</label><select class="admin-form-control" id="editShopCategory">${catOptions}</select></div>
             <div class="form-group"><label>店铺拥有者</label>
                 <select class="admin-form-control" id="editShopOwner">${ownerOptions}</select>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">当前拥有者：${shop.owner_id || '无'}</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">当前拥有者 ID: ${shop.owner_id || '无'}</div>
             </div>
             <div class="form-group" style="display:flex;align-items:center;gap:6px;">
                 <input type="checkbox" id="editShopIsSelf" ${Number(shop.is_self) === 1 ? 'checked' : ''} style="width:20px;height:20px;accent-color:#d4af37;" />
@@ -3013,6 +3055,9 @@ async function editShop(shopId) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
+// ============================================================
+// 修复1：doEditShop —— 先保存基本信息，再更新拥有者
+// ============================================================
 async function doEditShop(shopId) {
     const name = document.getElementById('editShopName').value.trim();
     const description = document.getElementById('editShopDesc').value.trim();
@@ -3024,21 +3069,24 @@ async function doEditShop(shopId) {
     const newOwnerId = document.getElementById('editShopOwner').value;
     if (!name) return toast('请输入店铺名称', 'warning');
 
+    // 先更新店铺基本信息
     try {
         await apiRequest('/shops/' + shopId, {
             method: 'PUT',
             body: JSON.stringify({ name, description, logo, banner, category_id, is_self, is_recommend })
         });
     } catch (err) {
-        return toast('店铺信息保存失败: ' + err.message, 'error');
+        return toast('保存失败: ' + err.message, 'error');
     }
 
+    // 再更新拥有者
     if (newOwnerId) {
         try {
-            await apiRequest('/admin/shops/' + shopId + '/owner', {
+            const r = await apiRequest('/admin/shops/' + shopId + '/owner', {
                 method: 'PUT',
                 body: JSON.stringify({ new_owner_id: newOwnerId })
             });
+            toast(r.message || '拥有者已更新', 'success');
         } catch (err) {
             toast('拥有者更新失败: ' + err.message, 'warning');
         }
@@ -3169,51 +3217,184 @@ window.deleteWithdraw=function(withdrawId){confirmAction('确认删除','确认�
 async function doDeleteWithdraw(withdrawId){try{await apiRequest('/admin/withdrawals/'+withdrawId,{method:'DELETE'});toast('已删除','success');renderSubWithdrawals();}catch(err){toast(err.message,'error');}}
 
 /* ============================================================
-   子页面-账户设置
+   修复5：子页面-账户设置（快手风格）
 ============================================================ */
 function renderSubAccount() {
-  const container = document.getElementById('subAccountContent');
-  if (!container) return;
-  const isAdmin = (currentUserRole || currentUser?.role) === 'admin';
-  container.innerHTML = `
-    <div class="admin-card">
-      <div class="admin-card-title"><i class="fas fa-user"></i> 个人信息</div>
-      <div class="info-row"><span class="label">用户名</span><span class="value">${currentUser?.username || '-'}</span></div>
-      <div class="info-row"><span class="label">用户ID</span><span class="value">${currentUser?.id || '-'}</span></div>
-      <div class="info-row"><span class="label">角色</span><span class="value">${currentUser?.role || '-'}</span></div>
-      <div class="info-row"><span class="label">红钻</span><span class="value" style="color:#f4212e;font-weight:700;">${currentUser?.diamond || 0}</span></div>
-    </div>
-    <div class="admin-card">
-      <div class="admin-card-title"><i class="fas fa-cog"></i> 账户设置</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm" onclick="showChangeName()"><i class="fas fa-user-edit"></i> 修改昵称</button>
-        <button class="btn btn-outline btn-sm" onclick="showChangeBanner()"><i class="fas fa-image"></i> 设置背景墙</button>
-        <button class="btn btn-primary btn-sm" onclick="uploadAvatar()"><i class="fas fa-camera"></i> 上传头像</button>
-        <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
-      </div>
-    </div>
-    <div class="admin-card">
-      <div class="admin-card-title"><i class="fas fa-id-card"></i> 修改我的用户ID</div>
-      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">修改后需重新登录</p>
-      <div class="admin-form-group"><label>新用户ID（6位以上数字）</label><input class="admin-form-control" id="newUserIdInput" placeholder="如 000001" /></div>
-      <button class="btn btn-warning btn-sm" onclick="changeUserId()"><i class="fas fa-edit"></i> 修改ID</button>
-    </div>
-    ${isAdmin ? `
-    <div class="admin-card" style="border-left:4px solid #0f1419;">
-      <div class="admin-card-title"><i class="fas fa-image"></i> 充值图片管理（管理员）</div>
-      <div class="admin-form-group"><label>充值图片URL</label><input class="admin-form-control" id="rechargeImgUrl" /></div>
-      <div class="admin-form-group"><label>排序</label><input class="admin-form-control" id="rechargeImgSort" type="number" value="0" /></div>
-      <button class="btn btn-primary btn-sm" onclick="addRechargeImage()">添加图片</button>
-      <div id="rechargeImgList" style="margin-top:10px;"></div>
-    </div>` : ''}
-  `;
-  if (isAdmin) {
-    setTimeout(() => {
-      bindUploadBtn('rechargeImgUrl', 'image/*');
-      loadRechargeImgList();
-    }, 100);
-  }
+    const container = document.getElementById('subAccountContent');
+    if (!container) return;
+    if (!currentUser) { container.innerHTML = '<div class="empty-state"><p>请先登录</p></div>'; return; }
+    const isAdmin = (currentUserRole || currentUser?.role) === 'admin';
+    const avatarUrl = currentUser.avatar || '';
+    const bannerUrl = currentUser.banner || '';
+    const avatarHtml = avatarUrl
+        ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;" />`
+        : (currentUser.username || '?').charAt(0).toUpperCase();
+    const roleMap = { 'admin': '管理员', 'boss': '老板', 'handler': '打手', 'dispatcher': '派单员', 'service': '客服' };
+
+    container.innerHTML = `
+        <div style="background:#fff;border-radius:14px;overflow:hidden;margin-bottom:10px;">
+            <div style="position:relative;height:150px;background:linear-gradient(135deg,#1d9bf0,#6a3aff);overflow:hidden;">
+                ${bannerUrl ? `<img src="${bannerUrl}" style="width:100%;height:100%;object-fit:cover;" />` : ''}
+                <button onclick="showChangeBanner()" style="position:absolute;right:10px;top:10px;background:rgba(0,0,0,0.45);color:#fff;border:none;border-radius:18px;padding:5px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                    <i class="fas fa-image" style="font-size:11px;"></i> 设置背景
+                </button>
+                <button onclick="closeSubPage()" style="position:absolute;left:10px;top:10px;background:rgba(0,0,0,0.45);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:14px;cursor:pointer;">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+            <div style="padding:0 14px;margin-top:-40px;display:flex;align-items:flex-end;gap:12px;">
+                <div onclick="uploadAvatar()" style="width:80px;height:80px;border-radius:50%;background:#0f1419;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;overflow:hidden;cursor:pointer;position:relative;flex-shrink:0;">
+                    ${avatarHtml}
+                    <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);color:#fff;font-size:10px;text-align:center;padding:2px 0;display:flex;align-items:center;justify-content:center;gap:3px;">
+                        <i class="fas fa-camera" style="font-size:10px;"></i> 更换
+                    </div>
+                </div>
+            </div>
+            <div style="padding:8px 14px 14px;">
+                <div style="font-size:18px;font-weight:700;color:#0f1419;margin-bottom:6px;">${currentUser.username || '用户'}</div>
+                <div style="height:3px;background:#eff3f4;border-radius:2px;overflow:hidden;">
+                    <div style="height:100%;width:40%;background:linear-gradient(90deg,#f4212e,#ff6b6b);"></div>
+                </div>
+                <div style="font-size:11px;color:#536471;margin-top:6px;">
+                    资料完整度<span style="color:#f4212e;font-weight:600;">40%</span>，完善资料可提升被关注度
+                </div>
+            </div>
+        </div>
+
+        <div style="background:#fff;border-radius:14px;margin-bottom:10px;overflow:hidden;">
+            <div onclick="uploadAvatar()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eff3f4;cursor:pointer;">
+                <span style="font-size:15px;color:#0f1419;">头像</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;background:#0f1419;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;">
+                        ${avatarUrl ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;" />` : (currentUser.username || '?').charAt(0).toUpperCase()}
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:#cfd9de;font-size:13px;"></i>
+                </div>
+            </div>
+            <div onclick="showChangeName()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eff3f4;cursor:pointer;">
+                <span style="font-size:15px;color:#0f1419;">昵称</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="color:#536471;font-size:14px;">${currentUser.username || '未设置'}</span>
+                    <i class="fas fa-chevron-right" style="color:#cfd9de;font-size:13px;"></i>
+                </div>
+            </div>
+            <div onclick="showChangeIdModal()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eff3f4;cursor:pointer;">
+                <span style="font-size:15px;color:#0f1419;">用户ID</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="color:#536471;font-size:14px;">${currentUser.id || '-'}</span>
+                    <i class="fas fa-chevron-right" style="color:#cfd9de;font-size:13px;"></i>
+                </div>
+            </div>
+            <div onclick="showChangeBanner()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eff3f4;cursor:pointer;">
+                <span style="font-size:15px;color:#0f1419;">背景墙</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:54px;height:32px;border-radius:6px;background:linear-gradient(135deg,#1d9bf0,#6a3aff);overflow:hidden;">
+                        ${bannerUrl ? `<img src="${bannerUrl}" style="width:100%;height:100%;object-fit:cover;" />` : ''}
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:#cfd9de;font-size:13px;"></i>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eff3f4;">
+                <span style="font-size:15px;color:#0f1419;">红钻余额</span>
+                <div style="display:flex;align-items:center;gap:6px;color:#f4212e;font-weight:700;font-size:14px;">
+                    <span>${currentUser.diamond || 0}</span>
+                    <i class="fas fa-gem" style="font-size:12px;"></i>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;">
+                <span style="font-size:15px;color:#0f1419;">角色</span>
+                <span style="color:#536471;font-size:14px;">${roleMap[currentUser.role] || currentUser.role || '-'}</span>
+            </div>
+        </div>
+
+        <div style="background:#fff;border-radius:14px;margin-bottom:10px;overflow:hidden;">
+            <div style="padding:12px 16px;border-bottom:1px solid #eff3f4;">
+                <div style="font-size:15px;font-weight:600;color:#0f1419;display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-cog"></i> 账户设置
+                </div>
+            </div>
+            <div onclick="showChangeName()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eff3f4;cursor:pointer;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-user-edit" style="color:#0f1419;width:20px;text-align:center;"></i>
+                    <span style="font-size:14px;color:#0f1419;">修改昵称</span>
+                </div>
+                <i class="fas fa-chevron-right" style="color:#cfd9de;font-size:13px;"></i>
+            </div>
+            <div onclick="showChangeBanner()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eff3f4;cursor:pointer;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-image" style="color:#0f1419;width:20px;text-align:center;"></i>
+                    <span style="font-size:14px;color:#0f1419;">设置背景墙</span>
+                </div>
+                <i class="fas fa-chevron-right" style="color:#cfd9de;font-size:13px;"></i>
+            </div>
+            <div onclick="uploadAvatar()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eff3f4;cursor:pointer;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-camera" style="color:#0f1419;width:20px;text-align:center;"></i>
+                    <span style="font-size:14px;color:#0f1419;">上传头像</span>
+                </div>
+                <i class="fas fa-chevron-right" style="color:#cfd9de;font-size:13px;"></i>
+            </div>
+            <div onclick="logout()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-sign-out-alt" style="color:#f4212e;width:20px;text-align:center;"></i>
+                    <span style="font-size:14px;color:#f4212e;">退出登录</span>
+                </div>
+                <i class="fas fa-chevron-right" style="color:#cfd9de;font-size:13px;"></i>
+            </div>
+        </div>
+
+        ${isAdmin ? `
+        <div class="admin-card" style="border-left:4px solid #3a7eff;">
+            <div class="admin-card-title"><i class="fas fa-image"></i> 充值图片管理（管理员）</div>
+            <div class="admin-form-group"><label>充值图片URL</label><input class="admin-form-control" id="rechargeImgUrl" /></div>
+            <div class="admin-form-group"><label>排序</label><input class="admin-form-control" id="rechargeImgSort" type="number" value="0" /></div>
+            <button class="btn btn-primary btn-sm" onclick="addRechargeImage()">添加图片</button>
+            <div id="rechargeImgList" style="margin-top:10px;"></div>
+        </div>` : ''}
+    `;
+
+    if (isAdmin) {
+        setTimeout(() => bindUploadBtn('rechargeImgUrl', 'image/*'), 100);
+        setTimeout(loadRechargeImgList, 100);
+    }
 }
+
+// 点击"用户ID"行 → 直接弹出修改框
+function showChangeIdModal() {
+    showCustomModal(`
+        <h3><i class="fas fa-id-card"></i> 修改用户ID</h3>
+        <p style="color:#536471;font-size:13px;">当前ID：<strong>${currentUser.id}</strong></p>
+        <p style="color:#536471;font-size:12px;margin-bottom:8px;">ID是账号唯一标识，修改后需重新登录。请谨慎操作。</p>
+        <div class="form-group">
+            <label>新用户ID（6位以上数字）</label>
+            <input class="admin-form-control" id="newUserIdInput" placeholder="如 000001" inputmode="numeric" />
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-warning" onclick="submitChangeId()">确认修改</button>
+        </div>
+    `);
+    document.getElementById('customModal').classList.add('active');
+}
+
+async function submitChangeId() {
+    const newId = document.getElementById('newUserIdInput').value.trim();
+    if (!newId) return toast('请输入新ID', 'warning');
+    if (!/^\d{6,}$/.test(newId)) return toast('ID必须为6位以上数字', 'warning');
+    if (newId === currentUser.id) return toast('与当前ID相同', 'warning');
+    closeCustomModal();
+    try {
+        await apiRequest('/user-id', {
+            method: 'PUT',
+            body: JSON.stringify({ targetUserId: currentUser.id, newId })
+        });
+        toast('✅ ID已修改，请重新登录', 'success');
+        setTimeout(() => logout(), 1500);
+    } catch (err) {
+        toast(err.message, 'error');
+    }
+}
+
 async function addRechargeImage(){
   const url=document.getElementById('rechargeImgUrl').value.trim();
   const sort=parseInt(document.getElementById('rechargeImgSort').value)||0;
@@ -3605,12 +3786,85 @@ window.confirmDeleteBanner=function(bannerId){confirmAction('确认删除','确�
 async function doDeleteBanner(bannerId){try{await apiRequest('/admin/banners/'+bannerId,{method:'DELETE'});toast('已删除','success');renderSubBanners();await loadBannersFromAPI();}catch(err){toast(err.message,'error');}}
 
 /* ============================================================
-   子页面-图标
+   修复3：子页面-图标（可设置默认头像/商品图标等）
 ============================================================ */
-async function renderSubIcons(){
-  const container=document.getElementById('subIconsContent');
-  if(!container)return;
-  container.innerHTML='<div class="admin-card"><div class="admin-card-title"><i class="fas fa-palette"></i> 图标自定义</div><p style="font-size:13px;color:var(--text-muted);">功能开发中...</p></div>';
+async function renderSubIcons() {
+    const container = document.getElementById('subIconsContent');
+    if (!container) return;
+    try {
+        const icons = await apiRequest('/icons') || [];
+        const iconKeys = [
+            { key: 'shop_default', label: '店铺默认图标' },
+            { key: 'product_default', label: '商品默认图标' },
+            { key: 'avatar_default', label: '默认头像' },
+            { key: 'banner_default', label: '广告默认图标' },
+            { key: 'logo', label: '网站Logo' },
+            { key: 'empty_default', label: '空状态默认图标' },
+            { key: 'category_default', label: '分类默认图标' }
+        ];
+
+        let html = `
+            <div class="admin-card">
+                <div class="admin-card-title"><i class="fas fa-palette"></i> 图标自定义</div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">上传图片URL自定义网站图标，留空则使用默认图标</p>
+                <div id="iconList"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+
+        const listContainer = document.getElementById('iconList');
+        let listHtml = '<div class="table-wrap"><table><thead><tr><th>图标名称</th><th>当前图标</th><th>操作</th></tr></thead><tbody>';
+        for (const item of iconKeys) {
+            const icon = icons.find(i => i.key === item.key);
+            const currentUrl = icon?.image_url || '';
+            listHtml += `
+                <tr>
+                    <td>${item.label}</td>
+                    <td>
+                        ${currentUrl ? `<img src="${currentUrl}" style="max-width:50px;max-height:50px;border-radius:4px;object-fit:cover;" onclick="showImgPreview('${currentUrl}')" />` : '<span style="color:var(--text-muted);">默认</span>'}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                            <input class="admin-form-control" id="iconInput_${item.key}" placeholder="输入图片URL" style="width:160px;padding:4px 8px;font-size:12px;" value="${currentUrl}" />
+                            <button class="btn btn-primary btn-xs" onclick="setIcon('${item.key}')">设置</button>
+                            ${currentUrl ? `<button class="btn btn-danger btn-xs" onclick="deleteIcon('${item.key}')">清除</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        listHtml += '</tbody></table></div>';
+        listContainer.innerHTML = listHtml;
+
+        // 给每个 input 加"上传"按钮
+        iconKeys.forEach(item => {
+            setTimeout(() => bindUploadBtn('iconInput_' + item.key, 'image/*'), 50);
+        });
+    } catch (err) {
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+    }
+}
+
+// 修复3辅助：设置图标
+async function setIcon(key) {
+    const input = document.getElementById('iconInput_' + key);
+    const url = input ? input.value.trim() : '';
+    if (!url) return toast('请输入图片URL', 'warning');
+    try {
+        await apiRequest('/admin/icons', { method: 'POST', body: JSON.stringify({ key, image_url: url }) });
+        toast('图标已更新', 'success');
+        renderSubIcons();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// 修复3辅助：删除图标
+async function deleteIcon(key) {
+    if (!confirm('确认清除该图标？')) return;
+    try {
+        await apiRequest('/admin/icons/' + key, { method: 'DELETE' });
+        toast('已清除', 'success');
+        renderSubIcons();
+    } catch (err) { toast(err.message, 'error'); }
 }
 
 /* ============================================================
@@ -4164,6 +4418,8 @@ window.requestRefund=requestRefund;
 window.viewOrderDetail=viewOrderDetail;
 window.showChangeName=showChangeName;
 window.showChangeBanner=showChangeBanner;
+window.showChangeIdModal=showChangeIdModal;
+window.submitChangeId=submitChangeId;
 window.doAuthLogin=doAuthLogin;
 window.doAuthRegister=doAuthRegister;
 window.prevBanner=prevBanner;
@@ -4191,6 +4447,8 @@ window.renderSubDispatcher=renderSubDispatcher;
 window.renderSubCategories=renderSubCategories;
 window.renderSubBanners=renderSubBanners;
 window.renderSubIcons=renderSubIcons;
+window.setIcon=setIcon;
+window.deleteIcon=deleteIcon;
 window.renderSubMyShop=renderSubMyShop;
 window.submitShopApplication=submitShopApplication;
 window.editMyShopInfo=editMyShopInfo;
@@ -4272,7 +4530,7 @@ window.submitReview=submitReview;
 window.pickAndUpload=pickAndUpload;
 window.bindUploadBtn=bindUploadBtn;
 
-console.log('QW电竞护航平台 v7.6 已加载');
+console.log('QW电竞护航平台 v7.7 已加载');
 </script>
 </body>
 </html>
