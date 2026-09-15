@@ -142,8 +142,9 @@ html,body{width:100%;height:100%;min-height:100vh;min-height:100dvh;overflow:hid
 .post-card .post-content{font-size:14px;line-height:1.6;color:var(--text-secondary);margin-bottom:10px;white-space:pre-wrap;word-break:break-word;}
 .post-card .post-images{display:grid;gap:4px;margin-bottom:10px;}
 .post-card .post-images img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;cursor:pointer;}
-.post-card .post-images .grid-2{grid-template-columns:1fr 1fr;}
-.post-card .post-images .grid-3{grid-template-columns:1fr 1fr 1fr;}
+.post-card .post-images video{width:100%;max-height:400px;border-radius:8px;background:#000;}
+.post-card .post-images.grid-2{grid-template-columns:1fr 1fr;}
+.post-card .post-images.grid-3{grid-template-columns:1fr 1fr 1fr;}
 .post-card .post-actions{display:flex;gap:20px;padding-top:10px;border-top:1px solid var(--border-light);}
 .post-card .post-actions button{background:none;border:none;font-size:13px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:20px;}
 .post-card .post-actions button.liked{color:#f91880;}
@@ -556,7 +557,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 </div>
 </div>
 </div>
-<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.4</div>
+<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.6</div>
 </div>
 </div>
 <div class="bottom-nav" id="bottomNav"></div>
@@ -786,41 +787,74 @@ function formatTime(timeStr){
 }
 
 /* ============================================================
-   临时上传测试（测完删除按钮即可，函数保留）
+   上传工具（B2）
 ============================================================ */
-function testUpload() {
-    if (!currentUser) { toast('请先登录', 'warning'); return; }
+function pickAndUpload(accept = 'image/*') {
+  return new Promise((resolve) => {
+    if (!currentUser) { toast('请先登录', 'warning'); resolve(null); return; }
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'image/*';
+    input.accept = accept;
+    input.style.display = 'none';
+    document.body.appendChild(input);
     input.onchange = async () => {
-        const file = input.files[0];
-        if (!file) return;
-        toast('上传中...', 'warning');
+      const file = input.files && input.files[0];
+      input.remove();
+      if (!file) { resolve(null); return; }
+      toast('上传中，请稍候...', 'warning');
+      try {
         const fd = new FormData();
         fd.append('file', file);
-        try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                headers: { Authorization: token },
-                body: fd
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || '上传失败');
-            toast('上传成功！', 'success');
-            showCustomModal(`
-                <h3>上传成功</h3>
-                <div style="font-size:12px;color:#536471;word-break:break-all;margin:10px 0;">${data.url}</div>
-                <img src="${data.url}" style="max-width:100%;border-radius:10px;margin-top:8px;" onerror="this.style.display='none'" />
-                <div class="btn-row" style="margin-top:12px;">
-                    <button class="btn btn-outline" onclick="closeCustomModal()">关闭</button>
-                </div>
-            `);
-        } catch (err) {
-            toast('上传失败: ' + err.message, 'error');
-        }
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Authorization': token || '' },
+          body: fd
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || '上传失败');
+        toast('上传成功', 'success');
+        resolve(data.url);
+      } catch (err) {
+        toast('上传失败: ' + err.message, 'error');
+        resolve(null);
+      }
     };
     input.click();
+  });
+}
+
+function bindUploadBtn(inputId, accept = 'image/*') {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.dataset.uploadBound === '1') return;
+  input.dataset.uploadBound = '1';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn btn-outline btn-xs';
+  btn.innerHTML = '<i class="fas fa-upload"></i> 上传';
+  btn.style.marginLeft = '6px';
+  btn.style.flexShrink = '0';
+  btn.onclick = async (e) => {
+    e.preventDefault();
+    const url = await pickAndUpload(accept);
+    if (url) {
+      const cur = (input.value || '').trim();
+      if (cur) {
+        input.value = cur + ',' + url;
+      } else {
+        input.value = url;
+      }
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  };
+
+  if (input.parentElement) {
+    input.parentElement.style.display = 'flex';
+    input.parentElement.style.alignItems = 'center';
+    input.parentElement.style.gap = '6px';
+    input.parentElement.appendChild(btn);
+  }
 }
 
 /* ============================================================
@@ -1103,7 +1137,7 @@ async function filterShopProductsByCat(shopId,catId){
               <div class="product-bottom"><span class="product-price">${p.price} <i class="fas fa-gem" style="color:#f4212e;font-size:0.9em;"></i></span></div>
             </div>
           </div>`;
-      });
+    });
       prodHtml+='</div></div>';
     }
     const catSection=catContainer.querySelector('.category-horizontal-scroll');
@@ -1553,7 +1587,13 @@ function renderPostsHtml(posts) {
         let imagesHtml = '';
         if (images.length > 0) {
             const gridClass = images.length === 1 ? '' : images.length === 2 ? 'grid-2' : 'grid-3';
-            imagesHtml = `<div class="post-images ${gridClass}">${images.map(img => `<img src="${img}" onclick="event.stopPropagation();showImgPreview('${img}')" />`).join('')}</div>`;
+            imagesHtml = `<div class="post-images ${gridClass}">${images.map(url => {
+                const isVideo = /\.(mp4|mov|webm|m4v|avi|mkv)$/i.test(url);
+                if (isVideo) {
+                    return `<video src="${url}" controls style="width:100%;border-radius:8px;background:#000;" preload="metadata"></video>`;
+                }
+                return `<img src="${url}" onclick="event.stopPropagation();showImgPreview('${url}')" />`;
+            }).join('')}</div>`;
         }
         html += `
             <div class="post-card" id="post-${post.id}">
@@ -1593,11 +1633,15 @@ async function showCreatePost(){
     <h3><i class="fas fa-plus-circle"></i> 发布帖子</h3>
     <div class="form-group"><label>帖子分类</label><select class="admin-form-control" id="postCategory">${catOptions}</select></div>
     <div class="form-group"><label>内容</label><textarea class="admin-form-control" id="postContent" rows="4"></textarea></div>
-    <div class="form-group"><label>图片（多个URL用逗号分隔）</label><input class="admin-form-control" id="postImages" /></div>
+    <div class="form-group"><label>图片/视频（点击"上传"按钮上传）</label><input class="admin-form-control" id="postImages" placeholder="上传后自动填入，或粘贴URL（多个用逗号分隔）" /></div>
     <div class="btn-row">
       <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
       <button class="btn btn-primary" onclick="submitPost()">发布</button>
     </div>`);
+  document.getElementById('customModal').classList.add('active');
+  setTimeout(() => {
+    bindUploadBtn('postImages', 'image/*,video/*');
+  }, 50);
 }
 async function submitPost(){
   const content=document.getElementById('postContent').value.trim();
@@ -1694,11 +1738,13 @@ function uploadAvatar(){
       <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
       <button class="btn btn-success" onclick="doUploadAvatar()">确认上传</button>
     </div>`);
+  document.getElementById('customModal').classList.add('active');
   document.getElementById('avatarUrlInput').addEventListener('input',function(){
     const img=document.getElementById('avatarPreview');
     if(this.value){img.src=this.value;img.style.display='block';}
     else img.style.display='none';
   });
+  setTimeout(() => bindUploadBtn('avatarUrlInput', 'image/*'), 50);
 }
 async function doUploadAvatar(){
   const url=document.getElementById('avatarUrlInput').value.trim();
@@ -1817,7 +1863,6 @@ function renderMoreFunctions(){
   let items=[];
   if(role==='admin'){
     items=[
-      {icon:'fa-flask',label:'上传测试',action:"testUpload()"},
       {icon:'fa-clipboard-list',label:'订单管理',action:"openSubPage('orders')"},
       {icon:'fa-box',label:'商品管理',action:"openSubPage('products')"},
       {icon:'fa-users',label:'用户管理',action:"openSubPage('users')"},
@@ -2302,6 +2347,10 @@ async function renderSubProducts(){
     await loadCategoriesForSelectors();
     await loadShopSelect();
     await loadShopCategorySelect();
+    setTimeout(() => {
+      bindUploadBtn('prodImageUrl', 'image/*');
+      bindUploadBtn('prodDetailImages', 'image/*');
+    }, 50);
   }catch(err){container.innerHTML='<div class="empty-state"><p>加载失败</p></div>';}
 }
 function toggleInlineModal(id){const el=document.getElementById(id+'Modal');if(el)el.classList.toggle('active');}
@@ -2464,6 +2513,8 @@ window.openEditProduct=async function(productId){
         <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
         <button class="btn btn-success" onclick="doEditProduct('${productId}')">保存</button>
       </div>`);
+    document.getElementById('customModal').classList.add('active');
+    setTimeout(() => bindUploadBtn('editProdImage', 'image/*'), 50);
   }catch(err){toast(err.message,'error');}
 };
 async function loadEditSubCategories(){
@@ -2780,6 +2831,12 @@ async function renderSubShops(){
           </div>`;
       }
     } catch (e) {}
+
+    // 绑定上传按钮（创建店铺）
+    setTimeout(() => {
+      bindUploadBtn('shopLogo', 'image/*');
+      bindUploadBtn('shopBanner', 'image/*');
+    }, 50);
   }catch(err){container.innerHTML='<div class="empty-state"><p>加载失败</p></div>';}
 }
 
@@ -2800,6 +2857,8 @@ async function addShopMainCategory(shopId) {
             <button class="btn btn-success" onclick="doAddShopCat('${shopId}', null)">添加</button>
         </div>
     `);
+    document.getElementById('customModal').classList.add('active');
+    setTimeout(() => bindUploadBtn('newMainCatImage', 'image/*'), 50);
 }
 
 async function addShopSubCategory(shopId, parentId) {
@@ -2812,6 +2871,8 @@ async function addShopSubCategory(shopId, parentId) {
             <button class="btn btn-success" onclick="doAddShopCat('${shopId}', '${parentId}')">添加</button>
         </div>
     `);
+    document.getElementById('customModal').classList.add('active');
+    setTimeout(() => bindUploadBtn('newMainCatImage', 'image/*'), 50);
 }
 
 async function doAddShopCat(shopId, parentId) {
@@ -2859,6 +2920,8 @@ function editShopCategory(catId, name, imageUrl) {
             <button class="btn btn-success" onclick="doEditShopCategory('${catId}')">保存</button>
         </div>
     `);
+    document.getElementById('customModal').classList.add('active');
+    setTimeout(() => bindUploadBtn('editShopCatImage', 'image/*'), 50);
 }
 
 async function doEditShopCategory(catId) {
@@ -2942,6 +3005,11 @@ async function editShop(shopId) {
                 <button class="btn btn-success" onclick="doEditShop('${shopId}')">保存</button>
             </div>
         `);
+        document.getElementById('customModal').classList.add('active');
+        setTimeout(() => {
+          bindUploadBtn('editShopLogo', 'image/*');
+          bindUploadBtn('editShopBanner', 'image/*');
+        }, 50);
     } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -3139,7 +3207,12 @@ function renderSubAccount() {
       <div id="rechargeImgList" style="margin-top:10px;"></div>
     </div>` : ''}
   `;
-  if (isAdmin) setTimeout(loadRechargeImgList, 100);
+  if (isAdmin) {
+    setTimeout(() => {
+      bindUploadBtn('rechargeImgUrl', 'image/*');
+      loadRechargeImgList();
+    }, 100);
+  }
 }
 async function addRechargeImage(){
   const url=document.getElementById('rechargeImgUrl').value.trim();
@@ -3168,6 +3241,7 @@ async function deleteRechargeImage(id){
 }
 function showChangeName(){
   showCustomModal(`<h3>修改昵称</h3><div class="form-group"><label>新昵称</label><input class="admin-form-control" id="newNameInput" /></div><div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">取消</button><button class="btn btn-success" onclick="doChangeName()">确认</button></div>`);
+  document.getElementById('customModal').classList.add('active');
 }
 async function doChangeName(){
   const newName=document.getElementById('newNameInput').value.trim();
@@ -3182,6 +3256,8 @@ async function doChangeName(){
 }
 function showChangeBanner(){
   showCustomModal(`<h3>设置背景墙</h3><div class="form-group"><label>图片URL</label><input class="admin-form-control" id="bannerUrlInput" /></div><div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">取消</button><button class="btn btn-success" onclick="doChangeBanner()">确认</button></div>`);
+  document.getElementById('customModal').classList.add('active');
+  setTimeout(() => bindUploadBtn('bannerUrlInput', 'image/*'), 50);
 }
 async function doChangeBanner(){
   const url=document.getElementById('bannerUrlInput').value.trim();
@@ -3379,7 +3455,11 @@ async function renderSubCategories(){
       <button class="btn btn-success" onclick="createPostCategory()">创建帖子分类</button>
       <div id="postCatList" style="margin-top:12px;"></div>`;
     container.appendChild(postCatSection);
-    setTimeout(loadPostCatList,100);
+    setTimeout(() => {
+      bindUploadBtn('categoryImage', 'image/*');
+      bindUploadBtn('postCatIcon', 'image/*');
+      loadPostCatList();
+    }, 100);
   }catch(err){}
 }
 async function createCategory(){
@@ -3412,6 +3492,8 @@ async function editCategory(categoryId){
     const cat=categories.find(c=>c.id===categoryId);
     if(!cat)return toast('分类不存在','error');
     showCustomModal(`<h3>编辑分类</h3><div class="form-group"><label>分类名称</label><input class="admin-form-control" id="editCategoryName" value="${cat.name}" /></div><div class="form-group"><label>分类图片URL</label><input class="admin-form-control" id="editCategoryImage" value="${cat.image||''}" /></div><div class="form-group"><label>排序权重</label><input class="admin-form-control" id="editCategorySortOrder" type="number" value="${cat.sort_order||0}" /></div><div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">取消</button><button class="btn btn-success" onclick="doEditCategory('${categoryId}')">保存</button></div>`);
+    document.getElementById('customModal').classList.add('active');
+    setTimeout(() => bindUploadBtn('editCategoryImage', 'image/*'), 50);
   }catch(err){toast(err.message,'error');}
 }
 async function doEditCategory(categoryId){
@@ -3457,6 +3539,7 @@ async function loadPostCatList(){
 function editPostCategory(id,name,icon,sort){
   showCustomModal(`<h3><i class="fas fa-edit"></i> 编辑帖子分类</h3><div class="form-group"><label>分类名称</label><input class="admin-form-control" id="editPostCatName" value="${name}" /></div><div class="form-group"><label>图标图片URL</label><input class="admin-form-control" id="editPostCatIcon" value="${icon}" /></div><div class="form-group"><label>排序</label><input class="admin-form-control" id="editPostCatSort" type="number" value="${sort}" /></div><div class="btn-row"><button class="btn btn-outline" onclick="closeCustomModal()">取消</button><button class="btn btn-success" onclick="doEditPostCategory('${id}')">保存</button></div>`);
   document.getElementById('customModal').classList.add('active');
+  setTimeout(() => bindUploadBtn('editPostCatIcon', 'image/*'), 50);
 }
 async function doEditPostCategory(id){
   const name=document.getElementById('editPostCatName').value.trim();
@@ -3494,13 +3577,16 @@ async function renderSubBanners(){
       </div>
       <div class="admin-card"><div class="admin-card-title"><i class="fas fa-image"></i> 广告列表</div><div id="bannerList"></div></div>`;
     const listContainer=document.getElementById('bannerList');
-    if(banners.length===0){listContainer.innerHTML='<div class="empty-state"><p>暂无广告</p></div>';return;}
-    let listHtml='<div class="table-wrap"><table><thead><tr><th>图片</th><th>排序</th><th>操作</th></tr></thead><tbody>';
-    for(const b of banners){
-      listHtml+=`<tr><td><img src="${b.image_url}" style="max-width:80px;max-height:50px;border-radius:4px;object-fit:cover;" /></td><td>${b.sort_order||0}</td><td><button class="btn btn-danger btn-xs" onclick="confirmDeleteBanner('${b.id}')">删除</button></td></tr>`;
+    if(banners.length===0){listContainer.innerHTML='<div class="empty-state"><p>暂无广告</p></div>';}
+    else{
+      let listHtml='<div class="table-wrap"><table><thead><tr><th>图片</th><th>排序</th><th>操作</th></tr></thead><tbody>';
+      for(const b of banners){
+        listHtml+=`<tr><td><img src="${b.image_url}" style="max-width:80px;max-height:50px;border-radius:4px;object-fit:cover;" /></td><td>${b.sort_order||0}</td><td><button class="btn btn-danger btn-xs" onclick="confirmDeleteBanner('${b.id}')">删除</button></td></tr>`;
+      }
+      listHtml+='</tbody></table></div>';
+      listContainer.innerHTML=listHtml;
     }
-    listHtml+='</tbody></table></div>';
-    listContainer.innerHTML=listHtml;
+    setTimeout(() => bindUploadBtn('bannerImageUrl', 'image/*'), 50);
   }catch(err){}
 }
 async function createBanner(){
@@ -3547,6 +3633,10 @@ async function renderSubMyShop() {
           <div class="admin-form-group"><label>店铺背景图URL</label><input class="admin-form-control" id="applyShopBanner" /></div>
           <button class="btn btn-success" onclick="submitShopApplication()">提交申请</button>
         </div>`;
+      setTimeout(() => {
+        bindUploadBtn('applyShopLogo', 'image/*');
+        bindUploadBtn('applyShopBanner', 'image/*');
+      }, 50);
       return;
     }
 
@@ -3630,6 +3720,11 @@ function editMyShopInfo() {
         <button class="btn btn-success" onclick="saveMyShopInfo()">保存</button>
       </div>
     `);
+    document.getElementById('customModal').classList.add('active');
+    setTimeout(() => {
+      bindUploadBtn('myShopLogo', 'image/*');
+      bindUploadBtn('myShopBanner', 'image/*');
+    }, 50);
   });
 }
 
@@ -3661,6 +3756,7 @@ async function inviteHandlerToShop() {
         <button class="btn btn-success" onclick="doInviteHandler()">邀请</button>
       </div>
     `);
+    document.getElementById('customModal').classList.add('active');
   } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -3865,6 +3961,7 @@ function showLoginModal(){
       <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
       <button class="btn btn-success" onclick="doLogin()">登录</button>
     </div>`);
+  document.getElementById('customModal').classList.add('active');
 }
 async function doLogin(){
   const username=document.getElementById('loginUsername').value.trim();
@@ -4005,7 +4102,6 @@ window.doBuyWithHandler=doBuyWithHandler;
 window.filterProductsByCategory=filterProductsByCategory;
 window.filterMyOrders=filterMyOrders;
 window.uploadAvatar=uploadAvatar;
-window.testUpload=testUpload;
 window.openRecharge=openRecharge;
 window.openWithdraw=openWithdraw;
 window.showLoginModal=showLoginModal;
@@ -4173,8 +4269,10 @@ window.serviceRejectRecharge=serviceRejectRecharge;
 window.doServiceApproveRecharge=doServiceApproveRecharge;
 window.showReviewModal=showReviewModal;
 window.submitReview=submitReview;
+window.pickAndUpload=pickAndUpload;
+window.bindUploadBtn=bindUploadBtn;
 
-console.log('QW电竞护航平台 v7.4 已加载');
+console.log('QW电竞护航平台 v7.6 已加载');
 </script>
 </body>
 </html>
