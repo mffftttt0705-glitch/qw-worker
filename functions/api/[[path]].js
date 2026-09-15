@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v7.3)
-//  更新：店铺分类主/子支持 / owner 显式返回 / 允许一人多店
+//  QW电竞 - 完整后端 API (v7.4)
+//  新增：B2 S3 文件上传（SigV4 签名，纯 JS，无依赖）
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -1649,6 +1649,147 @@ async function handleGetHandlers(env) {
 async function handleHealthCheck(env) { return jsonResponse({ status: 'ok', time: new Date().toISOString() }); }
 
 // ============================================================
+//  B2 S3 上传（SigV4 签名，纯 JS，无依赖）
+// ============================================================
+async function sha256Hex(data) {
+  const buf = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hmacSign(key, data) {
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    typeof key === 'string' ? new TextEncoder().encode(key) : key,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  return new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(data)));
+}
+
+function toHex(buf) {
+  return [...buf].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function signB2Request(env, method, objectKey, payloadHash) {
+  const keyId = env.B2_KEY_ID;
+  const appKey = env.B2_APP_KEY;
+  const bucket = env.B2_BUCKET;
+  const endpoint = env.B2_ENDPOINT;
+  const region = env.B2_REGION;
+
+  const now = new Date();
+  const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
+  const dateStamp = amzDate.substring(0, 8);
+
+  const host = endpoint;
+  const canonicalUri = `/${bucket}/${objectKey}`;
+  const service = 's3';
+
+  const canonicalHeaders =
+    `host:${host}\n` +
+    `x-amz-content-sha256:${payloadHash}\n` +
+    `x-amz-date:${amzDate}\n`;
+  const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+
+  const canonicalRequest =
+    `${method}\n${canonicalUri}\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
+
+  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+  const stringToSign =
+    `AWS4-HMAC-SHA256\n${amzDate}\n${credentialScope}\n${await sha256Hex(canonicalRequest)}`;
+
+  const kDate = await hmacSign(`AWS4${appKey}`, dateStamp);
+  const kRegion = await hmacSign(kDate, region);
+  const kService = await hmacSign(kRegion, service);
+  const kSigning = await hmacSign(kService, 'aws4_request');
+  const signature = toHex(await hmacSign(kSigning, stringToSign));
+
+  const authorization =
+    `AWS4-HMAC-SHA256 Credential=${keyId}/${credentialScope}, ` +
+    `SignedHeaders=${signedHeaders}, Signature=${signature}`;
+
+  return {
+    url: `https://${host}${canonicalUri}`,
+    headers: {
+      'Host': host,
+      'Authorization': authorization,
+      'x-amz-content-sha256': payloadHash,
+      'x-amz-date': amzDate
+    }
+  };
+}
+
+async function handleUploadFile(env, authHeader, request) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+
+  try {
+    const formData = await request.formData();
+    const file = formData.get('file');
+    if (!file) return errorResponse('未收到文件');
+
+    const fileName = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const contentType = file.type || 'application/octet-stream';
+    const arrayBuffer = await file.arrayBuffer();
+
+    if (arrayBuffer.byteLength > 50 * 1024 * 1024) {
+      return errorResponse('文件过大，请上传小于 50MB');
+    }
+
+    const ext = fileName.includes('.') ? fileName.split('.').pop() : 'bin';
+    const dateFolder = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const randomName = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const objectKey = `${dateFolder}/${randomName}.${ext}`;
+
+    const payloadHash = await sha256Hex(arrayBuffer);
+    const signed = await signB2Request(env, 'PUT', objectKey, payloadHash);
+
+    const uploadRes = await fetch(signed.url, {
+      method: 'PUT',
+      headers: { ...signed.headers, 'Content-Type': contentType },
+      body: arrayBuffer
+    });
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      console.error('B2 上传失败:', errText);
+      return errorResponse('上传失败: HTTP ' + uploadRes.status, 500);
+    }
+
+    const proxyUrl = `/api/file/${objectKey}`;
+    return jsonResponse({ success: true, url: proxyUrl, key: objectKey });
+  } catch (err) {
+    console.error('上传异常:', err);
+    return errorResponse('上传失败: ' + err.message, 500);
+  }
+}
+
+async function handleProxyFile(env, objectKey) {
+  try {
+    const emptyHash = await sha256Hex('');
+    const signed = await signB2Request(env, 'GET', objectKey, emptyHash);
+
+    const res = await fetch(signed.url, { method: 'GET', headers: signed.headers });
+    if (!res.ok) return new Response('文件不存在', { status: 404 });
+
+    const contentType = res.headers.get('Content-Type') || 'application/octet-stream';
+    const contentLength = res.headers.get('Content-Length') || '';
+    const headers = new Headers();
+    headers.set('Content-Type', contentType);
+    if (contentLength) headers.set('Content-Length', contentLength);
+    headers.set('Cache-Control', 'public, max-age=31536000');
+    headers.set('Access-Control-Allow-Origin', '*');
+
+    return new Response(res.body, { status: 200, headers });
+  } catch (err) {
+    console.error('代理读取失败:', err);
+    return new Response('读取失败', { status: 500 });
+  }
+}
+
+// ============================================================
 //  入口路由
 // ============================================================
 export async function onRequest(context) {
@@ -1667,6 +1808,13 @@ export async function onRequest(context) {
 
     // 公开接口
     if (path === '/api/health' && method === 'GET') return await handleHealthCheck(env);
+
+    // B2 文件代理（公开，无需登录）
+    if (path.startsWith('/api/file/') && method === 'GET') {
+      const key = path.replace('/api/file/', '');
+      return await handleProxyFile(env, decodeURIComponent(key));
+    }
+
     if (path === '/api/register' && method === 'POST') return await handleRegister(env, body);
     if (path === '/api/login' && method === 'POST') return await handleLogin(env, body);
     if (path === '/api/products' && method === 'GET') return await handleGetProducts(env, url);
@@ -1693,6 +1841,7 @@ export async function onRequest(context) {
 
     // 需登录
     if (path === '/api/me' && method === 'GET') return await handleGetMe(env, authHeader);
+    if (path === '/api/upload' && method === 'POST') return await handleUploadFile(env, authHeader, request);
     if (path === '/api/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
     if (path === '/api/user/avatar' && method === 'POST') return await handleUploadAvatar(env, authHeader, body);
     if (path === '/api/user/name' && method === 'PUT') return await handleChangeName(env, authHeader, body);
