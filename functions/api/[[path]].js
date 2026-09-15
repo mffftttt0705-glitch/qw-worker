@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v7.5)
-//  修复：multipart/form-data 上传不再被 request.text() 消费
+//  QW电竞 - 完整后端 API (v7.6)
+//  更新：上传文件大小限制改为 95MB
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -1734,8 +1734,9 @@ async function handleUploadFile(env, authHeader, request) {
     const contentType = file.type || 'application/octet-stream';
     const arrayBuffer = await file.arrayBuffer();
 
-    if (arrayBuffer.byteLength > 50 * 1024 * 1024) {
-      return errorResponse('文件过大，请上传小于 50MB');
+    // Cloudflare Pages Functions 免费版请求体最大 100MB
+    if (arrayBuffer.byteLength > 95 * 1024 * 1024) {
+      return errorResponse('文件过大，请上传小于 95MB');
     }
 
     const ext = fileName.includes('.') ? fileName.split('.').pop() : 'bin';
@@ -1799,7 +1800,7 @@ export async function onRequest(context) {
   const method = request.method;
   const env = context.env;
 
-  // ✅ 修复：只对 JSON 请求解析 body，multipart/form-data 跳过
+  // 修复：只对 JSON 请求解析 body，multipart/form-data 跳过
   let body = {};
   const contentType = request.headers.get('Content-Type') || '';
   if (method !== 'GET' && method !== 'OPTIONS' && contentType.includes('application/json')) {
