@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v7.6)
-//  更新：上传文件大小限制改为 95MB
+//  QW电竞 - 完整后端 API (v7.7)
+//  修复：店铺拥有者更新、handleGetShopDetail 返回 owner_id
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -206,6 +206,10 @@ async function handleChangeUserId(env, authHeader, body) {
       ['user_avatars', 'user_id'],
       ['recharge_requests', 'user_id'], ['withdraw_requests', 'user_id'],
       ['shops', 'owner_id'],
+      ['shop_applications', 'applicant_id'],
+      ['shop_handlers', 'handler_id'],
+      ['shop_reviews', 'user_id'],
+      ['shop_follows', 'user_id'],
     ];
     for (const [t, col] of tables) {
       try { await runDB(env, `UPDATE ${t} SET ${col} = ? WHERE ${col} = ?`, [newId, targetUserId]); } catch (e) {}
@@ -923,6 +927,9 @@ async function handleRejectShopApplication(env, authHeader, appId, body) {
   return jsonResponse({ success: true, message: '已拒绝' });
 }
 
+// ============================================================
+//  修复：店铺拥有者更新（去掉"已拥有其他店铺"限制）
+// ============================================================
 async function handleChangeShopOwner(env, authHeader, shopId, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -930,14 +937,16 @@ async function handleChangeShopOwner(env, authHeader, shopId, body) {
   if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
   const { new_owner_id } = body;
   if (!new_owner_id) return errorResponse('请选择新拥有者');
+  if (new_owner_id === '') return errorResponse('拥有者不能为空');
   const u = await getUserById(env, new_owner_id);
   if (!u) return errorResponse('用户不存在');
   if (!['admin', 'service', 'dispatcher'].includes(u.role)) {
     return errorResponse('拥有者只能是管理员/客服/派单员');
   }
   await runDB(env, 'UPDATE shops SET owner_id = ? WHERE id = ?', [new_owner_id, shopId]);
-  return jsonResponse({ success: true, message: '拥有者已更新' });
+  return jsonResponse({ success: true, message: '拥有者已更新为 ' + u.username });
 }
+
 // ============================================================
 //  订单
 // ============================================================
@@ -1734,7 +1743,6 @@ async function handleUploadFile(env, authHeader, request) {
     const contentType = file.type || 'application/octet-stream';
     const arrayBuffer = await file.arrayBuffer();
 
-    // Cloudflare Pages Functions 免费版请求体最大 100MB
     if (arrayBuffer.byteLength > 95 * 1024 * 1024) {
       return errorResponse('文件过大，请上传小于 95MB');
     }
@@ -1800,7 +1808,6 @@ export async function onRequest(context) {
   const method = request.method;
   const env = context.env;
 
-  // 修复：只对 JSON 请求解析 body，multipart/form-data 跳过
   let body = {};
   const contentType = request.headers.get('Content-Type') || '';
   if (method !== 'GET' && method !== 'OPTIONS' && contentType.includes('application/json')) {
@@ -1819,7 +1826,6 @@ export async function onRequest(context) {
     // 公开接口
     if (path === '/api/health' && method === 'GET') return await handleHealthCheck(env);
 
-    // B2 文件代理（公开，无需登录）
     if (path.startsWith('/api/file/') && method === 'GET') {
       const key = path.replace('/api/file/', '');
       return await handleProxyFile(env, decodeURIComponent(key));
@@ -1872,10 +1878,8 @@ export async function onRequest(context) {
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
 
-    // 打手接单大厅
     if (path === '/api/handler/pending-orders' && method === 'GET') return await handleGetPendingOrders(env, authHeader);
 
-    // 我的店铺
     if (path === '/api/my-shop' && method === 'GET') return await handleMyShop(env, authHeader);
     if (path === '/api/my-shop/apply' && method === 'POST') return await handleApplyShop(env, authHeader, body);
     if (path === '/api/my-shop/products' && method === 'GET') return await handleGetMyShopProducts(env, authHeader);
@@ -1884,13 +1888,11 @@ export async function onRequest(context) {
     if (path === '/api/my-shop/update' && method === 'PUT') return await handleMyShopUpdate(env, authHeader, body);
     if (path === '/api/my-shop/invite' && method === 'POST') return await handleInviteHandler(env, authHeader, body);
 
-    // 客服
     if (path === '/api/service/recharges' && method === 'GET') return await handleGetPendingRecharges(env, authHeader);
     if (path === '/api/service/process' && method === 'POST') return await handleProcessRecharge(env, authHeader, body);
     if (path === '/api/service/users' && method === 'GET') return await handleGetUsersForService(env, authHeader);
     if (path === '/api/service/gift' && method === 'POST') return await handleServiceGift(env, authHeader, body);
 
-    // 店铺分类
     if (path === '/api/shop-categories' && method === 'POST') return await handleCreateShopCategory(env, authHeader, body);
     if (path.startsWith('/api/shop-categories/')) {
       const catId = path.replace('/api/shop-categories/', '');
@@ -1898,7 +1900,6 @@ export async function onRequest(context) {
       if (method === 'DELETE') return await handleDeleteShopCategory(env, authHeader, catId);
     }
 
-    // 关注店铺
     if (path.startsWith('/api/shops/') && path.endsWith('/follow') && method === 'POST') {
       return await handleFollowShop(env, authHeader, path.replace('/api/shops/', '').replace('/follow', ''));
     }
@@ -1906,7 +1907,6 @@ export async function onRequest(context) {
       return await handleGetFollowStatus(env, authHeader, path.replace('/api/shops/', '').replace('/follow-status', ''));
     }
 
-    // 管理员订单操作（必须在 /api/orders/ 通配前）
     if (path.startsWith('/api/admin/orders/')) {
       const oId = path.replace('/api/admin/orders/', '');
       if (oId.endsWith('/confirm') && method === 'PUT') return await handleAdminConfirm(env, oId.replace('/confirm', ''));
@@ -1915,7 +1915,6 @@ export async function onRequest(context) {
       if (method === 'DELETE') return await handleAdminDeleteOrder(env, oId);
     }
 
-    // 订单带参数
     if (path.startsWith('/api/orders/')) {
       const orderId = path.replace('/api/orders/', '');
       if (method === 'GET') return await handleGetOrderDetail(env, authHeader, orderId);
@@ -1928,7 +1927,6 @@ export async function onRequest(context) {
       if (orderId.endsWith('/cancel') && method === 'PUT') return await handleAdminCancelOrder(env, orderId.replace('/cancel', ''));
     }
 
-    // 帖子带参数
     if (path.startsWith('/api/posts/')) {
       const postId = path.replace('/api/posts/', '');
       if (postId.endsWith('/like') && method === 'POST') return await handleLikePost(env, authHeader, postId.replace('/like', ''));
@@ -1936,12 +1934,10 @@ export async function onRequest(context) {
       if (method === 'DELETE') return await handleDeletePost(env, authHeader, postId);
     }
 
-    // 邮件领取
     if (path.startsWith('/api/mails/') && path.endsWith('/claim') && method === 'PUT') {
       return await handleClaimMail(env, authHeader, path.replace('/api/mails/', '').replace('/claim', ''));
     }
 
-    // 管理员
     const userId = verifyAndGetUserId(authHeader);
     if (userId) {
       const user = await getUserById(env, userId);
