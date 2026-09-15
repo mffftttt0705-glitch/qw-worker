@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v7.4)
-//  新增：B2 S3 文件上传（SigV4 签名，纯 JS，无依赖）
+//  QW电竞 - 完整后端 API (v7.5)
+//  修复：multipart/form-data 上传不再被 request.text() 消费
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -1798,8 +1798,17 @@ export async function onRequest(context) {
   const path = url.pathname;
   const method = request.method;
   const env = context.env;
+
+  // ✅ 修复：只对 JSON 请求解析 body，multipart/form-data 跳过
   let body = {};
-  try { const text = await request.text(); body = text ? JSON.parse(text) : {}; } catch (e) {}
+  const contentType = request.headers.get('Content-Type') || '';
+  if (method !== 'GET' && method !== 'OPTIONS' && contentType.includes('application/json')) {
+    try {
+      const text = await request.text();
+      body = text ? JSON.parse(text) : {};
+    } catch (e) { body = {}; }
+  }
+
   if (method === 'OPTIONS') {
     return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' } });
   }
@@ -1880,7 +1889,7 @@ export async function onRequest(context) {
     if (path === '/api/service/users' && method === 'GET') return await handleGetUsersForService(env, authHeader);
     if (path === '/api/service/gift' && method === 'POST') return await handleServiceGift(env, authHeader, body);
 
-    // 店铺分类（允许 service/dispatcher）
+    // 店铺分类
     if (path === '/api/shop-categories' && method === 'POST') return await handleCreateShopCategory(env, authHeader, body);
     if (path.startsWith('/api/shop-categories/')) {
       const catId = path.replace('/api/shop-categories/', '');
