@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v7.7)
-//  修复：店铺拥有者更新、handleGetShopDetail 返回 owner_id
+//  QW电竞 - 完整后端 API (v7.8)
+//  修复：店铺拥有者、handleGetShops 返回 owner_id、店铺分类子分类
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -555,7 +555,7 @@ async function handleGetShops(env, url) {
     is_self: Number(s.is_self) || 0,
     is_recommend: Number(s.is_recommend) || 0,
     follow_count: Number(s.follow_count) || 0,
-    sort_order: Number(s.sort_order) || 0,
+    owner_id: s.owner_id || ''
   }));
   return jsonResponse(shops);
 }
@@ -625,6 +625,9 @@ async function handleDeleteShop(env, authHeader, shopId) {
   return jsonResponse({ success: true, message: '店铺已删除' });
 }
 
+// ============================================================
+//  修复2：handleGetShopDetail 返回完整 owner_id 和 category_id
+// ============================================================
 async function handleGetShopDetail(env, shopId) {
   const result = await queryDB(env, 'SELECT * FROM shops WHERE id = ?', [shopId]);
   if (!result.results || result.results.length === 0) return errorResponse('店铺不存在', 404);
@@ -633,6 +636,7 @@ async function handleGetShopDetail(env, shopId) {
   shop.is_recommend = Number(shop.is_recommend) || 0;
   shop.follow_count = Number(shop.follow_count) || 0;
   shop.owner_id = shop.owner_id || '';
+  shop.category_id = shop.category_id || '';
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM products WHERE shop_id = ? AND hidden = 0', [shopId]);
   shop.productCount = countResult.results?.[0]?.count || 0;
   return jsonResponse(shop);
@@ -654,6 +658,9 @@ async function handleGetShopCategories(env, shopId) {
   return jsonResponse(result.results || []);
 }
 
+// ============================================================
+//  修复4：handleCreateShopCategory 支持 parent_id 子分类
+// ============================================================
 async function handleCreateShopCategory(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -665,18 +672,11 @@ async function handleCreateShopCategory(env, authHeader, body) {
   if (!shop_id) return errorResponse('请选择店铺');
   if (!name) return errorResponse('请输入分类名称');
   const id = generateId();
-  try {
-    await runDB(env,
-      'INSERT INTO shop_categories (id, shop_id, name, image_url, sort_order, parent_id, created_at) VALUES (?, ?, ?, ?, 0, ?, ?)',
-      [id, shop_id, name, image_url || '', parent_id || null, new Date().toISOString()]
-    );
-  } catch (e) {
-    await runDB(env,
-      'INSERT INTO shop_categories (id, shop_id, name, image_url, sort_order, created_at) VALUES (?, ?, ?, ?, 0, ?)',
-      [id, shop_id, name, image_url || '', new Date().toISOString()]
-    );
-  }
-  return jsonResponse({ success: true, id, message: parent_id ? '子分类创建成功' : '分类创建成功' });
+  await runDB(env,
+    'INSERT INTO shop_categories (id, shop_id, name, image_url, sort_order, parent_id, created_at) VALUES (?, ?, ?, ?, 0, ?, ?)',
+    [id, shop_id, name, image_url || '', parent_id || null, new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, id, message: parent_id ? '子分类已添加' : '主分类已添加' });
 }
 
 async function handleUpdateShopCategory(env, authHeader, catId, body) {
@@ -928,7 +928,7 @@ async function handleRejectShopApplication(env, authHeader, appId, body) {
 }
 
 // ============================================================
-//  修复：店铺拥有者更新（去掉"已拥有其他店铺"限制）
+//  修复2：handleChangeShopOwner 彻底去掉限制
 // ============================================================
 async function handleChangeShopOwner(env, authHeader, shopId, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -937,14 +937,10 @@ async function handleChangeShopOwner(env, authHeader, shopId, body) {
   if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
   const { new_owner_id } = body;
   if (!new_owner_id) return errorResponse('请选择新拥有者');
-  if (new_owner_id === '') return errorResponse('拥有者不能为空');
   const u = await getUserById(env, new_owner_id);
   if (!u) return errorResponse('用户不存在');
-  if (!['admin', 'service', 'dispatcher'].includes(u.role)) {
-    return errorResponse('拥有者只能是管理员/客服/派单员');
-  }
   await runDB(env, 'UPDATE shops SET owner_id = ? WHERE id = ?', [new_owner_id, shopId]);
-  return jsonResponse({ success: true, message: '拥有者已更新为 ' + u.username });
+  return jsonResponse({ success: true, message: `拥有者已更改为 ${u.username}` });
 }
 
 // ============================================================
@@ -1823,7 +1819,6 @@ export async function onRequest(context) {
   try {
     const authHeader = request.headers.get('Authorization');
 
-    // 公开接口
     if (path === '/api/health' && method === 'GET') return await handleHealthCheck(env);
 
     if (path.startsWith('/api/file/') && method === 'GET') {
@@ -1855,7 +1850,6 @@ export async function onRequest(context) {
     }
     if (path.startsWith('/api/products/') && method === 'GET') return await handleGetProductDetail(env, path.replace('/api/products/', ''));
 
-    // 需登录
     if (path === '/api/me' && method === 'GET') return await handleGetMe(env, authHeader);
     if (path === '/api/upload' && method === 'POST') return await handleUploadFile(env, authHeader, request);
     if (path === '/api/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
