@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="msapplication-TileColor" content="#0f1419">
-<meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+<meta name="msapplication-TileImage" href="/icons/icon-144x144.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 <style>
 :root {
@@ -283,7 +283,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 .contact-item .contact-avatar img{width:100%;height:100%;object-fit:cover;}
 .contact-item .contact-body{flex:1;min-width:0;}
 .contact-item .unread-badge{background:#0f1419;color:#fff;border-radius:50%;font-size:10px;padding:0 6px;min-width:18px;text-align:center;line-height:18px;display:inline-block;margin-left:4px;}
-/* 修复4：用户管理“全部”标签统一比例 */
+/* 修复1：用户管理筛选按钮统一比例 */
 .user-filter {
     display: flex;
     gap: 6px;
@@ -585,7 +585,7 @@ td{padding:8px 6px;border-bottom:1px solid var(--border-color);vertical-align:mi
 </div>
 </div>
 </div>
-<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.7</div>
+<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px 0 4px;">QW电竞护航平台 · v7.8</div>
 </div>
 </div>
 <div class="bottom-nav" id="bottomNav"></div>
@@ -2596,9 +2596,10 @@ window.doEditProduct=async function(productId){
 };
 
 /* ============================================================
-   子页面-用户
+   修复1：子页面-用户（"全部"显示完整）
 ============================================================ */
 async function renderSubUsers(){
+  userFilterSub = 'all';  // ✅ 每次进入重置为全部
   const container=document.getElementById('subUsersContent');
   if(!container)return;
   try{
@@ -2624,65 +2625,65 @@ async function renderSubUsers(){
     await populateGiftUsersSub();
   }catch(err){}
 }
+
 async function renderUsersListSub() {
-  try {
-    const search = (document.getElementById('searchUserSub')?.value || '').toLowerCase();
-    const users = await apiRequest('/admin/users');
-    let filtered = users || [];
-    if (userFilterSub === 'boss') filtered = filtered.filter(u => u.role === 'boss');
-    else if (userFilterSub === 'handler') filtered = filtered.filter(u => u.role === 'handler');
-    else if (userFilterSub === 'dispatcher') filtered = filtered.filter(u => u.role === 'dispatcher');
-    else if (userFilterSub === 'service') filtered = filtered.filter(u => u.role === 'service');
-    else if (userFilterSub === 'pending') filtered = filtered.filter(u => u.status === 'pending' && (u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service'));
-    if (search) filtered = filtered.filter(u => (u.username || '').toLowerCase().includes(search));
+    try {
+        const searchEl = document.getElementById('searchUserSub');
+        const search = (searchEl?.value || '').toLowerCase().trim();
+        const users = await apiRequest('/admin/users');
+        let filtered = Array.isArray(users) ? users.slice() : [];
 
-    const container = document.getElementById('usersListSub');
-    if (!container) return;
-    if (filtered.length === 0) {
-      container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>暂无用户</p></div>';
-      return;
-    }
+        // 按角色/状态筛选
+        if (userFilterSub === 'boss') filtered = filtered.filter(u => u.role === 'boss');
+        else if (userFilterSub === 'handler') filtered = filtered.filter(u => u.role === 'handler');
+        else if (userFilterSub === 'dispatcher') filtered = filtered.filter(u => u.role === 'dispatcher');
+        else if (userFilterSub === 'service') filtered = filtered.filter(u => u.role === 'service');
+        else if (userFilterSub === 'pending') filtered = filtered.filter(u => u.status === 'pending' && ['handler','dispatcher','service'].includes(u.role));
+        // 'all' 保持全部，不做任何 filter
 
-    let html = '<div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
-    for (const u of filtered) {
-      const roleText = u.role === 'boss' ? '老板'
-        : u.role === 'handler' ? (u.status === 'pending' ? '待审核打手' : '打手')
-        : u.role === 'dispatcher' ? (u.status === 'pending' ? '待审核派单' : '派单员')
-        : u.role === 'service' ? (u.status === 'pending' ? '待审核客服' : '客服')
-        : u.role === 'admin' ? '管理员' : (u.role || '未知');
+        if (search) filtered = filtered.filter(u => (u.username || '').toLowerCase().includes(search));
 
-      const statusText2 = u.status === 'active' ? '正常'
-        : u.status === 'pending' ? '待审核'
-        : u.status === 'banned' ? '封禁' : (u.status || '未知');
-      const statusCls = u.status === 'active' ? 'status-onsale'
-        : u.status === 'pending' ? 'status-pending' : 'status-canceled';
-
-      let actions = '';
-      if (u.role !== 'admin') {
-        if ((u.role === 'handler' || u.role === 'dispatcher' || u.role === 'service') && u.status === 'pending') {
-          actions += `<button class="btn btn-success btn-xs" onclick="approveHandler('${u.id}')">审核通过</button>`;
+        const container = document.getElementById('usersListSub');
+        if (!container) return;
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>暂无用户</p></div>';
+            return;
         }
-        actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status === 'active' ? '封禁' : '解禁'}</button>`;
-        actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
-        actions += `<button class="btn btn-primary btn-xs" onclick="changeUsername('${u.id}','${(u.username || '').replace(/'/g, "\\'")}')">改用户名</button>`;
-        actions += `<button class="btn btn-danger btn-xs" onclick="deleteUser('${u.id}')">删除</button>`;
-      }
 
-      html += `<tr>
-        <td>${u.username || '未知'}</td>
-        <td>${roleText}</td>
-        <td>${u.diamond || 0}</td>
-        <td><span class="status-badge ${statusCls}">${statusText2}</span></td>
-        <td><div class="action-group">${actions}</div></td>
-      </tr>`;
+        let html = '<div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>红钻</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+        for (const u of filtered) {
+            const roleMap = { 'boss': '老板', 'handler': '打手', 'dispatcher': '派单', 'service': '客服', 'admin': '管理员' };
+            const roleText = roleMap[u.role] || u.role || '未知';
+            const statusMap = { 'active': '正常', 'pending': '待审核', 'banned': '封禁' };
+            const statusText2 = statusMap[u.status] || u.status || '未知';
+            const statusCls = u.status === 'active' ? 'status-onsale' : u.status === 'pending' ? 'status-pending' : 'status-canceled';
+
+            let actions = '';
+            if (u.role !== 'admin') {
+                if (['handler','dispatcher','service'].includes(u.role) && u.status === 'pending') {
+                    actions += `<button class="btn btn-success btn-xs" onclick="approveHandler('${u.id}')">审核通过</button>`;
+                }
+                actions += `<button class="btn btn-warning btn-xs" onclick="toggleUserBan('${u.id}')">${u.status === 'active' ? '封禁' : '解禁'}</button>`;
+                actions += `<button class="btn btn-outline btn-xs" onclick="resetUserPassword('${u.id}')">重置密码</button>`;
+                actions += `<button class="btn btn-primary btn-xs" onclick="changeUsername('${u.id}','${(u.username || '').replace(/'/g, "\\'")}')">改用户名</button>`;
+                actions += `<button class="btn btn-danger btn-xs" onclick="deleteUser('${u.id}')">删除</button>`;
+            }
+
+            html += `<tr>
+                <td>${u.username || '未知'}</td>
+                <td>${roleText}</td>
+                <td>${u.diamond || 0}</td>
+                <td><span class="status-badge ${statusCls}">${statusText2}</span></td>
+                <td><div class="action-group">${actions}</div></td>
+            </tr>`;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('renderUsersListSub error:', err);
+        const container = document.getElementById('usersListSub');
+        if (container) container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p></div>';
     }
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
-  } catch (err) {
-    console.error('renderUsersListSub error:', err);
-    const container = document.getElementById('usersListSub');
-    if (container) container.innerHTML = '<div class="empty-state"><p>加载失败: ' + err.message + '</p></div>';
-  }
 }
 function setUserFilterSub(filter){
   userFilterSub=filter;
@@ -2783,58 +2784,61 @@ async function renderSubShops(){
     }
 
     // ============================================================
-    // 修复2：店铺分类（主/子）—— 主分类点击展开子分类
+    // 修复4：店铺分类（主 + 子）—— 主分类点击展开子分类
     // ============================================================
     try {
-      let allShopCatsHtml = '';
-      for (const s of shops) {
-        const cats = await apiRequest('/shops/' + s.id + '/categories');
-        if (cats.length === 0) continue;
-        const mainCats2 = cats.filter(c => !c.parent_id);
-        const subCats2 = cats.filter(c => c.parent_id);
+        let allShopCatsHtml = '';
+        for (const s of shops) {
+            const cats = await apiRequest('/shops/' + s.id + '/categories');
+            const mainCats2 = cats.filter(c => !c.parent_id);
+            const subCats2 = cats.filter(c => c.parent_id);
 
-        allShopCatsHtml += `
-          <div style="margin-top:16px;border-top:1px solid var(--border-light);padding-top:12px;">
-            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${s.name} 的分类：</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              ${mainCats2.map(c => {
-                const children = subCats2.filter(sc => sc.parent_id === c.id);
-                const iconHtml = c.image_url ? `<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" />` : '<i class="fas fa-tag"></i>';
-                return `
-                  <div style="display:flex;flex-direction:column;gap:4px;min-width:120px;">
-                    <div onclick="toggleShopSubCats('${s.id}','${c.id}')" style="display:flex;align-items:center;gap:6px;background:#f7f9f9;padding:6px 10px;border-radius:10px;cursor:pointer;border:1px solid #eff3f4;">
-                      <div style="width:24px;height:24px;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:12px;">
-                        ${iconHtml}
-                      </div>
-                      <span style="font-size:12px;font-weight:600;flex:1;">${c.name}</span>
-                      <span style="font-size:10px;color:#536471;">(${children.length})</span>
-                      <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();editShopCategory('${c.id}', '${(c.name || '').replace(/'/g, "\\'")}', '${(c.image_url || '').replace(/'/g, "\\'")}')" style="padding:0 6px;font-size:10px;">改</button>
-                      <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteShopCategory('${c.id}')" style="padding:0 6px;font-size:10px;">×</button>
+            allShopCatsHtml += `
+                <div style="margin-top:16px;border-top:1px solid var(--border-light);padding-top:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <div style="font-size:13px;font-weight:600;">${s.name} 的分类</div>
+                        <button class="btn btn-primary btn-xs" onclick="addShopMainCategory('${s.id}')">+ 主分类</button>
                     </div>
-                    <div id="subcats-${s.id}-${c.id}" style="display:none;padding-left:16px;flex-direction:column;gap:4px;">
-                      ${children.map(sc => `
-                        <div style="display:flex;align-items:center;gap:6px;background:#fff;padding:4px 8px;border-radius:8px;border:1px solid #eff3f4;">
-                          <span style="font-size:11px;flex:1;">├─ ${sc.name}</span>
-                          <button class="btn btn-primary btn-xs" onclick="editShopCategory('${sc.id}', '${(sc.name || '').replace(/'/g, "\\'")}', '${(sc.image_url || '').replace(/'/g, "\\'")}')" style="padding:0 6px;font-size:10px;">改</button>
-                          <button class="btn btn-danger btn-xs" onclick="deleteShopCategory('${sc.id}')" style="padding:0 6px;font-size:10px;">×</button>
-                        </div>
-                      `).join('')}
-                      <button class="btn btn-outline btn-xs" onclick="addShopSubCategory('${s.id}','${c.id}')" style="font-size:10px;width:fit-content;">+ 添加子分类</button>
+                    ${mainCats2.length === 0 ? '<div style="font-size:12px;color:#536471;">暂无分类</div>' : ''}
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        ${mainCats2.map(c => {
+                            const children = subCats2.filter(sc => sc.parent_id === c.id);
+                            const iconHtml = c.image_url ? `<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" />` : '<i class="fas fa-tag"></i>';
+                            return `
+                                <div>
+                                    <div style="display:flex;align-items:center;gap:8px;background:#f7f9f9;padding:8px 10px;border-radius:10px;border:1px solid #eff3f4;">
+                                        <div style="width:28px;height:28px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:12px;flex-shrink:0;">
+                                            ${iconHtml}
+                                        </div>
+                                        <span style="font-size:13px;font-weight:600;flex:1;">${c.name}</span>
+                                        <span style="font-size:11px;color:#536471;">${children.length} 个子分类</span>
+                                        <button class="btn btn-outline btn-xs" onclick="addShopSubCategory('${s.id}','${c.id}')">+ 子</button>
+                                        <button class="btn btn-primary btn-xs" onclick="editShopCategory('${c.id}', '${(c.name || '').replace(/'/g, "\\'")}', '${(c.image_url || '').replace(/'/g, "\\'")}')">改</button>
+                                        <button class="btn btn-danger btn-xs" onclick="deleteShopCategory('${c.id}')">删</button>
+                                    </div>
+                                    ${children.length > 0 ? `
+                                    <div style="padding-left:16px;margin-top:6px;display:flex;flex-direction:column;gap:4px;">
+                                        ${children.map(sc => `
+                                            <div style="display:flex;align-items:center;gap:8px;background:#fff;padding:6px 10px;border-radius:8px;border:1px solid #eff3f4;">
+                                                <span style="font-size:12px;flex:1;">├─ ${sc.name}</span>
+                                                <button class="btn btn-primary btn-xs" onclick="editShopCategory('${sc.id}', '${(sc.name || '').replace(/'/g, "\\'")}', '${(sc.image_url || '').replace(/'/g, "\\'")}')">改</button>
+                                                <button class="btn btn-danger btn-xs" onclick="deleteShopCategory('${sc.id}')">删</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-            <button class="btn btn-outline btn-xs" onclick="addShopMainCategory('${s.id}')" style="margin-top:8px;font-size:11px;">+ 添加主分类</button>
-          </div>
-        `;
-      }
-      if (allShopCatsHtml) {
-        const catSection = document.createElement('div');
-        catSection.className = 'admin-card';
-        catSection.innerHTML = `<div class="admin-card-title"><i class="fas fa-tags"></i> 店铺分类（主/子）</div>${allShopCatsHtml}`;
-        container.appendChild(catSection);
-      }
+                </div>
+            `;
+        }
+        if (allShopCatsHtml) {
+            const catSection = document.createElement('div');
+            catSection.className = 'admin-card';
+            catSection.innerHTML = `<div class="admin-card-title"><i class="fas fa-tags"></i> 店铺分类管理</div>${allShopCatsHtml}`;
+            container.appendChild(catSection);
+        }
     } catch (err) { console.error(err); }
 
     // 店铺申请审核区
@@ -2873,58 +2877,93 @@ async function renderSubShops(){
   }catch(err){container.innerHTML='<div class="empty-state"><p>加载失败</p></div>';}
 }
 
-// 修复2辅助函数：切换子分类显示
-function toggleShopSubCats(shopId, catId) {
-  const el = document.getElementById(`subcats-${shopId}-${catId}`);
-  if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+// 修复4辅助函数：添加主分类（无弹窗预选，直接输入名称）
+function addShopMainCategory(shopId) {
+    showCustomModal(`
+        <h3>添加主分类</h3>
+        <div class="form-group"><label>分类名称</label>
+            <input class="admin-form-control" id="newMainCatName" placeholder="如：排位护航" />
+        </div>
+        <div class="form-group"><label>图标URL（可选）</label>
+            <input class="admin-form-control" id="newMainCatImage" placeholder="输入图片URL" />
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+            <button class="btn btn-success" onclick="doAddShopMainCat('${shopId}')">添加</button>
+        </div>
+    `);
+    setTimeout(() => bindUploadBtn('newMainCatImage', 'image/*'), 50);
 }
 
-// 修复2辅助函数：添加主分类
-async function addShopMainCategory(shopId) {
-  showCustomModal(`
-    <h3>添加主分类</h3>
-    <div class="form-group"><label>店铺ID</label><input class="admin-form-control" value="${shopId}" disabled /></div>
-    <div class="form-group"><label>分类名称</label><input class="admin-form-control" id="newMainCatName" /></div>
-    <div class="form-group"><label>图标URL（可选）</label><input class="admin-form-control" id="newMainCatImage" /></div>
-    <div class="btn-row">
-      <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-      <button class="btn btn-success" onclick="doAddShopCat('${shopId}', null)">添加</button>
-    </div>
-  `);
-  document.getElementById('customModal').classList.add('active');
-  setTimeout(() => bindUploadBtn('newMainCatImage', 'image/*'), 50);
+async function doAddShopMainCat(shopId) {
+    const name = document.getElementById('newMainCatName').value.trim();
+    const image_url = document.getElementById('newMainCatImage').value.trim();
+    if (!name) return toast('请输入分类名称', 'warning');
+    try {
+        await apiRequest('/shop-categories', {
+            method: 'POST',
+            body: JSON.stringify({ shop_id: shopId, name, image_url, parent_id: null })
+        });
+        closeCustomModal();
+        toast('主分类已添加', 'success');
+        renderSubShops();
+    } catch (err) { toast(err.message, 'error'); }
 }
 
-// 修复2辅助函数：添加子分类
-async function addShopSubCategory(shopId, parentId) {
-  showCustomModal(`
-    <h3>添加子分类</h3>
-    <div class="form-group"><label>子分类名称</label><input class="admin-form-control" id="newMainCatName" /></div>
-    <div class="form-group"><label>图标URL（可选）</label><input class="admin-form-control" id="newMainCatImage" /></div>
-    <div class="btn-row">
-      <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
-      <button class="btn btn-success" onclick="doAddShopCat('${shopId}', '${parentId}')">添加</button>
-    </div>
-  `);
-  document.getElementById('customModal').classList.add('active');
-  setTimeout(() => bindUploadBtn('newMainCatImage', 'image/*'), 50);
+// 修复4辅助函数：添加子分类（弹窗先选主分类）
+async function addShopSubCategory(shopId, preselectParentId) {
+    try {
+        const cats = await apiRequest('/shops/' + shopId + '/categories');
+        const mainCats = cats.filter(c => !c.parent_id);
+        if (mainCats.length === 0) {
+            return toast('请先创建主分类', 'warning');
+        }
+        const options = mainCats.map(c => `<option value="${c.id}" ${preselectParentId === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
+
+        showCustomModal(`
+            <h3>添加子分类</h3>
+            <div class="form-group"><label>选择主分类</label>
+                <select class="admin-form-control" id="newSubParentId">${options}</select>
+            </div>
+            <div class="form-group"><label>子分类名称</label>
+                <input class="admin-form-control" id="newSubCatName" placeholder="如：排位护航" />
+            </div>
+            <div class="form-group"><label>图标URL（可选）</label>
+                <input class="admin-form-control" id="newSubCatImage" placeholder="输入图片URL" />
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeCustomModal()">取消</button>
+                <button class="btn btn-success" onclick="doAddShopSubCat('${shopId}')">添加</button>
+            </div>
+        `);
+
+        setTimeout(() => bindUploadBtn('newSubCatImage', 'image/*'), 50);
+    } catch (err) { toast(err.message, 'error'); }
 }
 
-// 修复2辅助函数：提交添加店铺分类
+async function doAddShopSubCat(shopId) {
+    const parent_id = document.getElementById('newSubParentId').value;
+    const name = document.getElementById('newSubCatName').value.trim();
+    const image_url = document.getElementById('newSubCatImage').value.trim();
+    if (!parent_id) return toast('请选择主分类', 'warning');
+    if (!name) return toast('请输入子分类名称', 'warning');
+    try {
+        await apiRequest('/shop-categories', {
+            method: 'POST',
+            body: JSON.stringify({ shop_id: shopId, name, image_url, parent_id })
+        });
+        closeCustomModal();
+        toast('子分类已添加', 'success');
+        renderSubShops();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+// 兼容旧代码：doAddShopCat（保留，避免其他地方引用报错）
 async function doAddShopCat(shopId, parentId) {
-  const name = document.getElementById('newMainCatName').value.trim();
-  const image_url = document.getElementById('newMainCatImage').value.trim();
-  if (!name) return toast('请输入分类名称', 'warning');
-  try {
-    await apiRequest('/shop-categories', {
-      method: 'POST',
-      body: JSON.stringify({ shop_id: shopId, name, image_url, parent_id: parentId })
-    });
-    closeCustomModal();
-    toast('已添加', 'success');
-    renderSubShops();
-  } catch (err) { toast(err.message, 'error'); }
+    if (parentId === null || parentId === undefined) {
+        return doAddShopMainCat(shopId);
+    }
+    return doAddShopSubCat(shopId);
 }
 
 async function approveShopApp(appId) {
@@ -3001,9 +3040,9 @@ async function deleteShopCategory(catId){
   catch(err){toast(err.message,'error');}
 }
 
-// ============================================================
-// 修复1：editShop —— 拥有者下拉正确选中当前拥有者
-// ============================================================
+/* ============================================================
+   修复2+3：editShop —— 拥有者下拉正确选中 + 勾选正常
+============================================================ */
 async function editShop(shopId) {
     try {
         const shop = await apiRequest('/shops/' + shopId);
@@ -3014,7 +3053,7 @@ async function editShop(shopId) {
             catOptions += `<option value="${c.id}" ${shop.category_id === c.id ? 'selected' : ''}>${c.name}</option>`;
         });
 
-        // 加载拥有者候选
+        // 拥有者候选：所有 admin/service/dispatcher
         const allUsers = await apiRequest('/admin/users');
         const ownerCandidates = allUsers.filter(u => ['admin', 'dispatcher', 'service'].includes(u.role));
         let ownerOptions = '<option value="">-- 选择拥有者 --</option>';
@@ -3032,13 +3071,13 @@ async function editShop(shopId) {
             <div class="form-group"><label>所属分类</label><select class="admin-form-control" id="editShopCategory">${catOptions}</select></div>
             <div class="form-group"><label>店铺拥有者</label>
                 <select class="admin-form-control" id="editShopOwner">${ownerOptions}</select>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">当前拥有者 ID: ${shop.owner_id || '无'}</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">当前拥有者 ID：${shop.owner_id || '无'}</div>
             </div>
-            <div class="form-group" style="display:flex;align-items:center;gap:6px;">
+            <div class="form-group" style="display:flex;align-items:center;gap:8px;">
                 <input type="checkbox" id="editShopIsSelf" ${Number(shop.is_self) === 1 ? 'checked' : ''} style="width:20px;height:20px;accent-color:#d4af37;" />
                 <label style="margin:0;font-size:14px;">自营店铺</label>
             </div>
-            <div class="form-group" style="display:flex;align-items:center;gap:6px;">
+            <div class="form-group" style="display:flex;align-items:center;gap:8px;">
                 <input type="checkbox" id="editShopIsRecommend" ${Number(shop.is_recommend) === 1 ? 'checked' : ''} style="width:20px;height:20px;accent-color:#f4212e;" />
                 <label style="margin:0;font-size:14px;">推荐店铺</label>
             </div>
@@ -3048,16 +3087,15 @@ async function editShop(shopId) {
             </div>
         `);
         document.getElementById('customModal').classList.add('active');
+
+        // 上传按钮
         setTimeout(() => {
-          bindUploadBtn('editShopLogo', 'image/*');
-          bindUploadBtn('editShopBanner', 'image/*');
+            bindUploadBtn('editShopLogo', 'image/*');
+            bindUploadBtn('editShopBanner', 'image/*');
         }, 50);
     } catch (err) { toast(err.message, 'error'); }
 }
 
-// ============================================================
-// 修复1：doEditShop —— 先保存基本信息，再更新拥有者
-// ============================================================
 async function doEditShop(shopId) {
     const name = document.getElementById('editShopName').value.trim();
     const description = document.getElementById('editShopDesc').value.trim();
@@ -3069,7 +3107,6 @@ async function doEditShop(shopId) {
     const newOwnerId = document.getElementById('editShopOwner').value;
     if (!name) return toast('请输入店铺名称', 'warning');
 
-    // 先更新店铺基本信息
     try {
         await apiRequest('/shops/' + shopId, {
             method: 'PUT',
@@ -3079,7 +3116,6 @@ async function doEditShop(shopId) {
         return toast('保存失败: ' + err.message, 'error');
     }
 
-    // 再更新拥有者
     if (newOwnerId) {
         try {
             const r = await apiRequest('/admin/shops/' + shopId + '/owner', {
@@ -3217,7 +3253,7 @@ window.deleteWithdraw=function(withdrawId){confirmAction('确认删除','确认�
 async function doDeleteWithdraw(withdrawId){try{await apiRequest('/admin/withdrawals/'+withdrawId,{method:'DELETE'});toast('已删除','success');renderSubWithdrawals();}catch(err){toast(err.message,'error');}}
 
 /* ============================================================
-   修复5：子页面-账户设置（快手风格）
+   子页面-账户设置（快手风格）
 ============================================================ */
 function renderSubAccount() {
     const container = document.getElementById('subAccountContent');
@@ -3359,7 +3395,6 @@ function renderSubAccount() {
     }
 }
 
-// 点击"用户ID"行 → 直接弹出修改框
 function showChangeIdModal() {
     showCustomModal(`
         <h3><i class="fas fa-id-card"></i> 修改用户ID</h3>
@@ -3786,7 +3821,7 @@ window.confirmDeleteBanner=function(bannerId){confirmAction('确认删除','确�
 async function doDeleteBanner(bannerId){try{await apiRequest('/admin/banners/'+bannerId,{method:'DELETE'});toast('已删除','success');renderSubBanners();await loadBannersFromAPI();}catch(err){toast(err.message,'error');}}
 
 /* ============================================================
-   修复3：子页面-图标（可设置默认头像/商品图标等）
+   子页面-图标（可设置默认头像/商品图标等）
 ============================================================ */
 async function renderSubIcons() {
     const container = document.getElementById('subIconsContent');
@@ -3845,7 +3880,6 @@ async function renderSubIcons() {
     }
 }
 
-// 修复3辅助：设置图标
 async function setIcon(key) {
     const input = document.getElementById('iconInput_' + key);
     const url = input ? input.value.trim() : '';
@@ -3857,7 +3891,6 @@ async function setIcon(key) {
     } catch (err) { toast(err.message, 'error'); }
 }
 
-// 修复3辅助：删除图标
 async function deleteIcon(key) {
     if (!confirm('确认清除该图标？')) return;
     try {
@@ -4383,9 +4416,10 @@ window.confirmDeleteShop=confirmDeleteShop;
 window.deleteShopCategory=deleteShopCategory;
 window.editShopCategory=editShopCategory;
 window.updateShopSort=updateShopSort;
-window.toggleShopSubCats=toggleShopSubCats;
 window.addShopMainCategory=addShopMainCategory;
+window.doAddShopMainCat=doAddShopMainCat;
 window.addShopSubCategory=addShopSubCategory;
+window.doAddShopSubCat=doAddShopSubCat;
 window.doAddShopCat=doAddShopCat;
 window.shelfProduct=shelfProduct;
 window.loadProdSubCategories=loadProdSubCategories;
@@ -4530,7 +4564,7 @@ window.submitReview=submitReview;
 window.pickAndUpload=pickAndUpload;
 window.bindUploadBtn=bindUploadBtn;
 
-console.log('QW电竞护航平台 v7.7 已加载');
+console.log('QW电竞护航平台 v7.8 已加载');
 </script>
 </body>
 </html>
