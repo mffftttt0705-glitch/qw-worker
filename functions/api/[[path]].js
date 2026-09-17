@@ -1,6 +1,6 @@
 // ============================================================
-//  QW电竞 - 完整后端 API (v7.8)
-//  修复：店铺拥有者、handleGetShops 返回 owner_id、店铺分类子分类
+//  QW电竞 - 完整后端 API (v7.9)
+//  新增：店铺入驻、打手状态、说说、礼物系统、客服扣钻修复
 // ============================================================
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
@@ -45,7 +45,7 @@ async function handleRegister(env, body) {
   const userId = String(100000 + count + 1);
   const userStatus = (role === 'handler' || role === 'dispatcher' || role === 'service') ? 'pending' : (status || 'active');
   await runDB(env,
-    'INSERT INTO users (id, username, password, role, diamond, balance, status, avatar, level) VALUES (?, ?, ?, ?, 0, 0, ?, ?, 1)',
+    'INSERT INTO users (id, username, password, role, diamond, balance, status, avatar, level, is_accepting, bio) VALUES (?, ?, ?, ?, 0, 0, ?, ?, 1, 0, "")',
     [userId, username, password, role || 'boss', userStatus, '']
   );
   return jsonResponse({ message: (role === 'handler' || role === 'dispatcher' || role === 'service') ? '注册成功，请等待管理员审核' : '注册成功', id: userId });
@@ -63,7 +63,7 @@ async function handleLogin(env, body) {
   const token = generateId() + '.' + user.id;
   return jsonResponse({
     token,
-    user: { id: user.id, username: user.username, role: user.role || 'boss', diamond: user.diamond || 0, balance: user.balance || 0, status: user.status || 'active', banner: user.banner || '', avatar: user.avatar || '', club_prefix: user.club_prefix || '', level: user.level || 1 }
+    user: { id: user.id, username: user.username, role: user.role || 'boss', diamond: user.diamond || 0, balance: user.balance || 0, status: user.status || 'active', banner: user.banner || '', avatar: user.avatar || '', club_prefix: user.club_prefix || '', level: user.level || 1, is_accepting: user.is_accepting || 0, bio: user.bio || '' }
   });
 }
 
@@ -80,7 +80,9 @@ async function handleGetMe(env, authHeader) {
 }
 
 async function handleGetUserPublic(env, userId) {
-  const result = await queryDB(env, 'SELECT id, username, role, diamond, level, status, avatar, banner FROM users WHERE id = ?', [userId]);
+  const result = await queryDB(env,
+    'SELECT id, username, role, diamond, level, status, avatar, banner, is_accepting, bio FROM users WHERE id = ?',
+    [userId]);
   const user = result.results && result.results[0];
   if (!user) return errorResponse('用户不存在', 404);
   return jsonResponse(user);
@@ -92,7 +94,7 @@ async function handleGetUserPublic(env, userId) {
 async function handleAdminGetUsers(env) {
   try {
     const result = await queryDB(env,
-      'SELECT id, username, role, diamond, balance, status, created_at, banner, avatar, club_prefix, level FROM users ORDER BY created_at DESC'
+      'SELECT id, username, role, diamond, balance, status, created_at, banner, avatar, club_prefix, level, is_accepting, bio FROM users ORDER BY created_at DESC'
     );
     const users = (result.results || []).map(u => ({
       ...u,
@@ -152,6 +154,7 @@ async function handleAdminDeleteUser(env, targetUserId) {
   await runDB(env, 'DELETE FROM post_likes WHERE user_id = ?', [targetUserId]);
   await runDB(env, 'DELETE FROM messages WHERE sender_id = ? OR receiver_id = ?', [targetUserId, targetUserId]);
   await runDB(env, 'DELETE FROM message_contacts WHERE user_id = ? OR contact_id = ?', [targetUserId, targetUserId]);
+  await runDB(env, 'DELETE FROM shop_handlers WHERE handler_id = ?', [targetUserId]);
   await runDB(env, 'DELETE FROM users WHERE id = ?', [targetUserId]);
   return jsonResponse({ success: true, message: '用户已删除' });
 }
@@ -190,12 +193,13 @@ async function handleChangeUserId(env, authHeader, body) {
     await runDB(env, 'UPDATE users SET username = ? WHERE id = ?', [tmpUsername, targetUserId]);
 
     await runDB(env,
-      `INSERT INTO users (id, username, password, role, diamond, balance, status, banner, avatar, club_prefix, level, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO users (id, username, password, role, diamond, balance, status, banner, avatar, club_prefix, level, is_accepting, bio, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [newId, finalUsername, oldUser.password, oldUser.role,
        oldUser.diamond || 0, oldUser.balance || 0, oldUser.status || 'active',
        oldUser.banner || '', oldUser.avatar || '', oldUser.club_prefix || '',
-       oldUser.level || 1, oldUser.created_at || new Date().toISOString()]
+       oldUser.level || 1, oldUser.is_accepting || 0, oldUser.bio || '',
+       oldUser.created_at || new Date().toISOString()]
     );
 
     const tables = [
@@ -210,6 +214,8 @@ async function handleChangeUserId(env, authHeader, body) {
       ['shop_handlers', 'handler_id'],
       ['shop_reviews', 'user_id'],
       ['shop_follows', 'user_id'],
+      ['gift_records', 'from_user_id'],
+      ['gift_records', 'to_user_id'],
     ];
     for (const [t, col] of tables) {
       try { await runDB(env, `UPDATE ${t} SET ${col} = ? WHERE ${col} = ?`, [newId, targetUserId]); } catch (e) {}
@@ -225,7 +231,7 @@ async function handleChangeUserId(env, authHeader, body) {
 }
 
 // ============================================================
-//  头像 / 改名 / 背景墙
+//  头像 / 改名 / 背景墙 / 说说 / 接单状态
 // ============================================================
 async function handleUploadAvatar(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -254,6 +260,24 @@ async function handleSetBanner(env, authHeader, body) {
   const { banner } = body;
   await runDB(env, 'UPDATE users SET banner = ? WHERE id = ?', [banner || '', userId]);
   return jsonResponse({ success: true, message: '背景墙已更新' });
+}
+
+async function handleToggleAccepting(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || user.role !== 'handler') return errorResponse('只有打手可切换', 403);
+  const newStatus = user.is_accepting ? 0 : 1;
+  await runDB(env, 'UPDATE users SET is_accepting = ? WHERE id = ?', [newStatus, userId]);
+  return jsonResponse({ success: true, is_accepting: newStatus, message: newStatus ? '已开启接单' : '已暂停接单' });
+}
+
+async function handleUpdateBio(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const { bio } = body;
+  await runDB(env, 'UPDATE users SET bio = ? WHERE id = ?', [bio || '', userId]);
+  return jsonResponse({ success: true, message: '说说已更新' });
 }
 
 // ============================================================
@@ -570,6 +594,9 @@ async function handleUpdateShopSort(env, authHeader, shopId, body) {
   return jsonResponse({ success: true, message: '排序已更新' });
 }
 
+// ============================================================
+//  修复：handleCreateShop 传入 invite_code
+// ============================================================
 async function handleCreateShop(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -582,11 +609,14 @@ async function handleCreateShop(env, authHeader, body) {
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM shops');
   const count = countResult.results?.[0]?.count || 0;
   const shopId = 'a' + String(100000 + count + 1);
+  const inviteCode = generateId().slice(0, 8).toUpperCase();
   await runDB(env,
-    `INSERT INTO shops (id, owner_id, name, description, logo, banner, category_id, status, rating, sales, is_self, is_recommend, follow_count, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'active', '4.9', 0, ?, ?, 0, ?)`,
-    [shopId, userId, name, description || '', logo || '', banner || '', category_id, is_self ? 1 : 0, is_recommend ? 1 : 0, new Date().toISOString()]);
-  return jsonResponse({ success: true, id: shopId, message: '店铺创建成功' });
+    `INSERT INTO shops (id, owner_id, name, description, logo, banner, category_id, status, rating, sales, is_self, is_recommend, follow_count, invite_code, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'active', '5.0', 0, ?, ?, 0, ?, ?)`,
+    [shopId, userId, name, description || '', logo || '', banner || '', category_id,
+     is_self ? 1 : 0, is_recommend ? 1 : 0, inviteCode, new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, id: shopId, invite_code: inviteCode, message: '店铺创建成功' });
 }
 
 async function handleUpdateShop(env, authHeader, shopId, body) {
@@ -625,9 +655,6 @@ async function handleDeleteShop(env, authHeader, shopId) {
   return jsonResponse({ success: true, message: '店铺已删除' });
 }
 
-// ============================================================
-//  修复2：handleGetShopDetail 返回完整 owner_id 和 category_id
-// ============================================================
 async function handleGetShopDetail(env, shopId) {
   const result = await queryDB(env, 'SELECT * FROM shops WHERE id = ?', [shopId]);
   if (!result.results || result.results.length === 0) return errorResponse('店铺不存在', 404);
@@ -637,6 +664,7 @@ async function handleGetShopDetail(env, shopId) {
   shop.follow_count = Number(shop.follow_count) || 0;
   shop.owner_id = shop.owner_id || '';
   shop.category_id = shop.category_id || '';
+  shop.invite_code = shop.invite_code || '';
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM products WHERE shop_id = ? AND hidden = 0', [shopId]);
   shop.productCount = countResult.results?.[0]?.count || 0;
   return jsonResponse(shop);
@@ -658,9 +686,6 @@ async function handleGetShopCategories(env, shopId) {
   return jsonResponse(result.results || []);
 }
 
-// ============================================================
-//  修复4：handleCreateShopCategory 支持 parent_id 子分类
-// ============================================================
 async function handleCreateShopCategory(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -766,6 +791,54 @@ async function handleGetFollowStatus(env, authHeader, shopId) {
   if (!userId) return jsonResponse({ followed: false });
   const check = await queryDB(env, 'SELECT * FROM shop_follows WHERE user_id = ? AND shop_id = ?', [userId, shopId]);
   return jsonResponse({ followed: (check.results && check.results.length > 0) });
+}
+
+// ============================================================
+//  店铺入驻（新）
+// ============================================================
+async function handleJoinShop(env, authHeader, shopId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || user.role !== 'handler') return errorResponse('只有打手可以入驻店铺', 403);
+  const shopResult = await queryDB(env, 'SELECT * FROM shops WHERE id = ?', [shopId]);
+  if (!shopResult.results || shopResult.results.length === 0) return errorResponse('店铺不存在', 404);
+  const existing = await queryDB(env, 'SELECT * FROM shop_handlers WHERE shop_id = ? AND handler_id = ?', [shopId, userId]);
+  if (existing.results && existing.results.length > 0) return errorResponse('您已入驻该店铺');
+  await runDB(env,
+    'INSERT INTO shop_handlers (id, shop_id, handler_id, status, created_at) VALUES (?, ?, ?, "active", ?)',
+    [generateId(), shopId, userId, new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, message: '入驻成功' });
+}
+
+async function handleLeaveShop(env, authHeader, shopId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  await runDB(env, 'DELETE FROM shop_handlers WHERE shop_id = ? AND handler_id = ?', [shopId, userId]);
+  return jsonResponse({ success: true, message: '已退出店铺' });
+}
+
+async function handleGetShopHandlers(env, shopId) {
+  const result = await queryDB(env,
+    `SELECT u.id, u.username, u.avatar, u.level, u.status,
+            (SELECT COUNT(*) FROM orders WHERE handler_id = u.id AND status = 'completed') as completed_orders
+     FROM shop_handlers sh
+     LEFT JOIN users u ON sh.handler_id = u.id
+     WHERE sh.shop_id = ? AND sh.status = 'active'`,
+    [shopId]
+  );
+  return jsonResponse(result.results || []);
+}
+
+async function handleGetHandlerShops(env, handlerId) {
+  const result = await queryDB(env,
+    `SELECT s.* FROM shop_handlers sh
+     LEFT JOIN shops s ON sh.shop_id = s.id
+     WHERE sh.handler_id = ? AND sh.status = 'active'`,
+    [handlerId]
+  );
+  return jsonResponse(result.results || []);
 }
 
 // ============================================================
@@ -906,11 +979,12 @@ async function handleApproveShopApplication(env, authHeader, appId) {
   const countResult = await queryDB(env, 'SELECT COUNT(*) as c FROM shops');
   const count = countResult.results?.[0]?.c || 0;
   const shopId = 'a' + String(100000 + count + 1);
+  const inviteCode = generateId().slice(0, 8).toUpperCase();
 
   await runDB(env,
-    `INSERT INTO shops (id, owner_id, name, description, logo, banner, status, rating, sales, is_self, is_recommend, follow_count, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'active', '5.0', 0, 0, 0, 0, ?)`,
-    [shopId, app.applicant_id, app.shop_name, app.description || '', app.logo || '', app.banner || '', new Date().toISOString()]
+    `INSERT INTO shops (id, owner_id, name, description, logo, banner, status, rating, sales, is_self, is_recommend, follow_count, invite_code, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'active', '5.0', 0, 0, 0, 0, ?, ?)`,
+    [shopId, app.applicant_id, app.shop_name, app.description || '', app.logo || '', app.banner || '', inviteCode, new Date().toISOString()]
   );
   await runDB(env, 'UPDATE shop_applications SET status = "approved", handled_at = ? WHERE id = ?',
     [new Date().toISOString(), appId]);
@@ -927,9 +1001,6 @@ async function handleRejectShopApplication(env, authHeader, appId, body) {
   return jsonResponse({ success: true, message: '已拒绝' });
 }
 
-// ============================================================
-//  修复2：handleChangeShopOwner 彻底去掉限制
-// ============================================================
 async function handleChangeShopOwner(env, authHeader, shopId, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -1293,6 +1364,10 @@ async function handleGetPendingRecharges(env, authHeader) {
      WHERE r.status = 'pending' ORDER BY r.created_at DESC`);
   return jsonResponse(result.results || []);
 }
+
+// ============================================================
+//  修复：客服同意充值扣钻逻辑
+// ============================================================
 async function handleProcessRecharge(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
@@ -1304,14 +1379,24 @@ async function handleProcessRecharge(env, authHeader, body) {
   if (!req.results || req.results.length === 0) return errorResponse('申请不存在');
   const request = req.results[0];
   if (request.status !== 'pending') return errorResponse('已处理');
+
   if (action === 'approve') {
-    if (user.diamond < request.diamond) return errorResponse(`红钻不足`);
+    // 客服/管理员扣自己的红钻（模拟充值来源）
+    if ((user.diamond || 0) < request.diamond) {
+      return errorResponse(`您的红钻不足（需 ${request.diamond}，当前 ${user.diamond || 0}）`);
+    }
     await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [request.diamond, userId]);
     await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [request.diamond, request.user_id]);
-    await runDB(env, 'UPDATE recharge_requests SET status = "approved", handler_id = ?, handled_at = ? WHERE id = ?', [userId, new Date().toISOString(), requestId]);
-    return jsonResponse({ success: true, message: `充值已通过` });
+    await runDB(env,
+      'UPDATE recharge_requests SET status = "approved", handler_id = ?, handled_at = ? WHERE id = ?',
+      [userId, new Date().toISOString(), requestId]
+    );
+    return jsonResponse({ success: true, message: `已通过，扣除您 ${request.diamond} 红钻` });
   } else {
-    await runDB(env, 'UPDATE recharge_requests SET status = "rejected", handler_id = ?, reject_reason = ?, handled_at = ? WHERE id = ?', [userId, rejectReason || '无原因', new Date().toISOString(), requestId]);
+    await runDB(env,
+      'UPDATE recharge_requests SET status = "rejected", handler_id = ?, reject_reason = ?, handled_at = ? WHERE id = ?',
+      [userId, rejectReason || '无原因', new Date().toISOString(), requestId]
+    );
     return jsonResponse({ success: true, message: '已拒绝' });
   }
 }
@@ -1435,6 +1520,72 @@ async function handleGetUnreadCount(env, authHeader) {
 }
 async function handleGetSupportContacts(env) {
   const result = await queryDB(env, 'SELECT id, username, role FROM users WHERE role IN ("admin", "service") AND status = "active"');
+  return jsonResponse(result.results || []);
+}
+
+// ============================================================
+//  礼物系统（新）
+// ============================================================
+async function handleGetGifts(env) {
+  const result = await queryDB(env, 'SELECT * FROM gifts ORDER BY sort_order ASC, created_at DESC');
+  return jsonResponse(result.results || []);
+}
+
+async function handleAdminCreateGift(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
+  const { name, image_url, price, sort_order } = body;
+  if (!name || !image_url) return errorResponse('请填写完整');
+  const id = generateId();
+  await runDB(env,
+    'INSERT INTO gifts (id, name, image_url, price, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    [id, name, image_url, price || 0, sort_order || 0, new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, id, message: '礼物已添加' });
+}
+
+async function handleAdminDeleteGift(env, authHeader, giftId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
+  await runDB(env, 'DELETE FROM gifts WHERE id = ?', [giftId]);
+  return jsonResponse({ success: true, message: '已删除' });
+}
+
+async function handleSendGift(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const { gift_id, to_user_id } = body;
+  if (!gift_id || !to_user_id) return errorResponse('参数不完整');
+  if (userId === to_user_id) return errorResponse('不能给自己送礼物');
+  const gift = await queryDB(env, 'SELECT * FROM gifts WHERE id = ?', [gift_id]);
+  const g = gift.results?.[0];
+  if (!g) return errorResponse('礼物不存在');
+  const user = await getUserById(env, userId);
+  if ((user.diamond || 0) < (g.price || 0)) return errorResponse('红钻不足');
+  if (g.price > 0) {
+    await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [g.price, userId]);
+    await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [g.price, to_user_id]);
+  }
+  await runDB(env,
+    'INSERT INTO gift_records (id, gift_id, from_user_id, to_user_id, created_at) VALUES (?, ?, ?, ?, ?)',
+    [generateId(), gift_id, userId, to_user_id, new Date().toISOString()]
+  );
+  return jsonResponse({ success: true, message: '礼物已送达' });
+}
+
+async function handleGetUserGifts(env, userId) {
+  const result = await queryDB(env,
+    `SELECT g.*, COUNT(gr.id) as count FROM gift_records gr
+     LEFT JOIN gifts g ON gr.gift_id = g.id
+     WHERE gr.to_user_id = ?
+     GROUP BY g.id
+     ORDER BY count DESC`,
+    [userId]
+  );
   return jsonResponse(result.results || []);
 }
 
@@ -1839,13 +1990,28 @@ export async function onRequest(context) {
     if (path === '/api/icons' && method === 'GET') return await handleGetIcons(env);
     if (path === '/api/recharge-images' && method === 'GET') return await handleGetRechargeImages(env);
     if (path === '/api/posts' && method === 'GET') return await handleGetPosts(env, url);
+    if (path === '/api/gifts' && method === 'GET') return await handleGetGifts(env);
+
+    // 公开：店铺入驻打手列表、用户礼物
+    if (path.startsWith('/api/shops/') && path.endsWith('/handlers') && method === 'GET') {
+      const shopId = path.replace('/api/shops/', '').replace('/handlers', '');
+      return await handleGetShopHandlers(env, shopId);
+    }
+    if (path.startsWith('/api/users/') && path.endsWith('/gifts') && method === 'GET') {
+      const uId = path.replace('/api/users/', '').replace('/gifts', '');
+      return await handleGetUserGifts(env, uId);
+    }
+    if (path.startsWith('/api/handlers/') && path.endsWith('/shops') && method === 'GET') {
+      const handlerId = path.replace('/api/handlers/', '').replace('/shops', '');
+      return await handleGetHandlerShops(env, handlerId);
+    }
 
     if (path.startsWith('/api/users/') && method === 'GET') return await handleGetUserPublic(env, path.replace('/api/users/', ''));
     if (path.startsWith('/api/posts/') && method === 'GET') return await handleGetPostDetail(env, path.replace('/api/posts/', ''));
     if (path.startsWith('/api/shops/') && path.endsWith('/reviews') && method === 'GET') return await handleGetShopReviews(env, path.replace('/api/shops/', '').replace('/reviews', ''));
     if (path.startsWith('/api/shops/') && path.endsWith('/products') && method === 'GET') return await handleGetShopProducts(env, path.replace('/api/shops/', '').replace('/products', ''));
     if (path.startsWith('/api/shops/') && path.endsWith('/categories') && method === 'GET') return await handleGetShopCategories(env, path.replace('/api/shops/', '').replace('/categories', ''));
-    if (path.startsWith('/api/shops/') && method === 'GET' && !path.endsWith('/products') && !path.endsWith('/categories') && !path.endsWith('/follow') && !path.endsWith('/follow-status') && !path.endsWith('/reviews')) {
+    if (path.startsWith('/api/shops/') && method === 'GET' && !path.endsWith('/products') && !path.endsWith('/categories') && !path.endsWith('/follow') && !path.endsWith('/follow-status') && !path.endsWith('/reviews') && !path.endsWith('/handlers')) {
       return await handleGetShopDetail(env, path.replace('/api/shops/', ''));
     }
     if (path.startsWith('/api/products/') && method === 'GET') return await handleGetProductDetail(env, path.replace('/api/products/', ''));
@@ -1856,6 +2022,8 @@ export async function onRequest(context) {
     if (path === '/api/user/avatar' && method === 'POST') return await handleUploadAvatar(env, authHeader, body);
     if (path === '/api/user/name' && method === 'PUT') return await handleChangeName(env, authHeader, body);
     if (path === '/api/user/banner' && method === 'PUT') return await handleSetBanner(env, authHeader, body);
+    if (path === '/api/user/toggle-accepting' && method === 'POST') return await handleToggleAccepting(env, authHeader);
+    if (path === '/api/user/bio' && method === 'PUT') return await handleUpdateBio(env, authHeader, body);
     if (path === '/api/orders/my' && method === 'GET') return await handleGetMyOrders(env, authHeader);
     if (path === '/api/orders/buy' && method === 'POST') return await handleBuyProduct(env, authHeader, body);
     if (path === '/api/mails' && method === 'GET') return await handleGetMails(env, authHeader);
@@ -1871,6 +2039,7 @@ export async function onRequest(context) {
     if (path === '/api/messages/contacts' && method === 'GET') return await handleGetContacts(env, authHeader);
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
+    if (path === '/api/gifts/send' && method === 'POST') return await handleSendGift(env, authHeader, body);
 
     if (path === '/api/handler/pending-orders' && method === 'GET') return await handleGetPendingOrders(env, authHeader);
 
@@ -1899,6 +2068,14 @@ export async function onRequest(context) {
     }
     if (path.startsWith('/api/shops/') && path.endsWith('/follow-status') && method === 'GET') {
       return await handleGetFollowStatus(env, authHeader, path.replace('/api/shops/', '').replace('/follow-status', ''));
+    }
+    if (path.startsWith('/api/shops/') && path.endsWith('/join') && method === 'POST') {
+      const shopId = path.replace('/api/shops/', '').replace('/join', '');
+      return await handleJoinShop(env, authHeader, shopId);
+    }
+    if (path.startsWith('/api/shops/') && path.endsWith('/leave') && method === 'POST') {
+      const shopId = path.replace('/api/shops/', '').replace('/leave', '');
+      return await handleLeaveShop(env, authHeader, shopId);
     }
 
     if (path.startsWith('/api/admin/orders/')) {
@@ -2011,6 +2188,11 @@ export async function onRequest(context) {
           if (method === 'DELETE') return await handleAdminDeleteRecharge(env, rId);
         }
         if (path === '/api/admin/announce' && method === 'PUT') return await handleAdminUpdateAnnounce(env, body);
+        if (path === '/api/admin/gifts' && method === 'POST') return await handleAdminCreateGift(env, authHeader, body);
+        if (path.startsWith('/api/admin/gifts/') && method === 'DELETE') {
+          const gId = path.replace('/api/admin/gifts/', '');
+          return await handleAdminDeleteGift(env, authHeader, gId);
+        }
       }
     }
 
