@@ -38,17 +38,20 @@ function verifyAndGetUserId(authHeader) {
 async function handleRegister(env, body) {
   const { username, password, role, status } = body;
   if (!username || !password) return errorResponse('请填写用户名和密码');
+  // 禁止注册成为管理员，隐藏管理员角色
+  let finalRole = role || 'boss';
+  if (finalRole === 'admin') finalRole = 'boss';
   const existing = await queryDB(env, 'SELECT * FROM users WHERE username = ?', [username]);
   if (existing.results && existing.results.length > 0) return errorResponse('用户名已存在');
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM users');
   const count = countResult.results?.[0]?.count || 0;
   const userId = String(100000 + count + 1);
-  const userStatus = (role === 'handler' || role === 'dispatcher' || role === 'service') ? 'pending' : (status || 'active');
+  const userStatus = (finalRole === 'handler' || finalRole === 'dispatcher' || finalRole === 'service') ? 'pending' : (status || 'active');
   await runDB(env,
     'INSERT INTO users (id, username, password, role, diamond, balance, status, avatar, level, is_accepting, bio) VALUES (?, ?, ?, ?, 0, 0, ?, ?, 1, 0, "")',
-    [userId, username, password, role || 'boss', userStatus, '']
+    [userId, username, password, finalRole, userStatus, '']
   );
-  return jsonResponse({ message: (role === 'handler' || role === 'dispatcher' || role === 'service') ? '注册成功，请等待管理员审核' : '注册成功', id: userId });
+  return jsonResponse({ message: (finalRole === 'handler' || finalRole === 'dispatcher' || finalRole === 'service') ? '注册成功，请等待管理员审核' : '注册成功', id: userId });
 }
 
 async function handleLogin(env, body) {
@@ -1206,8 +1209,7 @@ async function handleDispatcherPublish(env, authHeader, body) {
   const { game, title, desc, price, assignedHandlerId } = body;
   if (!title || !price) return errorResponse('请填写完整信息');
   if (price < 1) return errorResponse('价格至少为1红钻');
-  if (user.diamond < price) return errorResponse(`红钻不足，需要 ${price} 红钻`, 400);
-  await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [price, userId]);
+  // 已清除派单发布时的扣红钻逻辑
   const orderId = generateId();
   let status = 'pending';
   let handlerId = assignedHandlerId || null;
@@ -1256,12 +1258,8 @@ async function handleDispatcherConfirmComplete(env, authHeader, orderId) {
   if (!order) return errorResponse('订单不存在', 404);
   if (order.boss_id !== userId && user.role !== 'admin') return errorResponse('不是你的订单', 403);
   if (order.status !== 'ongoing' && order.status !== 'pending') return errorResponse('订单状态不可确认', 400);
-  const diamondCost = order.price;
-  if (user.diamond < diamondCost) return errorResponse(`红钻不足`);
-  await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [diamondCost, userId]);
-  const handlerEarning = Math.floor(order.price * 0.8);
-  if (order.handler_id) await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [handlerEarning, order.handler_id]);
-  await runDB(env, 'UPDATE orders SET status = "completed", end_time = ?, settled = 1, settled_amount = ? WHERE id = ?', [new Date().toISOString(), handlerEarning, orderId]);
+  // 已清除派单确认时的扣红钻、给打手加钻逻辑
+  await runDB(env, 'UPDATE orders SET status = "completed", end_time = ?, settled = 1 WHERE id = ?', [new Date().toISOString(), orderId]);
   return jsonResponse({ success: true, message: `验收完成` });
 }
 async function handleSendChat(env, authHeader, orderId, body) {
@@ -1758,7 +1756,10 @@ async function handleAdminCancelOrder(env, orderId) {
   const result = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [orderId]);
   const order = (result.results && result.results[0]) || null;
   await runDB(env, 'UPDATE orders SET status = "canceled" WHERE id = ?', [orderId]);
-  if (order && order.boss_id) await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [order.price, order.boss_id]);
+  // 只有商品购买订单（有 product_id）才退还红钻，派单订单不再扣钻所以也不退
+  if (order && order.boss_id && order.product_id) {
+    await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [order.price, order.boss_id]);
+  }
   return jsonResponse({ message: '已取消' });
 }
 
