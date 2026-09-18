@@ -1528,6 +1528,40 @@ async function ensureExtraTables(env) {
   } catch (e) {}
 }
 
+/** 确保客服机器人在 users 表中存在，避免消息外键约束失败 */
+async function ensureCsBotUser(env) {
+  try {
+    const exist = await queryDB(env, 'SELECT id FROM users WHERE id = ?', [CS_BOT_ID]);
+    if (exist.results && exist.results.length > 0) return true;
+  } catch (e) {}
+  // 多种插入方式，兼容不同表结构
+  const tries = [
+    async () => runDB(env,
+      `INSERT OR IGNORE INTO users (id, username, password, role, diamond, balance, status, avatar, level, is_accepting, bio)
+       VALUES (?, ?, ?, ?, 0, 0, ?, ?, 1, 0, ?)`,
+      [CS_BOT_ID, '在线客服', '__system_bot__', 'service', 'active', '', '智能客服机器人']),
+    async () => runDB(env,
+      `INSERT OR IGNORE INTO users (id, username, password, role, diamond, balance, status, avatar, level, is_accepting, bio, created_at)
+       VALUES (?, ?, ?, ?, 0, 0, ?, ?, 1, 0, ?, ?)`,
+      [CS_BOT_ID, '在线客服', '__system_bot__', 'service', 'active', '', '智能客服机器人', new Date().toISOString()]),
+    async () => runDB(env,
+      `INSERT OR IGNORE INTO users (id, username, password, role, status) VALUES (?, ?, ?, ?, ?)`,
+      [CS_BOT_ID, '在线客服', '__system_bot__', 'service', 'active']),
+    async () => runDB(env,
+      `INSERT OR IGNORE INTO users (id, username, password, role) VALUES (?, ?, ?, ?)`,
+      [CS_BOT_ID, '在线客服', '__system_bot__', 'service']),
+  ];
+  for (const fn of tries) {
+    try { await fn(); } catch (e) {}
+  }
+  try {
+    const check = await queryDB(env, 'SELECT id FROM users WHERE id = ?', [CS_BOT_ID]);
+    return !!(check.results && check.results.length > 0);
+  } catch (e) {
+    return false;
+  }
+}
+
 async function touchOnline(env, userId) {
   if (!userId || userId === CS_BOT_ID) return;
   try { await runDB(env, 'UPDATE users SET last_active = ? WHERE id = ?', [new Date().toISOString(), userId]); } catch (e) {}
@@ -1576,7 +1610,7 @@ async function matchAutoReply(env, text) {
 
 async function findOnlineServiceAgent(env) {
   const result = await queryDB(env, 'SELECT * FROM users WHERE role IN ("service", "admin") AND status = "active"');
-  const users = result.results || [];
+  const users = (result.results || []).filter(u => u.id !== CS_BOT_ID);
   const online = users.filter(u => u.role === 'service' && isUserOnline(u));
   if (online.length > 0) return online[Math.floor(Math.random() * online.length)];
   const onlineAdmin = users.filter(u => u.role === 'admin' && isUserOnline(u));
@@ -1598,7 +1632,17 @@ async function handleSendMessage(env, authHeader, body) {
   // 客服机器人 + 自动回复 + 转人工
   if (receiverId === CS_BOT_ID) {
     await ensureExtraTables(env);
-    await insertMessage(env, userId, CS_BOT_ID, text);
+    const botOk = await ensureCsBotUser(env);
+    if (!botOk) {
+      return errorResponse('客服系统初始化失败，请联系管理员在数据库中确认 users 表可写入', 500);
+    }
+    try {
+      await insertMessage(env, userId, CS_BOT_ID, text);
+    } catch (e) {
+      // 外键仍失败时再尝试一次初始化
+      await ensureCsBotUser(env);
+      await insertMessage(env, userId, CS_BOT_ID, text);
+    }
     await upsertContact(env, userId, CS_BOT_ID, text, 0);
 
     if (/转人工|人工客服|转接人工|找客服/.test(text)) {
@@ -1677,7 +1721,8 @@ async function handleGetContacts(env, authHeader) {
     list = (result.results || []).map(c => ({ ...c, online: false }));
   }
 
-  // 置顶客服机器人联系人
+  // 置顶客服机器人联系人（确保 users 表有 cs_bot 记录）
+  try { await ensureCsBotUser(env); } catch (e) {}
   const csMc = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [userId, CS_BOT_ID]);
   const csRow = (csMc.results && csMc.results[0]) || {};
   const csContact = {
@@ -1723,6 +1768,7 @@ async function handleGetMessages(env, authHeader, body) {
   if (!contactId) return errorResponse('请选择联系人');
   // 客服机器人特殊处理
   if (contactId === CS_BOT_ID) {
+    try { await ensureCsBotUser(env); } catch (e) {}
     const result = await queryDB(env,
       `SELECT m.*, 
         CASE WHEN m.sender_id = ? THEN '在线客服' ELSE COALESCE(u.username, m.sender_id) END as sender_name,
