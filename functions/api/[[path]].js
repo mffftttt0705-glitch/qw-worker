@@ -907,15 +907,37 @@ async function handleLeaveShop(env, authHeader, shopId) {
 }
 
 async function handleGetShopHandlers(env, shopId) {
-  const result = await queryDB(env,
-    `SELECT u.id, u.username, u.avatar, u.level, u.status,
-            (SELECT COUNT(*) FROM orders WHERE handler_id = u.id AND status = 'completed') as completed_orders
-     FROM shop_handlers sh
-     LEFT JOIN users u ON sh.handler_id = u.id
-     WHERE sh.shop_id = ? AND sh.status = 'active'`,
-    [shopId]
-  );
-  return jsonResponse(result.results || []);
+  let result;
+  try {
+    result = await queryDB(env,
+      `SELECT u.id, u.username, u.avatar, u.level, u.status, u.is_accepting, u.last_active,
+              (SELECT COUNT(*) FROM orders WHERE handler_id = u.id AND status = 'completed') as completed_orders
+       FROM shop_handlers sh
+       LEFT JOIN users u ON sh.handler_id = u.id
+       WHERE sh.shop_id = ? AND sh.status = 'active'`,
+      [shopId]
+    );
+  } catch (e) {
+    result = await queryDB(env,
+      `SELECT u.id, u.username, u.avatar, u.level, u.status, u.is_accepting,
+              (SELECT COUNT(*) FROM orders WHERE handler_id = u.id AND status = 'completed') as completed_orders
+       FROM shop_handlers sh
+       LEFT JOIN users u ON sh.handler_id = u.id
+       WHERE sh.shop_id = ? AND sh.status = 'active'`,
+      [shopId]
+    );
+  }
+  const list = (result.results || []).map(h => {
+    const online = isUserOnline(h);
+    const accepting = Number(h.is_accepting) === 1;
+    let sortKey = 2; // 不在线
+    if (accepting) sortKey = 0;
+    else if (online) sortKey = 1;
+    return { ...h, online, is_accepting: accepting ? 1 : 0, sortKey };
+  });
+  // 接单中 > 在线 > 不在线
+  list.sort((a, b) => a.sortKey - b.sortKey);
+  return jsonResponse(list);
 }
 
 async function handleGetHandlerShops(env, handlerId) {
@@ -1840,6 +1862,8 @@ async function handleAdminDeleteGift(env, authHeader, giftId) {
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (!user || user.role !== 'admin') return errorResponse('权限不足', 403);
+  // 同步删除赠送记录，个人主页礼物列表不再显示已删除礼物
+  try { await runDB(env, 'DELETE FROM gift_records WHERE gift_id = ?', [giftId]); } catch (e) {}
   await runDB(env, 'DELETE FROM gifts WHERE id = ?', [giftId]);
   return jsonResponse({ success: true, message: '已删除' });
 }
@@ -1867,9 +1891,10 @@ async function handleSendGift(env, authHeader, body) {
 }
 
 async function handleGetUserGifts(env, userId) {
+  // 只返回仍存在的礼物（已删除的礼物不显示）
   const result = await queryDB(env,
     `SELECT g.*, COUNT(gr.id) as count FROM gift_records gr
-     LEFT JOIN gifts g ON gr.gift_id = g.id
+     INNER JOIN gifts g ON gr.gift_id = g.id
      WHERE gr.to_user_id = ?
      GROUP BY g.id
      ORDER BY count DESC`,
@@ -1889,7 +1914,8 @@ async function handleRequestWithdraw(env, authHeader, body) {
   if (user.role !== 'handler') return errorResponse('只有打手可申请提现', 403);
   const { amount } = body;
   if (!amount || amount < 1) return errorResponse('请输入有效数量');
-  const available = Math.max(0, (user.diamond || 0) - 100);
+  // 取消冻结100红钻限制，可提现全部余额
+  const available = Math.max(0, Number(user.diamond) || 0);
   if (amount > available) return errorResponse(`可提现红钻不足，可用：${available}`, 400);
   const id = generateId();
   await runDB(env, 'INSERT INTO withdraw_requests (id, user_id, amount, status, created_at) VALUES (?, ?, ?, "pending", ?)', [id, userId, amount, new Date().toISOString()]);
@@ -2085,6 +2111,28 @@ async function handleAdminGiftDiamond(env, body) {
   if (!targetUserId || !amount) return errorResponse('请填写完整信息');
   await runDB(env, 'UPDATE users SET diamond = diamond + ? WHERE id = ?', [amount, targetUserId]);
   return jsonResponse({ success: true, message: '赠送成功' });
+}
+
+/** 管理员扣除任意用户红钻 */
+async function handleAdminDeductDiamond(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const admin = await getUserById(env, userId);
+  if (!admin || admin.role !== 'admin') return errorResponse('权限不足', 403);
+  const { targetUserId, amount, reason } = body;
+  if (!targetUserId || !amount || amount < 1) return errorResponse('请填写用户和扣除数量');
+  const target = await getUserById(env, targetUserId);
+  if (!target) return errorResponse('用户不存在', 404);
+  const current = Number(target.diamond) || 0;
+  const deduct = Math.min(current, parseInt(amount));
+  if (deduct <= 0) return errorResponse('该用户红钻余额为0');
+  await runDB(env, 'UPDATE users SET diamond = diamond - ? WHERE id = ?', [deduct, targetUserId]);
+  return jsonResponse({
+    success: true,
+    message: `已扣除 ${deduct} 红钻${reason ? '（' + reason + '）' : ''}`,
+    deducted: deduct,
+    remain: current - deduct
+  });
 }
 
 // ============================================================
@@ -2433,6 +2481,7 @@ export async function onRequest(context) {
         if (path === '/api/admin/users' && method === 'GET') return await handleAdminGetUsers(env);
         if (path === '/api/admin/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
         if (path === '/api/admin/gift' && method === 'POST') return await handleAdminGiftDiamond(env, body);
+        if (path === '/api/admin/deduct' && method === 'POST') return await handleAdminDeductDiamond(env, authHeader, body);
         if (path.startsWith('/api/admin/users/')) {
           const tId = path.replace('/api/admin/users/', '');
           if (tId.endsWith('/ban') && method === 'PUT') return await handleAdminToggleBan(env, tId.replace('/ban', ''));
