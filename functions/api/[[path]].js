@@ -83,11 +83,21 @@ async function handleGetMe(env, authHeader) {
 }
 
 async function handleGetUserPublic(env, userId) {
-  const result = await queryDB(env,
-    'SELECT id, username, role, diamond, level, status, avatar, banner, is_accepting, bio FROM users WHERE id = ?',
-    [userId]);
-  const user = result.results && result.results[0];
+  let user = null;
+  try {
+    const result = await queryDB(env,
+      'SELECT id, username, role, diamond, level, status, avatar, banner, is_accepting, bio, last_active FROM users WHERE id = ?',
+      [userId]);
+    user = result.results && result.results[0];
+  } catch (e) {
+    const result = await queryDB(env,
+      'SELECT id, username, role, diamond, level, status, avatar, banner, is_accepting, bio FROM users WHERE id = ?',
+      [userId]);
+    user = result.results && result.results[0];
+  }
   if (!user) return errorResponse('用户不存在', 404);
+  user.online = isUserOnline(user);
+  user.is_accepting = Number(user.is_accepting) || 0;
   return jsonResponse(user);
 }
 
@@ -758,18 +768,92 @@ async function handleCreateReview(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
   const { shop_id, order_id, rating, content, images } = body;
-  if (!shop_id || !rating) return errorResponse('请填写完整信息');
+  if (!rating) return errorResponse('请填写评分');
+  let order = null;
   if (order_id) {
     const o = await queryDB(env, 'SELECT * FROM orders WHERE id = ?', [order_id]);
-    if (o.results && o.results[0] && o.results[0].reviewed) return errorResponse('该订单已评价');
-    await runDB(env, 'UPDATE orders SET reviewed = 1 WHERE id = ?', [order_id]);
+    order = (o.results && o.results[0]) || null;
+    if (order && order.reviewed) return errorResponse('该订单已评价');
+    if (order) await runDB(env, 'UPDATE orders SET reviewed = 1 WHERE id = ?', [order_id]);
   }
   const id = generateId();
   const imagesJson = Array.isArray(images) ? JSON.stringify(images) : '[]';
-  await runDB(env,
-    'INSERT INTO shop_reviews (id, shop_id, order_id, user_id, rating, content, images, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [id, shop_id, order_id || null, userId, parseInt(rating), content || '', imagesJson, new Date().toISOString()]);
+  // 店铺评价（有 shop_id 时）
+  if (shop_id) {
+    await runDB(env,
+      'INSERT INTO shop_reviews (id, shop_id, order_id, user_id, rating, content, images, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, shop_id, order_id || null, userId, parseInt(rating), content || '', imagesJson, new Date().toISOString()]);
+  }
+  // 同步到接单打手评价
+  const handlerId = order && order.handler_id;
+  if (handlerId) {
+    await ensureExtraTables(env);
+    try {
+      await runDB(env,
+        'INSERT INTO handler_reviews (id, handler_id, order_id, user_id, rating, content, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [generateId(), handlerId, order_id || null, userId, parseInt(rating), content || '', new Date().toISOString()]);
+    } catch (e) {}
+  }
   return jsonResponse({ success: true, id, message: '评价成功' });
+}
+
+async function handleGetHandlerReviews(env, handlerId) {
+  await ensureExtraTables(env);
+  try {
+    const result = await queryDB(env,
+      `SELECT r.*, u.username, u.avatar FROM handler_reviews r
+       LEFT JOIN users u ON r.user_id = u.id
+       WHERE r.handler_id = ?
+       ORDER BY r.created_at DESC`, [handlerId]);
+    return jsonResponse(result.results || []);
+  } catch (e) {
+    return jsonResponse([]);
+  }
+}
+
+async function handleHeartbeat(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  await touchOnline(env, userId);
+  return jsonResponse({ success: true, time: new Date().toISOString() });
+}
+
+async function handleGetAutoReplies(env, authHeader) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || (user.role !== 'admin' && user.role !== 'service')) return errorResponse('权限不足', 403);
+  await ensureExtraTables(env);
+  const result = await queryDB(env, 'SELECT * FROM auto_replies ORDER BY sort_order ASC, created_at ASC');
+  return jsonResponse(result.results || []);
+}
+
+async function handleSaveAutoReply(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || (user.role !== 'admin' && user.role !== 'service')) return errorResponse('权限不足', 403);
+  await ensureExtraTables(env);
+  const { id, question, answer, keywords, sort_order } = body;
+  if (!question || !answer) return errorResponse('请填写问题和回答');
+  if (id) {
+    await runDB(env, 'UPDATE auto_replies SET question = ?, answer = ?, keywords = ?, sort_order = ? WHERE id = ?',
+      [question, answer, keywords || question, sort_order || 0, id]);
+    return jsonResponse({ success: true, message: '已更新' });
+  }
+  const newId = generateId();
+  await runDB(env, 'INSERT INTO auto_replies (id, question, answer, keywords, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    [newId, question, answer, keywords || question, sort_order || 0, new Date().toISOString()]);
+  return jsonResponse({ success: true, id: newId, message: '已添加' });
+}
+
+async function handleDeleteAutoReply(env, authHeader, replyId) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const user = await getUserById(env, userId);
+  if (!user || (user.role !== 'admin' && user.role !== 'service')) return errorResponse('权限不足', 403);
+  await runDB(env, 'DELETE FROM auto_replies WHERE id = ?', [replyId]);
+  return jsonResponse({ success: true, message: '已删除' });
 }
 
 // ============================================================
@@ -1422,30 +1506,135 @@ async function handleServiceGift(env, authHeader, body) {
 // ============================================================
 //  消息
 // ============================================================
+// 客服机器人固定 ID
+const CS_BOT_ID = 'cs_bot';
+const ONLINE_THRESHOLD_MS = 3 * 60 * 1000;
+
+async function ensureExtraTables(env) {
+  try {
+    await runDB(env, `CREATE TABLE IF NOT EXISTS auto_replies (
+      id TEXT PRIMARY KEY, question TEXT, answer TEXT, keywords TEXT, sort_order INTEGER DEFAULT 0, created_at TEXT
+    )`);
+  } catch (e) {}
+  try {
+    await runDB(env, `CREATE TABLE IF NOT EXISTS cs_sessions (
+      id TEXT PRIMARY KEY, user_id TEXT, agent_id TEXT, status TEXT, requested_at TEXT, connected_at TEXT
+    )`);
+  } catch (e) {}
+  try {
+    await runDB(env, `CREATE TABLE IF NOT EXISTS handler_reviews (
+      id TEXT PRIMARY KEY, handler_id TEXT, order_id TEXT, user_id TEXT, rating INTEGER, content TEXT, created_at TEXT
+    )`);
+  } catch (e) {}
+}
+
+async function touchOnline(env, userId) {
+  if (!userId || userId === CS_BOT_ID) return;
+  try { await runDB(env, 'UPDATE users SET last_active = ? WHERE id = ?', [new Date().toISOString(), userId]); } catch (e) {}
+}
+
+function isUserOnline(user) {
+  if (!user || !user.last_active) return false;
+  const t = new Date(user.last_active).getTime();
+  if (isNaN(t)) return false;
+  return (Date.now() - t) < ONLINE_THRESHOLD_MS;
+}
+
+async function upsertContact(env, userId, contactId, lastMsg, unreadInc) {
+  const c = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [userId, contactId]);
+  if (!c.results || c.results.length === 0) {
+    await runDB(env, 'INSERT INTO message_contacts (id, user_id, contact_id, last_message, last_time, unread_count) VALUES (?, ?, ?, ?, ?, ?)',
+      [generateId(), userId, contactId, lastMsg, new Date().toISOString(), unreadInc || 0]);
+  } else if (unreadInc) {
+    await runDB(env, 'UPDATE message_contacts SET last_message = ?, last_time = ?, unread_count = unread_count + ? WHERE user_id = ? AND contact_id = ?',
+      [lastMsg, new Date().toISOString(), unreadInc, userId, contactId]);
+  } else {
+    await runDB(env, 'UPDATE message_contacts SET last_message = ?, last_time = ? WHERE user_id = ? AND contact_id = ?',
+      [lastMsg, new Date().toISOString(), userId, contactId]);
+  }
+}
+
+async function insertMessage(env, senderId, receiverId, content) {
+  const id = generateId();
+  await runDB(env, 'INSERT INTO messages (id, sender_id, receiver_id, content, is_read, created_at) VALUES (?, ?, ?, ?, 0, ?)',
+    [id, senderId, receiverId, content, new Date().toISOString()]);
+  return id;
+}
+
+async function matchAutoReply(env, text) {
+  await ensureExtraTables(env);
+  const result = await queryDB(env, 'SELECT * FROM auto_replies ORDER BY sort_order ASC, created_at ASC');
+  const list = result.results || [];
+  const lower = (text || '').toLowerCase();
+  for (const item of list) {
+    const kws = (item.keywords || item.question || '').split(/[,，;；\s]+/).filter(Boolean);
+    if (kws.length === 0) continue;
+    if (kws.some(k => lower.includes(String(k).toLowerCase()))) return item.answer || '';
+  }
+  return '您好，我是智能客服。您可以描述问题，或发送「转人工」联系在线客服。';
+}
+
+async function findOnlineServiceAgent(env) {
+  const result = await queryDB(env, 'SELECT * FROM users WHERE role IN ("service", "admin") AND status = "active"');
+  const users = result.results || [];
+  const online = users.filter(u => u.role === 'service' && isUserOnline(u));
+  if (online.length > 0) return online[Math.floor(Math.random() * online.length)];
+  const onlineAdmin = users.filter(u => u.role === 'admin' && isUserOnline(u));
+  if (onlineAdmin.length > 0) return onlineAdmin[Math.floor(Math.random() * onlineAdmin.length)];
+  return null;
+}
+
 async function handleSendMessage(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
+  await touchOnline(env, userId);
   const { receiverId, content } = body;
-  if (!receiverId || !content || !content.trim()) return errorResponse('请完整填写');
+  if (!receiverId || !content || !String(content).trim()) return errorResponse('请完整填写');
+  const text = String(content).trim();
+  if (userId === receiverId) return errorResponse('不能给自己发消息', 403);
+
+  // 客服机器人 + 自动回复 + 转人工
+  if (receiverId === CS_BOT_ID) {
+    await ensureExtraTables(env);
+    await insertMessage(env, userId, CS_BOT_ID, text);
+    await upsertContact(env, userId, CS_BOT_ID, text, 0);
+
+    if (/转人工|人工客服|转接人工|找客服/.test(text)) {
+      const agent = await findOnlineServiceAgent(env);
+      if (agent) {
+        await runDB(env, 'INSERT INTO cs_sessions (id, user_id, agent_id, status, requested_at, connected_at) VALUES (?, ?, ?, ?, ?, ?)',
+          [generateId(), userId, agent.id, 'connected', new Date().toISOString(), new Date().toISOString()]);
+        const tip = `已为您转接人工客服「${agent.username}」，正在为您接入...`;
+        await insertMessage(env, CS_BOT_ID, userId, tip);
+        await upsertContact(env, userId, CS_BOT_ID, tip, 1);
+        const intro = `[系统] 用户 ${user.username}(${userId}) 请求人工客服`;
+        await insertMessage(env, userId, agent.id, intro);
+        await upsertContact(env, userId, agent.id, intro, 0);
+        await upsertContact(env, agent.id, userId, intro, 1);
+        return jsonResponse({ success: true, message: '已转人工', transferred: true, agent_id: agent.id, agent_name: agent.username });
+      } else {
+        await runDB(env, 'INSERT INTO cs_sessions (id, user_id, agent_id, status, requested_at, connected_at) VALUES (?, ?, ?, ?, ?, ?)',
+          [generateId(), userId, null, 'waiting', new Date().toISOString(), null]);
+        const tip = '目前客服不在线，请稍等。有客服上线后会尽快为您接入（预计不超过5分钟）。';
+        await insertMessage(env, CS_BOT_ID, userId, tip);
+        await upsertContact(env, userId, CS_BOT_ID, tip, 1);
+        return jsonResponse({ success: true, message: '客服不在线', offline: true });
+      }
+    }
+
+    const answer = await matchAutoReply(env, text);
+    await insertMessage(env, CS_BOT_ID, userId, answer);
+    await upsertContact(env, userId, CS_BOT_ID, answer, 1);
+    return jsonResponse({ success: true, message: '发送成功', auto_reply: true });
+  }
+
   const receiver = await getUserById(env, receiverId);
   if (!receiver) return errorResponse('接收者不存在', 404);
-  if (userId === receiverId) return errorResponse('不能给自己发消息', 403);
-  const id = generateId();
-  await runDB(env, 'INSERT INTO messages (id, sender_id, receiver_id, content, is_read, created_at) VALUES (?, ?, ?, ?, 0, ?)', [id, userId, receiverId, content.trim(), new Date().toISOString()]);
-  const c1 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [userId, receiverId]);
-  if (!c1.results || c1.results.length === 0) {
-    await runDB(env, 'INSERT INTO message_contacts (id, user_id, contact_id, last_message, last_time, unread_count) VALUES (?, ?, ?, ?, ?, 0)', [generateId(), userId, receiverId, content.trim(), new Date().toISOString()]);
-  } else {
-    await runDB(env, 'UPDATE message_contacts SET last_message = ?, last_time = ? WHERE user_id = ? AND contact_id = ?', [content.trim(), new Date().toISOString(), userId, receiverId]);
-  }
-  const c2 = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [receiverId, userId]);
-  if (!c2.results || c2.results.length === 0) {
-    await runDB(env, 'INSERT INTO message_contacts (id, user_id, contact_id, last_message, last_time, unread_count) VALUES (?, ?, ?, ?, ?, 1)', [generateId(), receiverId, userId, content.trim(), new Date().toISOString()]);
-  } else {
-    await runDB(env, 'UPDATE message_contacts SET last_message = ?, last_time = ?, unread_count = unread_count + 1 WHERE user_id = ? AND contact_id = ?', [content.trim(), new Date().toISOString(), receiverId, userId]);
-  }
+  await insertMessage(env, userId, receiverId, text);
+  await upsertContact(env, userId, receiverId, text, 0);
+  await upsertContact(env, receiverId, userId, text, 1);
   return jsonResponse({ success: true, message: '发送成功' });
 }
 async function handleGetContacts(env, authHeader) {
@@ -1453,20 +1642,57 @@ async function handleGetContacts(env, authHeader) {
   if (!userId) return errorResponse('请先登录', 401);
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
+  await touchOnline(env, userId);
   const sql = `
     WITH all_contacts AS (
       SELECT DISTINCT sender_id as contact_id FROM messages WHERE receiver_id = ?
       UNION
       SELECT DISTINCT receiver_id as contact_id FROM messages WHERE sender_id = ?
     )
-    SELECT u.id, u.username, u.role, u.avatar, mc.last_message, mc.last_time, mc.unread_count
+    SELECT u.id, u.username, u.role, u.avatar, u.last_active, mc.last_message, mc.last_time, mc.unread_count
     FROM all_contacts ac
     JOIN users u ON u.id = ac.contact_id
     LEFT JOIN message_contacts mc ON mc.user_id = ? AND mc.contact_id = ac.contact_id
     WHERE u.id != ?
     ORDER BY COALESCE(mc.last_time, '1970-01-01') DESC`;
-  const result = await queryDB(env, sql, [userId, userId, userId, userId]);
-  return jsonResponse(result.results || []);
+  let list = [];
+  try {
+    const result = await queryDB(env, sql, [userId, userId, userId, userId]);
+    list = (result.results || []).map(c => ({ ...c, online: isUserOnline(c) }));
+  } catch (e) {
+    // last_active 列可能不存在，降级查询
+    const sql2 = `
+      WITH all_contacts AS (
+        SELECT DISTINCT sender_id as contact_id FROM messages WHERE receiver_id = ?
+        UNION
+        SELECT DISTINCT receiver_id as contact_id FROM messages WHERE sender_id = ?
+      )
+      SELECT u.id, u.username, u.role, u.avatar, mc.last_message, mc.last_time, mc.unread_count
+      FROM all_contacts ac
+      JOIN users u ON u.id = ac.contact_id
+      LEFT JOIN message_contacts mc ON mc.user_id = ? AND mc.contact_id = ac.contact_id
+      WHERE u.id != ?
+      ORDER BY COALESCE(mc.last_time, '1970-01-01') DESC`;
+    const result = await queryDB(env, sql2, [userId, userId, userId, userId]);
+    list = (result.results || []).map(c => ({ ...c, online: false }));
+  }
+
+  // 置顶客服机器人联系人
+  const csMc = await queryDB(env, 'SELECT * FROM message_contacts WHERE user_id = ? AND contact_id = ?', [userId, CS_BOT_ID]);
+  const csRow = (csMc.results && csMc.results[0]) || {};
+  const csContact = {
+    id: CS_BOT_ID,
+    username: '在线客服',
+    role: 'service',
+    avatar: '',
+    last_message: csRow.last_message || '您好，有什么可以帮您？发送「转人工」可联系人工客服',
+    last_time: csRow.last_time || null,
+    unread_count: csRow.unread_count || 0,
+    online: true,
+    is_cs_bot: true
+  };
+  list = list.filter(c => c.id !== CS_BOT_ID);
+  return jsonResponse([csContact, ...list]);
 }
 async function handleGetMessages(env, authHeader, body) {
   const userId = verifyAndGetUserId(authHeader);
@@ -1495,6 +1721,25 @@ async function handleGetMessages(env, authHeader, body) {
   }
 
   if (!contactId) return errorResponse('请选择联系人');
+  // 客服机器人特殊处理
+  if (contactId === CS_BOT_ID) {
+    const result = await queryDB(env,
+      `SELECT m.*, 
+        CASE WHEN m.sender_id = ? THEN '在线客服' ELSE COALESCE(u.username, m.sender_id) END as sender_name,
+        u.avatar as sender_avatar
+       FROM messages m
+       LEFT JOIN users u ON m.sender_id = u.id
+       WHERE (m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?)
+       ORDER BY m.created_at ASC`,
+      [CS_BOT_ID, userId, CS_BOT_ID, CS_BOT_ID, userId]
+    );
+    await runDB(env, 'UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?', [CS_BOT_ID, userId]);
+    await runDB(env, 'UPDATE message_contacts SET unread_count = 0 WHERE user_id = ? AND contact_id = ?', [userId, CS_BOT_ID]);
+    return jsonResponse((result.results || []).map(m => ({
+      ...m,
+      sender_name: m.sender_id === CS_BOT_ID ? '在线客服' : m.sender_name
+    })));
+  }
   const contact = await getUserById(env, contactId);
   if (!contact) return errorResponse('联系人不存在', 404);
   const result = await queryDB(env,
@@ -2041,6 +2286,16 @@ export async function onRequest(context) {
     if (path === '/api/messages/history' && method === 'POST') return await handleGetMessages(env, authHeader, body);
     if (path === '/api/messages/unread' && method === 'GET') return await handleGetUnreadCount(env, authHeader);
     if (path === '/api/gifts/send' && method === 'POST') return await handleSendGift(env, authHeader, body);
+    if (path === '/api/heartbeat' && method === 'POST') return await handleHeartbeat(env, authHeader);
+    if (path === '/api/auto-replies' && method === 'GET') return await handleGetAutoReplies(env, authHeader);
+    if (path === '/api/auto-replies' && method === 'POST') return await handleSaveAutoReply(env, authHeader, body);
+    if (path.startsWith('/api/auto-replies/') && method === 'DELETE') {
+      return await handleDeleteAutoReply(env, authHeader, path.replace('/api/auto-replies/', ''));
+    }
+    if (path.startsWith('/api/handlers/') && path.endsWith('/reviews') && method === 'GET') {
+      const hId = path.replace('/api/handlers/', '').replace('/reviews', '');
+      return await handleGetHandlerReviews(env, hId);
+    }
 
     if (path === '/api/handler/pending-orders' && method === 'GET') return await handleGetPendingOrders(env, authHeader);
 
