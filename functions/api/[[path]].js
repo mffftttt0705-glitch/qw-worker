@@ -38,20 +38,29 @@ function verifyAndGetUserId(authHeader) {
 async function handleRegister(env, body) {
   const { username, password, role, status } = body;
   if (!username || !password) return errorResponse('请填写用户名和密码');
-  // 禁止注册成为管理员，隐藏管理员角色
+  // 公开注册仅允许 老板 / 打手；禁止注册管理员等角色
   let finalRole = role || 'boss';
-  if (finalRole === 'admin') finalRole = 'boss';
+  if (finalRole === 'admin' || finalRole === 'service' || finalRole === 'dispatcher') {
+    finalRole = 'boss';
+  }
+  if (finalRole !== 'boss' && finalRole !== 'handler') {
+    finalRole = 'boss';
+  }
   const existing = await queryDB(env, 'SELECT * FROM users WHERE username = ?', [username]);
   if (existing.results && existing.results.length > 0) return errorResponse('用户名已存在');
   const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM users');
   const count = countResult.results?.[0]?.count || 0;
   const userId = String(100000 + count + 1);
-  const userStatus = (finalRole === 'handler' || finalRole === 'dispatcher' || finalRole === 'service') ? 'pending' : (status || 'active');
+  const userStatus = (finalRole === 'handler') ? 'pending' : (status || 'active');
   await runDB(env,
     'INSERT INTO users (id, username, password, role, diamond, balance, status, avatar, level, is_accepting, bio) VALUES (?, ?, ?, ?, 0, 0, ?, ?, 1, 0, "")',
     [userId, username, password, finalRole, userStatus, '']
   );
-  return jsonResponse({ message: (finalRole === 'handler' || finalRole === 'dispatcher' || finalRole === 'service') ? '注册成功，请等待管理员审核' : '注册成功', id: userId });
+  return jsonResponse({
+    message: finalRole === 'handler' ? '注册成功，请等待管理员审核' : '注册成功',
+    id: userId,
+    role: finalRole
+  });
 }
 
 async function handleLogin(env, body) {
