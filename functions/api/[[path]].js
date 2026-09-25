@@ -215,14 +215,37 @@ async function handleAdminDeleteUser(env, targetUserId, body) {
       return errorResponse('删除管理员需输入正确密码', 403);
     }
   }
-  await runDB(env, 'DELETE FROM user_avatars WHERE user_id = ?', [targetUserId]);
-  await runDB(env, 'DELETE FROM posts WHERE user_id = ?', [targetUserId]);
-  await runDB(env, 'DELETE FROM post_comments WHERE user_id = ?', [targetUserId]);
-  await runDB(env, 'DELETE FROM post_likes WHERE user_id = ?', [targetUserId]);
-  await runDB(env, 'DELETE FROM messages WHERE sender_id = ? OR receiver_id = ?', [targetUserId, targetUserId]);
-  await runDB(env, 'DELETE FROM message_contacts WHERE user_id = ? OR contact_id = ?', [targetUserId, targetUserId]);
-  await runDB(env, 'DELETE FROM shop_handlers WHERE handler_id = ?', [targetUserId]);
-  await runDB(env, 'DELETE FROM users WHERE id = ?', [targetUserId]);
+  // 先清理所有可能引用该用户的表，避免外键约束失败
+  const cleanups = [
+    ['DELETE FROM user_avatars WHERE user_id = ?', [targetUserId]],
+    ['DELETE FROM posts WHERE user_id = ?', [targetUserId]],
+    ['DELETE FROM post_comments WHERE user_id = ?', [targetUserId]],
+    ['DELETE FROM post_likes WHERE user_id = ?', [targetUserId]],
+    ['DELETE FROM messages WHERE sender_id = ? OR receiver_id = ?', [targetUserId, targetUserId]],
+    ['DELETE FROM message_contacts WHERE user_id = ? OR contact_id = ?', [targetUserId, targetUserId]],
+    ['DELETE FROM shop_handlers WHERE handler_id = ?', [targetUserId]],
+    ['DELETE FROM shop_follows WHERE user_id = ?', [targetUserId]],
+    ['DELETE FROM shop_reviews WHERE user_id = ?', [targetUserId]],
+    ['DELETE FROM shop_applications WHERE applicant_id = ?', [targetUserId]],
+    ['DELETE FROM gift_records WHERE from_user_id = ? OR to_user_id = ?', [targetUserId, targetUserId]],
+    ['DELETE FROM recharge_requests WHERE user_id = ?', [targetUserId]],
+    ['DELETE FROM withdraw_requests WHERE user_id = ?', [targetUserId]],
+    ['DELETE FROM handler_reviews WHERE user_id = ? OR handler_id = ?', [targetUserId, targetUserId]],
+    ['DELETE FROM cs_sessions WHERE user_id = ? OR agent_id = ?', [targetUserId, targetUserId]],
+    // 订单：清空打手/老板关联（不删订单本体，避免丢数据时可改为 DELETE）
+    ['UPDATE orders SET handler_id = NULL WHERE handler_id = ?', [targetUserId]],
+    ['UPDATE orders SET boss_id = NULL WHERE boss_id = ?', [targetUserId]],
+    // 店铺拥有者：转空或保留店铺
+    ['UPDATE shops SET owner_id = NULL WHERE owner_id = ?', [targetUserId]],
+  ];
+  for (const [sql, params] of cleanups) {
+    try { await runDB(env, sql, params); } catch (e) {}
+  }
+  try {
+    await runDB(env, 'DELETE FROM users WHERE id = ?', [targetUserId]);
+  } catch (e) {
+    return errorResponse('删除失败（可能仍有关联数据）: ' + (e.message || e), 500);
+  }
   // 删除后该 6 位 ID 可被 allocateNextUserId 重新分配
   return jsonResponse({ success: true, message: '用户已删除，该ID可重新使用' });
 }
