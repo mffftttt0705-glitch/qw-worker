@@ -35,6 +35,31 @@ function verifyAndGetUserId(authHeader) {
 // ============================================================
 //  用户认证
 // ============================================================
+/** 用户数字 ID 起始值：000010，删除后的空号会优先复用 */
+const USER_ID_START = 10;
+
+function formatUserId(n) {
+  const num = parseInt(n, 10);
+  if (isNaN(num) || num < 0) return null;
+  return String(num).padStart(6, '0');
+}
+
+/** 分配下一个可用 6 位用户 ID（从 000010 起，优先复用已删除的空号） */
+async function allocateNextUserId(env) {
+  let used = new Set();
+  try {
+    const result = await queryDB(env, `SELECT id FROM users WHERE id GLOB '[0-9]*'`);
+    (result.results || []).forEach(r => {
+      const n = parseInt(r.id, 10);
+      if (!isNaN(n)) used.add(n);
+    });
+  } catch (e) {}
+  let n = USER_ID_START;
+  while (used.has(n)) n++;
+  // 超过 6 位时仍返回数字字符串
+  return formatUserId(n) || String(n);
+}
+
 async function handleRegister(env, body) {
   const { username, password, role, status } = body;
   if (!username || !password) return errorResponse('请填写用户名和密码');
@@ -48,14 +73,26 @@ async function handleRegister(env, body) {
   }
   const existing = await queryDB(env, 'SELECT * FROM users WHERE username = ?', [username]);
   if (existing.results && existing.results.length > 0) return errorResponse('用户名已存在');
-  const countResult = await queryDB(env, 'SELECT COUNT(*) as count FROM users');
-  const count = countResult.results?.[0]?.count || 0;
-  const userId = String(100000 + count + 1);
+  const userId = await allocateNextUserId(env);
   const userStatus = (finalRole === 'handler') ? 'pending' : (status || 'active');
-  await runDB(env,
-    'INSERT INTO users (id, username, password, role, diamond, balance, status, avatar, level, is_accepting, bio) VALUES (?, ?, ?, ?, 0, 0, ?, ?, 1, 0, "")',
-    [userId, username, password, finalRole, userStatus, '']
-  );
+  try {
+    await runDB(env,
+      'INSERT INTO users (id, username, password, role, diamond, balance, status, avatar, level, is_accepting, bio) VALUES (?, ?, ?, ?, 0, 0, ?, ?, 1, 0, "")',
+      [userId, username, password, finalRole, userStatus, '']
+    );
+  } catch (e) {
+    // 冲突时再分配一次
+    const retryId = await allocateNextUserId(env);
+    await runDB(env,
+      'INSERT INTO users (id, username, password, role, diamond, balance, status, avatar, level, is_accepting, bio) VALUES (?, ?, ?, ?, 0, 0, ?, ?, 1, 0, "")',
+      [retryId, username, password, finalRole, userStatus, '']
+    );
+    return jsonResponse({
+      message: finalRole === 'handler' ? '注册成功，请等待管理员审核' : '注册成功',
+      id: retryId,
+      role: finalRole
+    });
+  }
   return jsonResponse({
     message: finalRole === 'handler' ? '注册成功，请等待管理员审核' : '注册成功',
     id: userId,
@@ -166,10 +203,18 @@ async function handleChangeUsername(env, targetUserId, body) {
   return jsonResponse({ success: true, message: '用户名已修改' });
 }
 
-async function handleAdminDeleteUser(env, targetUserId) {
+const ADMIN_DELETE_PASSWORD = '@#555aaa';
+
+async function handleAdminDeleteUser(env, targetUserId, body) {
   const user = await getUserById(env, targetUserId);
   if (!user) return errorResponse('用户不存在', 404);
-  if (user.role === 'admin') return errorResponse('不能删除管理员', 403);
+  // 删除管理员必须输入专用密码
+  if (user.role === 'admin') {
+    const pwd = body && body.admin_delete_password;
+    if (pwd !== ADMIN_DELETE_PASSWORD) {
+      return errorResponse('删除管理员需输入正确密码', 403);
+    }
+  }
   await runDB(env, 'DELETE FROM user_avatars WHERE user_id = ?', [targetUserId]);
   await runDB(env, 'DELETE FROM posts WHERE user_id = ?', [targetUserId]);
   await runDB(env, 'DELETE FROM post_comments WHERE user_id = ?', [targetUserId]);
@@ -178,7 +223,50 @@ async function handleAdminDeleteUser(env, targetUserId) {
   await runDB(env, 'DELETE FROM message_contacts WHERE user_id = ? OR contact_id = ?', [targetUserId, targetUserId]);
   await runDB(env, 'DELETE FROM shop_handlers WHERE handler_id = ?', [targetUserId]);
   await runDB(env, 'DELETE FROM users WHERE id = ?', [targetUserId]);
-  return jsonResponse({ success: true, message: '用户已删除' });
+  // 删除后该 6 位 ID 可被 allocateNextUserId 重新分配
+  return jsonResponse({ success: true, message: '用户已删除，该ID可重新使用' });
+}
+
+/** 清空所有非管理员账号，管理员保留并规范为 000010（若原 ID 不同则迁移） */
+async function handleAdminResetUsers(env, authHeader, body) {
+  const userId = verifyAndGetUserId(authHeader);
+  if (!userId) return errorResponse('请先登录', 401);
+  const admin = await getUserById(env, userId);
+  if (!admin || admin.role !== 'admin') return errorResponse('权限不足', 403);
+  if (!body || body.confirm !== 'RESET_ALL_USERS') {
+    return errorResponse('请确认操作：body 中 confirm 必须为 RESET_ALL_USERS', 400);
+  }
+
+  // 删除所有非 admin 用户及相关数据
+  const all = await queryDB(env, 'SELECT id, role FROM users');
+  const list = all.results || [];
+  let deleted = 0;
+  for (const u of list) {
+    if (u.role === 'admin') continue;
+    try {
+      await handleAdminDeleteUser(env, u.id);
+      deleted++;
+    } catch (e) {
+      try { await runDB(env, 'DELETE FROM users WHERE id = ?', [u.id]); deleted++; } catch (e2) {}
+    }
+  }
+
+  // 将当前管理员 ID 规范为 000010（若尚未占用）
+  const targetAdminId = formatUserId(USER_ID_START);
+  if (admin.id !== targetAdminId) {
+    const taken = await queryDB(env, 'SELECT id FROM users WHERE id = ?', [targetAdminId]);
+    if (!taken.results || taken.results.length === 0) {
+      try {
+        await handleChangeUserId(env, authHeader, { targetUserId: admin.id, newId: targetAdminId });
+      } catch (e) {}
+    }
+  }
+
+  return jsonResponse({
+    success: true,
+    message: `已清空 ${deleted} 个账号。新注册将从 ${formatUserId(USER_ID_START)} 起分配，空号可复用。管理员请使用 ID ${targetAdminId} 重新登录（若已迁移）。`,
+    deleted
+  });
 }
 
 // ============================================================
@@ -190,11 +278,19 @@ async function handleChangeUserId(env, authHeader, body) {
   const user = await getUserById(env, userId);
   if (!user) return errorResponse('用户不存在', 404);
 
-  const { targetUserId, newId } = body;
-  if (!targetUserId || !newId) return errorResponse('请提供新ID');
-  if (!/^\d+$/.test(newId)) return errorResponse('ID必须为数字');
-  if (newId.length < 6) return errorResponse('ID至少6位');
-  if (newId === targetUserId) return errorResponse('新ID与当前ID相同');
+  const { targetUserId, newId: rawNewId } = body;
+  if (!targetUserId || !rawNewId) return errorResponse('请提供新ID');
+  // 统一为 6 位数字（不足补 0），管理员可随意指定空闲 6 位 ID
+  const digits = String(rawNewId).replace(/\D/g, '');
+  if (!digits) return errorResponse('ID必须为数字');
+  const newId = formatUserId(parseInt(digits, 10));
+  if (!newId) return errorResponse('ID格式无效');
+  if (parseInt(digits, 10) < USER_ID_START && user.role !== 'admin') {
+    return errorResponse(`用户ID不能小于 ${formatUserId(USER_ID_START)}`);
+  }
+  if (newId === targetUserId || newId === formatUserId(targetUserId)) {
+    return errorResponse('新ID与当前ID相同');
+  }
 
   const isSelf = targetUserId === userId;
   const isAdmin = user.role === 'admin';
@@ -2488,6 +2584,7 @@ export async function onRequest(context) {
           if (appId.endsWith('/reject') && method === 'PUT') return await handleRejectShopApplication(env, authHeader, appId.replace('/reject', ''), body);
         }
         if (path === '/api/admin/users' && method === 'GET') return await handleAdminGetUsers(env);
+        if (path === '/api/admin/reset-users' && method === 'POST') return await handleAdminResetUsers(env, authHeader, body);
         if (path === '/api/admin/user-id' && method === 'PUT') return await handleChangeUserId(env, authHeader, body);
         if (path === '/api/admin/gift' && method === 'POST') return await handleAdminGiftDiamond(env, body);
         if (path === '/api/admin/deduct' && method === 'POST') return await handleAdminDeductDiamond(env, authHeader, body);
@@ -2497,7 +2594,7 @@ export async function onRequest(context) {
           if (tId.endsWith('/reset-password') && method === 'PUT') return await handleAdminResetPassword(env, tId.replace('/reset-password', ''));
           if (tId.endsWith('/approve') && method === 'PUT') return await handleApproveHandler(env, tId.replace('/approve', ''));
           if (tId.endsWith('/username') && method === 'PUT') return await handleChangeUsername(env, tId.replace('/username', ''), body);
-          if (method === 'DELETE') return await handleAdminDeleteUser(env, tId);
+          if (method === 'DELETE') return await handleAdminDeleteUser(env, tId, body);
         }
         if (path === '/api/admin/products' && method === 'GET') return await handleAdminGetProducts(env);
         if (path === '/api/admin/products' && method === 'POST') return await handleAdminCreateProduct(env, body);
